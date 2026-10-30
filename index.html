@@ -149,6 +149,8 @@
   .drumstyles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
   .dgenre { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 8px; border-radius: 6px; background: #0e0f12; border: 1px solid #23262d; }
   .dgenre b { flex-basis: 100%; font: 400 15px/1 var(--display); color: var(--mz-toner); }
+  /* the one thing to do when you're alone: bring someone in */
+  #copyBtn.alone { background: var(--mz-pink, #FF68BA); color: #18181b; border-color: #18181b; font-weight: 700; box-shadow: 0 0 0 3px #ff68ba33; }
   .gearitem { position: relative; display: grid; justify-items: center; gap: 2px; width: 56px; }
   .gearitem .ico { width: 54px; height: 36px; }
   .gearitem .led { position: absolute; top: 0; right: 2px; width: 6px; height: 6px; }
@@ -716,7 +718,7 @@
     <div class="readout"><span class="legend">BPM</span><button id="bpmDown" class="btn small" aria-label="Slower">−</button><span id="bpmLcd" class="lcd" tabindex="0" role="spinbutton" aria-label="Tempo" title="Drag, scroll or use the arrow keys">96</span><button id="bpmUp" class="btn small" aria-label="Faster">+</button>
       <button id="metroBtn" class="round" title="Metronome" aria-label="Metronome"><svg width="15" height="15" viewBox="0 0 16 16"><path d="M5 15h6L9.5 2h-3z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 11l4-6" stroke="currentColor" stroke-width="1.5"/></svg></button><span id="tempoNote" class="help"></span></div>
     <button id="talkBtn" class="talkbtn" aria-pressed="false" title="Talk to the band: click to leave your mic on, or hold while you talk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Talk</span></button>
-    <button id="tapeBtn" class="tapebtn" title="Record the jam (everyone hears that you are)" aria-label="Record the jam"><i></i><span id="tapeTime"></span></button><button id="syncBtn" class="btn small" title="Sync record: everyone records their own true sound, gathered into one folder of aligned stems and MIDI">Sync take</button><button id="tapesBtn" class="btn small hide" title="Play back or save your takes">Tapes</button>
+    <button id="tapeBtn" class="tapebtn" title="Record the jam (everyone hears that you are)" aria-label="Record the jam"><i></i><span id="tapeTime"></span></button><button id="syncBtn" class="btn small ghost" title="Sync record: everyone records their own true sound, gathered into one folder of aligned stems and MIDI">Sync take</button><button id="tapesBtn" class="btn small hide" title="Play back or save your takes">Tapes</button>
     <div class="readout"><span class="legend">Key</span><select id="keySel" class="lcdsel" aria-label="The room's key" title="Everyone shares the key. The keys of the scale light up, and chord pads appear."></select></div>
     <div class="readout tech"><span class="legend">Quant</span><div class="seg" id="quantSeg"><button data-q="0" class="on">OFF</button><button data-q="0.25">1/16</button><button data-q="0.5">1/8</button><button data-q="1">1/4</button></div></div>
     <div class="lookbar tech"><span class="legend">Look</span><div class="meter" title="How far ahead your notes are scheduled"><i id="lookMeter"></i></div><span id="lookVal" class="lcd" style="min-width:72px;text-align:center;font-size:13px;padding:3px 6px">0 ms</span>
@@ -761,7 +763,7 @@
       <span class="help">A W S E D F T G Y H U J K · Z X octave · C V velocity · Space sustain</span><span style="margin-left:auto"></span>
       <button id="assistBtn" class="btn small" title="Notes you play slightly early are pulled part of the way onto the beat grid. Your timing still counts.">Rhythm help: off</button>
       <button id="lockBtn" class="btn small hide" aria-pressed="false" title="Every key you press lands on a note of the room's key">Lock to key</button>
-      <button id="midiBtn" class="btn small">Enable MIDI</button><button id="panicBtn" class="btn small" title="Stop every note">Panic</button></div>
+      <button id="midiBtn" class="btn small">Enable MIDI</button><button id="panicBtn" class="btn small ghost" title="Stop every note">Panic</button></div>
     <div id="pads" class="pads hide" aria-label="Chord pads (keys 1 to 6)"></div>
     <div id="keyboard" aria-label="On-screen keyboard"></div>
   </div>

@@ -693,7 +693,8 @@ function renderCorners() {
   const isBand = (id) => (id === S.me ? !S.listener : room.peers.get(id)?.role !== 'listener' && S.players.get(id)?.role !== 'listener');
   const ids = [S.me, ...room.peers.keys()].filter((id) => id && isBand(id)).sort((a, b) => slotOf(a) - slotOf(b));
   const ears = [S.me, ...room.peers.keys()].filter((id) => id && !isBand(id)).length;
-  setText($('#listeners'), ears ? `${ears} listening` : ''); $('#listeners')?.classList.toggle('hide', !ears);
+  setText($('#listeners'), ears ? `${ears} listening` : '');
+  setCls($('#copyBtn'), 'alone', ids.length + vplayers().length <= 1 && !room.peers.size); $('#listeners')?.classList.toggle('hide', !ears);
   const rackOf = (id) => (id === S.me ? publicRack() : S.players.get(id)?.rack || []);
   const sig = ids.join(',') + '|' + ids.map((id) => rackOf(id).map((x) => x.r + describe(x.cfg)).join(';')).join('|') + '|' + ids.map((id) => S.players.get(id)?.name || '').join(',') + '|' + JSON.stringify(songStore.song.players || {}) + (lane.on ? 'L' + lane.bars : '') + ids.map((id) => S.players.get(id)?.lane?.on ? 'l' + S.players.get(id).lane.bars : '').join('') + (songStore.song.transport?.on ? songStore.song.transport.sid : '');
   if (box.dataset.sig !== sig) {
