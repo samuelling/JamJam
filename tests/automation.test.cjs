@@ -65,6 +65,11 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
 
     // the moves are in the sound: the stem with the sweep vs the same take with the moves cleared
     const energyHi = async () => A.evaluate(async () => { await JJ.exportStems({ to: 'memory' }); const w = JJ.readWav24(JJ.lastStems.find((f) => /Stems\/01 /.test(f.name)).data); let d = 0, e = 0; for (let i = 1; i < w.L.length; i++) { const x = w.L[i] - w.L[i - 1]; d += x * x; e += w.L[i] * w.L[i]; } return d / e; });
+    // a known sweep on the take (the recorded one depends on where the pass fell): 300 Hz up to 8 kHz across the bar
+    await A.evaluate(() => { const s = JJ.song(), p = Object.values(s.sections.s1.parts)[0], t = p.takes.find((q) => q.id === p.current);
+      const ev = t.events.filter((e) => !(e.type === 'p' && e.id === 'cutoff')).concat([{ b: 0, type: 'p', id: 'cutoff', v: 300 }, { b: 3.5, type: 'p', id: 'cutoff', v: 8000, r: 1 }]).sort((a, b) => a.b - b.b);
+      JJ.setSong(`part:s1:${p.id}`, { ...p, takes: p.takes.map((q) => (q.id === t.id ? { ...q, events: ev } : q)) }); });
+    await sleep(500);
     const withMoves = await energyHi();
     await A.evaluate(() => [...document.querySelectorAll('.autorow .autohead')].find((e) => /Cutoff/.test(e.textContent)).querySelector('.msb').click()); await sleep(700);
     const left = await A.evaluate(() => { const p = Object.values(JJ.song().sections.s1.parts)[0], t = p.takes.find((q) => q.id === p.current); return t.events.filter((e) => e.type === 'p').length; });

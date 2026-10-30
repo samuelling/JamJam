@@ -374,7 +374,22 @@ export function makeCompose(x) {
       t.kind === 'audio' ? null : h('button', { class: 'btn small', title: "Put this track's instrument on your desk: the takes you lock with it go into this track", onclick: () => x.jamLane(t.id) }, 'Jam it'),
       fader(t), panner(t),
       h('span', { style: 'flex:1' }),
-      h('button', { class: 'btn small ghost danger', onclick: () => { if (confirm(`Remove the track "${t.name}" and all its takes?`)) { x.removeLane(t.id); cell = null; render(); } } }, 'Remove track'));
+      h('button', { class: 'btn small ghost danger', title: 'Delete this track and its takes, for everyone (Undo brings it back)', onclick: () => delTrack(t.id, t.name) }, 'Delete track'));
+  }
+  // delete a track: no question first; a bar says what went, with Undo, for a while
+  let undoGone = null, undoT = 0;
+  function delTrack(id, name) {
+    const gone = x.removeLane(id); if (!gone) return;
+    undoGone = { ...gone, name }; clearTimeout(undoT); undoT = setTimeout(() => { undoGone = null; render(); }, 12000);
+    if (cell && (cell.lane === id || cell.pid === id)) cell = null;
+    autoOpen.delete(id); autoExtra.delete(id);
+    render();
+  }
+  function undoBar() {
+    if (!undoGone) return null;
+    return h('div', { class: 'undobar', role: 'status' }, h('span', {}, `Deleted “${undoGone.name}” and its ${undoGone.parts.length} block${undoGone.parts.length === 1 ? '' : 's'}, for everyone.`),
+      h('button', { class: 'btn small hot', onclick: () => { x.restoreLane(undoGone); undoGone = null; clearTimeout(undoT); render(); } }, 'Undo'),
+      h('button', { class: 'btn small ghost', 'aria-label': 'Dismiss', onclick: () => { undoGone = null; clearTimeout(undoT); render(); } }, '×'));
   }
   // + Add track: any instrument, with its patch; it opens on an empty roll in the picked section
   function addTrackRow(hasSections) {
@@ -483,13 +498,15 @@ export function makeCompose(x) {
     const setRoleOf = (ln, role) => { if (ln.rec) x.setLane(ln.lane, { role }); const s0 = x.store.sections().find((s) => Object.values(s.parts || {}).some((p) => laneOf(p) === ln.lane)); const p = s0 && Object.values(s0.parts).find((q) => laneOf(q) === ln.lane); if (p) x.setRole(s0.id, p.id, role); };
     const isFresh = (lane) => lane === fresh && Date.now() - freshT < 4000;
     const rows = !open ? [] : L.flatMap((ln, li) => [h('div', { class: 'arow' + (isFresh(ln.lane) ? ' fresh' : '') + (ln.rec?.muted ? ' tmuted' : '') + (solos.size && !solos.has(ln.lane) ? ' unsolo' : '') },
-      h('div', { class: 'lhead pick' + (cell && cell.lane === ln.lane ? ' sel' : ''), style: `--lc:${laneColor(li)}`, title: `${ln.name}: show its notes below`, onclick: (e) => { if (e.target.closest('select, button, input')) return; pickLane(ln.lane); } }, x.iconEl(ln.sample),
+      h('div', { class: 'lhead pick' + (cell && cell.lane === ln.lane ? ' sel' : ''), tabindex: 0, style: `--lc:${laneColor(li)}`, title: `${ln.name}: show its notes below (Delete key deletes the track)`, onclick: (e) => { if (e.target.closest('select, button, input')) return; pickLane(ln.lane); },
+        onkeydown: (e) => { if (e.target !== e.currentTarget) return; if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); e.stopPropagation(); delTrack(ln.lane, ln.name); } else if (e.key === 'Enter') pickLane(ln.lane); } }, x.iconEl(ln.sample),
         h('span', {}, h('b', {}, ln.name), h('select', { class: 'role', 'aria-label': `${ln.name}'s role`, onchange: (e) => setRoleOf(ln, e.target.value) }, ...ROLES.map((r) => h('option', { value: r, selected: (ln.role || '') === r }, r)))),
         h('span', { class: 'ms' },
           ln.rec ? h('button', { class: 'msb' + (ln.rec.muted ? ' on' : ''), 'aria-pressed': String(!!ln.rec.muted), title: ln.rec.muted ? 'Unmute this track (for everyone)' : 'Mute this track for everyone', onclick: () => x.setLane(ln.lane, { muted: !ln.rec.muted }) }, 'M') : null,
           h('button', { class: 'msb solo' + (solos.has(ln.lane) ? ' on' : ''), 'aria-pressed': String(solos.has(ln.lane)), title: 'Solo: hear only the soloed tracks (only you; the band hears everything)', onclick: () => x.solo(ln.lane) }, 'S'),
           showAuto && ln.sample.kind !== 'audio' ? h('button', { class: 'msb autob' + (autoOpen.has(ln.lane) ? ' on' : ''), 'aria-expanded': String(autoOpen.has(ln.lane)), title: 'Automation: a lane for each knob this track moves', onclick: () => { if (autoOpen.has(ln.lane)) autoOpen.delete(ln.lane); else autoOpen.add(ln.lane); render(); } }, '◇') : null,
-          ln.rec ? fader(ln.rec, 'mini') : null)),
+          ln.rec ? fader(ln.rec, 'mini') : null,
+          x.removeLane ? h('button', { class: 'msb del', title: `Delete ${ln.name} (for everyone; Undo brings it back)`, 'aria-label': `Delete ${ln.name}`, onclick: () => delTrack(ln.lane, ln.name) }, '🗑') : null)),
       ...cols.map((c) => {
         const p = Object.values(c.s.parts || {}).find((q) => laneOf(q) === ln.lane);
         const wk = c.id === loopId ? busy.get(ln.lane) : null;
@@ -556,7 +573,7 @@ export function makeCompose(x) {
         h('div', { class: 'addsec' }, h('select', { class: 'lcdsel addsel', 'aria-label': 'Add a section', onchange: (e) => { if (e.target.value) addSection(e.target.value); e.target.value = ''; } }, h('option', { value: '' }, '+ Add a section'), ...SECTION_NAMES.map((nm) => h('option', { value: nm }, nm))))));
     const panes = 'arranger', was = [...box.querySelectorAll(`.${panes},.details .pane`)].map((e) => [e.scrollLeft, e.scrollTop]);
     const det = details(sel, cell);
-    box.replaceChildren(...[head, opts, songMore && stemsOpen && !empty ? stemsPanel(song) : null, grid, divider(det), det].filter(Boolean));
+    box.replaceChildren(...[head, opts, songMore && stemsOpen && !empty ? stemsPanel(song) : null, undoBar(), grid, divider(det), det].filter(Boolean));
     [...box.querySelectorAll(`.${panes},.details .pane`)].forEach((e, i) => { if (was[i]) [e.scrollLeft, e.scrollTop] = was[i]; });   // a redraw doesn't lose your place
     if (fresh && !freshShown) { freshShown = true; const r = box.querySelector('.arow.fresh'); if (r) { r.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); setTimeout(() => render(), 4100); } }
     if (adding) box.querySelector('.addform select')?.focus();

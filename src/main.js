@@ -904,7 +904,7 @@ const compose = makeCompose({
   removePart: (sid, pid) => setSong(`part:${sid}:${pid}`, null), choose, vote, saveVariation, restoreVariation, editTake,
   paramsOf: (inst) => engine.defs.get(inst)?.params || [], baseOf: (p) => partCfg({ ...p, ...SONG.laneCfg(songStore.song, p) }).params,
   now: () => clock.now(),   exportStems: (o, prog) => exportStemsTo(o, prog), canFolder: () => typeof window.showDirectoryPicker === 'function',
-  draftPart, previewNote, mixPreview: (id, patch) => mixPreview(id, patch), addLane: (o) => addLane(o), setLane: (id, patch) => setLane(id, patch), removeLane: (id) => removeLane(id), jamLane: (id) => jamLane(id),
+  draftPart, previewNote, mixPreview: (id, patch) => mixPreview(id, patch), addLane: (o) => addLane(o), setLane: (id, patch) => setLane(id, patch), removeLane: (id) => removeLane(id), restoreLane: (g) => restoreLane(g), jamLane: (id) => jamLane(id),
   solo: (key) => { S.solo = S.solo || new Set(); if (S.solo.has(key)) S.solo.delete(key); else S.solo.add(key); compose.render(); }, soloed: () => S.solo || new Set(),
   instruments: () => [...engine.defs.values()].filter((d) => !d.internal && d.id !== 'none').map((d) => ({ id: d.id, name: d.name + (d.lib ? ` (${engine.libs.get(d.lib)?.name || d.lib})` : ''), patches: engine.patchTypes({ inst: d.id }).map((t) => [t, patchName(d, t)]) })),
   desk: () => (S.listener ? [] : S.rack.filter((e) => e.cfg.inst !== 'audio').map((e) => ({ r: e.r, name: describe(e.cfg, true), lane: laneFor(e, false).draft ? null : laneFor(e, false).id }))),
@@ -1361,10 +1361,22 @@ function setLane(id, patch) {
   setSong('lane:' + id, next);
   if (patch.name) for (const s of songStore.sections()) { const p = s.parts?.[id]; if (p) setSong(`part:${s.id}:${id}`, { ...p, name: next.name, lane: next.name }); }
 }
+// delete a track (for everyone): its record and its block in every section, an older song's label-named lane too.
+// Gives back what it took, so Undo can put it all back.
 function removeLane(id) {
-  for (const s of songStore.sections()) if (s.parts?.[id]) setSong(`part:${s.id}:${id}`, null);
-  setSong('lane:' + id, null);
+  const lane = songStore.song.lanes?.[id] ? JSON.parse(JSON.stringify(songStore.song.lanes[id])) : null, parts = [];
+  for (const s of Object.values(songStore.song.sections || {})) for (const p of Object.values(s.parts || {})) {
+    if (p.id === id || p.laneId === id || SONG.laneOf(p) === id) { parts.push([s.id, JSON.parse(JSON.stringify(p))]); setSong(`part:${s.id}:${p.id}`, null); }
+  }
+  if (lane) setSong('lane:' + id, null);
   for (const e of S.rack) if (e.laneId === id) e.laneId = null;
+  S.solo?.delete(id);
+  return { id, lane, parts };
+}
+function restoreLane(gone) {
+  if (!gone) return;
+  if (gone.lane) setSong('lane:' + gone.id, gone.lane);
+  for (const [sid, p] of gone.parts) if (songStore.song.sections[sid]) setSong(`part:${sid}:${p.id}`, p);
 }
 function jamLane(id) {
   const t = songStore.song.lanes?.[id]; if (!t || t.kind === 'audio') return;
