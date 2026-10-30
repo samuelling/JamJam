@@ -63,7 +63,7 @@
   :focus-visible { outline: 2px solid var(--te-blue); outline-offset: 2px; }
 
   /* ================= the front door ================= */
-  #lobby { height: 100vh; display: grid; place-items: center; padding: 24px; overflow: auto; }
+  #lobby { height: 100vh; display: grid; place-items: start center; padding: clamp(24px, 7vh, 80px) 24px 24px; overflow: auto; }   /* pinned from the top: opening "what?" grows the page downward, nothing above it moves */
   .entrance { display: grid; justify-items: center; gap: 26px; text-align: center; }
     text-shadow: 0 0 4px #fff, 0 0 12px #ff7a3d, 0 0 28px #ff5a1f, 0 0 60px #ff3d00, 0 0 90px #ff3d0066; animation: hum 6s infinite; }
   @keyframes hum { 0%, 100% { opacity: 1; } 92% { opacity: 1; } 93% { opacity: .55; } 94% { opacity: 1; } 96% { opacity: .8; } 97% { opacity: 1; } }
@@ -487,7 +487,8 @@
   .door .legend, .or { font-family: var(--type); letter-spacing: .08em; text-transform: lowercase; font-size: 12px; }
   .btn.big { padding: 12px 14px; font: 400 20px/1 var(--display); letter-spacing: .02em; }
   .joinrow { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
-  .what { max-width: 520px; text-align: left; }
+  .what { width: min(520px, 100%); text-align: center; }   /* the same width open or shut, so the button stays put */
+  .what > div { text-align: left; }
   .what summary { display: inline-block; cursor: pointer; list-style: none; font: 700 .82rem/1 var(--type); letter-spacing: .08em; border: 1.5px solid var(--mz-toner); padding: 7px 11px; transform: rotate(-1deg); color: var(--mz-toner); }
   .what summary::-webkit-details-marker { display: none; }
   .what[open] summary, .what summary:hover { background: var(--mz-toner); color: var(--mz-paper); }
@@ -830,7 +831,7 @@
       <summary>what?</summary>
       <div>
         <p>Nobody's audio travels. Every browser in the room runs every jammer's instruments, and only what your hands do goes over the wire (notes and knob moves), each stamped with the moment it should sound on a clock the room shares. So everyone hears the same music at the same instant.</p>
-        <p>Bring real gear too: tell the studio what synth or drum machine you have, and your bandmates hear its closest software twin (or their own, if they have one). There's a lane for live audio a bar or two behind, and everything technical (timing, MIDI routing, clock out, the network) sits behind the gear button in the studio.</p>
+        <p>Bring real gear too: link your synths and drum machines in My gear, and your bandmates hear each one's closest software twin (or their own, if they have the same one, with your sound copied across). There's a lane for live audio a bar or two behind, and everything technical (timing, MIDI routing, clock out, the network) sits behind the gear button in the studio.</p>
       </div>
     </details>
   </div>
