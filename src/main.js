@@ -493,6 +493,7 @@ function playNote(on, note, vel, ch = 0) {
     if (on) { const sn = snapNote(note, ch); S.snapped.set(raw, sn); note = sn; } else { note = S.snapped.get(raw) ?? note; S.snapped.delete(raw); } }
   const rk = ch * 128 + note;
   const targets = on ? targetsFor(ch) : (S.route.get(rk) || []).map(entry).filter(Boolean);
+  if (on && !targets.length && !S.listener) { if (!S.nudged || performance.now() - S.nudged > 4000) { S.nudged = performance.now(); setStatus('Pick an instrument first: your desk is empty.'); } }
   if (on) S.route.set(rk, targets.map((e) => e.r)); else S.route.delete(rk);
   const now = clock.now();
   for (const e of targets) {
@@ -570,12 +571,11 @@ function changeEntry(e, next) {
   renderRack(); renderDevice(); renderCorners(); renderKeyboard();
 }
 function removeEntry(e) {
-  if (S.rack.length <= 1) { setStatus('Keep at least one instrument in your corner.', 'error'); return; }
   S.rack = S.rack.filter((x) => x !== e);
   const k = key(S.me, e.r), at = clock.now() + lookahead() + 20;
   room.send({ k: 'unrack', r: e.r, at });
   setTimeout(() => { engine.removeChannel(k); seqs.delete(k); }, Math.max(0, at - clock.now()));
-  S.sel = S.rack[0].r;
+  S.sel = S.rack[0]?.r ?? null;
   renderRack(); renderDevice(); renderCorners(); renderKeyboard();
 }
 
@@ -743,6 +743,7 @@ function cornerCard(id, rack) {
     h('div', { class: 'cfoot' }, vol, mute, h('div', { class: 'lanem', 'data-lane': id, title: 'Live audio' }, h('i'))),
   );
 }
+const EMPTY_START = qs.get('empty') === '1';
 const PICKS = new URLSearchParams(location.search).get('picks') === '1', DOORS = new URLSearchParams(location.search).get('doors') === '1';
 // ---------- Match my sound: the twin morphs toward your hardware while you play ----------
 const MATCH_FAST = new URLSearchParams(location.search).get('matchfast') === '1';   // tests: no resting between batches
@@ -1589,8 +1590,8 @@ function renderRack() {
       iconEl(e.cfg.ext ? { id: 'midi' } : def),
       h('b', {}, e.cfg.ext ? e.cfg.ext.name : unit ? unit.model : def.name), h('small', {}, e.cfg.ext ? `MIDI out ${e.midiOut ? 'ch' + (e.outCh || 1) : '—'}` : `${unit ? def.name + ' · ' : ''}${e.cfg.patch} · ${e.midiCh ? 'ch' + e.midiCh : 'any'}`),
       h('span', { class: 'led', 'data-led': key(S.me, e.r), style: `--c:${RACK_COLORS[i % 4]}` })),
-      S.rack.length > 1 ? h('button', { class: 'cartx', title: `Remove ${name}`, 'aria-label': `Remove ${name}`, onclick: () => removeEntry(e) }, '×') : null);
-  }));
+      h('button', { class: 'cartx', title: `Remove ${name}`, 'aria-label': `Remove ${name}`, onclick: () => removeEntry(e) }, '×'));
+  }), ...(S.listener ? [] : Array.from({ length: MAX_RACK - S.rack.length }, (_, i) => h('button', { class: 'cart emptyslot' + (i === 0 && !S.rack.length ? ' first' : ''), title: 'Put an instrument here', onclick: () => { renderLibrary(); openDrawer('#libDrawer'); } }, h('span', { class: 'plus' }, '+'), i === 0 ? h('b', {}, S.rack.length ? 'Add one' : 'Pick one') : null))));
 }
 
 // --- the instrument on your desk
@@ -1622,7 +1623,16 @@ function deviceFoot(e, def, unit) {
   return h('div', { class: 'devfoot' }, ...foot);
 }
 function renderDevice() {
-  const e = selEntry(); if (!e) return;
+  const e = selEntry();
+  if (!e) {
+    $('#device').className = 'device emptydesk'; S.md = null;
+    $('#plate').replaceChildren(h('div', { class: 'deskempty' }, h('b', {}, S.listener ? 'Listening in' : 'Your desk is empty'),
+      S.listener ? h('p', { class: 'help' }, 'You hear the band; nothing to play here.') : h('p', { class: 'help' }, 'Pick an instrument to play: the keys, a MIDI controller or the on-screen keyboard will play it.'),
+      S.listener ? null : h('div', { class: 'deskpicks' }, ...QUICK.map(([id, patch, label]) => { const meta = engine.defs.get(id) || engine.catalog.get(id); if (!meta) return null;
+        return h('button', { class: 'quick', onclick: async () => { try { const d = await engine.ensureDef(id); S.firstPick = false; addEntry({ inst: d.id, patch }); } catch (_) {} } }, iconEl(engine.defs.get(id) || { id, lib: meta.lib }), h('span', {}, label), h('small', {}, meta.name)); }).filter(Boolean),
+        h('button', { class: 'btn hot', onclick: () => { renderLibrary(); openDrawer('#libDrawer'); } }, 'See the whole wall'))));
+    return;
+  }
   const def = engine.defs.get(e.cfg.inst), unit = e.cfg.hw && engine.unit(e.cfg.hw), skin = skinOf(def);
   $('#device').className = 'device ' + skin.cls + (skin.wood ? ' wood' : '');
   knobEls = new Map();
@@ -1902,11 +1912,24 @@ function tile(meta, def) {
       h('button', { class: 'btn small hot', onclick: take }, 'Take it')),
     status);
 }
+// the drummer chooser on the wall: every style by genre, the kit it plays, and one click to bring it into the band
+function drummerChooser() {
+  const have = vplayers()[0], kitSel = h('select', { class: 'lcdsel', 'aria-label': 'Drum kit' }, h('option', { value: 'auto' }, 'Kit: whatever suits the style'), ...VPL.KITS.map((k) => h('option', { value: k.id, selected: have?.kit === k.id }, k.name)));
+  const pick = (st) => { const kit = kitSel.value; if (have) setVirtual(have.id, { style: st.id, kit, on: true }); else { const id = addVirtual('drums', st.id); if (id && kit !== 'auto') setVirtual(id, { kit }); } S.libTab = 'builtin'; closeDrawers(); };
+  return [
+    h('h3', { class: 'legend', style: 'margin:6px 0 0' }, have ? `Your drummer: ${have.name}` : 'A drummer for the band'),
+    h('p', { class: 'help', style: 'margin:0' }, 'It keeps time in the room\'s tempo, follows the song, builds and fills, and everyone hears exactly the same drums. It takes a corner of its own.'),
+    h('div', { class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap;align-items:center' }, kitSel, h('span', { class: 'help' }, 'Jazz, rock and funk sound best on the recorded Studio Kit; hip-hop and electronic on Machina.')),
+    h('div', { class: 'drumstyles' }, ...VPL.GENRES.map((g) => h('div', { class: 'dgenre' }, h('b', {}, g), ...VPL.STYLES.filter((st) => st.genre === g).map((st) =>
+      h('button', { class: 'btn small' + (have?.style === st.id ? ' on' : ''), title: `${st.name} on ${VPL.kitOf({ style: st.id }).name}`, onclick: () => pick(st) }, st.name))))),
+    have ? h('button', { class: 'btn small ghost', onclick: () => { removeVirtual(have.id); renderLibrary(); } }, `Send ${have.name} home`) : null,
+  ];
+}
 function plainTile(label, sub, onclick, cls = '') {
   return h('div', { class: 'tile plain ' + cls, style: `--r:${tilt(label)}deg` }, h('span', { class: 'peg' }), cls === 'live' ? h('span', { class: 'badge', title: 'The band hears it whole bars late, not in real time' }, 'works differently') : null,
     h('button', { class: 'face', onclick }, label), h('div', { class: 'ptag' }, h('b', {}, sub[0]), h('small', {}, sub[1])));
 }
-const QUICK = [['acoustic/guitar', 'strum', 'Something to strum'], ['monolith', 'bass', 'Hold down the bass'], ['machina', '909', 'Play the drums']];
+const QUICK = [['juniper', 'keys', 'Play some keys'], ['acoustic/guitar', 'strum', 'Something to strum'], ['monolith', 'bass', 'Hold down the bass'], ['machina', '909', 'Play the drums']];
 function renderLibrary() {
   loadFeatured();
   const quick = $('#quickPicks');
@@ -1922,11 +1945,13 @@ function renderLibrary() {
   for (const lib of engine.libs.values()) for (const id of lib.entries) tiles.push(tile({ ...engine.catalog.get(id), id, lib: lib.id }, engine.defs.get(id)));
   if (!featuredTried || engine.loadingLibs) tiles.push(h('div', { class: 'tile plain' }, h('span', { class: 'peg' }), h('div', { class: 'face' }, 'hanging more…')));
   tiles.push(plainTile('Bring your own', ['My hardware', 'Tell us your synth or drum machine; the band hears its twin'], () => { closeDrawers(); $('#addHwBtn').click(); }));
+  tiles.push(plainTile('Drummer', ['Virtual drummer', 'A drummer the room plays: jazz, rock, funk, hip-hop, house…'], () => { S.libTab = S.libTab === 'drums' ? 'builtin' : 'drums'; renderLibrary(); setTimeout(() => $('#libExtra')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30); }, 'drums'));
   tiles.push(plainTile('Live audio', ['Mic or line in', 'Real audio, heard by the band a few bars late'], () => S.openLive(), 'live'));
   tiles.push(plainTile('Plug in MIDI', ['External MIDI', 'A synth or DAW track on a MIDI port'], () => { closeDrawers(); $('#addExtBtn').click(); }, 'tech'));
   tiles.push(plainTile('More shelves', ['Libraries', 'Instruments from another GitHub repo or a friend\'s build'], () => { S.libTab = S.libTab === 'add' ? 'builtin' : 'add'; renderLibrary(); }, 'tech'));
   $('#libCards').replaceChildren(...tiles);
   const extra = $('#libExtra');
+  if (S.libTab === 'drums') { extra.replaceChildren(...drummerChooser().filter(Boolean)); return; }
   if (S.libTab !== 'add') { extra.replaceChildren(); return; }
   const inp = h('input', { type: 'text', placeholder: 'github:owner/repo   or   http://localhost:8780/megajam/', style: 'flex:1;min-width:260px', onkeydown: (e) => { e.stopPropagation(); if (e.key === 'Enter') add(); } });
   const msg = h('p', { class: 'help', style: 'margin:0' });
@@ -2265,7 +2290,8 @@ async function enter(code, listen = false) {
   setStatus('Loading the library…');
   try { await engine.start(); if (!engine.defs.size) { await engine.loadInstruments('.'); await restoreLibs(); } }
   catch (e) { setStatus("Couldn't start audio or load the instruments: " + e.message, 'error'); return; }
-  if (!S.rack.length && !S.listener) {
+  // you walk in with an empty desk and pick what to play (automated tests start with keys unless they ask, ?empty=1)
+  if (!S.rack.length && !S.listener && navigator.webdriver && !EMPTY_START) {
     const cfg = engine.resolve({ inst: 'juniper', patch: 'keys' });
     S.rack.push({ r: S.nextR++, cfg, budget: 'auto', midiCh: 0, midiOut: '', hwLatency: 0, hearTwin: false });
     S.sel = S.rack[0].r;
