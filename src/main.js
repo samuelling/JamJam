@@ -1062,7 +1062,7 @@ function buildMeter(bar, tr) {
   if (!m) { m = h('div', { class: 'loopmeter', 'aria-hidden': 'true' }); bar.append(m); }
   m.dataset.key = key;
   m.replaceChildren(
-    h('div', { class: 'lmbars' }, ...bars.map((b, i) => h('div', { class: 'lmbar' + (b.first && i ? ' newsec' : ''), 'data-lmbar': i }, h('b', {}, b.chord || ' '), h('span', { class: 'lmbeats' }, ...Array.from({ length: meter }, (_, k) => h('i', { 'data-lmbeat': `${i}:${k}` }))), b.first && tr.mode === 'range' ? h('small', {}, b.sec) : null)),
+    h('div', { class: 'lmbars' + (bars.length > 12 ? ' many' : '') }, ...bars.map((b, i) => h('div', { class: 'lmbar' + (b.first && i ? ' newsec' : ''), 'data-lmbar': i }, h('b', {}, b.chord || ' '), h('span', { class: 'lmbeats' }, ...Array.from({ length: meter }, (_, k) => h('i', { 'data-lmbeat': `${i}:${k}` }))), b.first && tr.mode === 'range' ? h('small', {}, b.sec) : null)),
       h('div', { class: 'lmfill' }), h('div', { class: 'lmhead' })),
     h('div', { class: 'lmpass' }, h('small', {}, tr.mode === 'song' ? 'section' : 'pass'), h('b', { 'data-lmpass': '' }, '1')),
     h('div', { class: 'lmcount hide' }));
@@ -1092,7 +1092,7 @@ requestAnimationFrame(meterFrame);
 function renderSecbar(full) {
   const bar = $('#secbar'); if (!bar) return;
   const tr = songStore.song.transport, pos = positionAt(tr, tempo.beatAt(clock.now()));
-  bar.classList.toggle('hide', !(tr && tr.on));
+  bar.classList.toggle('hide', !(tr && tr.on)); document.body.classList.toggle('looping', !!(tr && tr.on));
   compose.tick(pos && tr.on ? pos : null);
   if (!tr || !tr.on) return;
   const song = songStore.song, sec = pos ? song.sections[pos.sid] : song.sections[tr.sid];

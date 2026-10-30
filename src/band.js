@@ -172,7 +172,7 @@ export function makeBand(x) {
       const pl = VP.plan.get(vp.id), tr = songStore.song.transport, roll = $(`[data-vproll="${vp.id}"]`);
       if (roll && pl && roll.dataset.bar !== String(pl.start)) { roll.dataset.bar = String(pl.start); roll.innerHTML = vpRoll(vp); }
       const pos = tr && tr.on ? positionAt(tr, tempo.beatAt(clock.now())) : null, sec = pos && songStore.song.sections[pos.sid];
-      const words = !vp.on ? 'stopped' : sec ? (Object.values(sec.parts || {}).some((p) => p.drums && !p.muted) ? `laying out: drums are locked in ${sec.name}` : `playing the ${sec.name}`) : tr && tr.on ? 'waiting for the top' : `playing · bar ${pl ? (pl.n % 32) + 1 : 1} of 32`;
+      const words = !vp.on ? 'stopped' : sec ? (Object.values(sec.parts || {}).some((p) => p.drums && !p.muted) ? `laying out (drums locked in ${sec.name})` : `playing the ${sec.name}`) : tr && tr.on ? 'waiting for the top' : `playing · bar ${pl ? (pl.n % 32) + 1 : 1} of 32`;
       setText($(`[data-vpstate="${vp.id}"]`), words);
     }
   }

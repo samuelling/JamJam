@@ -76,7 +76,7 @@
   .or { text-align: center; font: 10px var(--mono); color: var(--faint); letter-spacing: .2em; }
 
   /* ================= the studio ================= */
-  #studio { height: 100vh; display: flex; flex-direction: column; gap: 10px; padding: 10px 14px 12px; }
+  #studio { height: 100vh; display: flex; flex-direction: column; gap: 10px; padding: 10px 14px 12px; overflow-y: auto; }
   #studio > .console, #studio > .audience, #studio > #corners, #studio > #secbar, #studio > .keybed { flex: none; }
   #studio > .deskrow, #studio > #compose { flex: 1 1 auto; min-height: 0; }
   /* wall-mounted display */
@@ -120,6 +120,8 @@
   .gearrow { display: flex; gap: 6px; align-items: flex-end; min-height: 38px; }
   /* a virtual player's corner: the room plays it */
   .corner.vp { background: repeating-linear-gradient(135deg, #d8a83a0a 0 8px, transparent 8px 16px), var(--mz-sheet, #141518); }
+  .corner.vp .chead { padding-right: 26px; }
+  .corner.vp [data-vpstate] { min-width: 0; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .corner.vp .vptag { font: 400 10px var(--type); color: #d8a83a; letter-spacing: .04em; }
   .corner.vp .gearrow { display: flex; align-items: center; gap: 10px; }
   .vproll { color: #d8a83a; line-height: 0; }
@@ -183,7 +185,7 @@
   .lanem i { display: block; height: 100%; width: 0; background: var(--c); }
 
   /* your desk */
-  .deskrow { display: grid; grid-template-columns: 108px minmax(0, 1fr) 44px; gap: 10px; min-height: 0; }
+  .deskrow { display: grid; grid-template-columns: 108px minmax(0, 1fr) 44px; gap: 10px; min-height: 250px; }
   .shelf { display: flex; flex-direction: column; gap: 8px; padding: 8px 6px; border-radius: 12px; background: linear-gradient(180deg, #121316, #0d0e10); border: 1px solid #000; overflow-y: auto; }
   .shelf h3 { margin: 0 0 2px; text-align: center; }
   .cart { position: relative; display: grid; justify-items: center; gap: 3px; padding: 6px 4px 5px; border-radius: 10px; background: transparent; border: 1px solid transparent; color: var(--ink); width: 100%; }
@@ -404,8 +406,12 @@
     #studio { height: auto; min-height: 100vh; }
     #corners { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .deskrow { grid-template-columns: 1fr; }
-    .shelf { flex-direction: row; overflow-x: auto; }
-    .shelf .add { margin: 0; }
+    .shelf { flex-direction: row; overflow-x: auto; align-items: stretch; }
+    .shelf h3 { writing-mode: vertical-rl; transform: rotate(180deg); margin: 0; align-self: center; }
+    #rackList { display: flex !important; gap: 6px; }
+    #rackList .cart, #rackList .cartwrap { width: 112px; flex: none; }
+    .shelf .add { margin: 0 0 0 auto; padding: 0 0 0 8px; border-top: 0; border-left: 1px dashed #25272c; align-content: center; }
+    .shelf .add .btn { width: auto; white-space: nowrap; }
     .sidetabs { flex-direction: row; }
     .screen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .devtop, .md-top { grid-template-columns: 1fr; }
@@ -500,6 +506,9 @@
   .link { font: 400 11px var(--type); color: var(--mz-muted); word-break: break-all; }
   .quickpicks { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 14px; background: var(--mz-toner); color: #18181b; border-radius: 3px; transform: rotate(-.4deg); box-shadow: 0 6px 16px #0007; }
   .quickpicks > b { font: 400 22px/1 var(--display); margin-right: 6px; }
+  .quickpicks > b { flex-basis: 100%; }
+  .quickpicks .quick { flex: 1 1 180px; }
+  .quickpicks > .btn { margin-left: auto; }
   .quick { display: grid; grid-template-columns: 64px auto; grid-template-rows: auto auto; column-gap: 8px; align-items: center; text-align: left; background: #fff; border: 2px solid #18181b; border-radius: 8px; padding: 6px 10px 6px 6px; color: #18181b; }
   .quick:hover { background: var(--mz-pink); }
   .quick .ico { grid-row: span 2; width: 64px; height: 43px; }
@@ -591,10 +600,15 @@
   .door2 .knob { position: absolute; right: 18px; top: 52%; width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff6c0, #b08a2a); box-shadow: 0 2px 3px #0008; }
   .door2 b { font: 700 18px/1 var(--sans); }
   .door2 small { font: 400 12px var(--type); }
+  /* while a section plays, the corners give the desk some room */
+  body.looping .corner { min-height: 0; padding-top: 7px; padding-bottom: 7px; }
+  body.looping .corner .cfoot, body.looping .corner .cstats, body.looping .corner .vpctl + .vpctl, body.looping .corner.empty .help { display: none; }
+  body.looping .corner .gearitem .ico { width: 40px; height: 27px; }
   .secbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 10px; background: #141518; border: 1px solid #000; box-shadow: inset 4px 0 0 var(--sc, #888); }
-  .loopmeter { flex: 1 1 100%; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: stretch; position: relative; --p: 0; }
-  .lmbars { position: relative; display: flex; gap: 3px; min-height: 40px; }
-  .lmbar { position: relative; flex: 1 1 0; min-width: 0; display: grid; align-content: space-between; padding: 4px 6px; border-radius: 4px; background: #0e0f12; border: 1px solid #23262d; z-index: 1; transition: background .08s; }
+  .loopmeter { flex: 1 1 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: stretch; position: relative; --p: 0; }
+  .lmbars { position: relative; display: flex; gap: 3px; min-height: 34px; min-width: 0; }
+  .lmbars.many .lmbar b { font-size: 10px; } .lmbars.many .lmbeats i { width: 3px; height: 3px; } .lmbars.many .lmbeats { gap: 2px; } .lmbars.many .lmbar { padding: 3px 3px; }
+  .lmbar { position: relative; flex: 1 1 0; min-width: 0; overflow: hidden; display: grid; align-content: space-between; padding: 4px 6px; border-radius: 4px; background: #0e0f12; border: 1px solid #23262d; z-index: 1; transition: background .08s; }
   .lmbar.newsec { margin-left: 6px; box-shadow: -4px 0 0 -1px var(--sc); }
   .lmbar b { font: 700 13px/1 var(--sans); color: var(--mz-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .lmbar small { position: absolute; top: -9px; left: 4px; font: 400 9px var(--type); color: var(--mz-muted); }

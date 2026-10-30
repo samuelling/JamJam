@@ -54,6 +54,45 @@ export const ICONS = {
     <circle cx="47" cy="39" r="7" fill="#20140c"/><circle cx="47" cy="39" r="9" fill="none" stroke="#3a2414" stroke-width="1.5"/>
     <rect x="25" y="34" width="4" height="10" rx="1" fill="#2a1a10"/>
     ${[0, 1, 2, 3, 4, 5].map((i) => `<line x1="27" y1="${35.5 + i * 1.4}" x2="118" y2="${35.5 + i * 1.4}" stroke="#ece6d6" stroke-width=".45"/>`).join('')}</svg>`,
+  studio: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <ellipse cx="60" cy="56" rx="20" ry="18" fill="#7a1f24"/><ellipse cx="60" cy="56" rx="15" ry="13.5" fill="#efe8da"/><ellipse cx="60" cy="56" rx="4" ry="3.6" fill="#d9cfbd"/>
+    <ellipse cx="36" cy="40" rx="11" ry="5" fill="#d9d2c4"/><rect x="25" y="40" width="22" height="9" fill="#7a1f24"/><ellipse cx="36" cy="49" rx="11" ry="4" fill="#5e171b"/>
+    <ellipse cx="84" cy="37" rx="10" ry="4.5" fill="#d9d2c4"/><rect x="74" y="37" width="20" height="10" fill="#7a1f24"/><ellipse cx="84" cy="47" rx="10" ry="4" fill="#5e171b"/>
+    <ellipse cx="22" cy="18" rx="15" ry="3" fill="#d8a83a"/><line x1="22" y1="18" x2="22" y2="44" stroke="#8a8a8a" stroke-width="1.4"/>
+    <ellipse cx="99" cy="15" rx="17" ry="3.4" fill="#c99a2e"/><line x1="99" y1="15" x2="99" y2="40" stroke="#8a8a8a" stroke-width="1.4"/></svg>`,
+  pads: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <rect x="16" y="6" width="88" height="70" rx="5" fill="#2b2d31"/><rect x="22" y="11" width="30" height="9" rx="1.5" fill="#16242e"/><rect x="24" y="13" width="18" height="2" fill="#ffcf26"/>
+    ${[58, 68, 78, 88].map((x) => `<circle cx="${x + 4}" cy="15.5" r="3" fill="#3b3e44" stroke="#17181b"/>`).join('')}
+    ${Array.from({ length: 16 }, (_, i) => `<rect x="${24 + (i % 4) * 18.5}" y="${25 + Math.floor(i / 4) * 12.5}" width="16" height="10.5" rx="1.8" fill="${[5, 10].includes(i) ? '#ffcf26' : '#55585f'}" stroke="#18191c" stroke-width=".8"/>`).join('')}</svg>`,
+  tonewheel: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <rect x="6" y="20" width="108" height="46" rx="3" fill="#5a3a22"/><rect x="6" y="20" width="108" height="4" fill="#3e2716"/>
+    ${[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => `<rect x="${16 + i * 5}" y="10" width="3.2" height="${18 + ((i * 7) % 9)}" fill="${i < 2 ? '#7a2a20' : i < 7 ? '#e9e4d6' : '#1b1b1b'}"/><rect x="${15.2 + i * 5}" y="${26 + ((i * 7) % 9)}" width="4.8" height="3" rx="1" fill="#efeee8"/>`).join('')}
+    ${keys(64, 30, 46, 11, 9)}${keys(10, 46, 100, 14, 17)}</svg>`,
+  hammerwork: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <path d="M12 52 L12 30 Q12 16 34 16 L70 16 Q92 16 104 34 Q110 44 108 52 Z" fill="#121214"/><path d="M18 18 L70 6 L74 16 Z" fill="#1d1d20"/>
+    <path d="M20 28 Q30 22 60 22 Q84 22 98 36" stroke="#c9a14a" stroke-width="1" fill="none"/>
+    ${keys(12, 52, 96, 12, 17)}<rect x="12" y="64" width="96" height="3" fill="#121214"/>
+    <rect x="18" y="67" width="3" height="10" fill="#121214"/><rect x="99" y="67" width="3" height="10" fill="#121214"/></svg>`,
+  blown: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <rect x="8" y="34" width="96" height="9" rx="4.5" fill="#1b1b1d"/><path d="M104 32 L116 26 L116 51 L104 45 Z" fill="#1b1b1d"/>
+    ${[22, 32, 42, 56, 66, 76, 88].map((x) => `<circle cx="${x}" cy="38.5" r="2.4" fill="#c9cbd0" stroke="#7d7f85" stroke-width=".6"/>`).join('')}
+    <rect x="2" y="36" width="8" height="5" rx="1" fill="#7a5a2a"/>
+    <rect x="8" y="55" width="104" height="5" rx="2.5" fill="#c9cbd0"/>${[20, 30, 40, 52, 62, 72, 84, 94].map((x) => `<circle cx="${x}" cy="57.5" r="1.6" fill="#7d7f85"/>`).join('')}</svg>`,
+  chip: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <rect x="8" y="14" width="104" height="54" rx="4" fill="#c9bfa6"/><rect x="8" y="14" width="104" height="8" rx="4" fill="#b3a88e"/>
+    <rect x="34" y="28" width="52" height="26" rx="2" fill="#1b1b1d"/>${Array.from({ length: 12 }, (_, i) => `<rect x="${37 + i * 4}" y="24" width="2" height="4" fill="#c9cbd0"/><rect x="${37 + i * 4}" y="54" width="2" height="4" fill="#c9cbd0"/>`).join('')}
+    <text x="60" y="44" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" font-weight="700" fill="#e9e9e4">CHIP</text>
+    <rect x="16" y="58" width="10" height="5" rx="1" fill="#e5383b"/><rect x="94" y="58" width="10" height="5" rx="1" fill="#55585f"/></svg>`,
+  complexosc: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <rect x="18" y="4" width="84" height="72" rx="3" fill="#ece9df"/><rect x="18" y="4" width="84" height="7" fill="#d8d2c2"/>
+    ${[[34, 24, '#2f80ff'], [60, 22, '#1b1b1d'], [86, 24, '#e5383b'], [34, 46, '#1b1b1d'], [60, 46, '#ffcf26'], [86, 46, '#1b1b1d']].map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="7" fill="${c}"/><line x1="${x}" y1="${y}" x2="${x + 4}" y2="${y - 5}" stroke="#efeee8" stroke-width="1.2"/>`).join('')}
+    ${[30, 44, 58, 72, 86].map((x) => `<circle cx="${x}" cy="66" r="3.2" fill="#1b1b1d" stroke="#888"/>`).join('')}
+    <path d="M44 66 C 52 50, 64 80, 72 66" stroke="#e5383b" stroke-width="2.2" fill="none"/></svg>`,
+  analog: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <rect x="4" y="10" width="112" height="60" rx="3" fill="#d9d4c7"/><rect x="4" y="10" width="112" height="18" fill="#2b2b2b"/>
+    ${[12, 24, 36, 48, 60, 72, 84, 96].map((x, i) => `<circle cx="${x + 2}" cy="19" r="3.6" fill="${['#e5383b', '#ff8a3d', '#ffcf26', '#efeee8'][i % 4]}"/>`).join('')}
+    ${Array.from({ length: 16 }, (_, i) => `<rect x="${8 + i * 6.6}" y="52" width="5.4" height="11" rx="1" fill="${['#e5383b', '#ff8a3d', '#ffcf26', '#efeee8'][Math.floor(i / 4)]}"/>`).join('')}
+    <text x="8" y="44" font-family="Inter Tight,Arial" font-weight="800" font-size="6" letter-spacing="1" fill="#2b2b2b">ANALOG DRUMS</text></svg>`,
   generic: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
     <rect x="10" y="16" width="100" height="50" rx="6" fill="#25272b"/>${[28, 46, 64, 82].map((x) => `<circle cx="${x}" cy="32" r="5" fill="#3b3e44"/>`).join('')}${keys(16, 44, 88, 16, 14)}</svg>`,
 };
