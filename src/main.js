@@ -1192,6 +1192,57 @@ function vpRoll(vp) {
   return `<svg viewBox="0 0 ${w} ${ht}" width="${w}" height="${ht}"><g stroke="#ffffff18">${grid}</g><g fill="currentColor">${dots}</g></svg>`;
 }
 // the bar above the desk in the Jam Room while a section plays: where you are, the chords, Lock it in
+// ---------- the loop meter: where in the loop you are, bar by bar, beat by beat ----------
+// A strip under the section bar with a box per bar of the loop (its chord inside, a dot per beat), the bar you're
+// in lit, a playhead sweeping across, this pass filling in behind it (red while Record every pass is on), the pass
+// number, and a flash at the top of each pass. Before the loop starts, it counts you in.
+function meterBars(tr) {
+  const song = songStore.song, meter = song.meter || 4, tl = songStore.timeline(), out = [];
+  const chordIn = (sec, b) => { for (let i = b; i >= 0; i--) if (sec.chords[i]) return sec.chords[i]; return ''; };
+  if (tr.mode === 'range') {
+    for (let x = tr.a; x < tr.b - 1e-6; x += meter) { const t = tl.find((q) => x >= q.start - 1e-6 && x < q.start + q.beats - 1e-6); const sec = t && song.sections[t.id]; if (!sec) continue; const bi = Math.round((x - t.start) / meter); out.push({ chord: chordIn(sec, bi), sec: sec.name, first: bi === 0 || x === tr.a }); }
+  } else {
+    const pos = positionAt(tr, tempo.beatAt(clock.now())), sec = song.sections[pos?.sid || tr.sid]; if (!sec) return out;
+    for (let i = 0; i < sec.bars; i++) out.push({ chord: chordIn(sec, i), sec: sec.name, first: i === 0 });
+  }
+  return out;
+}
+function buildMeter(bar, tr) {
+  const pos = positionAt(tr, tempo.beatAt(clock.now()));
+  const bars = meterBars(tr), meter = songStore.song.meter || 4;
+  const key = JSON.stringify([tr.mode, tr.sid, tr.a, tr.b, tr.start, pos?.sid, bars.map((b) => b.chord), meter]);
+  let m = bar.querySelector('.loopmeter');
+  if (m && m.dataset.key === key) return;
+  if (!m) { m = h('div', { class: 'loopmeter', 'aria-hidden': 'true' }); bar.append(m); }
+  m.dataset.key = key;
+  m.replaceChildren(
+    h('div', { class: 'lmbars' }, ...bars.map((b, i) => h('div', { class: 'lmbar' + (b.first && i ? ' newsec' : ''), 'data-lmbar': i }, h('b', {}, b.chord || ' '), h('span', { class: 'lmbeats' }, ...Array.from({ length: meter }, (_, k) => h('i', { 'data-lmbeat': `${i}:${k}` }))), b.first && tr.mode === 'range' ? h('small', {}, b.sec) : null)),
+      h('div', { class: 'lmfill' }), h('div', { class: 'lmhead' })),
+    h('div', { class: 'lmpass' }, h('small', {}, tr.mode === 'song' ? 'section' : 'pass'), h('b', { 'data-lmpass': '' }, '1')),
+    h('div', { class: 'lmcount hide' }));
+  m.dataset.bars = bars.length; m.dataset.meter = meter;
+}
+let meterLast = { bar: -1, beat: -1, pass: -1 };
+function meterFrame() {
+  requestAnimationFrame(meterFrame);
+  const m = document.querySelector('#secbar:not(.hide) .loopmeter'); if (!m) return;
+  const tr = songStore.song.transport; if (!tr || !tr.on) return;
+  const meter = +m.dataset.meter || 4, nb = +m.dataset.bars || 1, b = tempo.beatAt(clock.now());
+  const count = m.querySelector('.lmcount');
+  if (b < tr.start) { count.classList.remove('hide'); setText(count, `count in · ${Math.ceil(tr.start - b)}`); setVar(m, '--p', '0'); return; }
+  count.classList.add('hide');
+  let frac, pass;
+  if (tr.mode === 'song') { const pos = positionAt(tr, b); if (!pos) return; frac = (b - pos.seg.start) / pos.seg.beats; pass = (pos.seg.idx ?? 0) + 1; }
+  else { const L = nb * meter; frac = (((b - tr.start) % L) + L) % L / L; pass = Math.floor((b - tr.start) / L) + 1; }
+  m.style.setProperty('--p', frac.toFixed(4));
+  setCls(m, 'rec', !!S.recAll);
+  const bi = Math.min(nb - 1, Math.floor(frac * nb)), be = Math.min(meter - 1, Math.floor((frac * nb - bi) * meter));
+  if (bi !== meterLast.bar) { for (const el of m.querySelectorAll('.lmbar')) setCls(el, 'now', +el.dataset.lmbar === bi); }
+  if (bi !== meterLast.bar || be !== meterLast.beat) { for (const el of m.querySelectorAll('.lmbeats i.on')) el.classList.remove('on'); m.querySelector(`[data-lmbeat="${bi}:${be}"]`)?.classList.add('on'); }
+  if (pass !== meterLast.pass) { setText(m.querySelector('[data-lmpass]'), String(pass)); if (meterLast.pass > 0) { m.classList.remove('wrap'); void m.offsetWidth; m.classList.add('wrap'); } }
+  meterLast = { bar: bi, beat: be, pass };
+}
+requestAnimationFrame(meterFrame);
 function renderSecbar(full) {
   const bar = $('#secbar'); if (!bar) return;
   const tr = songStore.song.transport, pos = positionAt(tr, tempo.beatAt(clock.now()));
@@ -1213,6 +1264,7 @@ function renderSecbar(full) {
       !S.listener && (e || lane.on) ? h('button', { class: 'btn small recall' + (S.recAll ? ' on' : ''), 'aria-pressed': String(!!S.recAll), title: 'Keep every full pass you play as a take, without clicking. Your lanes stay quiet while you record.', onclick: () => setRecAll(!S.recAll) }, S.recAll ? `⏺ Recording every pass${S.recCount ? ` · ${S.recCount} kept` : ''}` : '⏺ Record every pass') : null,
       h('button', { class: 'btn small', onclick: () => goRoom('compose') }, 'Song board'), h('button', { class: 'btn small ghost', onclick: stopTransport }, '■ Stop'));
   }
+  buildMeter(bar, tr);
   if (pos) { const ch = chordAt(pos.bar).replace(/#/g, '♯').replace(/b(?=\d|$|m)/, '♭'); for (const pd of $$('#pads .pad')) setCls(pd, 'now', pd.dataset.chord === ch || pd.dataset.chord === ch.replace(/7$|maj7$|m7$/, (x) => (x === 'm7' ? 'm' : ''))); }
   if (pos) { setText($('[data-barno]'), `bar ${pos.bar + 1}/${sec.bars}`); setText($('[data-chordnow]'), chordAt(pos.bar)); setText($('[data-chordnext]'), pos.bar + 1 < sec.bars ? `then ${chordAt(pos.bar + 1)}` : ''); }
   else setText($('[data-barno]'), 'count in…');
