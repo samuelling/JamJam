@@ -485,6 +485,11 @@
   .key.outkey { opacity: .45; }
   .key.black.outkey::before { opacity: .5; }
   .pads { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; padding: 0 12px 10px; }
+  .pads.seven { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .pads[data-keyname]::before { content: attr(data-keyname); grid-column: 1 / -1; font: 400 11px var(--type); color: var(--mz-muted); margin-bottom: -2px; }
+  .pad { position: relative; }
+  .pad .num { position: absolute; top: 6px; right: 8px; font: 700 15px/1 var(--sans); color: var(--mz-muted); }
+  .pad.now { box-shadow: inset 0 0 0 2px var(--sc, #ffcf26), 0 3px 0 #000; }
   .pad { display: grid; gap: 2px; justify-items: start; padding: 9px 12px; border-radius: 6px; background: linear-gradient(180deg, #2a2c31, #1b1c20); border: 1px solid #000; box-shadow: inset 0 1px 0 #ffffff12, 0 3px 0 #000; color: var(--mz-toner); touch-action: none; }
   .pad b { font: 700 20px/1 var(--sans); letter-spacing: -.02em; }
   .pad small { font: 400 11px var(--type); color: var(--mz-muted); }

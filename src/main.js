@@ -444,28 +444,38 @@ function setKey(root, mode) {
   takeKey(k, false); room.send({ k: 'key', key: S.key });
 }
 // diatonic triads on each degree (pentatonic and blues borrow the major or minor chords)
+// a strummed instrument (Acoustic) always gets chords, numbered by degree (1 to 7, as players count them); with no
+// room key it uses the song's key, else C major
+const strummy = (e) => !!e && /acoustic|guitar/i.test(`${e.cfg.inst} ${engine.defs.get(e.cfg.inst)?.family || ''}`);
+function padKey() {
+  if (S.key.mode) return S.key;
+  if (!strummy(selEntry())) return null;
+  const k = songStore.song.order.length && songStore.song.key; return k && MODES[k.mode] ? { root: k.root, mode: k.mode } : { root: 0, mode: 'major' };
+}
 function padChords() {
-  if (!S.key.mode) return [];
-  const M = MODES[S.key.mode], st = MODES[M.chords || S.key.mode].steps;
+  const K = padKey(); if (!K) return [];
+  const M = MODES[K.mode], st = MODES[M.chords || K.mode].steps;
   const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
   const out = [];
   for (let d = 0; d < 7; d++) {
     const t = [0, 2, 4].map((j) => st[(d + j) % 7] + 12 * Math.floor((d + j) / 7));
     const third = t[1] - t[0], fifth = t[2] - t[0], qual = third === 4 && fifth === 7 ? '' : third === 3 && fifth === 7 ? 'm' : third === 3 && fifth === 6 ? '°' : '+';
-    const root = (S.key.root + t[0]) % 12;
+    const root = (K.root + t[0]) % 12;
     const flat = st[d] < [0, 2, 4, 5, 7, 9, 11][d] ? '♭' : '';   // named against the major scale, as players say it (♭VII in mixolydian)
     out.push({ d, roman: flat + (qual === 'm' || qual === '°' ? ROMAN[d].toLowerCase() : ROMAN[d]) + (qual === '°' ? '°' : ''), name: NOTE_NAMES[root] + qual, tones: t });
   }
-  // the useful six, in the order players reach for them
-  const base = M.chords || S.key.mode;
+  // a guitar gets all seven, numbered; otherwise the useful six, in the order players reach for them
+  if (strummy(selEntry())) return out.map((c) => ({ ...c, num: c.d + 1, key: K }));
+  const base = M.chords || K.mode;
   const want = { major: [0, 3, 4, 5, 1, 2], minor: [0, 3, 4, 5, 6, 2], dorian: [0, 3, 6, 2, 4, 1], mixolydian: [0, 3, 6, 4, 1, 5] }[base];
-  return want.map((i) => out[i]);
+  return want.map((i) => ({ ...out[i], key: K }));
 }
 const padHeld = new Map();
-function padDown(c, id) {
+function padDown(c, id, seventh = false) {
   const e = selEntry(); if (!e) return;
-  // a comfortable voicing: root in octave 3, close triad above it, plus the root on top
-  const base = 48 + S.key.root, notes = [base + c.tones[0] - 12, base + c.tones[0], base + c.tones[1], base + c.tones[2], base + c.tones[0] + 12].map((n) => (n < 40 ? n + 12 : n));
+  // a comfortable voicing: root in octave 3, close triad above it, plus the root on top (Shift adds the seventh)
+  const base = 48 + (c.key || S.key).root, notes = [base + c.tones[0] - 12, base + c.tones[0], base + c.tones[1], base + c.tones[2], base + c.tones[0] + 12].map((n) => (n < 40 ? n + 12 : n));
+  if (seventh) { const st = MODES[MODES[(c.key || S.key).mode].chords || (c.key || S.key).mode].steps; if (st.length === 7) notes.splice(4, 0, base + st[(c.d + 6) % 7] + 12 * Math.floor((c.d + 6) / 7)); }
   padHeld.set(id, notes);
   for (const n of notes) input.press(n, 96, 0);
 }
@@ -479,9 +489,11 @@ function renderKey() {
   const e = selEntry(), drums = !!(e && engine.defs.get(e.cfg.inst)?.drums);
   const list = drums ? [] : padChords();
   pads.classList.toggle('hide', !list.length);
+  pads.classList.toggle('seven', list.length === 7);
+  if (list.length && !S.key.mode) pads.dataset.keyname = `Chords in ${NOTE_NAMES[list[0].key.root]} ${MODES[list[0].key.mode].name} (set the room's key to change) · Shift adds the 7th`; else delete pads.dataset.keyname;
   pads.replaceChildren(...list.map((c, i) => {
-    const b = h('button', { class: 'pad', title: `${c.name} · key ${i + 1}`, 'data-pad': i }, h('b', {}, c.name), h('small', {}, c.roman));
-    b.addEventListener('pointerdown', (ev) => { ev.preventDefault(); b.setPointerCapture(ev.pointerId); b.classList.add('down'); padDown(c, 'p' + i); });
+    const b = h('button', { class: 'pad', title: `${c.name} · key ${i + 1}${list.length === 7 ? ' · Shift for the seventh' : ''}`, 'data-pad': i, 'data-chord': c.name }, c.num ? h('span', { class: 'num' }, String(c.num)) : null, h('b', {}, c.name), h('small', {}, c.roman));
+    b.addEventListener('pointerdown', (ev) => { ev.preventDefault(); b.setPointerCapture(ev.pointerId); b.classList.add('down'); padDown(c, 'p' + i, ev.shiftKey); });
     const up = () => { b.classList.remove('down'); padUp('p' + i); };
     b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
     return b;
@@ -1194,6 +1206,7 @@ function renderSecbar(full) {
       lane.on && !S.listener ? h('button', { class: 'btn small hot', title: 'Keep your last full pass of live audio as a take everyone plays from the song', onclick: () => lockAudio() }, '🎙 Lock in my live audio') : null,
       h('button', { class: 'btn small', onclick: () => goRoom('compose') }, 'Song board'), h('button', { class: 'btn small ghost', onclick: stopTransport }, '■ Stop'));
   }
+  if (pos) { const ch = chordAt(pos.bar).replace(/#/g, '♯').replace(/b(?=\d|$|m)/, '♭'); for (const pd of $$('#pads .pad')) setCls(pd, 'now', pd.dataset.chord === ch || pd.dataset.chord === ch.replace(/7$|maj7$|m7$/, (x) => (x === 'm7' ? 'm' : ''))); }
   if (pos) { setText($('[data-barno]'), `bar ${pos.bar + 1}/${sec.bars}`); setText($('[data-chordnow]'), chordAt(pos.bar)); setText($('[data-chordnext]'), pos.bar + 1 < sec.bars ? `then ${chordAt(pos.bar + 1)}` : ''); }
   else setText($('[data-barno]'), 'count in…');
 }
@@ -1993,6 +2006,7 @@ async function loadFeatured() {
     try { if (![...engine.libs.values()].some((l) => l.url === Engine.resolveLibraryUrl(u))) { await engine.addLibrary(u); saveLibs(); } } catch (_) { /* offline: the wall just shows the built-ins */ }
   }
   if (!$('#libDrawer').classList.contains('hide')) renderLibrary();
+  if (!S.rack.length) renderDevice();   // the empty desk's first picks include the featured guitar once it's here
 }
 const tilt = (id) => { let x = 0; for (const c of String(id)) x = (x * 31 + c.charCodeAt(0)) | 0; return ((x >>> 0) % 7 - 3) * 0.7; };
 function tile(meta, def) {
@@ -2219,11 +2233,12 @@ const pointers = new Map();
 function keyFromPoint(x, y) { const el = document.elementFromPoint(x, y)?.closest('[data-note]'); return el ? +el.dataset.note : null; }
 window.addEventListener('keydown', (ev) => {
   if (ev.repeat || ev.metaKey || ev.ctrlKey || ev.altKey || /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) return;
-  const i = '123456'.indexOf(ev.key); if (i < 0 || !S.me) return;
+  // number keys (with Shift: the seventh; ev.code, since Shift changes ev.key to a symbol)
+  const i = /^Digit[1-7]$/.test(ev.code) ? +ev.code.slice(5) - 1 : -1; if (i < 0 || !S.me) return;
   const c = padChords()[i]; if (!c || padHeld.has('k' + i)) return;
-  $(`[data-pad="${i}"]`)?.classList.add('down'); padDown(c, 'k' + i);
+  $(`[data-pad="${i}"]`)?.classList.add('down'); padDown(c, 'k' + i, ev.shiftKey);
 });
-window.addEventListener('keyup', (ev) => { const i = '123456'.indexOf(ev.key); if (i < 0) return; $(`[data-pad="${i}"]`)?.classList.remove('down'); padUp('k' + i); });
+window.addEventListener('keyup', (ev) => { const i = /^Digit[1-7]$/.test(ev.code) ? +ev.code.slice(5) - 1 : -1; if (i < 0) return; $(`[data-pad="${i}"]`)?.classList.remove('down'); padUp('k' + i); });
 function wireKeyboard() {
   const kb = $('#keyboard');
   kb.addEventListener('pointerdown', (e) => {

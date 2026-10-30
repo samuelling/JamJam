@@ -22,6 +22,20 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     check((await A.evaluate(() => JJ.S.rack.map((e) => e.cfg.inst).join())) === 'juniper' && (await A.$$('#rackList .emptyslot')).length === 3, 'one click puts keys on the desk; three slots left');
     await A.click('#rackList .cartx'); await sleep(400);
     check((await A.evaluate(() => JJ.S.rack.length)) === 0 && /Your desk is empty/.test(await A.textContent('#plate')), 'the last instrument can come off again');
+    // Acoustic: numbered chord pads 1 to 7 even with no key set; a number key strums that chord
+    await A.click('#plate .quick >> text=Something to strum');
+    for (let i = 0; i < 40 && !(await A.evaluate(() => JJ.S.rack.length)); i++) await sleep(300);
+    await sleep(500);
+    const pads = await A.$$eval('#pads:not(.hide) .pad', (els) => els.map((e) => e.textContent.trim()));
+    check(pads.length === 7 && pads[0].replace(/\s/g, '') === '1CI' && pads[4].replace(/\s/g, '') === '5GV', `Acoustic gets chord pads 1 to 7 in C with no key set (${pads.map((t) => t.replace(/\s+/g, '')).slice(0, 7).join(' ')})`);
+    const n0 = await A.evaluate(() => JJ.engine.log.filter((e) => e.type === 'on').length);
+    await A.keyboard.down('Digit5'); await sleep(300); await A.keyboard.up('Digit5'); await sleep(200);
+    const ons = await A.evaluate((n0) => JJ.engine.log.filter((e) => e.type === 'on').slice(n0).map((e) => e.note % 12), n0);
+    check(ons.length >= 3 && [7, 11, 2].every((pc) => ons.includes(pc)), `pressing 5 plays a G chord (${ons.join(',')})`);
+    await A.keyboard.down('Shift'); await A.keyboard.down('Digit5'); await sleep(300); await A.keyboard.up('Digit5'); await A.keyboard.up('Shift'); await sleep(200);
+    const ons7 = await A.evaluate((n0) => JJ.engine.log.filter((e) => e.type === 'on').slice(n0).map((e) => e.note % 12), n0 + ons.length);
+    check(ons7.includes(5), `Shift+5 adds the seventh: G7 (${ons7.join(',')})`);
+    await A.click('#rackList .cartx'); await sleep(300);
     // the Drummer tile on the wall
     await A.click('#rackList .emptyslot >> nth=0'); await sleep(500);
     await A.click('#libCards .tile.drums .face'); await sleep(400);
