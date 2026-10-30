@@ -1,0 +1,44 @@
+/* Machina's machine-drum panel. Loaded in order from index.html: later files win ties, as in the one stylesheet they came from. */
+/* ---- Machina: the machine-drum panel ---- */
+.skin-machina .plate { background: linear-gradient(180deg, #3a3c40 0, #2b2d31 2px, #242629 100%); gap: 10px; }
+.md-top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+.md-logo { font: 800 22px/1 var(--sans); letter-spacing: .32em; color: #d9dbe0; }
+.md-logo small { display: block; font: 600 9px var(--mono); letter-spacing: .3em; color: #8b8f97; margin-top: 4px; }
+.md-lcd { background: linear-gradient(180deg, #1d2a34, #13202a); color: #bfe3ff; border: 2px solid #0c0d0f; border-radius: 6px; padding: 7px 12px; font: 12px/1.4 var(--mono); box-shadow: inset 0 0 18px #0009; min-height: 58px; display: grid; align-content: center; text-shadow: 0 0 6px #4ab0ff55; }
+.md-lcd b { color: #fff; }
+.md-lcd .row2 { color: #78a9cf; }
+.md-master { display: flex; gap: 8px; }
+.md-encs.depth { margin-top: 6px; }
+.md-lfos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+.md-lfo { display: grid; grid-template-columns: auto minmax(0, 1.6fr) repeat(4, minmax(0, 1fr)); gap: 8px; align-items: center; background: #1e1f22; border-radius: 8px; padding: 8px; box-shadow: inset 0 1px 3px #000a; }
+.md-lfo > b { font: 700 10px var(--type); letter-spacing: .08em; color: #d9dbe0; writing-mode: vertical-rl; transform: rotate(180deg); }
+.md-destw { display: grid; gap: 3px; } .md-destw small { font: 600 9px var(--type); opacity: .6; text-transform: uppercase; }
+.md-dest { width: 100%; }
+.md-tracks { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; }
+.md-key { position: relative; height: 34px; border-radius: 4px; border: 1px solid #0c0d0f; background: linear-gradient(180deg, #4a4d53, #3a3d42); color: #e3e5ea; font: 700 10px var(--mono); letter-spacing: .08em; box-shadow: inset 0 1px 0 #ffffff1f, 0 2px 0 #0c0d0f; }
+.md-key i { position: absolute; top: 4px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: #3b1a14; }
+.md-key.sel { background: linear-gradient(180deg, #5c6068, #4a4d53); outline: 1px solid #bfe3ff; }
+.md-key.hit i { background: #ff3b1f; box-shadow: 0 0 8px #ff3b1f; }
+.md-key small { display: block; font: 9px var(--mono); color: #9ea3ab; letter-spacing: 0; }
+.md-encs { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; background: #1e1f22; border-radius: 8px; padding: 10px 6px; box-shadow: inset 0 1px 3px #000a; }
+.skin-machina .enc { --c: #d9dbe0; }
+.skin-machina .enc::after { background: #1e1f22; }
+.skin-machina .enc .cap { background: radial-gradient(circle at 35% 30%, #6d7077, #3b3e44 60%, #2b2d31); }
+.skin-machina .stepper .lcd { background: #13202a; color: #bfe3ff; }
+.md-transport { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.md-btn { height: 30px; min-width: 44px; padding: 0 10px; border-radius: 4px; border: 1px solid #0c0d0f; background: linear-gradient(180deg, #4a4d53, #3a3d42); color: #e3e5ea; font: 700 10px var(--mono); letter-spacing: .1em; box-shadow: inset 0 1px 0 #ffffff1f, 0 2px 0 #0c0d0f; }
+.md-btn.on { color: #fff; background: linear-gradient(180deg, #d6331a, #a8240f); }
+.md-btn.play.on { background: linear-gradient(180deg, #23b45e, #168a45); }
+.md-btn.lockbtn.on { background: linear-gradient(180deg, #f2b81f, #c48d0b); color: #1a1000; }
+.md-btn:disabled { opacity: .35; cursor: default; }
+.md-sep { width: 1px; height: 22px; background: #0c0d0f; box-shadow: 1px 0 0 #ffffff14; }
+.md-trigs { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 5px; }
+.md-trig { position: relative; height: clamp(38px, 6vh, 54px); border-radius: 4px; border: 1px solid #0c0d0f; background: linear-gradient(180deg, #e4e5e8, #b9bbc0); box-shadow: inset 0 -3px 0 #8f9298, 0 2px 0 #0c0d0f; touch-action: none; }
+.md-trig:nth-child(4n+1) { background: linear-gradient(180deg, #cfd1d5, #a4a7ad); }
+.md-trig i { position: absolute; left: 50%; top: 18%; width: 34%; height: 18%; margin-left: -17%; border-radius: 2px; background: #5a1d14; }
+.md-trig.on i { background: #ff3b1f; box-shadow: 0 0 8px #ff3b1f; }
+.md-trig.lk::after { content: ''; position: absolute; right: 4px; bottom: 5px; width: 6px; height: 6px; border-radius: 50%; background: #f2b81f; box-shadow: 0 0 5px #f2b81f; }
+.md-trig.head { outline: 2px solid #fff; outline-offset: -2px; }
+.md-trig.held { transform: translateY(1px); box-shadow: inset 0 -1px 0 #8f9298, 0 1px 0 #0c0d0f; filter: brightness(1.08); }
+.md-trig span { position: absolute; bottom: 4px; left: 5px; font: 700 8px var(--mono); color: #555a62; }
+.md-hint { font: 10px var(--mono); color: #9ea3ab; }

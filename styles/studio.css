@@ -1,0 +1,77 @@
+/* The studio: wall display, the band in their corners, bringing someone in. Loaded in order from index.html: later files win ties, as in the one stylesheet they came from. */
+/* ================= the studio ================= */
+#studio { height: 100vh; display: flex; flex-direction: column; gap: 10px; padding: 10px 14px 12px; overflow-y: auto; }
+#studio > .console, #studio > .audience, #studio > #corners, #studio > #secbar, #studio > .keybed { flex: none; }
+#studio > .deskrow, #studio > #compose { flex: 1 1 auto; min-height: 0; }
+/* wall-mounted display */
+.console { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 12px; background: linear-gradient(180deg, #16171a, #0f1012); border: 1px solid #000; border-radius: 12px; box-shadow: inset 0 1px 0 #ffffff0d, 0 10px 30px #0008; }
+.badge-logo { display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: -.02em; }
+.readout { display: flex; align-items: center; gap: 6px; }
+.readout .lcd { font-size: 15px; min-width: 56px; text-align: center; padding: 3px 9px; letter-spacing: .08em; }
+#roomCode { letter-spacing: .4em; }
+#bpmLcd { cursor: ns-resize; user-select: none; touch-action: none; }
+.seg { display: inline-flex; border: 1px solid #000; border-radius: 7px; overflow: hidden; background: var(--lcd); }
+.seg button { background: transparent; border: 0; color: var(--lcddim); font: 11px var(--mono); padding: 5px 8px; }
+.seg button.on { background: var(--te-white); color: #000; }
+.lookbar { display: flex; align-items: center; gap: 8px; flex: 1 1 240px; min-width: 220px; }
+.meter { position: relative; flex: 1; height: 8px; background: #08090a; border-radius: 4px; overflow: hidden; box-shadow: inset 0 1px 2px #000; }
+.meter i { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, var(--te-green), var(--te-yellow) 60%, var(--te-orange)); transition: width .2s; }
+.onair { font: 700 10px var(--mono); letter-spacing: .2em; padding: 4px 8px; border-radius: 5px; border: 1px solid #3a1a12; color: #5a2a1d; background: #140906; }
+.onair.live { color: #fff; background: #d6331a; border-color: #ff6a4d; box-shadow: 0 0 14px #ff3d1a88; text-shadow: 0 0 6px #fff8; }
+#status { color: var(--dim); font: 11px var(--mono); flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#status:not(:empty)::before { content: '› '; color: var(--mz-gold, #ffcf26); }
+.console > .badge-logo { order: -2; } .console > .roomseg { order: -1; margin-right: 4px; }
+#leaveBtn { margin-left: auto; }
+.console #keySel { width: 128px; max-width: 128px; }
+.console { gap: 8px 10px; }
+#status[data-kind=error] { color: var(--bad); }
+#lookHelp { flex-basis: 100%; font-size: 11px; }
+
+/* the band, in booths along the wall */
+#corners { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.corner { position: relative; border-radius: 12px; padding: 10px 11px 9px; display: grid; gap: 6px; align-content: start; min-height: 112px;
+  background: radial-gradient(120% 90% at 50% -30%, color-mix(in srgb, var(--c) 22%, transparent), transparent 60%), linear-gradient(180deg, #15161a, #0f1012);
+  border: 1px solid #000; box-shadow: inset 0 1px 0 #ffffff0a; }
+.corner::before { content: ''; position: absolute; left: 30%; right: 30%; top: -1px; height: 3px; border-radius: 0 0 4px 4px; background: var(--c); box-shadow: 0 0 16px var(--c); }
+.corner.me { box-shadow: inset 0 1px 0 #ffffff0a, 0 0 0 1px color-mix(in srgb, var(--c) 60%, transparent); }
+.corner.empty { border: 1px dashed #24262a; background: transparent; place-content: center; text-align: center; color: var(--faint); box-shadow: none; }
+.corner.empty::before { display: none; }
+.chead { display: flex; align-items: center; gap: 8px; }
+.cname { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tag { margin-left: auto; font: 10px var(--mono); padding: 1px 7px; border-radius: 99px; border: 1px solid #2d3036; color: var(--dim); white-space: nowrap; }
+.tag[data-kind=ok] { color: var(--ok); border-color: #1d4a31; }
+.tag[data-kind=warn] { color: var(--warn); border-color: #4d4116; }
+.gearrow { display: flex; gap: 6px; align-items: flex-end; min-height: 38px; }
+/* a virtual player's corner: the room plays it */
+.corner.vp { background: repeating-linear-gradient(135deg, #d8a83a0a 0 8px, transparent 8px 16px), var(--mz-sheet, #141518); }
+.corner.vp .chead { padding-right: 26px; }
+.corner.vp [data-vpstate] { min-width: 0; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.corner.vp .vptag { font: 400 10px var(--type); color: #d8a83a; letter-spacing: .04em; }
+.corner.vp .gearrow { display: flex; align-items: center; gap: 10px; }
+.vproll { color: #d8a83a; line-height: 0; }
+.vpctl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.vpctl .lcdsel { max-width: 140px; }
+.vpk { display: inline-flex; align-items: center; gap: 4px; }
+.vpk small { font: 400 10px var(--type); color: var(--mz-muted); }
+.vpk input { width: 70px; }
+.vpmore { display: contents; }
+body.simple .vpmore { display: none; }
+.gearx { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%; border: 0; background: #2a2c31; color: var(--mz-muted); font: 700 13px/1 var(--sans); cursor: pointer; }
+.gearx:hover { background: #ff5a5a; color: #18181b; }
+.caveat { margin: 0; padding: 8px 10px; border-radius: 6px; background: #2a2412; border: 1px solid #5a4a1c; color: #e9dfc0; font: 400 12px/1.45 var(--sans); }
+.caveat b { color: #ffcf26; }
+.tile .badge { position: absolute; top: 8px; right: 8px; z-index: 2; font: 700 9px/1 var(--sans); letter-spacing: .05em; text-transform: uppercase; padding: 3px 5px; border-radius: 3px; background: #ffcf26; color: #18181b; transform: rotate(3deg); }
+.gearitem .mic { width: 54px; height: 36px; display: grid; place-items: center; border-radius: 5px; background: #2a2412; color: #ffcf26; }
+.deskempty { display: grid; gap: 10px; justify-items: start; padding: 18px 6px; }
+.deskempty b { font: 400 26px/1 var(--display); color: var(--mz-toner); }
+.deskpicks { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.drumstyles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.dgenre { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 8px; border-radius: 6px; background: #0e0f12; border: 1px solid #23262d; }
+.dgenre b { flex-basis: 100%; font: 400 15px/1 var(--display); color: var(--mz-toner); }
+/* the one thing to do when you're alone: bring someone in */
+#copyBtn.alone { background: var(--mz-pink, #FF68BA); color: #18181b; border-color: #18181b; font-weight: 700; box-shadow: 0 0 0 3px #ff68ba33; }
+.micico { display: grid; place-items: center; width: 34px; height: 24px; border-radius: 4px; background: #2a2412; color: #ffcf26; font-size: 14px; }
+.btn.recall.on { background: #e5383b; color: #fff; border-color: #18181b; animation: recpulse 1.4s ease-in-out infinite; }
+@keyframes recpulse { 50% { box-shadow: 0 0 0 4px #e5383b44; } }
+.sidetab.techtab { margin-top: auto; opacity: .7; }
+.sidetab.techtab[aria-pressed="true"] { opacity: 1; color: var(--mz-toner); box-shadow: inset 0 0 0 1px #ffcf2666; }
