@@ -2,10 +2,10 @@
 // with simulated network lag. Checks direct links, clock lock, that every note is heard at the same room time
 // in every browser, that fingerprints agree, the relay fallback, and the audio lane.
 //
-//   node server/dev.js &      (PORT=8790)
+//   node server/dev.js &      (8787)
 //   node tests/sync.test.cjs [baseUrl]
 const { chromium } = require('playwright');
-const BASE = process.argv[2] || 'http://localhost:8790/';
+const BASE = process.argv[2] || 'http://localhost:8787/';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;
 const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!ok) failures++; };

@@ -46,7 +46,7 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     T = await same(A, B, T, 'while Matt plays and the drummer listens, still the same in both');
     // Matt switches it to bossa: both change at the same bar
     await B.evaluate((id) => JJ.setVirtual(id, { style: 'bossa' }), vid);
-    await sleep(5000);
+    await sleep(7500);   // a change lands on a bar about 2.5 s ahead
     const bossaA = await A.evaluate(({ T }) => JJ.engine.log.filter((e) => e.pid.startsWith('vp:') && e.type === 'on' && e.note === 37 && e.at > T).length, { T });
     check(bossaA > 2, `the bossa's cross-stick comes in (${bossaA} hits)`);
     T = await same(A, B, T, 'and the change landed together');

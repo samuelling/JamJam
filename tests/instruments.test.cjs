@@ -2,7 +2,7 @@
 // it makes sound, no NaN/Inf, sane peak level, identical output on a second render (determinism), and render speed.
 //   node server/dev.js &   then   node tests/instruments.test.cjs [baseUrl]
 const { chromium } = require('playwright');
-const BASE = process.argv[2] || 'http://localhost:8790/';
+const BASE = process.argv[2] || 'http://localhost:8787/';
 let failures = 0;
 const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!ok) failures++; };
 

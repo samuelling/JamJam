@@ -77,7 +77,6 @@ export const VIRTUAL = {
 };
 VIRTUAL['jazz-drums'] = VIRTUAL.drums;
 export function newVirtual(kind, by, byName, style = 'medium') {
-  const def = VIRTUAL[kind] || VIRTUAL.drums;
   return { id: Math.random().toString(36).slice(2, 7), kind: 'drums', name: drummerName(style), inst: kitOf({ style }).inst, kit: 'auto', style, feel: 'auto',
     intensity: 0.5, busy: 0.5, fills: 0.6, listen: true, seed: Math.floor(Math.random() * 1e9), level: 0.8, on: false, start: 0, by, byName };
 }

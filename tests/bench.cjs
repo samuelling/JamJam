@@ -9,7 +9,7 @@
 //   spread  worst difference in when one note is heard across browsers, on-time notes only (ms)
 //   node tests/bench.cjs [baseUrl] [extra query, e.g. "tm=15&settle=0.2"]
 const { chromium } = require('playwright');
-const BASE = process.argv[2] || 'http://localhost:8790/';
+const BASE = process.argv[2] || 'http://localhost:8787/';
 const EXTRA = process.argv[3] || '';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

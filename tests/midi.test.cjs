@@ -1,8 +1,8 @@
 // External MIDI: your own gear on a MIDI port, a bandmate's part played on your gear, and MIDI clock out.
 // Uses ?midimock=1 (two fake outputs that log every message with its timestamp) and ?silent=1.
-//   node server/dev.js &  (8790)        node tests/midi.test.cjs
+//   node server/dev.js &  (8787)        node tests/midi.test.cjs
 const { chromium } = require('playwright');
-const BASE = process.argv[2] || 'http://localhost:8790/';
+const BASE = process.argv[2] || 'http://localhost:8787/';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;
 const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!ok) failures++; };

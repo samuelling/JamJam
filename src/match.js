@@ -40,7 +40,7 @@ export function analyze(x, sr, note, held) {
   const f0 = 440 * 2 ** ((note - 69) / 12), hop = Math.round(sr * 0.005), m = Math.floor(x.length / hop);
   const env = new Float32Array(m);
   for (let i = 0; i < m; i++) { let e = 0; for (let k = i * hop; k < (i + 1) * hop; k++) e += x[k] * x[k]; env[i] = Math.sqrt(e / hop); }
-  let pk = 0, pki = 0; for (let i = 0; i < m; i++) if (env[i] > pk) { pk = env[i]; pki = i; }
+  let pk = 0; for (let i = 0; i < m; i++) if (env[i] > pk) pk = env[i];
   if (pk < 1e-4) return null;
   const db = (v) => Math.max(-60, 20 * Math.log10(Math.max(v, 1e-9) / pk));
   let att = 0; for (let i = 0; i < m; i++) if (env[i] >= 0.9 * pk) { att = i * 5; break; }

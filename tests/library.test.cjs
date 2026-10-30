@@ -1,11 +1,11 @@
 // Libraries: instruments loaded from another origin (another GitHub repo, a friend's build on their machine).
 // Public library: a bandmate's browser loads it automatically. Private library: its address is never shared; a
 // stand-in plays until that jammer adds their own copy, then the real instrument takes over.
-//   node server/dev.js &  (8790)        node tests/library.test.cjs
+//   node server/dev.js &  (8787)        node tests/library.test.cjs
 const { chromium } = require('playwright');
 const { spawn } = require('child_process');
 const fs = require('fs'), path = require('path'), os = require('os');
-const BASE = process.argv[2] || 'http://localhost:8790/';
+const BASE = process.argv[2] || 'http://localhost:8787/';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;
 const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!ok) failures++; };

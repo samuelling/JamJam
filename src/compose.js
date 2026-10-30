@@ -1,7 +1,7 @@
 // The Compose Room: the band's song board. Sections in arrangement order, each with its length, chord chart, notes
 // and the parts locked into it; import a sketch (MIDI or a SynthLand Tracker song), export the song; loop a section
 // or play the whole song; "Jam this" takes everyone to the Jam Room with that section looping.
-import { SECTION_NAMES, NOTE_NAMES, sectionBeats, newSection, parseChord, takesOf, currentTake, laneOf, ROLES } from './song.js';
+import { SECTION_NAMES, NOTE_NAMES, newSection, parseChord, takesOf, currentTake, laneOf, ROLES } from './song.js';
 
 const COLORS = { Intro: '#7DB0FF', Verse: '#ECEBE5', 'Pre-chorus': '#D8A83A', Chorus: '#FF68BA', Bridge: '#9b8cff', Solo: '#3ddc84', Breakdown: '#8a8f98', Drop: '#ff7a3d', Outro: '#7DB0FF' };
 export const colorOfSection = (name) => COLORS[Object.keys(COLORS).find((k) => String(name).toLowerCase().startsWith(k.toLowerCase()))] || '#A0A6AF';

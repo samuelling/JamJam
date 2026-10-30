@@ -2,7 +2,7 @@
 // must play exactly the same trigs, with the same locks, at the same room times, without any notes being sent.
 //   node server/dev.js &   then   node tests/seq.test.cjs [baseUrl]
 const { chromium } = require('playwright');
-const BASE = process.argv[2] || 'http://localhost:8790/';
+const BASE = process.argv[2] || 'http://localhost:8787/';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;
 const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!ok) failures++; };

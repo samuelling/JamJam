@@ -65,11 +65,8 @@
   /* ================= the front door ================= */
   #lobby { height: 100vh; display: grid; place-items: center; padding: 24px; overflow: auto; }
   .entrance { display: grid; justify-items: center; gap: 26px; text-align: center; }
-  .neon { font-family: 'Monoton', var(--sans); font-size: clamp(54px, 9vw, 112px); line-height: 1; color: #ffd9c7; letter-spacing: .04em;
     text-shadow: 0 0 4px #fff, 0 0 12px #ff7a3d, 0 0 28px #ff5a1f, 0 0 60px #ff3d00, 0 0 90px #ff3d0066; animation: hum 6s infinite; }
-  .neon small { display: block; font: 600 12px var(--mono); letter-spacing: .5em; color: #9cc4ff; text-shadow: 0 0 6px #2f80ff, 0 0 18px #2f80ff; margin-top: 14px; animation: none; }
   @keyframes hum { 0%, 100% { opacity: 1; } 92% { opacity: 1; } 93% { opacity: .55; } 94% { opacity: 1; } 96% { opacity: .8; } 97% { opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .neon { animation: none; } }
   .tagline { color: var(--dim); max-width: 56ch; margin: 0; font-size: 15px; }
   .door { display: grid; grid-template-columns: 22px minmax(0, 360px) 22px; border-radius: 16px; overflow: hidden; box-shadow: 0 30px 60px #000c, 0 0 0 1px #000; text-align: left; }
   .cheek { background: var(--wood); box-shadow: inset -3px 0 6px #0006, inset 3px 0 4px #ffffff12; }
@@ -77,9 +74,6 @@
   .door input { width: 100%; }
   #codeIn { letter-spacing: .5em; text-transform: uppercase; font-size: 18px; text-align: center; }
   .or { text-align: center; font: 10px var(--mono); color: var(--faint); letter-spacing: .2em; }
-  .plaques { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 760px; }
-  .plaque { font: 600 10px var(--mono); letter-spacing: .1em; text-transform: uppercase; padding: 6px 10px; border-radius: 99px; border: 1px solid #25272b; color: var(--dim); background: #101113; }
-  .plaque b { color: var(--c); }
 
   /* ================= the studio ================= */
   #studio { height: 100vh; display: flex; flex-direction: column; gap: 10px; padding: 10px 14px 12px; }
@@ -87,7 +81,6 @@
   #studio > .deskrow, #studio > #compose { flex: 1 1 auto; min-height: 0; }
   /* wall-mounted display */
   .console { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 12px; background: linear-gradient(180deg, #16171a, #0f1012); border: 1px solid #000; border-radius: 12px; box-shadow: inset 0 1px 0 #ffffff0d, 0 10px 30px #0008; }
-  .neon .mega { color: #fff3a8; text-shadow: 0 0 6px #ffb300, 0 0 22px #ff7a00, 0 0 48px #ff5a1f; }
   .badge-logo { display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: -.02em; }
   .readout { display: flex; align-items: center; gap: 6px; }
   .readout .lcd { font-size: 15px; min-width: 56px; text-align: center; padding: 3px 9px; letter-spacing: .08em; }
@@ -458,7 +451,6 @@
   .what[open] summary, .what summary:hover { background: var(--mz-toner); color: var(--mz-paper); }
   .what p { font: 400 .9rem/1.5 var(--type); color: var(--mz-muted); margin: 12px 0 0; }
   .btn.hot { background: var(--mz-pink); border-color: var(--mz-pink); color: #1a0010; }
-  .btn.hood[aria-pressed="true"] { border-color: var(--mz-gold); color: var(--mz-gold); }
   body.simple .tech { display: none !important; }
   .legend { font-family: var(--type); letter-spacing: .1em; }
 
@@ -731,7 +723,6 @@
   .curtag { font: 700 10px var(--sans); color: var(--mz-blue); text-transform: uppercase; letter-spacing: .05em; }
   @media (max-width: 760px) { .details { grid-template-columns: 1fr; max-height: none; } .lhead { flex-basis: 120px; } }
   .secnotes { width: 100%; resize: vertical; background: #0e0f12; color: var(--mz-toner); border: 1px solid #23262d; border-radius: 3px; font: 400 12px var(--type); padding: 6px; }
-  .secno { font: 400 12px var(--type); color: var(--mz-muted); }
   .secname { font: 400 18px/1 var(--display); background: transparent; color: var(--sc); border: 0; max-width: 170px; }
   .bars { display: flex; align-items: center; gap: 6px; font: 400 12px var(--type); }
   .chord { width: 100%; min-width: 0; padding: 6px 4px; text-align: center; font: 700 14px var(--sans); background: #0e0f12; color: var(--mz-toner); border: 1px solid #23262d; border-radius: 3px; }

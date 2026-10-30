@@ -11,7 +11,7 @@ import { Input, sendToHardware, bendBytes } from './input.js';
 import { AudioLane, decodeChunk } from './lane.js';
 import { StepSeq } from './seq.js';
 import { iconEl, skinOf } from './skins.js';
-import * as VPL from './players.js';
+import { makeBand } from './band.js';
 import { Blobs, isBlobChunk, toPcm16 } from './blobs.js';
 import { makePadsUI, PAD_KEYS, PAD_BASE } from './padsui.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
@@ -715,40 +715,16 @@ function renderCorners() {
   const ids = [S.me, ...room.peers.keys()].filter((id) => id && isBand(id)).sort((a, b) => slotOf(a) - slotOf(b));
   const ears = [S.me, ...room.peers.keys()].filter((id) => id && !isBand(id)).length;
   setText($('#listeners'), ears ? `${ears} listening` : '');
-  setCls($('#copyBtn'), 'alone', ids.length + vplayers().length <= 1 && !room.peers.size); $('#listeners')?.classList.toggle('hide', !ears);
+  setCls($('#copyBtn'), 'alone', ids.length + band.list().length <= 1 && !room.peers.size); $('#listeners')?.classList.toggle('hide', !ears);
   const rackOf = (id) => (id === S.me ? publicRack() : S.players.get(id)?.rack || []);
   const sig = ids.join(',') + '|' + ids.map((id) => rackOf(id).map((x) => x.r + describe(x.cfg)).join(';')).join('|') + '|' + ids.map((id) => S.players.get(id)?.name || '').join(',') + '|' + JSON.stringify(songStore.song.players || {}) + (lane.on ? 'L' + lane.bars : '') + ids.map((id) => S.players.get(id)?.lane?.on ? 'l' + S.players.get(id).lane.bars : '').join('') + (songStore.song.transport?.on ? songStore.song.transport.sid : '');
   if (box.dataset.sig !== sig) {
     box.dataset.sig = sig;
-    const vps = vplayers();
-    box.replaceChildren(...ids.map((id) => cornerCard(id, rackOf(id))), ...vps.map((vp) => vpCard(vp)));
+    const vps = band.list();
+    box.replaceChildren(...ids.map((id) => cornerCard(id, rackOf(id))), ...vps.map((vp) => band.card(vp)));
     for (let i = ids.length + vps.length; i < MAX; i++) box.append(h('div', { class: 'corner empty' }, h('div', { class: 'legend' }, 'Empty corner'), h('div', { class: 'help' }, 'Copy the invite to bring someone in')));
   }
   updateCorners();
-}
-function vpCard(vp) {
-  const k = vpKey(vp), v = S.vol.get(k) || { vol: 0.9, mute: false }, tr = songStore.song.transport, def = VPL.VIRTUAL[vp.kind];
-  const set = (patch) => setVirtual(vp.id, patch);
-  const slider = (label, id, title) => h('label', { class: 'vpk', title }, h('small', {}, label), h('input', { type: 'range', min: 0, max: 1, step: 0.01, value: vp[id], 'aria-label': label, onchange: (e) => set({ [id]: +e.target.value }) }));
-  const vol = h('input', { type: 'range', min: 0, max: 1.5, step: 0.01, value: v.vol, 'aria-label': 'Volume in your mix', oninput: (e) => { S.vol.set(k, { ...(S.vol.get(k) || { mute: false }), vol: +e.target.value }); applyVpVolume(vp); } });
-  const mute = h('button', { class: 'btn small' + (v.mute ? ' on' : ''), title: 'Mute in your mix', onclick: (e) => { const x = S.vol.get(k) || { vol: 0.9, mute: false }; x.mute = !x.mute; S.vol.set(k, x); applyVpVolume(vp); e.target.classList.toggle('on', x.mute); } }, 'M');
-  const songOn = tr && tr.on, lockSid = songOn ? (tr.mode === 'loop' ? tr.sid : null) : null;
-  const roll = h('div', { class: 'vproll', 'data-vproll': vp.id }); roll.innerHTML = vpRoll(vp);
-  return h('div', { class: 'corner vp', style: '--c:#d8a83a' },
-    h('div', { class: 'chead' }, h('div', { class: 'cname' }, vp.name, h('small', { class: 'vptag' }, ' virtual')), h('span', { class: 'help', 'data-vpstate': vp.id }),
-      S.listener ? null : h('button', { class: 'gearx', 'aria-label': `Remove ${vp.name}`, title: `Send ${vp.name} home`, onclick: () => removeVirtual(vp.id) }, '×')),
-    h('div', { class: 'gearrow' }, h('div', { class: 'gearitem', title: def?.blurb || '' }, iconEl(engine.defs.get(vpCfg(vp).inst) || engine.defs.get('machina')), h('span', { class: 'led', 'data-led': k, style: '--c:#d8a83a' })), roll),
-    S.listener ? null : h('div', { class: 'vpctl' },
-      h('select', { class: 'lcdsel', 'aria-label': 'Style', onchange: (e) => set({ style: e.target.value }) }, ...VPL.GENRES.map((g) => h('optgroup', { label: g }, ...VPL.STYLES.filter((st) => st.genre === g).map((st) => h('option', { value: st.id, selected: st.id === vp.style }, st.name))))),
-      h('select', { class: 'lcdsel', 'aria-label': 'Drum kit', title: 'What it plays on', onchange: (e) => set({ kit: e.target.value }) }, h('option', { value: 'auto', selected: !vp.kit || vp.kit === 'auto' }, `Kit: ${VPL.kitOf({ style: vp.style }).name}`), ...VPL.KITS.map((kt) => h('option', { value: kt.id, selected: vp.kit === kt.id }, kt.name))),
-      h('button', { class: 'btn small' + (vp.on ? ' on' : ''), onclick: () => set({ on: !vp.on }) }, vp.on ? '■ Stop' : '▶ Play'),
-      h('button', { class: 'btn small ghost', title: 'Same style, a different drummer: a new seed', onclick: () => set({ seed: Math.floor(Math.random() * 1e9) }) }, 'Reroll'),
-      lockSid ? h('button', { class: 'btn small hot', title: "Lock this section's drums in as a take (then the live drummer lays out there)", onclick: () => lockVirtual(vp.id, lockSid) }, `Lock into ${songStore.song.sections[lockSid]?.name || 'section'}`) : null),
-    S.listener ? null : h('div', { class: 'vpctl' }, slider('Intensity', 'intensity', 'How hard it plays; it still builds through solos and lifts at bridges'),
-      h('span', { class: 'tech vpmore' }, slider('Busy', 'busy', 'How much it comps'), slider('Fills', 'fills', 'How often it fills at phrase ends'),
-        h('label', { class: 'help', title: "Plays up when the band plays more, and settles when it thins out (from two bars back, so every browser hears it the same)" }, h('input', { type: 'checkbox', checked: !!vp.listen, onchange: (e) => set({ listen: e.target.checked }) }), ' listens'),
-        h('select', { class: 'lcdsel', 'aria-label': 'Feel', onchange: (e) => set({ feel: e.target.value }) }, ...[['auto', 'feel: auto'], ['2', 'in 2'], ['4', 'in 4']].map(([val, t]) => h('option', { value: val, selected: (vp.feel || 'auto') === val }, t))))),
-    h('div', { class: 'cfoot' }, vol, mute));
 }
 function cornerCard(id, rack) {
   const pl = S.players.get(id) || {}, mine = id === S.me, peer = room.peers.get(id), c = colorOf(id);
@@ -909,6 +885,7 @@ const compose = makeCompose({
     return out; }, mutePart: (sid, pid, on) => { const p = songStore.song.sections[sid]?.parts?.[pid]; if (p) setSong(`part:${sid}:${pid}`, { ...p, muted: on }); },
   iconEl: (p) => (p.kind === 'audio' ? h('span', { class: 'ico micico', 'aria-hidden': 'true' }, '🎙') : iconEl(engine.defs.get(p.inst) || { id: p.inst })), audioReady: (id) => blobs.has(id),
 });
+const band = makeBand({ h, $, engine, tempo, clock, songStore, setSong, S, segmentsIn, positionAt, setStatus: (t, k) => setStatus(t, k), iconEl, setText, setCls, closeDrawers: () => closeDrawers(), renderLibrary: () => renderLibrary() });
 const slugName = () => (songStore.song.title || 'song').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'song';
 const songForExport = () => { const s = JSON.parse(JSON.stringify(songStore.song)); delete s.transport; delete s.players; s.bpm = Math.round(tempo.bpm(clock.now() + 1000)); s.key = S.key.mode ? { root: S.key.root, mode: S.key.mode } : s.key; return s; };
 function download(blob, name) { const a = h('a', { href: URL.createObjectURL(blob), download: name }); document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
@@ -1061,139 +1038,6 @@ function liveSchedule(p, seg, b0, b1, end) {
 }
 setInterval(songTick, 40);
 
-// ---------- virtual players: bandmates every browser generates the same way ----------
-// A virtual player is shared state (its settings and seed); each browser runs its generator a bar at a time, a little
-// ahead, on the room's bar grid (or the song's sections while the song plays), and plays the notes on its own channel.
-const VP = { done: new Set(), plan: new Map() };
-const vplayers = () => Object.values(songStore.song.players || {}).filter(Boolean);
-const vpKey = (vp) => 'vp:' + vp.id;
-const vpCfg = (vp) => VPL.kitOf(vp), vpPatch = (vp) => { const k = vpCfg(vp); return `${k.inst}/${k.patch}`; };
-// how much the band (people, not the song or other virtual players) played in a stretch of room time, as 0..3
-function bandDensity(t0, t1) {
-  let n = 0;
-  for (const [k, c] of engine.ch) { if (k.startsWith('vp:') || k.startsWith('song:')) continue; for (let i = c.notes.length - 1; i >= 0 && c.notes[i] >= t0; i--) if (c.notes[i] < t1) n++; }
-  return n < 3 ? 0 : n < 10 ? 1 : n < 22 ? 2 : 3;
-}
-// the bars a virtual player plays between two room beats: [{start, n, form}]
-function vpBars(vp, b0, b1) {
-  const out = [], song = songStore.song, tr = song.transport, meter = song.meter || 4;
-  if (!vp.on) return out;
-  if (tr && tr.on) {
-    const tl = songStore.timeline();
-    for (const seg of segmentsIn(tr, b0 - meter, b1)) {
-      const sec = song.sections[seg.sid]; if (!sec) continue;
-      // drums already locked into this section: the drummer lays out
-      if (Object.values(sec.parts || {}).some((p) => p.drums && !p.muted)) continue;
-      const idx = seg.idx ?? song.order.indexOf(seg.sid), label = (song.labels || [])[idx] || '';
-      const kind = VPL.sectionKind(sec.name, label), bars = sec.bars, lastSeg = tr.mode === 'song' && idx === tl.length - 1;
-      for (let i = 0; i < bars; i++) {
-        const start = seg.start + i * meter; if (start < b0 - 1e-6 || start >= b1 || start < (seg.lo ?? seg.start) - 1e-6 || start >= (seg.hi ?? Infinity) - 1e-6) continue;
-        const form = { kind, sectionBar: i, bars, pass: seg.k || 0, last: i === bars - 1, phraseEnd: i % 8 === 7 || i === bars - 1, final: lastSeg && i === bars - 1 && kind === 'ending' };
-        const prev = i > 0 ? { ...form, sectionBar: i - 1, last: false, phraseEnd: (i - 1) % 8 === 7, final: false } : null;
-        out.push({ start, n: Math.round((start - tr.start) / meter), form, prev });
-      }
-    }
-    return out;
-  }
-  for (let n = Math.max(0, Math.ceil((b0 - vp.start) / meter - 1e-6)); vp.start + n * meter < b1; n++) out.push({ start: vp.start + n * meter, n, form: VPL.vampForm(n), prev: n > 0 ? VPL.vampForm(n - 1) : null });
-  return out;
-}
-function vpGenerate(vp, bar) {
-  const meter = songStore.song.meter || 4, bpm = tempo.bpm(tempo.timeOf(bar.start));
-  const form = VPL.withPrevFill(vp, bar.form, bar.prev, bar.n);
-  if (vp.listen) form.band = bandDensity(tempo.timeOf(bar.start - 2 * meter), tempo.timeOf(bar.start - meter));
-  return VPL.drummerBar(vp, form, bar.n, meter, bpm);
-}
-function vpTick() {
-  if (!engine.ctx || !S.me) return;
-  // 1.5 s ahead, and a bar back: a background tab's timers may only run once a second, and the generator gives the
-  // same notes whenever it runs, so a late tick still plays what's left of the bar (never anything already past)
-  const now = clock.now(), b0 = tempo.beatAt(now), b1 = tempo.beatAt(now + 1500), meter = songStore.song.meter || 4;
-  for (const vp0 of vplayers()) {
-    const k = vpKey(vp0);
-    if (!engine.ch.get(k)) { const kc = vpCfg(vpAt(vp0, b0)); engine.setCfg(k, engine.resolve({ inst: kc.inst, patch: kc.patch }), -Infinity); engine.ch.get(k).vpPatch = vpPatch(vpAt(vp0, b0)); applyVpVolume(vp0); }
-    for (const [vp, from, to] of vpSpans(vp0, b0 - meter, b1)) for (const bar of vpBars(vp, from, to)) {
-      const tag = `${k}@${bar.start.toFixed(4)}`; if (VP.done.has(tag)) continue; VP.done.add(tag);
-      // a style with another kit: the kit changes at this bar line
-      const c = engine.ch.get(k), patch = vpPatch(vp);
-      if (c.vpPatch !== patch) { const kc = vpCfg(vp); engine.setCfg(k, engine.resolve({ inst: kc.inst, patch: kc.patch }), tempo.timeOf(bar.start) - 30); c.vpPatch = patch; setTimeout(() => applyVpVolume(vp0), Math.max(0, tempo.timeOf(bar.start) - clock.now())); }
-      const evs = vpGenerate(vp, bar);
-      VP.plan.set(vp.id, { start: bar.start, n: bar.n, evs, kind: bar.form.kind });
-      for (const e of evs) { const at = tempo.timeOf(bar.start + e.b) + e.ms; if (at < now + 20) continue; engine.event(k, { type: 'on', note: e.note, vel: e.vel, at }); engine.event(k, { type: 'off', note: e.note, at: at + 80 }); }
-    }
-  }
-  if (VP.done.size > 4000) VP.done = new Set([...VP.done].slice(-1000));
-  for (const k of [...engine.ch.keys()]) if (k.startsWith('vp:') && !songStore.song.players?.[k.slice(3)]) engine.removeChannel(k);
-}
-setInterval(vpTick, 60);
-// a drummer's level: your fader, times its kit's balance (Machina's kits run much hotter than the recorded kit)
-function applyVpVolume(vp) { const c = engine.ch.get(vpKey(vp)); if (!c || !engine.ctx) return; const v = S.vol.get(vpKey(vp)) || { vol: 0.9, mute: false }, kg = vpCfg(vpAt(vp, tempo.beatAt(clock.now()))).gain ?? 1; c.out.gain.setTargetAtTime(v.mute ? 0 : v.vol * kg, engine.ctx.currentTime, 0.02); }
-function addVirtual(kind = 'drums', style = 'medium') {
-  if (S.listener) return null;
-  const vp = VPL.newVirtual(kind, S.me, S.name, style);
-  vp.on = true; vp.start = nextBarBeat(); vp.versions = [{ from: -1e9, set: settingsOf(vp) }];
-  setSong('vp:' + vp.id, vp);
-  setStatus(`${vp.name} sits in. It follows the tempo${songStore.song.order.length ? ' and the song' : ''}; everyone hears the same drummer.`);
-  return vp.id;
-}
-const nextBarBeat = () => { const m = songStore.song.meter || 4; return Math.ceil(tempo.beatAt(clock.now() + 900) / m) * m; };
-// Changes to a virtual player take effect at a bar line far enough ahead that no browser has generated it yet
-// (generation runs 1.5 s ahead), so every browser switches at the same bar. The player keeps a short history of
-// settings, each from its bar on.
-const VP_SETTINGS = ['style', 'kit', 'intensity', 'busy', 'fills', 'listen', 'feel', 'seed', 'on', 'start', 'name'];
-const settingsOf = (vp) => Object.fromEntries(VP_SETTINGS.map((k) => [k, vp[k]]));
-function vpAt(vp, beat) {
-  let cur = null; for (const v of vp.versions || []) if (v.from <= beat + 1e-6) cur = v;
-  return cur ? { ...vp, ...cur.set } : vp.versions?.length ? { ...vp, ...vp.versions[0].set } : vp;
-}
-// [settings, from, to] for each stretch of [b0, b1) that one version of the settings covers
-function vpSpans(vp, b0, b1) {
-  const vs = vp.versions || []; if (!vs.length) return [[vp, b0, b1]];
-  const out = [];
-  vs.forEach((v, i) => { const lo = Math.max(b0, i === 0 ? -Infinity : v.from), hi = Math.min(b1, vs[i + 1]?.from ?? Infinity); if (hi > lo) out.push([{ ...vp, ...v.set }, lo, hi]); });
-  return out;
-}
-function setVirtual(id, patch) {
-  const vp = songStore.song.players?.[id]; if (!vp) return;
-  const meter = songStore.song.meter || 4, nowB = tempo.beatAt(clock.now());
-  const from = Math.ceil(tempo.beatAt(clock.now() + 2500) / meter - 1e-9) * meter;
-  const latest = vp.versions?.length ? vp.versions[vp.versions.length - 1].set : settingsOf(vp);
-  const set = { ...latest, ...patch };
-  if (patch.style) set.name = VPL.drummerName(patch.style);
-  if (patch.on === true && !latest.on) set.start = from;
-  // keep what still matters: the version playing now and anything ahead of it
-  const vs = (vp.versions || [{ from: -1e9, set: settingsOf(vp) }]).filter((v, i, a) => v.from > nowB || !a[i + 1] || a[i + 1].from > nowB).slice(-4);
-  setSong('vp:' + id, { ...vp, ...set, versions: [...vs, { from, set }] });
-}
-function removeVirtual(id) { setSong('vp:' + id, null); }
-// Lock the drummer in: the bars it would play in a section become a take, like anyone's (no capture needed: it's
-// the same generator). Then the section plays the take and the live drummer lays out there.
-function lockVirtual(id, sid) {
-  const vp0 = songStore.song.players?.[id], song = songStore.song, sec = song.sections[sid]; if (!vp0 || !sec) return;
-  const vp = { ...vp0, ...(vp0.versions?.length ? vp0.versions[vp0.versions.length - 1].set : {}) };
-  const meter = song.meter || 4, idx = song.order.indexOf(sid), kind = VPL.sectionKind(sec.name, (song.labels || [])[idx] || ''), evs = [];
-  const n0 = songStore.timeline().find((t) => t.id === sid)?.start / meter || 0;
-  for (let i = 0; i < sec.bars; i++) {
-    const form = { kind, sectionBar: i, bars: sec.bars, pass: 0, last: i === sec.bars - 1, phraseEnd: i % 8 === 7 || i === sec.bars - 1, final: false };
-    const prev = i > 0 ? { ...form, sectionBar: i - 1, last: false, phraseEnd: (i - 1) % 8 === 7 } : null;
-    const bpm = tempo.bpm(clock.now()), msB = 60000 / bpm;
-    for (const e of VPL.drummerBar(vp, VPL.withPrevFill(vp, form, prev, n0 + i), n0 + i, meter, bpm)) { const b = Math.max(0, i * meter + e.b + e.ms / msB); evs.push({ b, type: 'on', note: e.note, vel: e.vel }, { b: Math.min(sec.bars * meter - 0.001, b + 0.12), type: 'off', note: e.note }); }
-  }
-  const pid = 'vp-' + vp.id, old = sec.parts?.[pid];
-  const take = { id: Math.random().toString(36).slice(2, 7), events: evs.sort((a, b) => a.b - b.b), by: S.me, byName: `${vp.name} (seed ${vp.seed % 1000})`, at: clock.now() };
-  const takes = [...SONG.takesOf(old || {}), take].slice(-12);
-  setSong(`part:${sid}:${pid}`, { name: vp.name, lane: vp.name, role: 'time', inst: vpCfg(vp).inst, patch: vpCfg(vp).patch, params: null, drums: true, by: S.me, byName: S.name, muted: false, votes: old?.votes || {}, takes, current: take.id, prev: old ? SONG.currentTake(old)?.id : null, switchAt: tempo.beatAt(clock.now() + 300) });
-  setStatus(`${vp.name}'s ${sec.name} is locked in (take ${takes.length}). Reroll and lock again for another.`);
-}
-// a little picture of the bar the drummer is playing: one row per limb
-function vpRoll(vp) {
-  const pl = VP.plan.get(vp.id), meter = songStore.song.meter || 4; if (!pl) return '';
-  const rows = [[VPL.KIT.ride, VPL.KIT.bell, VPL.KIT.crash], [VPL.KIT.hhFoot, VPL.KIT.hhClosed], [VPL.KIT.snare, VPL.KIT.xstick, VPL.KIT.tomHi, VPL.KIT.tomMid, VPL.KIT.tomLo, VPL.KIT.floor], [VPL.KIT.kick]];
-  const w = 120, ht = 34, dots = pl.evs.map((e) => { const r = rows.findIndex((x) => x.includes(e.note)); if (r < 0) return ''; return `<circle cx="${(4 + (e.b / meter) * (w - 8)).toFixed(1)}" cy="${5 + r * 8}" r="${(1 + e.vel / 60).toFixed(1)}"/>`; }).join('');
-  const grid = Array.from({ length: meter }, (_, q) => `<line x1="${(4 + (q / meter) * (w - 8)).toFixed(1)}" y1="0" x2="${(4 + (q / meter) * (w - 8)).toFixed(1)}" y2="${ht}"/>`).join('');
-  return `<svg viewBox="0 0 ${w} ${ht}" width="${w}" height="${ht}"><g stroke="#ffffff18">${grid}</g><g fill="currentColor">${dots}</g></svg>`;
-}
-// the bar above the desk in the Jam Room while a section plays: where you are, the chords, Lock it in
 // ---------- the loop meter: where in the loop you are, bar by bar, beat by beat ----------
 // A strip under the section bar with a box per bar of the loop (its chord inside, a dot per beat), the bar you're
 // in lit, a playhead sweeping across, this pass filling in behind it (red while Record every pass is on), the pass
@@ -1305,7 +1149,7 @@ function lockTake(e, sid, ev, pos, opts = {}) {
   const pid = `${S.me}-${e.r}`, def = engine.defs.get(e.cfg.inst), sec = songStore.song.sections[sid], old = sec.parts?.[pid];
   const take = { id: Math.random().toString(36).slice(2, 7), events: ev, by: S.me, byName: S.name, at: clock.now() };
   const takes = [...SONG.takesOf(old || {}), take].slice(-TAKES_MAX);
-  const rule = songStore.song.rule || 'newest', owner = old ? old.by : S.me;
+  const owner = old ? old.by : S.me;
   const base = { name: old?.name || describe(e.cfg, true), lane: old?.lane || `${S.name} · ${describe(e.cfg, true)}`, role: old?.role || SONG.guessRole({ name: describe(e.cfg, true), inst: e.cfg.inst, patch: e.cfg.patch, drums: def?.drums }),
     inst: e.cfg.inst, patch: e.cfg.patch, params: { ...e.cfg.params }, drums: !!def?.drums, by: owner, byName: old?.byName || S.name, hw: e.cfg.hw || null, muted: old?.muted || false, votes: old?.votes || {} };
   commitTake(sid, pid, base, take, takes, old, pos, opts);
@@ -1751,14 +1595,7 @@ function lightsReact(active) {
 }
 function updateCorners() {
   const now = performance.now(), active = new Set();
-  for (const vp of vplayers()) {
-    const c = engine.ch.get(vpKey(vp)), led = $(`[data-led="${vpKey(vp)}"]`); if (led && c) setCls(led, 'lit', now - c.flashT < 120);
-    const pl = VP.plan.get(vp.id), tr = songStore.song.transport, roll = $(`[data-vproll="${vp.id}"]`);
-    if (roll && pl && roll.dataset.bar !== String(pl.start)) { roll.dataset.bar = String(pl.start); roll.innerHTML = vpRoll(vp); }
-    const pos = tr && tr.on ? positionAt(tr, tempo.beatAt(clock.now())) : null, sec = pos && songStore.song.sections[pos.sid];
-    const words = !vp.on ? 'stopped' : sec ? (Object.values(sec.parts || {}).some((p) => p.drums && !p.muted) ? `laying out: drums are locked in ${sec.name}` : `playing the ${sec.name}`) : tr && tr.on ? 'waiting for the top' : `playing · bar ${pl ? (pl.n % 32) + 1 : 1} of 32`;
-    setText($(`[data-vpstate="${vp.id}"]`), words);
-  }
+  band.updateCards(now);
   for (const id of [S.me, ...room.peers.keys()]) {
     if (!id) continue;
     const peer = room.peers.get(id), pl = S.players.get(id) || {};
@@ -2100,21 +1937,6 @@ function audition(cfg) {
 // --- the gear wall (library) and the hardware desk
 function openDrawer(id) { $(id).classList.remove('hide'); }
 function closeDrawers() { $$('.drawer').forEach((d) => d.classList.add('hide')); }
-function libCard(meta, def) {
-  const id = meta.id, name = def?.name || meta.name;
-  const status = h('span', { class: 'help' });
-  const withDef = async (fn) => {
-    try { status.textContent = def ? '' : 'Loading…'; const d = await engine.ensureDef(id); status.textContent = ''; fn(d); }
-    catch (err) { status.textContent = "Couldn't load it: " + err.message; }
-  };
-  return h('div', { class: 'card' },
-    iconEl(def || { id, icon: meta.icon }), h('div', { class: 'fam' }, def?.family || meta.family), h('div', { class: 'name' }, name), h('p', {}, def?.blurb || meta.blurb || ''),
-    def ? h('div', { class: 'chips' }, ...Object.keys(def.presets).slice(0, 8).map((t) => h('span', { class: 'chip' }, patchName(def, t))), Object.keys(def.presets).length > 8 ? h('span', { class: 'chip' }, `+${Object.keys(def.presets).length - 8}`) : null) : null,
-    h('div', { class: 'row' },
-      h('button', { class: 'btn small', onclick: () => withDef((d) => audition(engine.resolve({ inst: d.id }))) }, 'Audition'),
-      h('button', { class: 'btn small hot', onclick: () => withDef((d) => { addEntry({ inst: d.id }); closeDrawers(); }) }, 'Put it on my desk')),
-    status);
-}
 // the shared studio: every instrument hung on a pegboard. One click puts it on your desk.
 const FEATURED = ['github:samuelling/Acoustic@b540fd3b83f83014073f4a90e2ec769b34374763'];   // pinned, so every jammer loads the identical code
 let featuredTried = false;
@@ -2145,19 +1967,6 @@ function tile(meta, def) {
       h('button', { class: 'btn small hot', onclick: take }, 'Take it')),
     status);
 }
-// the drummer chooser on the wall: every style by genre, the kit it plays, and one click to bring it into the band
-function drummerChooser() {
-  const have = vplayers()[0], kitSel = h('select', { class: 'lcdsel', 'aria-label': 'Drum kit' }, h('option', { value: 'auto' }, 'Kit: whatever suits the style'), ...VPL.KITS.map((k) => h('option', { value: k.id, selected: have?.kit === k.id }, k.name)));
-  const pick = (st) => { const kit = kitSel.value; if (have) setVirtual(have.id, { style: st.id, kit, on: true }); else { const id = addVirtual('drums', st.id); if (id && kit !== 'auto') setVirtual(id, { kit }); } S.libTab = 'builtin'; closeDrawers(); };
-  return [
-    h('h3', { class: 'legend', style: 'margin:6px 0 0' }, have ? `Your drummer: ${have.name}` : 'A drummer for the band'),
-    h('p', { class: 'help', style: 'margin:0' }, 'It keeps time in the room\'s tempo, follows the song, builds and fills, and everyone hears exactly the same drums. It takes a corner of its own.'),
-    h('div', { class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap;align-items:center' }, kitSel, h('span', { class: 'help' }, 'Jazz, rock and funk sound best on the recorded Studio Kit; hip-hop and electronic on Machina.')),
-    h('div', { class: 'drumstyles' }, ...VPL.GENRES.map((g) => h('div', { class: 'dgenre' }, h('b', {}, g), ...VPL.STYLES.filter((st) => st.genre === g).map((st) =>
-      h('button', { class: 'btn small' + (have?.style === st.id ? ' on' : ''), title: `${st.name} on ${VPL.kitOf({ style: st.id }).name}`, onclick: () => pick(st) }, st.name))))),
-    have ? h('button', { class: 'btn small ghost', onclick: () => { removeVirtual(have.id); renderLibrary(); } }, `Send ${have.name} home`) : null,
-  ];
-}
 function plainTile(label, sub, onclick, cls = '') {
   return h('div', { class: 'tile plain ' + cls, style: `--r:${tilt(label)}deg` }, h('span', { class: 'peg' }), cls === 'live' ? h('span', { class: 'badge', title: 'The band hears it whole bars late, not in real time' }, 'works differently') : null,
     h('button', { class: 'face', onclick }, label), h('div', { class: 'ptag' }, h('b', {}, sub[0]), h('small', {}, sub[1])));
@@ -2184,7 +1993,7 @@ function renderLibrary() {
   tiles.push(plainTile('More shelves', ['Libraries', 'Instruments from another GitHub repo or a friend\'s build'], () => { S.libTab = S.libTab === 'add' ? 'builtin' : 'add'; renderLibrary(); }, 'tech'));
   $('#libCards').replaceChildren(...tiles);
   const extra = $('#libExtra');
-  if (S.libTab === 'drums') { extra.replaceChildren(...drummerChooser().filter(Boolean)); return; }
+  if (S.libTab === 'drums') { extra.replaceChildren(...band.chooser().filter(Boolean)); return; }
   if (S.libTab !== 'add') { extra.replaceChildren(); return; }
   const inp = h('input', { type: 'text', placeholder: 'github:owner/repo   or   http://localhost:8780/megajam/', style: 'flex:1;min-width:260px', onkeydown: (e) => { e.stopPropagation(); if (e.key === 'Enter') add(); } });
   const msg = h('p', { class: 'help', style: 'margin:0' });
@@ -2680,7 +2489,7 @@ Object.assign(window.JJ, {
   setTempo: (b) => setTempo(b),
   own: (id, v) => setOwned(id, v),
   loopRange: (a, b) => loopRange(a, b), editTake: (sid, pid, ev, w) => editTake(sid, pid, ev, w), lockAudio: () => lockAudio(), recAll: (on) => setRecAll(on), audio: () => ({ have: [...blobs.bytes.keys()], started: AUD.started }), lane: () => lane,
-  addVirtual: (kind, style) => addVirtual(kind, style), setVirtual: (id, p) => setVirtual(id, p), removeVirtual: (id) => removeVirtual(id), lockVirtual: (id, sid) => lockVirtual(id, sid), vplan: (id) => VP.plan.get(id), players: () => songStore.song.players || {},
+  addVirtual: (kind, style) => band.add(kind, style), setVirtual: (id, p) => band.set(id, p), removeVirtual: (id) => band.remove(id), lockVirtual: (id, sid) => band.lock(id, sid), vplan: (id) => band.plan.get(id), players: () => songStore.song.players || {},
   setKey: (root, mode) => setKey(root, mode), choose: (sid, pid, t) => choose(sid, pid, t), vote: (sid, pid, t) => vote(sid, pid, t), saveVar: (n) => saveVariation(n), restoreVar: (n) => restoreVariation(n), song: () => songStore.song, setSong: (k, v) => setSong(k, v), loadSong: (sg) => loadSong(sg), songFromTracker: (j) => SONG.songFromTracker(j), songFromMidi: (b) => SONG.songFromMidi(b), songMidi: () => Array.from(SONG.songToMidi(songForExport())), play: (mode, sid) => startTransport(mode, sid), stopSong: () => stopTransport(), lockIn: (r) => lockIn(entry(r)), goRoom: (w) => goRoom(w), bounced: () => [...songPlay.bounce].filter(([, v]) => v.buf).map(([k]) => k), match: (r, on) => { const e = entry(r); if (e) return on ? startMatch(e) : stopMatch(e); }, matchScore: async (r, params) => { const m = entry(r)?.match; return m && m.fitter.scoreAll(params); }, matchObs: (r) => entry(r)?.match?.fitter.obs.map((o) => ({ note: o.note, held: o.held, att: o.att, noise: +o.noise.toFixed(2), hSus: o.hSus && o.hSus.map(Math.round).join(' '), curve: o.curve.slice(0, 40).map(Math.round).join(' ') })),
   matchState: (r) => { const m = entry(r)?.match; return m && { why: m.why, on: m.on, obs: m.fitter.obs.length, renders: m.fitter.renders, ms: m.fitter.ms, lag: m.lag, sim: m.sim, applied: m.applied, d: m.fitter.bestD, params: entry(r).cfg.params }; }, react: (r) => react(r), listen: (code) => enter(code, true), assist: (v) => { S.assist = v; },
   tape: () => toggleTape(), sync: () => startSync(), syncState: () => { const r = S.srec; return r && { id: r.id, done: r.done, files: r.files.map((f) => f.name + ':' + f.data.length), got: [...r.got.keys()], zip: r.zip && r.zip.url, T0: r.T0, T1: r.T1 }; }, talk: (on) => talk.setOpen(on), voices: () => [...talk.voices.entries()].map(([id, v]) => ({ id, level: v.level, pan: v.pan.pan.value })), ducked: () => talk.ducked, tapes: () => tape.takes.map((t) => ({ seconds: t.seconds, size: t.blob.size, url: t.url })),
