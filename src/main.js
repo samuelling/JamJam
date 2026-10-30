@@ -1959,7 +1959,8 @@ function tile(meta, def) {
   const take = () => withDef((d) => { const swap = S.firstPick && S.rack.length === 1 ? S.rack[0] : null; S.firstPick = false; addEntry({ inst: d.id }); if (swap) removeEntry(swap); closeDrawers(); });
   return h('div', { class: 'tile', style: `--r:${tilt(id)}deg` },
     h('span', { class: 'peg' }),
-    lib ? h('span', { class: 'from', title: lib.url }, lib.by ? 'by ' + lib.by.split(' ')[0] : lib.name) : null,
+    lib ? h('span', { class: 'from', title: lib.url }, lib.by ? 'by ' + lib.by.split(' ')[0] : lib.name)
+      : def?.by ? h('span', { class: 'from', title: def.lineage || '' }, 'by ' + def.by) : null,
     h('button', { class: 'face', title: `Put ${name} on my desk`, onclick: take }, iconEl(def || { id, icon: meta.icon, accent: meta.accent, lib: meta.lib })),
     h('div', { class: 'ptag' }, h('b', {}, name), h('small', {}, def?.family || meta.family || '')),
     h('div', { class: 'acts' },

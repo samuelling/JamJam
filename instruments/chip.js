@@ -120,6 +120,7 @@ export default {
   family: 'Sound chip synth',
   blurb: "A home-computer sound chip: triangle, saw, pulse with PWM or noise, chip envelopes, a resonant multimode filter, crunch, and the race-through-the-chord arpeggio. A lite version of SynthLand's Chip SID.",
   lineage: 'SynthLand (CrumpLab) Chip SID, pared down for MEGAjam',
+  by: 'Matt',   // the full SynthLand instrument is Matt's design; this lite one credits him on its tile
   params: PARAMS,
   presets: PRESETS,
   presetNames: { lead: 'Lead', bass: 'Bass', arp: 'Chord arp', pwm: 'PWM pad', flute: 'Flute', zap: 'Zap' },

@@ -92,6 +92,7 @@ export default {
   family: 'West-coast complex oscillator',
   blurb: "A west-coast voice: a sine-to-triangle oscillator FM'd through zero by a modulator, a wavefolder, and a low-pass gate with a vactrol's decay, pinged for bongos and bells or held for drones. A lite version of SynthLand's Complex Osc.",
   lineage: 'SynthLand (CrumpLab) Complex Osc, pared down for MEGAjam',
+  by: 'Matt',   // the full SynthLand instrument is Matt's design; this lite one credits him on its tile
   params: PARAMS,
   presets: PRESETS,
   presetNames: { bongo: 'Bongo', bell: 'Bell', bubble: 'Bubble', wood: 'Wood', bass: 'Folded bass', drone: 'Drone' },

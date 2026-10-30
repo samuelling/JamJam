@@ -120,6 +120,7 @@ export default {
   family: 'Analog drum machine',
   blurb: "An analog drum machine: a pinged kick with punch, a snare with snappy noise, a clap, rim, toms, a cowbell, and hats and cymbal from six detuned squares, the closed hat choking the open. A lite version of SynthLand's Analog Drums.",
   lineage: 'SynthLand (CrumpLab) Analog Drums, pared down for MEGAjam',
+  by: 'Matt',   // the full SynthLand instrument is Matt's design; this lite one credits him on its tile
   drums: true,
   seq: { tracks: [
     { id: 'kick', label: 'BD', note: 36 }, { id: 'snare', label: 'SD', note: 38 }, { id: 'clap', label: 'CP', note: 39 }, { id: 'rim', label: 'RS', note: 37 },

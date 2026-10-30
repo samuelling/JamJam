@@ -125,6 +125,7 @@ export default {
   family: 'Drawbar organ',
   blurb: "A drawbar organ with key click, percussion, scanner vibrato and chorus, drive and a rotating speaker. A lite version of SynthLand's Tonewheel.",
   lineage: 'SynthLand (CrumpLab) Tonewheel, pared down for MEGAjam',
+  by: 'Matt',   // the full SynthLand instrument is Matt's design; this lite one credits him on its tile
   params: PARAMS,
   presets: PRESETS,
   presetNames: { jazz: 'Jazz', soul: 'Soul', gospel: 'Full gospel', rock: 'Rock drive', ballad: 'Ballad', flutes: 'Flutes' },

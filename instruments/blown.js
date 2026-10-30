@@ -111,6 +111,7 @@ export default {
   family: 'Modelled winds',
   blurb: "Winds played by breath: a waveguide bore with a reed (clarinet, or a gruffer sax-like reed) or an air jet (flute), breath noise and a vibrato that creeps in. Play harder to blow harder. A lite version of SynthLand's Blown.",
   lineage: 'SynthLand (CrumpLab) Blown, pared down for MEGAjam',
+  by: 'Matt',   // the full SynthLand instrument is Matt's design; this lite one credits him on its tile
   params: PARAMS,
   presets: PRESETS,
   presetNames: { clarinet: 'Clarinet', flute: 'Flute', reed: 'Gruff reed', breathy: 'Breathy flute', lowreed: 'Low reed' },
