@@ -7,7 +7,7 @@ import * as SR from './syncrec.js';
 import * as MATCH from './match.js';
 import * as SONG from './song.js';
 import { makeCompose, colorOfSection } from './compose.js';
-import { Input, sendToHardware, bendBytes } from './input.js';
+import { Input, sendToHardware, bendBytes, srcOf } from './input.js';
 import { AudioLane, decodeChunk } from './lane.js';
 import { StepSeq } from './seq.js';
 import { iconEl, skinOf } from './skins.js';
@@ -43,7 +43,7 @@ const setVar = (el, k, v) => { if (el && el.style.getPropertyValue(k) !== v) el.
 
 const qs = new URLSearchParams(location.search);
 const SERVER = qs.get('server') || window.MP_SERVER || 'wss://crush-commando-mp.samuelling.workers.dev';
-const MAX = 4, MAX_RACK = 4;
+const MAX = 4, MAX_RACK = 12;   // jammers in a room; instruments on one desk (a sequencer rig can bring many)
 const PLAYER_COLORS = ['#ff5a1f', '#2f80ff', '#1fc46e', '#e9e9e4'];
 const KNOB_COLORS = ['#2f80ff', '#1fc46e', '#e9e9e4', '#ff5a1f'];
 const RACK_COLORS = ['#ff5a1f', '#2f80ff', '#1fc46e', '#ffcf26'];
@@ -72,7 +72,7 @@ const S = {
   lockKey: false, snapped: new Map(), assist: 0,
   where: 'jam', lockLog: [],                     // which room you're in; your recent events, for Lock it in
   routes: new Map(),                       // a bandmate's part (channel key) -> {port, ch, lat, mute}: played on your MIDI gear
-  mclock: { port: '', on: false, lat: 0, next: null },  // MIDI clock out: the room's tempo to your drum machines  // channel key -> {wanted cfg} while a stand-in plays someone's library instrument
+  mclock: { port: '', on: false, lat: 0, next: null, ahead: false, aheadMs: 0 },  // MIDI clock out: the room's tempo to your drum machines  // channel key -> {wanted cfg} while a stand-in plays someone's library instrument
 };
 window.JJ = { clock, tempo, engine, S };
 const key = (pid, r) => `${pid}:${r}`;
@@ -378,8 +378,11 @@ function autoBudget(cfg) {
   return 'balanced';
 }
 const budgetOf = (e) => (e.budget === 'auto' ? autoBudget(e.cfg) : e.budget);
-const partLook = (e) => (room.peers.size ? BUDGETS[budgetOf(e)].L(lookahead()) : 0);
-const selfInstant = (e) => S.hearSelf || budgetOf(e) === 'loose';
+// A sequencer run a lookahead ahead (MEGAjam sends it clock early): what it plays is stamped by exactly that much,
+// so it lands on the room's beat for everyone, the player included (nobody's hands are waiting on it)
+const seqAhead = () => (S.mclock.on && S.mclock.port && S.mclock.ahead ? S.mclock.aheadMs : 0);
+const partLook = (e) => (e?.seq && seqAhead() ? seqAhead() : room.peers.size ? BUDGETS[budgetOf(e)].L(lookahead()) : 0);
+const selfInstant = (e) => !(e?.seq && seqAhead()) && (S.hearSelf || budgetOf(e) === 'loose');
 
 // ---------- playing ----------
 // Notes go out twice: on the fast channel, carrying the previous two events too (so one lost packet is recovered by
@@ -392,7 +395,7 @@ function sendEvent(e, ev, instant) {
   if (S.srec && !S.srec.done) (S.srec.events.get(k) || S.srec.events.set(k, []).get(k)).push({ ...ev });
   // a take is placed where the player heard the band when they played it: their note sounds one lookahead after
   // their hands move (with a quantize or rhythm-help shift kept, since that is meant), so take the lookahead off
-  logForLock(k, { ...ev, at: ev.at - partLook(e) });
+  logForLock(k, { ...ev, at: ev.at - (e.seq && seqAhead() ? 0 : partLook(e)) });   // a sequencer ahead already played for the beat it lands on
   engine.event(k, ev, { now: instant || room.peers.size === 0 || !clock.locked });
   if (!clock.locked) return;
   recentEv.push({ r: e.r, ev }); if (recentEv.length > 3) recentEv.shift();
@@ -421,10 +424,14 @@ function receiveEvent(p, r, ev) {
   routeOut(k, ev);
   if (ev.type === 'p' && ev.id !== 'bend') { const x = S.players.get(p.id).rack.find((y) => y.r === r); if (x) x.cfg.params[ev.id] = ev.v; }
 }
-function targetsFor(ch) {
+// who plays what comes in: the computer keys play the selected instrument; MIDI goes to the instruments listening on
+// its channel (and its port, for one that names a port: a sequencer's usb2, say). A port that some instrument
+// listens on is that instrument's alone: its other channels play nothing rather than the selected instrument.
+function targetsFor(ch, port = '') {
   if (ch === 0) return [selEntry()].filter(Boolean);
-  const t = S.rack.filter((e) => e.midiCh === ch || e.midiCh === 0);
-  return t.length ? t : [selEntry()].filter(Boolean);
+  const t = S.rack.filter((e) => (!e.midiIn || e.midiIn === port) && (e.midiCh === ch || e.midiCh === 0));
+  if (t.length || (port && S.rack.some((e) => e.midiIn === port))) return t;
+  return [selEntry()].filter(Boolean);
 }
 // ---------- the room's key, the key lock, chord pads ----------
 const NOTE_NAMES = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
@@ -437,9 +444,9 @@ const MODES = {
 };
 const keyName = (k = S.key) => (k.mode ? `${NOTE_NAMES[k.root]} ${MODES[k.mode].name}` : 'Free');
 const inKey = (n, k = S.key) => !k.mode || MODES[k.mode].steps.includes(((n - k.root) % 12 + 12) % 12);
-function snapNote(n, ch) {
+function snapNote(n, ch, port = '') {
   if (!S.lockKey || !S.key.mode) return n;
-  const e = targetsFor(ch)[0]; if (e && engine.defs.get(e.cfg.inst)?.drums) return n;
+  const e = targetsFor(ch, port)[0]; if (e && engine.defs.get(e.cfg.inst)?.drums) return n;
   for (const d of [0, 1, -1, 2, -2]) if (inKey(n + d)) return n + d;
   return n;
 }
@@ -512,12 +519,13 @@ function renderKey() {
   }));
 }
 
-function playNote(on, note, vel, ch = 0) {
+function playNote(on, note, vel, ch = 0, port = '') {
   if (!S.me) return;
-  { const raw = ch * 128 + note;   // the key lock: every key you press lands on a note of the room's key
-    if (on) { const sn = snapNote(note, ch); S.snapped.set(raw, sn); note = sn; } else { note = S.snapped.get(raw) ?? note; S.snapped.delete(raw); } }
-  const rk = ch * 128 + note;
-  const targets = on ? targetsFor(ch) : (S.route.get(rk) || []).map(entry).filter(Boolean);
+  const src = srcOf(ch, port);
+  { const raw = src * 128 + note;   // the key lock: every key you press lands on a note of the room's key
+    if (on) { const sn = snapNote(note, ch, port); S.snapped.set(raw, sn); note = sn; } else { note = S.snapped.get(raw) ?? note; S.snapped.delete(raw); } }
+  const rk = src * 128 + note;
+  const targets = on ? targetsFor(ch, port) : (S.route.get(rk) || []).map(entry).filter(Boolean);
   if (on && !targets.length && !S.listener) { if (!S.nudged || performance.now() - S.nudged > 4000) { S.nudged = performance.now(); setStatus('Pick an instrument first: your desk is empty.'); } }
   if (on) S.route.set(rk, targets.map((e) => e.r)); else S.route.delete(rk);
   const now = clock.now();
@@ -644,9 +652,10 @@ setInterval(sendFingerprint, 2000);
 // ---------- input ----------
 const input = new Input({
   plugged: (name, on) => { setStatus(on ? `${name} connected: play it and you'll hear your selected instrument.` : `${name} unplugged.`); renderInputStatus(); },
-  note: (on, note, vel, ch) => playNote(on, note, vel, ch),
-  cc: (cc, val, ch) => {
-    for (const e of targetsFor(ch)) {
+  note: (on, note, vel, ch, port) => playNote(on, note, vel, ch, port),
+  heard: (port, ch, note) => gear.heard(port, ch, note),   // what a sequencer is playing, while you add it
+  cc: (cc, val, ch, port) => {
+    for (const e of targetsFor(ch, port)) {
       const port = e.cfg.ext ? outPort(e.midiOut) : null;  // external gear gets your controller's CCs too, in lockstep
       if (port) sendToHardware(port, [0xb0 | (((e.outCh || 1) - 1) & 15), cc, val], selfInstant(e) ? performance.now() : clock.toLocal(clock.now() + partLook(e)) - (e.hwLatency || 0));
       const def = engine.defs.get(e.cfg.inst), unit = e.cfg.hw && engine.unit(e.cfg.hw);
@@ -659,11 +668,11 @@ const input = new Input({
       if (e === selEntry()) knobSet(pid);
     }
   },
-  bend: (semi, ch) => { for (const e of targetsFor(ch)) { const L = partLook(e);
+  bend: (semi, ch, port) => { for (const e of targetsFor(ch, port)) { const L = partLook(e);
     const port = e.cfg.ext ? outPort(e.midiOut) : null;
     if (port) sendToHardware(port, bendBytes(e.outCh || 1, semi), selfInstant(e) ? performance.now() : clock.toLocal(clock.now() + L) - (e.hwLatency || 0));
     sendEvent(e, { type: 'p', id: 'bend', v: semi, at: clock.now() + L, seq: ++S.seq, b: BUDGETS[budgetOf(e)].short, o: L - lookahead() }, selfInstant(e)); } },
-  raw: (bytes, ch) => gear.relayRaw(bytes, ch),      // knob moves, program changes, pressure: to a bandmate's same synth
+  raw: (bytes, ch, port) => gear.relayRaw(bytes, ch, port),      // knob moves, program changes, pressure: to a bandmate's same synth
   sysex: (bytes) => gear.onSysex(bytes),
   status: (msg) => renderInputStatus(msg),
 });
@@ -671,6 +680,7 @@ window.JJ.input = input;
 const gear = makeGear({
   h, S, engine, input, room, clock, tempo, outPort, sendToHardware, targetsFor, partLook, key, entry: (r) => entry(r), rack: () => S.rack, song: () => songStore.song,
   chat: (text) => addChat({ sys: true, text, t: Date.now() }), status: (t, k) => setStatus(t, k), setOwned: (id, v) => setOwned(id, v), addEntry: (o) => addEntry(o),
+  setClock: (patch) => setClock(patch), lookahead: () => lookahead(),
   closeDrawers: () => closeDrawers(), renderRack: () => renderRack(), openGear: () => openGear(), findUnit: () => { $('#hwSearch')?.focus(); $('#hwList')?.scrollIntoView({ block: 'nearest' }); renderHardware(); },
   render: () => { if ($('#hwDrawer') && !$('#hwDrawer').classList.contains('hide')) renderHardware(); renderDevice(); },
 });
@@ -1701,7 +1711,7 @@ function renderRack() {
     const name = e.cfg.ext ? e.cfg.ext.name : unit ? unit.model : def.name;
     return h('div', { class: 'cartwrap' }, h('button', { class: 'cart' + (e.r === (selEntry() || {}).r ? ' sel' : ''), style: `--k:${RACK_COLORS[i % 4]}`, title: describe(e.cfg), onclick: () => { S.sel = e.r; S.knobGroup = null; S.held = null; renderRack(); renderDevice(); renderKeyboard(); } },
       iconEl(e.cfg.ext ? { id: 'midi' } : def),
-      h('b', {}, e.cfg.ext ? e.cfg.ext.name : unit ? unit.model : def.name), h('small', {}, e.cfg.ext ? `MIDI out ${e.midiOut ? 'ch' + (e.outCh || 1) : '—'}` : `${unit ? def.name + ' · ' : ''}${e.cfg.patch} · ${e.midiCh ? 'ch' + e.midiCh : 'any'}`),
+      h('b', {}, e.cfg.ext ? e.cfg.ext.name : unit ? unit.model : def.name), h('small', {}, e.cfg.ext ? `MIDI out ${e.midiOut ? 'ch' + (e.outCh || 1) : '—'}` : `${unit ? def.name + ' · ' : ''}${e.cfg.patch} · ${e.midiIn ? (input.inputs.find((i) => i.id === e.midiIn)?.name || 'a gone port') + ' ' : ''}${e.midiCh ? 'ch' + e.midiCh : 'any'}`),
       h('span', { class: 'led', 'data-led': key(S.me, e.r), style: `--c:${RACK_COLORS[i % 4]}` })),
       h('button', { class: 'cartx', title: `Remove ${name}`, 'aria-label': `Remove ${name}`, onclick: () => removeEntry(e) }, '×'));
   }), S.listener || S.rack.length >= MAX_RACK ? null : h('button', { id: 'addSlot', class: 'cart emptyslot' + (!S.rack.length ? ' first' : ''), title: 'Put an instrument on your desk', onclick: () => { renderLibrary(); openDrawer('#libDrawer'); } },
@@ -1720,6 +1730,8 @@ function configFields(e, def, unit) {
   f.push(sel(def.drums ? 'Kit' : 'Patch', engine.patchTypes(e.cfg).map((t) => [t, patchName(def, t)]), e.cfg.patch, (v) => changeEntry(e, { patch: v })));
   f.push(techOnly(sel('Timing', [['auto', `Auto · ${BUDGETS[autoBudget(e.cfg)].label}`], ...Object.entries(BUDGETS).map(([k, b]) => [k, b.label])], e.budget, (v) => { e.budget = v; broadcastLook(true); renderDevice(); renderRack(); })));
   f.push(techOnly(sel('MIDI in', [[0, 'Any channel'], ...Array.from({ length: 16 }, (_, i) => [i + 1, `Channel ${i + 1}`])], e.midiCh, (v) => { e.midiCh = +v; renderRack(); })));
+  const fromSel = sel('From', [['', 'Any MIDI port'], ...input.inputs.map((i) => [i.id, i.name]), ...(e.midiIn && !input.inputs.some((i) => i.id === e.midiIn) ? [[e.midiIn, 'a port that is gone']] : [])], e.midiIn || '', (v) => { e.midiIn = v; renderRack(); });
+  f.push(e.midiIn ? fromSel : techOnly(fromSel));   // shown when it matters: an instrument played by a sequencer
   if (unit) f.push(sel('Plays my synth via', [['', input.outputs.length ? 'None (I play it)' : 'None · enable MIDI'], ...input.outputs.map((o) => [o.id, o.name])], e.midiOut, (v) => { e.midiOut = v; renderDevice(); }));
   return f;
 }
@@ -2298,10 +2310,12 @@ setInterval(() => {
   const m = S.mclock;
   if (!S.me || !m.on || !m.port) return;
   const port = outPort(m.port); if (!port) return;
-  const now = clock.now(), horizon = now + 100;
+  if (m.ahead) { const want = Math.max(30, lookahead() + 10); if (Math.abs(want - m.aheadMs) > 15) m.aheadMs = want; }   // follows the lookahead, in steps
+  const early = m.lat + (m.ahead ? m.aheadMs : 0);
+  const now = clock.now(), horizon = now + 100 + early;
   if (m.next == null) {
-    const bar = Math.ceil(tempo.beatAt(now + 150) / 4 - 1e-9) * 4;
-    const t = clock.toLocal(tempo.timeOf(bar)) - m.lat;
+    const bar = Math.ceil(tempo.beatAt(now + 150 + early) / 4 - 1e-9) * 4;
+    const t = clock.toLocal(tempo.timeOf(bar)) - early;
     sendToHardware(port, [0xf2, 0, 0], t - 1);   // song position: the top
     sendToHardware(port, [0xfa], t);             // start
     m.next = bar * 24; m.startBar = bar;
@@ -2309,7 +2323,7 @@ setInterval(() => {
   for (let guard = 0; guard < 200; guard++) {
     const t = tempo.timeOf(m.next / 24);
     if (t > horizon) break;
-    if (t >= now - 20) sendToHardware(port, [0xf8], clock.toLocal(t) - m.lat);
+    if (t >= now - 20 + early) sendToHardware(port, [0xf8], clock.toLocal(t) - early);
     m.next++;
   }
 }, 20);
@@ -2335,7 +2349,8 @@ function renderMidiPanel() {
     h('p', { class: 'help', style: 'margin:0' }, 'Sends the room tempo as MIDI clock (24 per beat) with Start on the next bar, so drum machines and sequencers follow the band.'),
     h('div', { class: 'row' }, portSel(m.port, (v) => setClock({ port: v, on: !!v }), 'Clock output'),
       h('button', { class: 'btn small' + (m.on && m.port ? ' on' : ''), disabled: !m.port, onclick: () => setClock({ on: !m.on }) }, m.on && m.port ? 'Running' : 'Stopped'),
-      h('label', { class: 'help' }, 'early ', h('input', { type: 'number', min: 0, max: 80, value: m.lat, style: 'width:52px', onkeydown: (e) => e.stopPropagation(), onchange: (e) => { m.lat = Math.max(0, Math.min(80, +e.target.value || 0)); } }), ' ms')),
+      h('label', { class: 'help' }, 'early ', h('input', { type: 'number', min: 0, max: 80, value: m.lat, style: 'width:52px', onkeydown: (e) => e.stopPropagation(), onchange: (e) => { m.lat = Math.max(0, Math.min(80, +e.target.value || 0)); } }), ' ms'),
+      h('label', { class: 'help', title: "For a sequencer whose parts you've added from My gear: its clock goes a lookahead early, and what it plays lands on the room's beat for everyone" }, h('input', { type: 'checkbox', checked: !!m.ahead, onchange: (e) => setClock({ ahead: e.target.checked, aheadMs: Math.max(30, lookahead() + 10), on: m.on }) }), ` run my sequencer ahead${m.ahead ? ` (${m.aheadMs} ms)` : ''}`)),
     h('h3', { class: 'legend', style: 'margin:8px 0 0' }, "The band's parts on your gear"),
     h('p', { class: 'help', style: 'margin:0' }, parts.length ? "Pick an output and channel to play a bandmate's part (notes, pitch bend, mapped knobs, sequencer hits) on your own synth or DAW, at the moment the room hears it." : 'When bandmates walk in, their parts show up here.'),
     ...parts.map(({ k, who, what, hw }) => {

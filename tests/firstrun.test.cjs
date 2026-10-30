@@ -14,12 +14,12 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     await A.click('#startBtn'); await A.waitForSelector('#studio:not(.hide)');
     await sleep(800);
     check((await A.evaluate(() => JJ.S.rack.length)) === 0, 'you walk in with nothing on your desk');
-    check(/4 of 4 free/.test(await A.textContent('#addSlot')), 'one add slot on your shelf, with all four free');
+    check(/12 of 12 free/.test(await A.textContent('#addSlot')), 'one add slot on your shelf, with all twelve free');
     check(/Your desk is empty/.test(await A.textContent('#plate')), 'the desk offers a first pick');
     await A.keyboard.down('a'); await sleep(100); await A.keyboard.up('a'); await sleep(200);
     check(/Pick an instrument first/.test(await A.evaluate(() => document.body.innerText)), 'playing a key says to pick something first');
     await A.click('#plate .quick >> text=Play some keys'); await sleep(600);
-    check((await A.evaluate(() => JJ.S.rack.map((e) => e.cfg.inst).join())) === 'juniper' && /3 of 4 free/.test(await A.textContent('#addSlot')), 'one click puts keys on the desk; three slots left');
+    check((await A.evaluate(() => JJ.S.rack.map((e) => e.cfg.inst).join())) === 'juniper' && /11 of 12 free/.test(await A.textContent('#addSlot')), 'one click puts keys on the desk; eleven slots left');
     await A.click('#rackList .cartx'); await sleep(400);
     check((await A.evaluate(() => JJ.S.rack.length)) === 0 && /Your desk is empty/.test(await A.textContent('#plate')), 'the last instrument can come off again');
     // Acoustic: numbered chord pads 1 to 7 even with no key set; a number key strums that chord

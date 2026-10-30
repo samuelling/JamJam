@@ -14,6 +14,7 @@
 // difference is pointed out.
 
 const hex = (s) => String(s || '').trim().split(/[\s,]+/).filter(Boolean).map((x) => parseInt(x, 16));
+const NOTE = (n) => ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'][n % 12] + (Math.floor(n / 12) - 1);
 const squash = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 const GENERIC = /^(usb|midi|iac|network|session|through|thru|bus|port|in|out|interface|audio|device|driver|\d)+$/;
 const IDENTITY_REQ = [0xf0, 0x7e, 0x7f, 0x06, 0x01, 0xf7];
@@ -83,8 +84,8 @@ export function makeGear(x) {
   // ---- the player's side
   // knob moves, program changes, pressure from your synth: to the bandmates playing your part on theirs
   let refetch = 0;
-  function relayRaw(bytes, ch) {
-    for (const e of x.targetsFor(ch)) {
+  function relayRaw(bytes, ch, port = '') {
+    for (const e of x.targetsFor(ch, port)) {
       if (!e.cfg.hw) continue;
       const to = live(e.r); if (!to.length) continue;
       const at = clock.now() + x.partLook(e);
@@ -239,6 +240,78 @@ export function makeGear(x) {
       h('div', { class: 'row' }, h('button', { class: 'btn small hot', disabled: !!t?.busy || !input.outputs.some((p) => p.id === S.owned.get(id)?.port), onclick: () => test(id) }, t?.busy ? 'Checking…' : 'Check it works'),
         t && !t.busy ? h('span', { class: 'help ' + (t.ok ? 'ok' : 'warn') }, (t.ok ? '✓ ' : '') + t.text) : null));
   }
+  // ---- adding a sequencer (a Cirklon, a Hapax, a DAW…): listen while it plays, list every port and channel that
+  // has notes, say what plays each one (a synth you linked, or a software instrument), and they go on your desk
+  let listening = null, redraw = 0;
+  const seqPick = new Map(), seqRoom = new Map();
+  let clockPort = null, clockAhead = true;
+  function heard(port, ch, note) {
+    if (!listening || listening.done || !port) return;
+    const k = port + '|' + ch, st = listening.streams.get(k) || { port, ch, n: 0, lo: 127, hi: 0, notes: new Set() };
+    st.n++; st.lo = Math.min(st.lo, note); st.hi = Math.max(st.hi, note); st.notes.add(note); listening.streams.set(k, st);
+    if (!redraw) redraw = setTimeout(() => { redraw = 0; render(); }, 300);
+  }
+  function listen(sec = 8) {
+    listening = { streams: new Map(), done: false, until: performance.now() + sec * 1000 };
+    clearTimeout(listen.t); listen.t = setTimeout(() => { if (listening) listening.done = true; render(); }, sec * 1000);
+    render();
+  }
+  const inName = (id) => input.inputs.find((i) => i.id === id)?.name || 'a MIDI port';
+  function guessFor(st) {
+    // a linked synth on that channel (on the first port that uses it), else something that suits the notes
+    const first = [...(listening?.streams.values() || [])].filter((y) => y.ch === st.ch).sort((a, b) => a.port.localeCompare(b.port))[0];
+    if (!first || first === st) for (const [id, o] of S.owned) if ((o.ch || 1) === st.ch) return 'gear:' + id;
+    if (st.ch === 10) return engine.defs.has('studio') ? 'studio' : 'machina';   // the drum channel by convention
+    if (st.hi < 55) return 'monolith';
+    return 'juniper';
+  }
+  function addStreams(list) {
+    let added = 0, full = false;
+    for (const st of list) {
+      const k = st.port + '|' + st.ch, v = seqPick.get(k) ?? guessFor(st); if (!v || v === 'skip') continue;
+      let e;
+      if (v.startsWith('gear:')) {
+        const id = v.slice(5), u = engine.unit(id), own = S.owned.get(id);
+        e = x.addEntry({ hw: id, inst: engine.twinCandidates(u)[0]?.inst });
+        if (e && seqRoom.get(k) && own?.port) { e.midiOut = own.port; e.outCh = own.ch || 1; }
+      } else e = x.addEntry({ inst: v });
+      if (!e) { full = true; break; }
+      e.midiIn = st.port; e.midiCh = st.ch; e.seq = true; e.budget = 'balanced'; added++;
+    }
+    if (clockPort) x.setClock({ port: clockPort, on: true, ahead: clockAhead, aheadMs: Math.max(30, x.lookahead() + 10) });
+    listening = null; x.renderRack();
+    x.status(full ? `Your desk is full: ${added} of the sequencer's parts went on it.` : `${added} part${added === 1 ? '' : 's'} from your sequencer on your desk${clockPort ? (clockAhead ? ', and it runs a lookahead ahead of the room so every part lands on the beat' : ', following the room\'s clock') : ''}.`);
+    render();
+  }
+  function seqSection() {
+    const defs = [...engine.defs.values()].filter((d) => !d.internal && !d.lib);
+    if (!listening) return h('div', { class: 'gearrow seqadd' }, h('span', {}, h('b', {}, 'Add a sequencer'),
+      h('small', {}, 'A Cirklon, Hapax, OXI or a DAW sending many parts over USB. Set its tracks to its USB ports (a Cirklon: usb1–usb6) and its clock to follow USB, start it playing, then listen: every port and channel with notes gets an instrument on your desk.')),
+      h('button', { class: 'btn small hot', onclick: () => listen() }, 'Listen for it'));
+    const list = [...listening.streams.values()].sort((a, b) => a.port.localeCompare(b.port) || a.ch - b.ch);
+    const rows = list.map((st) => {
+      const k = st.port + '|' + st.ch, v = seqPick.get(k) ?? guessFor(st), gearId = v.startsWith('gear:') ? v.slice(5) : null;
+      const pick = h('select', { class: 'lcdsel', 'aria-label': `What plays ${inName(st.port)} channel ${st.ch}`, onchange: (ev) => { seqPick.set(k, ev.target.value); render(); } },
+        S.owned.size ? h('optgroup', { label: 'My gear' }, ...[...S.owned.keys()].map((id) => h('option', { value: 'gear:' + id, selected: v === 'gear:' + id }, `My ${model(id)}`))) : null,
+        h('optgroup', { label: 'A software instrument' }, ...defs.map((d) => h('option', { value: d.id, selected: v === d.id }, d.name))),
+        h('option', { value: 'skip', selected: v === 'skip' }, 'Leave it out'));
+      return h('div', { class: 'seqrow' }, h('b', {}, `${inName(st.port)} · ch ${st.ch}`), h('small', { class: 'help' }, `${st.n} note${st.n === 1 ? '' : 's'}${st.n ? ` · ${NOTE(st.lo)}–${NOTE(st.hi)}` : ''}`), pick,
+        gearId && S.owned.get(gearId)?.port ? h('label', { class: 'help', title: `Your ${model(gearId)} gets its notes from MEGAjam, at the moment the band hears them, so you hear the same beat they do. Otherwise it plays straight from the sequencer, a lookahead ahead of the band.` },
+          h('input', { type: 'checkbox', checked: !!seqRoom.get(k), onchange: (ev) => seqRoom.set(k, ev.target.checked) }), ' MEGAjam plays it, in time with the band') : h('span', {}));   // keeps the columns lined up
+    });
+    const outs = input.outputs, guessOut = clockPort ?? (outs.find((o) => list.some((st) => squash(inName(st.port)).slice(0, 5) === squash(o.name).slice(0, 5)))?.id || '');
+    if (clockPort == null && guessOut) clockPort = guessOut;
+    const clockSel = h('select', { class: 'lcdsel', 'aria-label': 'Send the room clock to', onchange: (ev) => { clockPort = ev.target.value; } }, h('option', { value: '' }, 'no clock'), ...outs.map((o) => h('option', { value: o.id, selected: o.id === clockPort }, o.name)));
+    return h('div', { class: 'gearrow seqadd open' },
+      h('span', {}, h('b', {}, listening.done ? `Heard ${list.length} part${list.length === 1 ? '' : 's'}` : `Listening… ${list.length} part${list.length === 1 ? '' : 's'} so far`), h('small', {}, list.length ? 'Say what plays each one. Linked synths are matched by channel.' : 'Nothing yet: is the sequencer playing, and sending to its USB ports?')),
+      listening.done ? h('button', { class: 'btn small ghost', onclick: () => listen() }, 'Listen again') : null,
+      h('button', { class: 'btn small ghost', onclick: () => { listening = null; render(); } }, 'Cancel'),
+      h('div', { class: 'seqrows' }, ...rows),
+      list.length ? h('div', { class: 'row seqclock' }, h('span', { class: 'help' }, 'Room clock to'), clockSel,
+        h('label', { class: 'help', title: 'MEGAjam sends the sequencer its clock one lookahead early. What it plays reaches the room one lookahead later, so it lands on the beat for everyone. Nobody is playing it by hand, so the head start costs nothing.' },
+          h('input', { type: 'checkbox', checked: clockAhead, onchange: (ev) => { clockAhead = ev.target.checked; } }), ' run it a lookahead ahead (lands on the beat for everyone)'),
+        h('span', { style: 'flex:1' }), h('button', { class: 'btn small hot', onclick: () => addStreams(list) }, `Put ${list.filter((st) => (seqPick.get(st.port + '|' + st.ch) ?? guessFor(st)) !== 'skip').length} on my desk`)) : null);
+  }
   // the top of the My gear drawer
   function render(box = document.querySelector('#gearMine')) {
     if (!box) return;
@@ -281,10 +354,11 @@ export function makeGear(x) {
       input.sysex ? null : h('button', { class: 'btn small', onclick: allowSysex }, 'Allow SysEx'));
     box.replaceChildren(
       ...(linked.length ? [h('h3', {}, 'Linked')] : []), ...linked,
+      h('h3', {}, 'Sequencer'), seqSection(),
       ...(found.length ? [h('h3', {}, 'Found on MIDI')] : []), ...found,
       !linked.length && !found.length ? h('p', { class: 'help' }, 'No MIDI devices yet: plug one in, or pick your synth in the list below and choose its port.') : null,
       sysex);
   }
 
-  return { test, stepsFor, guessUnit, relayRaw, onSysex, receiveRaw, receiveSx, onReal, sharePatch, realMsg, check, render, link, play, allowSysex, hostsOf: live, onPreq: (p, m) => sharePatch(x.entry(m.r), [p.id], 'again'), identify, ver };
+  return { heard, listen, addStreams, test, stepsFor, guessUnit, relayRaw, onSysex, receiveRaw, receiveSx, onReal, sharePatch, realMsg, check, render, link, play, allowSysex, hostsOf: live, onPreq: (p, m) => sharePatch(x.entry(m.r), [p.id], 'again'), identify, ver };
 }

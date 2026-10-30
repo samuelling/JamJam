@@ -5,15 +5,19 @@
 // plain note-ons and note-offs (a sustained note's note-off is sent when the pedal comes up).
 
 const KEYMAP = { a: 0, w: 1, s: 2, e: 3, d: 4, f: 5, t: 6, g: 7, y: 8, h: 9, u: 10, j: 11, k: 12, o: 13, l: 14, p: 15, ';': 16, "'": 17 };
-const key = (ch, note) => ch * 128 + note;
+// a key is a note on a channel of a port: two ports (a sequencer's usb1 and usb2, say) can both use channel 3
+const slots = new Map();   // port id -> a small number
+export const srcOf = (ch, port = '') => (port ? (slots.get(port) || slots.set(port, slots.size + 1).get(port)) * 17 : 0) + ch;
+const portOfSrc = (src) => { const n = Math.floor(src / 17); if (!n) return ''; for (const [id, k] of slots) if (k === n) return id; return ''; };
+const key = (ch, note, port = '') => srcOf(ch, port) * 128 + note;
 const NRPN_CC = new Set([99, 98, 101, 100, 6, 38, 96, 97]);   // parameter number, data entry, increment/decrement
 
 // read once at load: the app rewrites the address bar to ?room=… after you walk in
 const MIDI_MOCK = typeof location !== 'undefined' && new URLSearchParams(location.search).get('midimock') === '1';
 
 export class Input {
-  constructor({ note, cc, bend, status, plugged, raw, sysex }) {
-    this.cb = { note, cc, bend, status, plugged, raw, sysex };
+  constructor({ note, cc, bend, status, plugged, raw, sysex, heard }) {
+    this.cb = { note, cc, bend, status, plugged, raw, sysex, heard };
     this.sysex = false;            // SysEx access granted (asked for only when patches are shared)
     this.nrpn = new Map();         // channel -> a parameter message being gathered (CC 99/98/6/38 arrive one by one)
     this.octave = 4; this.velocity = 100;
@@ -27,28 +31,29 @@ export class Input {
     window.addEventListener('blur', () => this.panic());
   }
 
-  press(note, vel, ch = 0) {
+  press(note, vel, ch = 0, port = '') {
     if (note < 0 || note > 127) return;
-    const k = key(ch, note);
-    if (this.down.has(k) || this.sustained.has(k)) { this.sustained.delete(k); this.cb.note(false, note, 0, ch); }
+    const k = key(ch, note, port);
+    if (this.down.has(k) || this.sustained.has(k)) { this.sustained.delete(k); this.cb.note(false, note, 0, ch, port); }
     this.down.add(k);
-    this.cb.note(true, note, vel, ch);
+    this.cb.note(true, note, vel, ch, port);
   }
-  release(note, ch = 0, force = false) {
-    const k = key(ch, note);
+  release(note, ch = 0, force = false, port = '') {
+    const k = key(ch, note, port);
     if (!this.down.has(k) && !(force && this.sustained.has(k))) return;
     this.down.delete(k);
-    if (this.sustain.has(ch) && !force) { this.sustained.add(k); return; }
+    if (this.sustain.has(srcOf(ch, port)) && !force) { this.sustained.add(k); return; }
     this.sustained.delete(k);
-    this.cb.note(false, note, 0, ch);
+    this.cb.note(false, note, 0, ch, port);
   }
-  pedal(on, ch = 0) {
-    if (on) { this.sustain.add(ch); return; }
-    this.sustain.delete(ch);
-    for (const k of [...this.sustained]) if (Math.floor(k / 128) === ch) { this.sustained.delete(k); if (!this.down.has(k)) this.cb.note(false, k % 128, 0, ch); }
+  pedal(on, ch = 0, port = '') {
+    const src = srcOf(ch, port);
+    if (on) { this.sustain.add(src); return; }
+    this.sustain.delete(src);
+    for (const k of [...this.sustained]) if (Math.floor(k / 128) === src) { this.sustained.delete(k); if (!this.down.has(k)) this.cb.note(false, k % 128, 0, ch, port); }
   }
   panic() {
-    for (const k of [...this.down, ...this.sustained]) { this.down.delete(k); this.sustained.delete(k); this.cb.note(false, k % 128, 0, Math.floor(k / 128)); }
+    for (const k of [...this.down, ...this.sustained]) { this.down.delete(k); this.sustained.delete(k); const src = Math.floor(k / 128); this.cb.note(false, k % 128, 0, src % 17, portOfSrc(src)); }
     this.sustain.clear(); this.keysDown.clear();
   }
 
@@ -120,35 +125,36 @@ export class Input {
   }
 
   onMIDI({ data, target }) {
-    const [st, a = 0, b = 0] = data, type = st & 0xf0, ch = (st & 15) + 1;
-    if (st === 0xf0) { this.cb.sysex?.([...data], target?.id || ''); return; }
+    const [st, a = 0, b = 0] = data, type = st & 0xf0, ch = (st & 15) + 1, port = target?.id || '';
+    if (st === 0xf0) { this.cb.sysex?.([...data], port); return; }
     if (type < 0x80 || type > 0xe0) return;
     this.lastChannel = ch;
-    if (type === 0x90 && b > 0) this.press(a, b, ch);
-    else if (type === 0x80 || (type === 0x90 && b === 0)) this.release(a, ch);
+    if (type === 0x90 && b > 0) { this.cb.heard?.(port, ch, a); this.press(a, b, ch, port); }
+    else if (type === 0x80 || (type === 0x90 && b === 0)) this.release(a, ch, false, port);
     else if (type === 0xb0) {
-      if (NRPN_CC.has(a)) { this.gather(ch, st, a, b); return; }
-      this.flush(ch);
-      if (a === 64) this.pedal(b >= 64, ch);
-      else if (a === 123 || a === 120) { for (const k of [...this.down]) if (Math.floor(k / 128) === ch) this.release(k % 128, ch); this.pedal(false, ch); }
-      else { this.cb.cc(a, b, ch); this.cb.raw?.([st, a, b], ch); }
-    } else if (type === 0xe0) this.cb.bend((((b << 7) | a) - 8192) / 8192 * 2, ch);
-    else if (type === 0xc0 || type === 0xd0) { this.flush(ch); this.cb.raw?.([st, a], ch); }   // program change, channel pressure
-    else if (type === 0xa0) this.cb.raw?.([st, a, b], ch);                                     // poly pressure
+      if (NRPN_CC.has(a)) { this.gather(ch, st, a, b, port); return; }
+      this.flush(ch, port);
+      if (a === 64) this.pedal(b >= 64, ch, port);
+      else if (a === 123 || a === 120) { const src = srcOf(ch, port); for (const k of [...this.down]) if (Math.floor(k / 128) === src) this.release(k % 128, ch, false, port); this.pedal(false, ch, port); }
+      else { this.cb.cc(a, b, ch, port); this.cb.raw?.([st, a, b], ch, port); }
+    } else if (type === 0xe0) this.cb.bend((((b << 7) | a) - 8192) / 8192 * 2, ch, port);
+    else if (type === 0xc0 || type === 0xd0) { this.flush(ch, port); this.cb.raw?.([st, a], ch, port); }   // program change, channel pressure
+    else if (type === 0xa0) this.cb.raw?.([st, a, b], ch, port);                                           // poly pressure
   }
   // NRPN and RPN: a parameter number (CC 99/98 or 101/100) then a value (CC 6, maybe 38), sent as separate messages.
   // They travel as one group, so a bandmate's synth can't get the value of one parameter applied to another.
-  gather(ch, st, a, b) {
-    let g = this.nrpn.get(ch); if (!g) this.nrpn.set(ch, (g = { bytes: [], timer: 0 }));
-    if ((a === 99 || a === 101) && g.bytes.some((x, i) => i % 3 === 1 && (x === 6 || x === 38))) this.flush(ch);   // a new parameter starts
+  gather(ch, st, a, b, port = '') {
+    const src = srcOf(ch, port);
+    let g = this.nrpn.get(src); if (!g) this.nrpn.set(src, (g = { bytes: [], timer: 0 }));
+    if ((a === 99 || a === 101) && g.bytes.some((x, i) => i % 3 === 1 && (x === 6 || x === 38))) this.flush(ch, port);   // a new parameter starts
     g.bytes.push(st, a, b);
     clearTimeout(g.timer);
-    if (a === 38) this.flush(ch); else g.timer = setTimeout(() => this.flush(ch), 4);
+    if (a === 38) this.flush(ch, port); else g.timer = setTimeout(() => this.flush(ch, port), 4);
   }
-  flush(ch) {
-    const g = this.nrpn.get(ch); if (!g || !g.bytes.length) return;
+  flush(ch, port = '') {
+    const g = this.nrpn.get(srcOf(ch, port)); if (!g || !g.bytes.length) return;
     clearTimeout(g.timer); const bytes = g.bytes; g.bytes = [];
-    this.cb.raw?.(bytes, ch);
+    this.cb.raw?.(bytes, ch, port);
   }
 }
 

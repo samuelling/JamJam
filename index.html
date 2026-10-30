@@ -166,6 +166,10 @@
   .gearsetup li.done label { text-decoration: line-through; text-decoration-color: #ffffff55; }
   .gearsetup .ok { color: #3ddc84; }
   .gearsetup .warn { color: #ffb24d; }
+  .gearrow.seqadd.open { flex-direction: row; }
+  .seqrows { flex-basis: 100%; display: flex; flex-direction: column; gap: 4px; }
+  .seqrow { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(90px, .7fr) minmax(160px, 1fr) minmax(0, 1.1fr); gap: 10px; align-items: center; padding: 4px 6px; border-radius: 6px; background: #0002; }
+  .seqclock { flex-basis: 100%; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
   .owned.linkto { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
   .gearprompt { position: fixed; right: 18px; bottom: 18px; z-index: 50; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; max-width: 420px; padding: 12px 14px; border-radius: 10px; background: #1d1e22; box-shadow: 0 8px 30px #0008, inset 0 0 0 1px #ffffff1a; }
   .gearprompt .help { flex-basis: 100%; order: 1; }
