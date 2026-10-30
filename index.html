@@ -539,7 +539,17 @@
   body.listener .deskrow, body.listener .keybed, body.listener #tapeBtn ~ #syncBtn, body.listener .readout:has(#keySel), body.listener #talkBtn { display: none !important; }
 
   /* the two rooms */
-  .roomseg button { font: 600 12px var(--sans); padding: 4px 10px; }
+  /* the two rooms: a big two-door switch in the rooms' own colours (the doors in the hall are pink and blue) */
+  .roomseg { padding: 3px; gap: 3px; border-radius: 9px; background: #0b0b0d; border: 1px solid #000; box-shadow: inset 0 1px 0 #ffffff10, 0 2px 0 #000; }
+  .roomseg button { position: relative; font: 400 15px/1 var(--display); letter-spacing: .03em; padding: 8px 14px 7px 30px; border-radius: 7px; border: 0; color: var(--mz-muted); background: transparent; transition: background .15s, color .15s; }
+  .roomseg button::before { content: ''; position: absolute; left: 11px; top: 50%; width: 11px; height: 15px; margin-top: -8px; border-radius: 2px 2px 0 0; border: 2px solid currentColor; border-bottom-width: 0; opacity: .7; }
+  .roomseg button[data-room="jam"] { --rc: #FF68BA; } .roomseg button[data-room="compose"] { --rc: #7DB0FF; }
+  .roomseg button:hover { color: var(--mz-toner); background: color-mix(in srgb, var(--rc) 14%, transparent); }
+  .roomseg button.on { background: var(--rc); color: #18181b; box-shadow: 0 0 0 1px #18181b, 0 0 14px color-mix(in srgb, var(--rc) 45%, transparent); }
+  .roomseg button.on::before { opacity: 1; background: #18181b22; }
+  .roomseg .rdots { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: middle; }
+  .roomseg .rdots:empty { display: none; }
+  .roomseg .rdots i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 1.5px #18181b; }
   body.where-compose .deskrow, body.where-compose .keybed, body.where-compose #secbar { display: none !important; }
   body.where-compose #compose { display: flex !important; }
   .hall { position: fixed; inset: 0; z-index: 35; display: grid; place-items: center; background: radial-gradient(800px 400px at 50% 30%, #2a2018, #0b0b0d 70%); }

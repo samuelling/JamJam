@@ -1436,6 +1436,14 @@ function renderHall() {
   const box = $('#hallDoors'); if (!box) return;
   const ppl = (w) => [...S.players.values()].filter((p) => p.role !== 'listener' && p.where === w).map((p) => p.name);
   for (const w of ['jam', 'compose']) setText($(`[data-door="${w}"]`), ppl(w).length ? `${ppl(w).join(', ')} inside` : 'empty');
+  // the room switch shows who's in the other room: a dot per bandmate, in their colour
+  for (const w of ['jam', 'compose']) {
+    const b = $(`#roomSeg button[data-room="${w}"]`); if (!b) continue;
+    const who = [...S.players.entries()].filter(([, p]) => p.role !== 'listener' && p.where === w);
+    let dots = b.querySelector('.rdots'); if (!dots) { dots = h('span', { class: 'rdots' }); b.append(dots); }
+    dots.replaceChildren(...who.map(([pid, p]) => h('i', { style: `--c:${colorOf(pid)}`, title: `${p.name} is in here` })));
+    b.title = who.length ? `${who.map(([, p]) => p.name).join(', ')} ${who.length > 1 ? 'are' : 'is'} in the ${w === 'jam' ? 'Jam' : 'Compose'} Room` : '';
+  }
 }
 
 // ---------- reactions: listeners (and the band) clap, cheer and laugh ----------
