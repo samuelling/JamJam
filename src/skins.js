@@ -56,11 +56,20 @@ export const SKINS = {
   generic: { cls: 'skin-generic', knob: 'knob', option: 'stepper', wood: true },
 };
 
+// a module from a library with no icon of its own gets a cartridge with its name and accent colour
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+function cartridge(def) {
+  const name = esc((def.name || def.id || '?').slice(0, 14)), accent = /^#[0-9a-f]{3,8}$/i.test(def.accent || '') ? def.accent : '#ffcf26';
+  return `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <rect x="10" y="10" width="100" height="60" rx="7" fill="#232529"/><rect x="10" y="10" width="100" height="14" rx="7" fill="${accent}"/><rect x="10" y="18" width="100" height="6" fill="${accent}"/>
+    ${[26, 44, 62, 80].map((x) => `<circle cx="${x + 6}" cy="38" r="5.5" fill="#3b3e44" stroke="#15161a"/><line x1="${x + 6}" y1="38" x2="${x + 6}" y2="33.5" stroke="${accent}" stroke-width="1.2"/>`).join('')}
+    <text x="60" y="61" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" font-weight="700" fill="#e9e9e4">${name}</text></svg>`;
+}
 export function iconEl(def, extra = '') {
   const el = document.createElement('span');
   el.className = 'ico' + (extra ? ' ' + extra : '');
-  el.innerHTML = (def && (def.icon || ICONS[def.id])) || ICONS.generic;
+  el.innerHTML = (def && (def.icon || ICONS[def.id] || (def.lib || String(def.id).includes('/') ? cartridge(def) : null))) || ICONS.generic;
   el.setAttribute('aria-hidden', 'true');
   return el;
 }
-export const skinOf = (def) => SKINS[def?.id] || SKINS.generic;
+export const skinOf = (def) => SKINS[def?.id] || (def?.skin ? { ...SKINS.generic, ...def.skin } : SKINS.generic);

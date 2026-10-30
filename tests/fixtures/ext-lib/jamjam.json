@@ -1,0 +1,12 @@
+{
+  "jamjam": 1,
+  "id": "testlab",
+  "name": "Test Lab",
+  "by": "the JamJam tests",
+  "private": false,
+  "instruments": [
+    { "id": "wobble", "file": "wobble.js", "name": "Wobble", "family": "Test poly", "blurb": "A sine with a wobble, served from another origin." },
+    { "id": "beep-a", "file": "beeps.js", "arg": 440, "name": "Beep A", "family": "Test bleep", "blurb": "One module, many instruments: this one beeps at 440." },
+    { "id": "beep-b", "file": "beeps.js", "arg": 660, "name": "Beep B", "family": "Test bleep", "blurb": "The same module with arg 660." }
+  ]
+}

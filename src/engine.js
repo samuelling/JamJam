@@ -23,6 +23,9 @@ export class Engine {
     this.log = [];        // recent scheduled events, for the latency view and the tests
     this.logMax = 4000;
     this.silent = new URLSearchParams(location.search).get('silent') === '1';
+    this.libs = new Map();      // library id -> {id, url, name, by, private, entries}
+    this.catalog = new Map();   // "lib/inst" -> what the gear wall shows before the instrument loads
+    this.loading = new Map();
   }
 
   async start() {
@@ -57,6 +60,83 @@ export class Engine {
     this.hashes.hardware = await sha(hwText);
   }
 
+  // ---------- libraries: instruments from other places (another GitHub repo, a friend's build on their machine) ----------
+  // A library is a folder with a jamjam.json:
+  //   { "jamjam": 1, "id": "namespace", "name": "Shown name", "by": "who", "private": false,
+  //     "instruments": [ { "id": "x", "file": "x.js", "name", "family", "blurb", "icon" (svg text), "drums", "arg" }, ... ] }
+  // Each file is an ES module whose default export is an instrument (the same contract as instruments/), or a function
+  // (arg, {base, ctx, sha}) returning one, so one bridge module can serve many instruments. Modules load only when
+  // someone picks them. Instrument ids become "namespace/x". A library marked private never has its address shared:
+  // the others load it from their own copy, or hear a stand-in.
+  static resolveLibraryUrl(input) {
+    let s = String(input || '').trim();
+    let m = s.match(/^(?:github:|gh:)([\w.-]+)\/([\w.-]+)(?:@([\w./-]+?))?(\/.*)?$/);
+    if (!m) { const g = s.match(/^https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)(?:\/tree\/([\w.-]+))?(\/.*)?$/); if (g) m = [g[0], g[1], g[2], g[3], g[4]]; }
+    if (m) s = `https://cdn.jsdelivr.net/gh/${m[1]}/${m[2]}${m[3] ? '@' + m[3] : ''}${m[4] || ''}`;
+    s = s.replace(/jamjam\.json$/, '');
+    if (!/^https?:\/\//.test(s)) throw new Error('A library address starts with https://, http://localhost or github:owner/repo');
+    return s.endsWith('/') ? s : s + '/';
+  }
+  async addLibrary(input) {
+    const url = Engine.resolveLibraryUrl(input);
+    for (const lib of this.libs.values()) if (lib.url === url) return lib;
+    const r = await fetch(url + 'jamjam.json', { cache: 'no-cache' });
+    if (!r.ok) throw new Error(`No jamjam.json at ${url} (${r.status})`);
+    const man = await r.json();
+    const id = String(man.id || '').replace(/[^\w.-]/g, '').slice(0, 40);
+    if (!id || !Array.isArray(man.instruments)) throw new Error('That jamjam.json needs an "id" and an "instruments" list');
+    const lib = { id, url, name: man.name || id, by: man.by || '', private: !!man.private, entries: [] };
+    for (const it of man.instruments) {
+      if (!it || !it.id || !it.file) continue;
+      const fullId = `${id}/${it.id}`;
+      const meta = { id: fullId, lib: id, file: it.file, arg: it.arg, name: it.name || it.id, family: it.family || lib.name, blurb: it.blurb || '', icon: typeof it.icon === 'string' && it.icon.startsWith('<svg') ? it.icon : null, drums: !!it.drums, presets: it.presets || null };
+      this.catalog.set(fullId, meta); lib.entries.push(fullId);
+    }
+    this.libs.set(id, lib);
+    return lib;
+  }
+  removeLibrary(id) {
+    const lib = this.libs.get(id); if (!lib) return;
+    for (const k of lib.entries) this.catalog.delete(k);
+    this.libs.delete(id);
+  }
+  // load one library instrument (once); resolves to its def
+  ensureDef(fullId) {
+    if (this.defs.has(fullId)) return Promise.resolve(this.defs.get(fullId));
+    if (this.loading.has(fullId)) return this.loading.get(fullId);
+    const meta = this.catalog.get(fullId);
+    if (!meta) return Promise.reject(new Error(`${fullId} isn't in any library you've added`));
+    const lib = this.libs.get(meta.lib);
+    const job = (async () => {
+      const src = await (await fetch(new URL(meta.file, lib.url).href, { cache: 'no-cache' })).text();
+      const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+      let mod;
+      try { mod = await import(url); } finally { URL.revokeObjectURL(url); }
+      let def = mod.default;
+      if (typeof def === 'function') def = await def(meta.arg, { base: lib.url, ctx: this.ctx, sha });
+      if (!def || typeof def.create !== 'function') throw new Error(`${meta.file} didn't give an instrument`);
+      def = { ...def, id: fullId, lib: meta.lib, name: def.name || meta.name, family: def.family || meta.family, blurb: def.blurb || meta.blurb, icon: def.icon || meta.icon, drums: def.drums ?? meta.drums };
+      def.hash = await sha(src + (def.contentHash || ''));
+      if (!def.presets || !Object.keys(def.presets).length) def.presets = { init: {} };
+      if (def.init) await def.init(this.ctx);
+      this.defs.set(fullId, def);
+      this.hashes[fullId] = def.hash;
+      return def;
+    })();
+    this.loading.set(fullId, job);
+    job.catch(() => this.loading.delete(fullId));
+    return job;
+  }
+  // the built-in instrument closest to an instrument someone else is playing but this browser can't load
+  standIn(meta = {}) {
+    const f = `${meta.family || ''} ${meta.name || ''}`.toLowerCase();
+    if (meta.drums || /drum|perc|kit|beat/.test(f)) return { inst: 'machina', patch: 'hybrid' };
+    if (/mono|bass|acid|lead|303|ladder/.test(f)) return { inst: 'monolith', patch: /bass|acid|303/.test(f) ? 'bass' : 'lead' };
+    if (/fm|operator|piano|rhodes|electric|bell|tine|keys|organ|tonewheel/.test(f)) return { inst: 'tine', patch: /bell/.test(f) ? 'bell' : 'keys' };
+    if (/string|pad|ensemble|choir/.test(f)) return { inst: 'juniper', patch: 'strings' };
+    return { inst: 'juniper', patch: 'keys' };
+  }
+
   // A channel config: {inst, params, patch, hw}. Remote jammers only need inst + params to sound the same.
   // For a hardware unit with no instrument chosen, the best-ranked twin is used.
   resolve({ inst, patch, hw }) {
@@ -70,7 +150,15 @@ export class Engine {
     for (const p of def.params) params[p.id] = p.def;
     Object.assign(params, def.presets[patch] || {});
     if (unit) for (const [k, v] of Object.entries(unit.character || {})) if (k in params) params[k] = v;
-    return { inst: def.id, patch, hw: unit ? unit.id : null, params };
+    const out = { inst: def.id, patch, hw: unit ? unit.id : null, params };
+    if (def.lib) {
+      const lib = this.libs.get(def.lib);
+      // what the others need to find it: the library, its public address (never for a private one), and enough
+      // about it to pick a sensible stand-in
+      out.lib = { id: def.lib, name: lib?.name || def.lib, url: lib && !lib.private ? lib.url : null };
+      out.meta = { name: def.name, family: def.family, drums: !!def.drums };
+    }
+    return out;
   }
   unit(id) { return this.hardware.hardware.find((h) => h.id === id) || null; }
   patchTypes(cfg) {

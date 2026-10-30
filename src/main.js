@@ -18,6 +18,10 @@ const h = (tag, attrs = {}, ...kids) => {
   return el;
 };
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
+// the display refreshes ten times a second; only touch the DOM when something actually changed
+const setText = (el, t) => { if (el && el.textContent !== t) el.textContent = t; };
+const setCls = (el, c, on) => { if (el && el.classList.contains(c) !== !!on) el.classList.toggle(c, !!on); };
+const setVar = (el, k, v) => { if (el && el.style.getPropertyValue(k) !== v) el.style.setProperty(k, v); };
 
 const qs = new URLSearchParams(location.search);
 const SERVER = qs.get('server') || window.MP_SERVER || 'wss://crush-commando-mp.samuelling.workers.dev';
@@ -42,6 +46,7 @@ const S = {
   lockedAt: 0, slackRep: new Map(), needs: new Map(), loopActive: false,
   chat: [], unread: 0, knobGroup: null,
   mdTrack: 0, mdPage: 0, mdLock: false, held: null, hits: new Map(), md: null,
+  libTab: 'builtin', standins: new Map(),  // channel key -> {wanted cfg} while a stand-in plays someone's library instrument
 };
 window.JJ = { clock, tempo, engine, S };
 const key = (pid, r) => `${pid}:${r}`;
@@ -158,10 +163,40 @@ function remoteCfg(pid, r, cfg, at, budget, seqSnap) {
   const k = key(pid, r);
   const known = pl.rack.find((x) => x.r === r);
   if (known) { known.cfg = cfg; if (budget) known.budget = budget; } else pl.rack.push({ r, cfg, budget });
-  engine.setCfg(k, cfg, at);
+  if (cfg.lib && !engine.defs.has(cfg.inst)) {
+    // someone is playing an instrument from a library this browser hasn't loaded: a stand-in plays until it loads
+    S.standins.set(k, { wanted: cfg, at });
+    engine.setCfg(k, engine.resolve(engine.standIn(cfg.meta)), at);
+    loadWanted(k);
+  } else { S.standins.delete(k); engine.setCfg(k, cfg, at); }
   ensureSeq(k, cfg, seqSnap);
   if (!S.stable.has(k)) S.stable.set(k, performance.now());
   applyVolume(k);
+}
+async function loadWanted(k) {
+  const sti = S.standins.get(k); if (!sti) return;
+  const cfg = sti.wanted;
+  try {
+    if (!engine.catalog.has(cfg.inst) && cfg.lib.url && !engine.libs.has(cfg.lib.id)) { await engine.addLibrary(cfg.lib.url); saveLibs(); }
+    if (!engine.catalog.has(cfg.inst)) throw new Error('not here');
+    await engine.ensureDef(cfg.inst);
+  } catch (_) {
+    if (!sti.told) { sti.told = true; const who = S.players.get(pidOf(k))?.name || 'A bandmate'; addChat({ sys: true, text: `${who} is playing ${cfg.meta?.name || cfg.inst} from ${cfg.lib.name}. You're hearing a stand-in; add ${cfg.lib.name} in the gear wall to hear the real thing.`, t: Date.now() }); }
+    renderCorners(); return;
+  }
+  if (S.standins.get(k) !== sti) return;                 // changed meanwhile
+  S.standins.delete(k);
+  // swap in after the stand-in's own start (which can still be in the future)
+  engine.setCfg(k, cfg, Math.max(clock.now() + 30, Number.isFinite(sti.at) ? sti.at + 1 : -Infinity));
+  applyVolume(k);
+  renderCorners();
+}
+function retryStandins() { for (const k of S.standins.keys()) loadWanted(k); }
+function saveLibs() { try { localStorage.setItem('jamjam.libs', JSON.stringify([...engine.libs.values()].map((l) => l.url))); } catch (_) {} }
+async function restoreLibs() {
+  let urls = [];
+  try { urls = JSON.parse(localStorage.getItem('jamjam.libs') || '[]'); } catch (_) {}
+  for (const u of urls) { try { await engine.addLibrary(u); } catch (e) { setStatus(`Couldn't reach a library you added (${u}).`, 'error'); } }
 }
 
 function onMessage(p, m) {
@@ -496,9 +531,10 @@ const colorOf = (pid) => PLAYER_COLORS[slotOf(pid)];
 function describe(cfg, short = false) {
   if (!cfg) return '…';
   const def = engine.defs.get(cfg.inst), unit = cfg.hw && engine.unit(cfg.hw);
-  if (unit) return short ? unit.model : `${unit.maker} ${unit.model} → ${def ? def.name : cfg.inst}`;
-  return `${def ? def.name : cfg.inst} · ${cap(cfg.patch)}`;
+  if (unit) return short ? unit.model : `${unit.maker} ${unit.model} → ${def ? def.name : cfg.meta?.name || cfg.inst}`;
+  return `${def ? def.name : cfg.meta?.name || cfg.inst} · ${patchName(def, cfg.patch)}`;
 }
+const patchName = (def, t) => def?.presetNames?.[t] || cap(t);
 
 // --- the band: one corner per jammer
 function renderCorners() {
@@ -535,17 +571,17 @@ function updateCorners() {
     const peer = room.peers.get(id), pl = S.players.get(id) || {};
     const tag = $(`[data-path="${id}"]`);
     if (tag) {
-      if (id === S.me) { tag.textContent = clock.isLeader ? 'clock leader' : clock.locked ? 'clock synced' : 'syncing…'; tag.dataset.kind = clock.locked ? 'ok' : 'wait'; }
+      if (id === S.me) { setText(tag, clock.isLeader ? 'clock leader' : clock.locked ? 'clock synced' : 'syncing…'); tag.dataset.kind = clock.locked ? 'ok' : 'wait'; }
       else if (peer) {
         const rtt = peer.rtt.length ? Math.round(pct(peer.rtt, 0.5)) : null;
-        tag.textContent = peer.path === 'direct' ? `direct ${rtt ?? '…'} ms` : peer.path === 'relay' ? `relay ${rtt ?? '…'} ms` : 'connecting…';
+        setText(tag, peer.path === 'direct' ? `direct ${rtt ?? '…'} ms` : peer.path === 'relay' ? `relay ${rtt ?? '…'} ms` : 'connecting…');
         tag.dataset.kind = peer.path === 'direct' ? 'ok' : peer.path === 'relay' ? 'warn' : 'wait';
       }
     }
     const rack = id === S.me ? S.rack : pl.rack || [];
     for (const x of rack) {
       const k = key(id, x.r), c = engine.ch.get(k);
-      for (const led of $$(`[data-led="${k}"]`)) if (c) led.classList.toggle('lit', now - c.flashT < 120 || c.held.size > 0);
+      for (const led of $$(`[data-led="${k}"]`)) if (c) setCls(led, 'lit', now - c.flashT < 120 || c.held.size > 0);
       const b = $(`[data-budget="${k}"]`);
       if (b) { const bb = id === S.me ? budgetOf(x) : x.budget; b.title = room.peers.size && bb ? `${bb} timing · ${id === S.me ? partLook(x) : Math.round(BUDGETS[bb].L(pl.peerL ?? 0))} ms` : ''; }
     }
@@ -560,15 +596,18 @@ function updateCorners() {
         let late = 0; for (const x of rack) late += engine.ch.get(key(id, x.r))?.late || 0;
         if (late) bits.push(`${late} late`);
         if (pl.lane?.on) bits.push(`lane +${pl.lane.bars} bar${pl.lane.bars > 1 ? 's' : ''}`);
+        const st = rack.find((x) => S.standins.has(key(id, x.r)));
+        if (st) bits.unshift(`⚠ stand-in for ${st.cfg.meta?.name || st.cfg.inst}: add ${st.cfg.lib?.name} to hear it`);
       } else if (lane.on) bits.push(`your lane +${lane.bars} bar${lane.bars > 1 ? 's' : ''}`);
-      st.textContent = bits.join(' · ');
+      setText(st, bits.join(' · '));
     }
     const lm = $(`[data-lane="${id}"] i`);
     if (lm) {
       const lc = engine.ch.get(key(id, 'lane'));
       const active = id === S.me ? lane.on : lc && now - lc.laneT < 300;
-      lm.parentElement.classList.toggle('active', !!active);
-      lm.style.width = (id === S.me ? Math.min(1, lane.level * 1.5) : active ? 0.7 : 0) * 100 + '%';
+      setCls(lm.parentElement, 'active', active);
+      const w = Math.round((id === S.me ? Math.min(1, lane.level * 1.5) : active ? 0.7 : 0) * 100) + '%';
+      if (lm.style.width !== w) lm.style.width = w;
     }
   }
 }
@@ -592,8 +631,8 @@ function configFields(e, def, unit) {
     h('select', { 'aria-label': label, onchange: (ev) => onchange(ev.target.value) }, ...options.map(([v, t]) => h('option', { value: v, selected: String(v) === String(value) }, t))));
   const f = [];
   if (unit) f.push(sel('Twin', engine.twinCandidates(unit).map((c) => [c.inst, `${engine.defs.get(c.inst).name} ${Math.round(c.score * 100)}%`]), e.cfg.inst, (v) => changeEntry(e, { inst: v })));
-  else f.push(sel('Instrument', [...engine.defs.values()].map((d) => [d.id, d.name]), e.cfg.inst, (v) => changeEntry(e, { inst: v, patch: null })));
-  f.push(sel(def.drums ? 'Kit' : 'Patch', engine.patchTypes(e.cfg).map((t) => [t, cap(t)]), e.cfg.patch, (v) => changeEntry(e, { patch: v })));
+  else f.push(sel('Instrument', [...engine.defs.values()].map((d) => [d.id, d.lib ? `${d.name} (${engine.libs.get(d.lib)?.name || d.lib})` : d.name]), e.cfg.inst, (v) => changeEntry(e, { inst: v, patch: null })));
+  f.push(sel(def.drums ? 'Kit' : 'Patch', engine.patchTypes(e.cfg).map((t) => [t, patchName(def, t)]), e.cfg.patch, (v) => changeEntry(e, { patch: v })));
   f.push(sel('Timing', [['auto', `Auto · ${BUDGETS[autoBudget(e.cfg)].label}`], ...Object.entries(BUDGETS).map(([k, b]) => [k, b.label])], e.budget, (v) => { e.budget = v; broadcastLook(true); renderDevice(); renderRack(); }));
   f.push(sel('MIDI in', [[0, 'Any channel'], ...Array.from({ length: 16 }, (_, i) => [i + 1, `Channel ${i + 1}`])], e.midiCh, (v) => { e.midiCh = +v; renderRack(); }));
   if (unit) f.push(sel('Plays my synth via', [['', input.outputs.length ? 'None (I play it)' : 'None · enable MIDI'], ...input.outputs.map((o) => [o.id, o.name])], e.midiOut, (v) => { e.midiOut = v; renderDevice(); }));
@@ -621,15 +660,16 @@ function renderDevice() {
   const wide = unit
     ? `The band hears ${def.name} as your ${unit.model}${unit.note ? ' (' + unit.note.replace(/\.$/, '') + ')' : ''}. Shape the knobs until it sounds like your patch. Pick a MIDI output (with Local Control off) and JamJam plays your synth in lockstep too.`
     : def.blurb || '';
-  const groups = [...new Set(def.params.map((P) => P.group || 'Sound'))];
+  const shown = def.params.filter((P) => !P.hidden);
+  const groups = [...new Set(shown.map((P) => P.group || 'Sound'))];
   if (!groups.includes(S.knobGroup)) S.knobGroup = groups[0];
   const io = (P) => ({ get: () => e.cfg.params[P.id] ?? P.def, set: (v) => setParam(e, P.id, v), reset: () => setParam(e, P.id, def.presets[e.cfg.patch]?.[P.id] ?? P.def), locked: () => false });
   $('#plate').replaceChildren(...[
     h('div', { class: 'devtop' },
-      h('div', { class: 'brand' }, h('div', { class: 'name' }, unit ? unit.model : def.name), h('div', { class: 'fam' }, unit ? `${unit.maker} · heard as ${def.name}` : def.family)),
+      h('div', { class: 'brand' }, h('div', { class: 'name' }, unit ? unit.model : def.name), h('div', { class: 'fam' }, unit ? `${unit.maker} · heard as ${def.name}` : def.lib ? `${engine.libs.get(def.lib)?.name || def.lib} · ${def.family}` : def.family)),
       h('div', { class: 'screen lcd' }, ...configFields(e, def, unit), h('div', { class: 'wide' }, wide))),
     groups.length > 1 ? h('div', { class: 'pages' }, ...groups.map((g) => h('button', { class: 'page' + (g === S.knobGroup ? ' on' : ''), onclick: () => { S.knobGroup = g; renderDevice(); } }, g))) : null,
-    h('div', { class: 'encoders' }, ...def.params.filter((P) => (P.group || 'Sound') === S.knobGroup).map((P, i) => paramControl(P, KNOB_COLORS[i % 4], io(P), skin))),
+    h('div', { class: 'encoders' }, ...shown.filter((P) => (P.group || 'Sound') === S.knobGroup).map((P, i) => paramControl(P, KNOB_COLORS[i % 4], io(P), skin))),
     deviceFoot(e, def, unit)].filter(Boolean));
 }
 
@@ -811,13 +851,49 @@ function audition(cfg) {
 // --- the gear wall (library) and the hardware desk
 function openDrawer(id) { $(id).classList.remove('hide'); }
 function closeDrawers() { $$('.drawer').forEach((d) => d.classList.add('hide')); }
-function renderLibrary() {
-  $('#libCards').replaceChildren(...[...engine.defs.values()].map((d) => h('div', { class: 'card' },
-    iconEl(d), h('div', { class: 'fam' }, d.family), h('div', { class: 'name' }, d.name), h('p', {}, d.blurb || ''),
-    h('div', { class: 'chips' }, ...Object.keys(d.presets).map((t) => h('span', { class: 'chip' }, t))),
+function libCard(meta, def) {
+  const id = meta.id, name = def?.name || meta.name;
+  const status = h('span', { class: 'help' });
+  const withDef = async (fn) => {
+    try { status.textContent = def ? '' : 'Loading…'; const d = await engine.ensureDef(id); status.textContent = ''; fn(d); }
+    catch (err) { status.textContent = "Couldn't load it: " + err.message; }
+  };
+  return h('div', { class: 'card' },
+    iconEl(def || { id, icon: meta.icon }), h('div', { class: 'fam' }, def?.family || meta.family), h('div', { class: 'name' }, name), h('p', {}, def?.blurb || meta.blurb || ''),
+    def ? h('div', { class: 'chips' }, ...Object.keys(def.presets).slice(0, 8).map((t) => h('span', { class: 'chip' }, patchName(def, t))), Object.keys(def.presets).length > 8 ? h('span', { class: 'chip' }, `+${Object.keys(def.presets).length - 8}`) : null) : null,
     h('div', { class: 'row' },
-      h('button', { class: 'btn small', onclick: () => audition(engine.resolve({ inst: d.id })) }, 'Audition'),
-      h('button', { class: 'btn small hot', onclick: () => { addEntry({ inst: d.id }); closeDrawers(); } }, 'Put it on my desk')))));
+      h('button', { class: 'btn small', onclick: () => withDef((d) => audition(engine.resolve({ inst: d.id }))) }, 'Audition'),
+      h('button', { class: 'btn small hot', onclick: () => withDef((d) => { addEntry({ inst: d.id }); closeDrawers(); }) }, 'Put it on my desk')),
+    status);
+}
+function renderLibrary() {
+  if (S.libTab !== 'builtin' && S.libTab !== 'add' && !engine.libs.has(S.libTab)) S.libTab = 'builtin';
+  const tab = (id, label) => h('button', { class: 'page' + (S.libTab === id ? ' on' : ''), onclick: () => { S.libTab = id; renderLibrary(); } }, label);
+  $('#libTabs').replaceChildren(tab('builtin', 'Built in'), ...[...engine.libs.values()].map((l) => tab(l.id, l.name)), tab('add', '+ Add a library'));
+  const cards = $('#libCards'), extra = $('#libExtra');
+  extra.replaceChildren();
+  if (S.libTab === 'builtin') {
+    cards.replaceChildren(...[...engine.defs.values()].filter((d) => !d.lib).map((d) => libCard({ id: d.id, name: d.name, family: d.family, blurb: d.blurb }, d)));
+  } else if (S.libTab === 'add') {
+    cards.replaceChildren();
+    const inp = h('input', { type: 'text', placeholder: 'github:owner/repo   or   http://localhost:8780/jamjam/', style: 'flex:1;min-width:260px', onkeydown: (e) => { e.stopPropagation(); if (e.key === 'Enter') add(); } });
+    const msg = h('p', { class: 'help', style: 'margin:0' });
+    const add = async () => {
+      msg.textContent = 'Looking…';
+      try { const lib = await engine.addLibrary(inp.value); saveLibs(); S.libTab = lib.id; renderLibrary(); retryStandins(); }
+      catch (err) { msg.textContent = err.message; }
+    };
+    extra.replaceChildren(
+      h('div', { class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap' }, inp, h('button', { class: 'btn hot', onclick: add }, 'Add library')), msg,
+      h('p', { class: 'help', style: 'margin:0' }, 'A library is any folder with a jamjam.json listing instruments. Use github:owner/repo (or owner/repo@branch/path) for a public GitHub repo, or the address of a library served from your own machine, such as a private build a friend shared with you. Libraries you add are remembered in this browser.'),
+      h('p', { class: 'help', style: 'margin:0' }, 'Public libraries load automatically for your bandmates when you play from them. A private library\'s address is never shared: each jammer adds their own copy, and anyone without it hears the closest built-in stand-in.'));
+  } else {
+    const lib = engine.libs.get(S.libTab);
+    cards.replaceChildren(...lib.entries.map((id) => libCard(engine.catalog.get(id), engine.defs.get(id))));
+    extra.replaceChildren(h('div', { class: 'row', style: 'display:flex;gap:10px;align-items:center' },
+      h('span', { class: 'help' }, `${lib.name}${lib.by ? ' by ' + lib.by : ''} · ${lib.entries.length} instruments · ${lib.private ? 'private: its address stays in this browser' : 'public'} · ${lib.url}`),
+      h('button', { class: 'btn small ghost', onclick: () => { engine.removeLibrary(lib.id); saveLibs(); S.libTab = 'builtin'; renderLibrary(); } }, 'Remove library')));
+  }
 }
 let hwPick = null;
 function renderHardware() {
@@ -846,21 +922,21 @@ function renderHardware() {
 // --- tempo, lookahead, keyboard, wiring
 function renderTempo() {
   const el = $('#bpmLcd'); if (!el || el.dataset.drag) return;
-  el.textContent = String(Math.round(tempo.bpm(clock.now() + 1000))).padStart(3, '0');
-  $('#tempoNote').textContent = room.peers.size && !clock.isLeader ? 'set by the clock leader' : '';
+  setText(el, String(Math.round(tempo.bpm(clock.now() + 1000))).padStart(3, '0'));
+  setText($('#tempoNote'), room.peers.size && !clock.isLeader ? 'set by the clock leader' : '');
 }
 function renderLook() {
   const L = lookahead(), e = selEntry();
-  $('#lookVal').textContent = room.peers.size ? `${L} ms` : 'SOLO';
-  $('#lookMeter').style.width = Math.min(100, (L / 300) * 100) + '%';
-  $('#lookAutoBtn').classList.toggle('on', S.lookOverride == null);
+  setText($('#lookVal'), room.peers.size ? `${L} ms` : 'SOLO');
+  const mw = Math.round(Math.min(100, (L / 300) * 100)) + '%'; if ($('#lookMeter').style.width !== mw) $('#lookMeter').style.width = mw;
+  setCls($('#lookAutoBtn'), 'on', S.lookOverride == null);
   const s = $('#lookSlider'); if (document.activeElement !== s) s.value = L;
   if (!e) return;
   const b = BUDGETS[budgetOf(e)].label.toLowerCase(), pl = partLook(e);
-  $('#lookHelp').textContent = !room.peers.size ? 'Alone in the studio: notes play the moment you press them.'
+  setText($('#lookHelp'), !room.peers.size ? 'Alone in the studio: notes play the moment you press them.'
     : S.quant ? `Notes snap to the next ${{ 1: 'beat', 0.5: '8th', 0.25: '16th' }[S.quant]} at least ${pl} ms away, so the band hears them land together.`
     : selfInstant(e) ? `${describe(e.cfg, true)} · ${b} timing: you hear it instantly, the band hears it ${pl} ms later, all together.`
-    : `${describe(e.cfg, true)} · ${b} timing: every note, yours included, sounds ${pl} ms after you play it, at the same instant for everyone. Play a touch ahead, like an organist.`;
+    : `${describe(e.cfg, true)} · ${b} timing: every note, yours included, sounds ${pl} ms after you play it, at the same instant for everyone. Play a touch ahead, like an organist.`);
 }
 function renderInputStatus(msg) {
   const el = $('#inputStatus'); if (!el) return;
@@ -911,10 +987,11 @@ function wireKeyboard() {
 }
 function flashKey(note, on) { const el = keyEls.get(note); if (el) el.classList.toggle('down', on); }
 function paintRemoteKeys() {
+  const held = new Map();
+  for (const [k, c] of engine.ch) { const pid = pidOf(k); if (pid === S.me || pid === 'audition' || !c.held.size) continue; for (const n of c.held) (held.get(n) || held.set(n, []).get(n)).push(colorOf(pid)); }
   for (const [n, el] of keyEls) {
-    const who = [];
-    for (const [k, c] of engine.ch) { const pid = pidOf(k); if (pid !== S.me && pid !== 'audition' && c.held.has(n)) who.push(colorOf(pid)); }
-    el.style.setProperty('--dots', who.length ? who.map((c, i) => `radial-gradient(circle at ${50 + (i - (who.length - 1) / 2) * 24}% 84%, ${c} 0 4px, transparent 5px)`).join(',') : 'none');
+    const who = held.get(n) || [];
+    setVar(el, '--dots', who.length ? who.map((c, i) => `radial-gradient(circle at ${50 + (i - (who.length - 1) / 2) * 24}% 84%, ${c} 0 4px, transparent 5px)`).join(',') : 'none');
   }
 }
 
@@ -978,7 +1055,7 @@ async function enter(code) {
   S.name = name;
   try { localStorage.setItem('jamjam.name', name); } catch (_) {}
   setStatus('Loading the library…');
-  try { await engine.start(); if (!engine.defs.size) await engine.loadInstruments('.'); }
+  try { await engine.start(); if (!engine.defs.size) { await engine.loadInstruments('.'); await restoreLibs(); } }
   catch (e) { setStatus("Couldn't start audio or load the instruments: " + e.message, 'error'); return; }
   if (!S.rack.length) {
     const cfg = engine.resolve({ inst: 'juniper', patch: 'keys' });
@@ -1077,9 +1154,9 @@ setInterval(() => {
   if (!S.me) return;
   computeAutoL();
   updateCorners(); renderLook(); paintRemoteKeys(); renderTempo(); renderMachinaDyn();
-  $('#onAir').classList.toggle('live', [...room.peers.values()].some((p) => p.path !== 'connecting'));
+  setCls($('#onAir'), 'live', [...room.peers.values()].some((p) => p.path !== 'connecting'));
   const now = performance.now();
-  for (const e of S.rack) { const c = engine.ch.get(key(S.me, e.r)); for (const led of $$(`#rackList [data-led="${key(S.me, e.r)}"]`)) if (c) led.classList.toggle('lit', now - c.flashT < 120 || c.held.size > 0); }
+  for (const e of S.rack) { const c = engine.ch.get(key(S.me, e.r)); for (const led of $$(`#rackList [data-led="${key(S.me, e.r)}"]`)) if (c) setCls(led, 'lit', now - c.flashT < 120 || c.held.size > 0); }
 }, 100);
 setInterval(() => { if (S.me) { renderNet(); broadcastLook(); } }, 1000);
 
@@ -1092,5 +1169,7 @@ Object.assign(window.JJ, {
   removeEntry: (r) => removeEntry(entry(r)),
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
+  addLibrary: async (u) => { const l = await engine.addLibrary(u); saveLibs(); retryStandins(); return l.id; },
+  addFromLibrary: async (id, patch) => { await engine.ensureDef(id); return addEntry({ inst: id, patch })?.r; },
 });
 wire();

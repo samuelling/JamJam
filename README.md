@@ -21,7 +21,9 @@ Each jammer walks into their own **corner**, racks up instruments from a shared 
 
   Juniper, Monolith and Machina render sample by sample in an AudioWorklet, with every event landing on an exact sample frame, so they render bit-identically in every browser.
 - **Your hardware.** Pick your unit and JamJam ranks software twins from the library (best match first, with a match score), with an audition button for each. The twin you choose ships to the band, loaded with the preset for your patch type and that unit's character. You play the real thing; everyone else hears the twin. Shape the twin's knobs until it sounds like your patch; your synth's CC knobs drive the twin where the mapping is known. Choose a MIDI output (Local Control off) and JamJam plays your synth in lockstep too, using Web MIDI timestamps. About 35 units are catalogued in `instruments/hardware.json`; adding one is one entry.
-- **Band chat**, an **audio lane**, and a **wiring** panel showing every link.
+- **Machina's sequencer.** Machina has a machine-drum panel with a 16–64 step sequencer (pages, length, play and stop on the bar) and per-trig **parameter locks**: hold a trig (or shift-click it, or use LOCK) and turn a knob, and that one step plays with that setting. The sequencer runs in lockstep in every browser from the shared pattern and clock, so sequenced parts send no notes at all, only edits. Each edit is stamped far enough ahead (lookahead plus the scheduling horizon) that every browser applies it before the step it touches, so every browser plays exactly the same trigs. `tests/seq.test.cjs` checks this across two lagged browsers.
+- **Libraries: instruments from other repos.** The gear wall can open libraries beyond the built-ins: any folder with a `jamjam.json`, from a public GitHub repo (`github:owner/repo`, served through jsDelivr), a GitHub Pages site, or a build served from your own machine (`tools/serve-library.py` adds the cross-origin headers). When you play a public library's instrument, your bandmates' browsers load it automatically. A library marked private is never shared: each jammer adds their own copy, and anyone without it hears the closest built-in stand-in (and is told so) until they do. See "Writing a library" below.
+- **Band chat**, an **audio lane**, and a **wiring** panel showing every link, in panels that slide out from the side of the desk.
 
 ## How the timing works
 
@@ -86,6 +88,22 @@ export default {
 
 Every call carries an AudioContext time `t`, usually in the future. The one rule is **determinism**: no `Math.random()` and no free-running state that differs between browsers. Use fixed seeds and keep a parameter's history so a note uses the setting in force at its own start. A plugin someone has already built (an AudioWorklet, a WebAssembly build of a C++ synth) fits behind the same five calls. `group` puts parameters on separate pages; `options` makes a stepped selector.
 
+## Writing a library
+
+A library is a folder with a `jamjam.json` and instrument modules:
+
+```json
+{
+  "jamjam": 1, "id": "mylab", "name": "My Lab", "by": "me", "private": false,
+  "instruments": [
+    { "id": "wobble", "file": "wobble.js", "name": "Wobble", "family": "Poly", "blurb": "One line" },
+    { "id": "big-a", "file": "bridge.js", "arg": "big-a", "name": "Big A" }
+  ]
+}
+```
+
+Each file is an ES module whose default export is an instrument (the contract above), or a function `(arg, { base, ctx, sha })` that returns one, so one bridge module can serve many instruments (for example, a host for a WebAssembly synth engine). Modules load only when someone picks them. Instruments get ids like `mylab/wobble`. Optional instrument fields for the gear wall and faceplate: `icon` (SVG text), `accent` (a colour for the generated cartridge icon), `presetNames` (`{slug: name}`), `hidden` on parameters the panel shouldn't show, and `contentHash` (anything that should mark two copies as different versions). `tests/fixtures/ext-lib/` is a small example.
+
 ## Run it locally
 
 ```sh
@@ -98,6 +116,8 @@ NODE_PATH=$(npm root -g) node tests/bench.cjs http://localhost:8787/ "tm=8&mem=1
 - `sync.test.cjs`: 2–4 headless jammers through the local relay with simulated lag: direct links, clock lock, instrument and hardware-twin changes, every note heard at the same room time everywhere, fingerprints, the relay fallback, the audio lane, tempo changes.
 - `instruments.test.cjs`: renders every preset offline and checks sound, no NaN, level, identical renders, and speed.
 - `bench.cjs`: the timing benchmark above.
+- `seq.test.cjs`: Machina's sequencer in two lagged browsers (identical trigs, locks and times).
+- `library.test.cjs`: public and private libraries from two other origins, auto-loading, stand-ins.
 
 ## Files
 
@@ -107,6 +127,9 @@ NODE_PATH=$(npm root -g) node tests/bench.cjs http://localhost:8787/ "tm=8&mem=1
 - `src/clock.js` – shared clock and tempo
 - `src/engine.js` – instrument loading and hashing, twins, channels, scheduling
 - `src/lane.js` – audio lane capture and chunk format
+- `src/seq.js` – the lockstep step sequencer
+- `src/skins.js` – instrument icons and faceplate styles
+- `tools/serve-library.py` – serve a library folder from your machine with the cross-origin headers JamJam needs
 - `src/input.js` – computer keyboard, Web MIDI in (all channels) and out, sustain
 - `instruments/` – the library and `hardware.json`
 - `server/` – local dev server and a copy of the relay's room logic
