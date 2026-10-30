@@ -4,6 +4,7 @@ import { Engine } from './engine.js';
 import { Tape } from './tape.js';
 import { Talk } from './talk.js';
 import * as SR from './syncrec.js';
+import * as MATCH from './match.js';
 import { Input, sendToHardware, bendBytes } from './input.js';
 import { AudioLane, decodeChunk } from './lane.js';
 import { StepSeq } from './seq.js';
@@ -499,6 +500,7 @@ function playNote(on, note, vel, ch = 0) {
     }
     const instant = selfInstant(e) && !shift;
     sendEvent(e, { type: on ? 'on' : 'off', note, vel, at, seq: ++S.seq, b: BUDGETS[budgetOf(e)].short, o: (L - lookahead()) + shift }, instant);
+    if (e.match?.on) matchNote(e, on, note, vel, instant ? clock.now() : at - (e.hwLatency || 0));
     const port = outPort(e.midiOut), oc = ((e.outCh || 1) - 1) & 15;
     if (port) sendToHardware(port, on ? [0x90 | oc, note, vel] : [0x80 | oc, note, 0], instant ? performance.now() : clock.toLocal(at) - (e.hwLatency || 0));
   }
@@ -535,6 +537,8 @@ function addEntry({ inst, patch, hw, ext }) {
   if (S.rack.length >= MAX_RACK) { setStatus(`A corner holds up to ${MAX_RACK} instruments.`, 'error'); return null; }
   const cfg = engine.resolve({ inst: ext ? inst || 'none' : inst, patch, hw });
   if (ext) cfg.ext = { name: String(ext.name || 'My synth').slice(0, 24) };
+  // a hardware unit matched before starts from its matched settings
+  try { const saved = (hw || ext) && store.get(`match:${hw || cfg.ext?.name}:${cfg.inst}`); if (saved) Object.assign(cfg.params, JSON.parse(saved)); } catch (_) {}
   const def = engine.defs.get(cfg.inst);
   const usedCh = new Set(S.rack.map((e) => e.midiCh));
   const midiCh = def.drums ? 10 : !usedCh.has(0) ? 0 : [1, 2, 3, 4, 5, 6].find((c) => !usedCh.has(c)) || 0;
@@ -700,6 +704,96 @@ function cornerCard(id, rack) {
   );
 }
 const PICKS = new URLSearchParams(location.search).get('picks') === '1';
+// ---------- Match my sound: the twin morphs toward your hardware while you play ----------
+const MATCH_FAST = new URLSearchParams(location.search).get('matchfast') === '1';   // tests: no resting between batches
+const canMatch = (e) => { const d = engine.defs.get(e.cfg.inst); return !!(d && !d.drums && !d.internal && !d.lib); };
+function matchUi(e) {
+  const m = e.match;
+  const st = h('span', { class: 'help', 'data-match': e.r }, matchStatus(e));
+  const b = h('button', { class: 'btn small' + (m?.on ? ' on' : ''), title: "Your browser listens to your hardware through an audio input while you play, and slowly morphs the twin the band hears toward it", onclick: () => (m?.on ? stopMatch(e) : startMatch(e)) }, m?.on ? 'Matching…' : 'Match my sound');
+  return [b, st];
+}
+function matchStatus(e) {
+  const m = e.match; if (!m) return '';
+  if (!m.on) return m.applied ? `twin matched ${Math.round(100 * m.sim)}%` : '';
+  const n = m.fitter.obs.length;
+  return !n ? 'listening: play some single notes' : `${n} note${n > 1 ? 's' : ''} heard · ${m.fitter.renders ? Math.round(100 * m.fitter.similarity()) + '% alike' : 'fitting…'}${m.lag != null ? ` · input ${m.lag} ms late` : ''}`;
+}
+async function startMatch(e) {
+  if (!canMatch(e)) return;
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: S.srecInput ? { exact: S.srecInput } : undefined, echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 2 } }); }
+  catch (_) { setStatus("Match my sound needs your synth's audio coming in: allow the microphone or audio input for this page.", 'error'); return; }
+  const def = engine.defs.get(e.cfg.inst), cap = new MATCH.Capture(engine.ctx);
+  await cap.start(stream);
+  e.match = { on: true, cap, fitter: new MATCH.Fitter(def, { ...e.cfg.params }, { batch: 6, perBatch: 2 }), notes: new Map(), recent: [], lag: null, lags: [], sim: 0, applied: 0, inst: e.cfg.inst };
+  renderDevice(); matchLoop(e);
+}
+function stopMatch(e) { const m = e.match; if (!m) return; m.on = false; m.cap.stop(); renderDevice(); }
+// note-on/off for the matched part, in room time when the hardware sounded
+function matchNote(e, on, note, vel, tRoom) {
+  const m = e.match;
+  if (on) { m.notes.set(note, { note, vel, on: tRoom }); m.recent.push(tRoom); if (m.recent.length > 40) m.recent.shift(); return; }
+  const n = m.notes.get(note); if (!n) return; m.notes.delete(note); n.off = tRoom;
+  setTimeout(() => matchTake(e, n), 1000);   // once the input has caught up past its tail
+}
+const roomToFrame = (ms) => Math.round(engine.audioTime(ms) * engine.ctx.sampleRate);
+function matchTake(e, n) {
+  const m = e.match; if (!m?.on || m.inst !== e.cfg.inst) return;
+  const sr = engine.ctx.sampleRate, held = (n.off - n.on) / 1000;
+  const why = (r) => { m.why = m.why || {}; m.why[r] = (m.why[r] || 0) + 1; };
+  if (held < 0.12) return why('short');
+  // only clean single notes teach the twin: nothing else of this part sounding nearby
+  if (m.recent.some((t) => t !== n.on && t > n.on - 80 && t < n.off + 350)) return why('overlap');
+  // the input's own latency, from the recent notes (median of estimates)
+  if (m.recent.length >= 3) {
+    const t0 = m.recent[Math.max(0, m.recent.length - 8)], len = Math.round(((n.off + 400 - t0) / 1000) * sr), x = m.cap.get(roomToFrame(t0), len);
+    if (x) { m.lags.push(MATCH.measureLagMono ? MATCH.measureLagMono(x, m.recent.filter((t) => t >= t0).map((t) => t - t0), sr) : SR.measureLag({ L: x, R: x }, m.recent.filter((t) => t >= t0).map((t) => t - t0), sr)); if (m.lags.length > 9) m.lags.shift(); m.lag = [...m.lags].sort((a, b) => a - b)[m.lags.length >> 1]; }
+  }
+  const lagF = Math.round(((m.lag ?? 0) / 1000) * sr), len = Math.round(Math.min(held + 0.45, 1.25) * sr);
+  const x = m.cap.get(roomToFrame(n.on) + lagF, len); if (!x) return why('no-audio');
+  const o = MATCH.analyze(x, sr, n.note, Math.min(held, 0.95));
+  if (!o) return why('silent');
+  if (!o.hSus) why('no-harm');
+  if (held > 0.95) o.rel = null;
+  o.vel = n.vel; m.fitter.observe(o); setText($(`[data-match="${e.r}"]`), matchStatus(e));
+}
+// the fitter runs in the background: one batch, then rest about nine times as long, so it costs about a tenth of
+// a core at most; it backs off when the jam is struggling (late notes anywhere)
+async function matchLoop(e) {
+  const m = e.match; let lateSeen = 0;
+  while (m.on && S.rack.includes(e)) {
+    let wait = 1500;
+    if (m.fitter.obs.length && m.inst === e.cfg.inst) {
+      let late = 0; for (const c of engine.ch.values()) late += c.late;
+      if (late > lateSeen) { lateSeen = late; wait = 10000; }
+      else {
+        const t = performance.now(), r = await m.fitter.step().catch(() => null), el = performance.now() - t;
+        wait = MATCH_FAST ? 120 : Math.max(1500, el * 9);
+        if (r) { m.sim = m.fitter.similarity(); if (r.improved && (!m.applied || r.d < m.applied * 0.93)) glideTo(e, r.params, r.d); }
+        setText($(`[data-match="${e.r}"]`), matchStatus(e));
+      }
+    }
+    await new Promise((res) => setTimeout(res, wait));
+  }
+}
+// improvements reach the band as ordinary timed parameter changes, eased over a second and a half
+function glideTo(e, target, d) {
+  const m = e.match, from = { ...e.cfg.params }, ids = m.fitter.space.map((P) => P.id).filter((id) => target[id] !== undefined && target[id] !== from[id]);
+  if (!ids.length) return;
+  m.applied = d;
+  const steps = 6, P = (id) => m.fitter.space.find((x) => x.id === id);
+  for (let i = 1; i <= steps; i++) setTimeout(() => {
+    if (!S.rack.includes(e)) return;
+    for (const id of ids) {
+      const p = P(id), a = from[id] ?? p.def, b = target[id];
+      const v = p.step ? (i === steps ? b : a) : p.curve === 'exp' ? a * (b / a) ** (i / steps) : a + (b - a) * (i / steps);
+      setParam(e, id, v);
+    }
+    if (i === steps) { try { store.set(`match:${e.cfg.hw || e.cfg.ext?.name}:${e.cfg.inst}`, JSON.stringify(target)); } catch (_) {} renderDevice(); }
+  }, i * 250);
+}
+
 // ---------- reactions: listeners (and the band) clap, cheer and laugh ----------
 const REACTIONS = { clap: '👏', fire: '🔥', heart: '❤️', laugh: '😂', wow: '🤯' };
 function react(r) { if (!REACTIONS[r]) return; room.send({ k: 'react', r }); showReaction(S.me, r); }
@@ -1030,6 +1124,7 @@ function configFields(e, def, unit) {
 }
 function deviceFoot(e, def, unit) {
   const foot = [h('span', { class: 'help tech' }, BUDGETS[budgetOf(e)].help), h('span', { style: 'flex:1' }), h('button', { class: 'btn small', onclick: () => audition(e.cfg) }, 'Audition')];
+  if ((unit || e.cfg.ext) && canMatch(e)) foot.push(...matchUi(e));
   if (unit) {
     foot.push(h('button', { class: 'btn small' + (e.hearTwin ? ' on' : ''), title: 'Also hear the twin yourself, to compare with your hardware', onclick: () => { e.hearTwin = !e.hearTwin; applyVolume(key(S.me, e.r)); renderDevice(); } }, 'Hear twin'));
     if (e.midiOut) {
@@ -1821,7 +1916,8 @@ Object.assign(window.JJ, {
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
   own: (id, v) => setOwned(id, v),
-  setKey: (root, mode) => setKey(root, mode), react: (r) => react(r), listen: (code) => enter(code, true), assist: (v) => { S.assist = v; },
+  setKey: (root, mode) => setKey(root, mode), match: (r, on) => { const e = entry(r); if (e) return on ? startMatch(e) : stopMatch(e); }, matchScore: async (r, params) => { const m = entry(r)?.match; return m && m.fitter.scoreAll(params); }, matchObs: (r) => entry(r)?.match?.fitter.obs.map((o) => ({ note: o.note, held: o.held, att: o.att, noise: +o.noise.toFixed(2), hSus: o.hSus && o.hSus.map(Math.round).join(' '), curve: o.curve.slice(0, 40).map(Math.round).join(' ') })),
+  matchState: (r) => { const m = entry(r)?.match; return m && { why: m.why, on: m.on, obs: m.fitter.obs.length, renders: m.fitter.renders, ms: m.fitter.ms, lag: m.lag, sim: m.sim, applied: m.applied, d: m.fitter.bestD, params: entry(r).cfg.params }; }, react: (r) => react(r), listen: (code) => enter(code, true), assist: (v) => { S.assist = v; },
   tape: () => toggleTape(), sync: () => startSync(), syncState: () => { const r = S.srec; return r && { id: r.id, done: r.done, files: r.files.map((f) => f.name + ':' + f.data.length), got: [...r.got.keys()], zip: r.zip && r.zip.url, T0: r.T0, T1: r.T1 }; }, talk: (on) => talk.setOpen(on), voices: () => [...talk.voices.entries()].map(([id, v]) => ({ id, level: v.level, pan: v.pan.pan.value })), ducked: () => talk.ducked, tapes: () => tape.takes.map((t) => ({ seconds: t.seconds, size: t.blob.size, url: t.url })),
   pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 't' + i); else padUp('t' + i); },
   addExternal: async (name, port, ch, twin) => { if (!input.midi) await input.enableMIDI(); return addEntry({ ext: { name, port, ch }, inst: twin })?.r; },
