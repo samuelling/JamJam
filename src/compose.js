@@ -2,7 +2,7 @@
 // and the parts locked into it; import a sketch (MIDI or a SynthLand Tracker song), export the song; loop a section
 // or play the whole song; "Jam this" takes everyone to the Jam Room with that section looping.
 import { STYLES as MASTER_STYLES, STEMS as MIX_STEMS, stemOf, masterSettings } from './console.js';
-import { SECTION_NAMES, NOTE_NAMES, newSection, parseChord, takesOf, currentTake, laneOf, laneName, ROLES } from './song.js';
+import { SECTION_NAMES, NOTE_NAMES, newSection, parseChord, takesOf, currentTake, laneOf, laneName, ROLES, movesOf, lineOf } from './song.js';
 
 const COLORS = { Intro: '#7DB0FF', Verse: '#ECEBE5', 'Pre-chorus': '#D8A83A', Chorus: '#FF68BA', Bridge: '#9b8cff', Solo: '#3ddc84', Breakdown: '#8a8f98', Drop: '#ff7a3d', Outro: '#7DB0FF' };
 export const colorOfSection = (name) => COLORS[Object.keys(COLORS).find((k) => String(name).toLowerCase().startsWith(k.toLowerCase()))] || '#A0A6AF';
@@ -29,6 +29,9 @@ export function makeCompose(x) {
   const mem = (k, d) => { try { const v = localStorage.getItem('megajam.' + k); return v == null ? d : v === '1'; } catch (_) { return d; } };
   const remember = (k, v) => { try { localStorage.setItem('megajam.' + k, v ? '1' : '0'); } catch (_) {} };
   let songMore = mem('songMore', false), secMore = mem('secMore', false);
+  // automation: hidden unless you turn it on (Song options); then a track's ◇ opens a lane per knob it moves
+  let lastTap = { k: '', t: 0 };
+  let showAuto = mem('auto', false); const autoOpen = new Set(), autoExtra = new Map();
   let stemsOpen = false, stemsBusy = false, stemsSay = '', stemsMine = false;   // the Export stems panel
   const SNAP = [{ name: '1/4', g: 1 }, { name: '1/8', g: 0.5 }, { name: '1/16', g: 0.25 }, { name: '1/8 triplet', g: 1 / 3 }, { name: '1/16 triplet', g: 1 / 6 }, { name: '1/32', g: 0.125 }];
   let snapI = 2, qStrength = 1;
@@ -124,7 +127,7 @@ export function makeCompose(x) {
     const toRow = (cy) => { const r = roll.getBoundingClientRect(); return Math.max(0, Math.min(nRows - 1, Math.floor((cy - r.top) / rh))); };
     const noteOfRow = (r) => (p.drums ? rows[r] : hi - r);
     const snap = (b, alt) => (alt ? b : Math.round(b / g) * g);
-    const write = (list, what) => { const ev = []; for (const n of list) { const a = Math.max(0, Math.min(beats - 0.01, n.a)), z = Math.max(a + 0.02, Math.min(beats - 0.001, n.z)); ev.push({ b: a, type: 'on', note: n.n, vel: n.v }, { b: z, type: 'off', note: n.n }); } ev.sort((u, w) => u.b - w.b || (u.type === 'off' ? -1 : 1)); x.editTake(s.id, p.id, ev, what, p); };
+    const write = (list, what) => { const ev = (take?.events || []).filter((e) => e.type === 'p'); for (const n of list) { const a = Math.max(0, Math.min(beats - 0.01, n.a)), z = Math.max(a + 0.02, Math.min(beats - 0.001, n.z)); ev.push({ b: a, type: 'on', note: n.n, vel: n.v }, { b: z, type: 'off', note: n.n }); } ev.sort((u, w) => u.b - w.b || (u.type === 'off' ? -1 : 1)); x.editTake(s.id, p.id, ev, what, p); };
     // every change keeps what came before it, in this browser; Undo writes that back as a new edit
     const key = `${s.id}:${p.id}`, hist = edits.get(key) || edits.set(key, { back: [], fwd: [] }).get(key);
     const save = (list, what) => { hist.back.push({ notes, b: step.b }); if (hist.back.length > 200) hist.back.shift(); hist.fwd = []; write(list, what); };
@@ -203,7 +206,7 @@ export function makeCompose(x) {
       h('button', { class: 'btn small ghost', title: 'Leave a rest: move the cursor on a step', onclick: () => nudge(step.len) }, 'Rest ▶'),
       x.midiOn?.() ? null : h('button', { class: 'btn small hot', onclick: async () => { await x.enableMidi(); render(); } }, 'Enable MIDI'),
       h('span', { class: 'help' }, step.b >= beats ? 'end of the section: click a bar number to go back' : `${pos(step.b)}: play a note or chord · click a bar number to jump`));
-    return h('div', { class: 'laneview' }, head(h('span', { class: 'help' }, stats.join(' · '))), tools, stepBar, h('div', { class: 'lvbody' }, h('div', { class: 'lvgut' }), barsRow, labels, roll));
+    return h('div', { class: 'laneview' }, head(h('span', { class: 'help' }, stats.join(' · '))), tools, stepBar, h('div', { class: 'lvbody' }, h('div', { class: 'lvgut' }), barsRow, labels, roll, ...autoStrips(s, p, color)));
   }
   // a note played anywhere: true when step entry took it, so it doesn't go to your desk. A note that started on the
   // desk still ends there, whatever has opened since.
@@ -256,6 +259,77 @@ export function makeCompose(x) {
     const v = t.pan ?? 0, readout = h('small', { class: 'mono help' }, fmtPan(v));
     return h('label', { class: 'tmix' }, h('small', {}, 'Pan'), h('input', { type: 'range', class: 'tpan', min: -1, max: 1, step: 0.02, value: v, 'aria-label': `${t.name} pan`, title: 'Double-click for centre',
       oninput: (e) => { readout.textContent = fmtPan(+e.target.value); x.mixPreview?.(t.id, { pan: +e.target.value }); }, onchange: (e) => x.setLane(t.id, { pan: +e.target.value }), ondblclick: () => x.setLane(t.id, { pan: 0 }) }), readout);
+  }
+  // ---------- automation lanes ----------
+  // A knob's moves in one block: the track's setting dashed, the moves as a line (recorded moves step, drawn points
+  // ramp from the point before), a dot per point. Click to add a point, drag to move it (snaps to 1/16; Alt for
+  // none), double-click to remove it. Saved like a note edit: an edited copy if the take isn't yours.
+  const trackInst = (p) => x.store.song.lanes?.[p.laneId]?.inst || p.inst;
+  function metaOf(p, id) {
+    if (id === 'bend') return { id, name: 'Pitch bend', min: -2, max: 2, def: 0, unit: 'st' };
+    return (x.paramsOf?.(trackInst(p)) || []).find((q) => q.id === id) || { id, name: id, min: 0, max: 1, def: 0 };
+  }
+  function scaleOf(m) {
+    const ex = m.curve === 'exp' && m.min > 0, lo = m.min ?? 0, hi = m.max ?? 1;
+    const norm = (v) => Math.max(0, Math.min(1, ex ? Math.log(v / lo) / Math.log(hi / lo) : (v - lo) / (hi - lo || 1)));
+    const denorm = (u) => { u = Math.max(0, Math.min(1, u)); let v = ex ? lo * Math.pow(hi / lo, u) : lo + u * (hi - lo); if (m.step || m.options) v = Math.round(v / (m.step || 1)) * (m.step || 1); return +v.toPrecision(5); };
+    return { norm, denorm };
+  }
+  const fmtV = (m, v) => (m.options ? m.options[Math.round(v)] ?? v : `${+v.toPrecision(3)}${m.unit ? ' ' + m.unit : ''}`);
+  function autoLane(s, p, id, o) {
+    const beats = s.bars * (x.store.song.meter || 4), take = currentTake(p), m = metaOf(p, id), { norm, denorm } = scaleOf(m);
+    const base = x.baseOf?.(p)?.[id] ?? m.def ?? m.min ?? 0, pts = lineOf(take?.events, id).map((e) => ({ ...e }));
+    const box = h('div', { class: 'autolane' + (o.compact ? ' compact cell' : ''), style: o.compact ? `width:${o.w}px` : '', 'data-auto': id, title: `${m.name} in ${s.name}: click to add a point, drag to move it, double-click to remove it` });
+    const draw = () => {
+      const Y = (v) => 3 + (1 - norm(v)) * 94, X = (b) => (b / beats) * 1000;
+      let d = `M0 ${Y(pts.length && pts[0].b < 1e-3 ? pts[0].v : base)}`, prev = pts.length && pts[0].b < 1e-3 ? pts[0].v : base;
+      for (const q of pts) { d += q.r ? ` L${X(q.b)} ${Y(q.v)}` : ` L${X(q.b)} ${Y(prev)} L${X(q.b)} ${Y(q.v)}`; prev = q.v; }
+      d += ` L1000 ${Y(prev)}`;
+      box.innerHTML = `<svg viewBox="0 0 1000 100" preserveAspectRatio="none" width="100%" height="100%"><line x1="0" x2="1000" y1="${Y(base)}" y2="${Y(base)}" stroke="#ffffff38" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"/><path d="${d}" fill="none" stroke="${o.color}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
+      if (pts.length <= 96) for (const q of pts) box.append(h('i', { class: 'adot' + (q.r ? '' : ' rec'), style: `left:${(q.b / beats) * 100}%;top:${Y(q.v)}%`, title: `${fmtV(m, q.v)} at bar ${Math.floor(q.b / (x.store.song.meter || 4)) + 1}` }));
+      if (!o.compact) box.append(h('small', { class: 'aname' }, `${m.name} · ${fmtV(m, base)}`));
+    };
+    draw();
+    const at = (ev) => { const r = box.getBoundingClientRect(); return { b: Math.max(0, Math.min(beats - 1e-3, ((ev.clientX - r.left) / r.width) * beats)), u: 1 - ((ev.clientY - r.top) / r.height - 0.03) / 0.94, px: ev.clientX - r.left, py: ev.clientY - r.top, r }; };
+    const near = (q) => { let best = -1, bd = 9; pts.forEach((t, i) => { const dx = (t.b / beats) * q.r.width - q.px, dy = ((3 + (1 - norm(t.v)) * 94) / 100) * q.r.height - q.py, dd = Math.hypot(dx, dy); if (dd < bd) { bd = dd; best = i; } }); return best; };
+    const save = () => { pts.sort((a, b) => a.b - b.b); const ev = (take?.events || []).filter((e) => !(e.type === 'p' && e.id === id)).concat(pts.map((q) => ({ b: +q.b.toFixed(4), type: 'p', id, v: q.v, ...(q.r ? { r: 1 } : {}) }))).sort((a, b) => a.b - b.b); x.editTake(s.id, p.id, ev, 'automation', p); };
+    box.addEventListener('pointerdown', (ev) => {
+      if (ev.button || !x.editTake || take?.audio) return;
+      ev.preventDefault(); ev.stopPropagation();
+      const q = at(ev); let i = near(q), made = false, moved = false;
+      if (i < 0) { pts.push({ b: ev.altKey ? q.b : Math.round(q.b * 4) / 4, v: denorm(q.u), r: 1 }); i = pts.length - 1; made = true; }
+      const dot = pts[i]; dragging = true; box.setPointerCapture(ev.pointerId); draw();
+      const mv = (e) => { const z = at(e); if (Math.abs(e.clientX - ev.clientX) + Math.abs(e.clientY - ev.clientY) < 3) return; moved = true; dot.b = e.altKey ? z.b : Math.max(0, Math.min(beats - 0.25, Math.round(z.b * 4) / 4)); dot.v = denorm(z.u); box.title = `${m.name}: ${fmtV(m, dot.v)}`; draw(); };
+      const up = () => {
+        box.removeEventListener('pointermove', mv); dragging = false;
+        // a second tap on the same point, quickly: remove it (a double-click, surviving the redraw in between)
+        const key = `${s.id}|${p.id}|${id}|${dot.b}|${dot.v}`, now = Date.now();
+        if (!made && !moved) { if (lastTap.k === key && now - lastTap.t < 450) { pts.splice(pts.indexOf(dot), 1); lastTap = { k: '', t: 0 }; save(); } else lastTap = { k: key, t: now }; return; }
+        lastTap = { k: made ? key : '', t: now }; save();
+      };
+      box.addEventListener('pointermove', mv); box.addEventListener('pointerup', up, { once: true }); box.addEventListener('pointercancel', up, { once: true });
+    });
+    return box;
+  }
+  // under a track's row, when its ◇ is open: a lane per knob any of its blocks moves, and + automate a knob
+  function autoRows(ln, li, cols) {
+    if (!showAuto || !autoOpen.has(ln.lane) || ln.sample.kind === 'audio') return [];
+    const blocks = cols.map((c) => Object.values(c.s.parts || {}).find((q) => laneOf(q) === ln.lane) || null), ids = new Set();
+    for (const p of blocks) for (const id of movesOf(currentTake(p)?.events) || []) ids.add(id);
+    for (const id of autoExtra.get(ln.lane) || []) ids.add(id);
+    const any = blocks.find(Boolean), meta = x.paramsOf?.(ln.rec?.inst || ln.inst) || [];
+    const out = [...ids].map((id) => h('div', { class: 'arow autorow' }, h('div', { class: 'lhead autohead', style: `--lc:${laneColor(li)}` }, h('small', {}, '◇ ' + (any ? metaOf(any, id).name : id)),
+      h('button', { class: 'msb', title: `Clear ${id === 'bend' ? 'the bends' : 'this knob'} from every block of the track`, onclick: () => { blocks.forEach((p, i) => { const t = p && currentTake(p); if (t && !t.audio && t.events?.some((e) => e.type === 'p' && e.id === id)) x.editTake(cols[i].id, p.id, t.events.filter((e) => !(e.type === 'p' && e.id === id)), 'automation', p); }); autoExtra.get(ln.lane)?.delete(id); render(); } }, '×')),
+      ...cols.map((c, i) => (blocks[i] && !currentTake(blocks[i])?.audio ? autoLane(c.s, blocks[i], id, { w: c.w, compact: true, color: laneColor(li) }) : h('div', { class: 'cell blank autocell', style: `width:${c.w}px`, title: 'No block here: write or jam one first' })))));
+    out.push(h('div', { class: 'arow autorow' }, h('div', { class: 'lhead autohead' }, h('select', { class: 'lcdsel autoadd', 'aria-label': `Automate a knob of ${ln.name}`, onchange: (e) => { const v = e.target.value; if (!v) return; autoExtra.set(ln.lane, new Set([...(autoExtra.get(ln.lane) || []), v])); render(); } },
+      h('option', { value: '' }, '+ automate a knob…'), ...meta.filter((q) => !ids.has(q.id)).map((q) => h('option', { value: q.id }, q.name))))));
+    return out;
+  }
+  // under the roll of the block you're editing: the same lanes, as wide as the roll
+  function autoStrips(s, p, color) {
+    if (!showAuto || currentTake(p)?.audio || !x.editTake) return [];
+    const ids = new Set([...(movesOf(currentTake(p)?.events) || []), ...(autoExtra.get(laneOf(p)) || [])]);
+    return [...ids].flatMap((id) => [h('div', { class: 'lvkeys autokey' }, h('span', {}, metaOf(p, id).name)), autoLane(s, p, id, { color })]);
   }
   // Export stems: every track from bar 1 to the end of the song, lined up, as WAVs; with the mix, MIDI and the song.
   // The band's shared folder (a Google Drive or Dropbox link everyone can see) is where they're meant to go: save into
@@ -395,6 +469,7 @@ export function makeCompose(x) {
       h('select', { class: 'lcdsel', 'aria-label': 'Versions', onchange: (e) => { const v = e.target.value; e.target.value = ''; if (v === '__save') { const n = prompt('Name this version of the song', `Version ${vars.length + 1}`); if (n) x.saveVariation(n.slice(0, 40)); } else if (v) x.restoreVariation(v); } },
         h('option', { value: '' }, vars.length ? `Versions (${vars.length})` : 'Versions'), h('option', { value: '__save' }, 'Save this version…'), ...vars.map((v) => h('option', { value: v.name }, `Go to “${v.name}”`))),
       empty ? null : importBtn('btn small'), empty ? null : presetPick('presets'), h('button', { class: 'btn small', onclick: () => x.exportMidi() }, 'Save MIDI'), h('button', { class: 'btn small', onclick: () => x.exportJson() }, 'Save song'),
+      h('label', { class: 'help', title: 'Knob moves are always recorded with takes; this shows them as lanes you can edit' }, h('input', { type: 'checkbox', class: 'autotoggle', checked: showAuto, onchange: (e) => { showAuto = e.target.checked; remember('auto', showAuto); render(); } }), ' Show automation'),
       x.exportStems && !empty ? h('button', { class: 'btn small' + (stemsOpen ? ' on' : ''), 'aria-expanded': String(stemsOpen), onclick: () => { stemsOpen = !stemsOpen; render(); } }, 'Export stems…') : null,
       h('span', { class: 'help mono' }, `${x.bpm()} bpm · ${x.keyName()}`),
       h('span', { class: 'zoom' }, h('small', { class: 'help' }, 'zoom'), h('button', { class: 'btn small ghost', 'aria-label': 'Zoom out', onclick: () => { PX = Math.max(8, PX - 4); render(); } }, '−'), h('button', { class: 'btn small ghost', 'aria-label': 'Zoom in', onclick: () => { PX = Math.min(48, PX + 4); render(); } }, '+')));
@@ -443,13 +518,14 @@ export function makeCompose(x) {
     const solos = x.soloed?.() || new Set();
     const setRoleOf = (ln, role) => { if (ln.rec) x.setLane(ln.lane, { role }); const s0 = x.store.sections().find((s) => Object.values(s.parts || {}).some((p) => laneOf(p) === ln.lane)); const p = s0 && Object.values(s0.parts).find((q) => laneOf(q) === ln.lane); if (p) x.setRole(s0.id, p.id, role); };
     const isFresh = (lane) => lane === fresh && Date.now() - freshT < 4000;
-    const rows = !open ? [] : L.map((ln, li) => h('div', { class: 'arow' + (isFresh(ln.lane) ? ' fresh' : '') + (ln.rec?.muted ? ' tmuted' : '') + (solos.size && !solos.has(ln.lane) ? ' unsolo' : '') },
-      h('div', { class: 'lhead pick' + (cell && cell.lane === ln.lane ? ' sel' : ''), style: `--lc:${laneColor(li)}`, title: `${ln.name}: show its notes below`, onclick: (e) => { if (e.target.closest('select, button')) return; pickLane(ln.lane); } }, x.iconEl(ln.sample),
+    const rows = !open ? [] : L.flatMap((ln, li) => [h('div', { class: 'arow' + (isFresh(ln.lane) ? ' fresh' : '') + (ln.rec?.muted ? ' tmuted' : '') + (solos.size && !solos.has(ln.lane) ? ' unsolo' : '') },
+      h('div', { class: 'lhead pick' + (cell && cell.lane === ln.lane ? ' sel' : ''), style: `--lc:${laneColor(li)}`, title: `${ln.name}: show its notes below`, onclick: (e) => { if (e.target.closest('select, button, input')) return; pickLane(ln.lane); } }, x.iconEl(ln.sample),
         h('span', {}, h('b', {}, ln.name), h('select', { class: 'role', 'aria-label': `${ln.name}'s role`, onchange: (e) => setRoleOf(ln, e.target.value) }, ...ROLES.map((r) => h('option', { value: r, selected: (ln.role || '') === r }, r)))),
         h('span', { class: 'ms' },
           ln.rec ? h('button', { class: 'msb' + (ln.rec.muted ? ' on' : ''), 'aria-pressed': String(!!ln.rec.muted), title: ln.rec.muted ? 'Unmute this track (for everyone)' : 'Mute this track for everyone', onclick: () => x.setLane(ln.lane, { muted: !ln.rec.muted }) }, 'M') : null,
-          h('button', { class: 'msb solo' + (solos.has(ln.lane) ? ' on' : ''), 'aria-pressed': String(solos.has(ln.lane)), title: 'Solo: hear only the soloed tracks (only you; the band hears everything)', onclick: () => x.solo(ln.lane) }, 'S')),
-        ln.rec ? fader(ln.rec, 'mini') : null),
+          h('button', { class: 'msb solo' + (solos.has(ln.lane) ? ' on' : ''), 'aria-pressed': String(solos.has(ln.lane)), title: 'Solo: hear only the soloed tracks (only you; the band hears everything)', onclick: () => x.solo(ln.lane) }, 'S'),
+          showAuto && ln.sample.kind !== 'audio' ? h('button', { class: 'msb autob' + (autoOpen.has(ln.lane) ? ' on' : ''), 'aria-expanded': String(autoOpen.has(ln.lane)), title: 'Automation: a lane for each knob this track moves', onclick: () => { if (autoOpen.has(ln.lane)) autoOpen.delete(ln.lane); else autoOpen.add(ln.lane); render(); } }, '◇') : null,
+          ln.rec ? fader(ln.rec, 'mini') : null)),
       ...cols.map((c) => {
         const p = Object.values(c.s.parts || {}).find((q) => laneOf(q) === ln.lane);
         const wk = c.id === loopId ? busy.get(ln.lane) : null;
@@ -459,9 +535,9 @@ export function makeCompose(x) {
         const take = currentTake(p), n = takesOf(p).length, beats = c.s.bars * meter;
         const blk = h('div', { class: 'cell take' + (p.muted ? ' muted' : '') + (wk ? ' retake' : '') + (cell && cell.sid === c.id && cell.pid === p.id ? ' sel' : ''), style: `width:${c.w}px;--lc:${laneColor(li)}`, title: `${ln.name} in ${c.s.name}: ${n} take${n > 1 ? 's' : ''}, playing ${take?.byName || '?'}'s${p.muted ? ' (muted)' : ''}`, onclick: () => { sel = c.id; cell = { sid: c.id, pid: p.id, lane: ln.lane }; render(); } });
         blk.innerHTML = miniRoll(take, beats, c.w - 4, 30, '#18181b', p.drums);
-        blk.append(...[h('span', { class: 'lock', 'aria-hidden': 'true' }, '🔒'), n > 1 ? h('span', { class: 'ntakes' }, `${n} takes`) : null, wk ? h('span', { class: 'retaking', style: `--c:${wk.color}` }, `${wk.who} trying a new take`) : null].filter(Boolean));
+        blk.append(...[h('span', { class: 'lock', 'aria-hidden': 'true' }, '🔒'), movesOf(take?.events) ? h('span', { class: 'automark', title: 'This take moves knobs too (Song options › Show automation to see them)' }, '◇') : null, n > 1 ? h('span', { class: 'ntakes' }, `${n} takes`) : null, wk ? h('span', { class: 'retaking', style: `--c:${wk.color}` }, `${wk.who} trying a new take`) : null].filter(Boolean));
         return blk;
-      })));
+      })), ...autoRows(ln, li, cols)]);
     // someone jamming the looping section on an instrument that has no track yet: a row of its own, marked as unlocked work
     const known = new Set(L.map((l) => l.lane)), ghosts = [];
     for (const [lane, w] of busy) if (!known.has(lane)) ghosts.push(h('div', { class: 'arow ghost' }, h('div', { class: 'lhead', style: `--lc:${w.color}` }, h('span', {}, h('b', {}, lane), h('small', {}, 'jamming now'))),

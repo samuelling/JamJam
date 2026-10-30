@@ -393,12 +393,12 @@ const selfInstant = (e) => !(e?.seq && seqAhead()) && (S.hearSelf || budgetOf(e)
 const recentEv = [];
 const REPEAT_MS = +(qs.get('repeat') ?? 20);
 let repeatGen = 0;
-function sendEvent(e, ev, instant) {
+function sendEvent(e, ev, instant, from) {
   const k = key(S.me, e.r);
   if (S.srec && !S.srec.done) (S.srec.events.get(k) || S.srec.events.set(k, []).get(k)).push({ ...ev });
   // a take is placed where the player heard the band when they played it: their note sounds one lookahead after
   // their hands move (with a quantize or rhythm-help shift kept, since that is meant), so take the lookahead off
-  logForLock(k, { ...ev, at: ev.at - (e.seq && seqAhead() ? 0 : partLook(e)) });   // a sequencer ahead already played for the beat it lands on
+  logForLock(k, { ...ev, from, at: ev.at - (e.seq && seqAhead() ? 0 : partLook(e)) });   // a sequencer ahead already played for the beat it lands on
   engine.event(k, ev, { now: instant || room.peers.size === 0 || !clock.locked });
   if (!clock.locked) return;
   recentEv.push({ r: e.r, ev }); if (recentEv.length > 3) recentEv.shift();
@@ -560,9 +560,9 @@ function playNote(on, note, vel, ch = 0, port = '') {
 
 function setParam(e, id, v) {
   if (!e) return;
+  const k = e.r + '|' + id, was = S.pendingP.get(k)?.from ?? e.cfg.params[id];
   e.cfg.params[id] = v;
-  const k = e.r + '|' + id;
-  S.pendingP.set(k, { e, id, v });
+  S.pendingP.set(k, { e, id, v, from: was });
   const last = S.lastPSend.get(k) || 0, wait = PARAM_SEND_MS - (performance.now() - last);
   if (wait <= 0) flushParam(k);
   else if (!S.pTimer) S.pTimer = setTimeout(() => { S.pTimer = null; for (const kk of [...S.pendingP.keys()]) flushParam(kk); }, wait);
@@ -571,7 +571,7 @@ function flushParam(k) {
   const x = S.pendingP.get(k); if (!x || !S.me) return;
   S.pendingP.delete(k); S.lastPSend.set(k, performance.now());
   const L = partLook(x.e);
-  sendEvent(x.e, { type: 'p', id: x.id, v: x.v, at: clock.now() + L, seq: ++S.seq, b: BUDGETS[budgetOf(x.e)].short, o: L - lookahead() }, selfInstant(x.e));
+  sendEvent(x.e, { type: 'p', id: x.id, v: x.v, at: clock.now() + L, seq: ++S.seq, b: BUDGETS[budgetOf(x.e)].short, o: L - lookahead() }, selfInstant(x.e), x.from);
 }
 
 // add, change or remove an instrument in your corner
@@ -862,8 +862,9 @@ function glideTo(e, target, d) {
 // ---------- composing: the song, the two rooms, section jams, lock it in ----------
 const songStore = new SONG.SongStore();
 function logForLock(k, ev) {
-  if (ev.type !== 'on' && ev.type !== 'off') return;
-  S.lockLog.push({ k, type: ev.type, note: ev.note, vel: ev.vel, at: ev.at });
+  if (ev.type === 'p') { if (typeof ev.v === 'number' && Number.isFinite(ev.v)) S.lockLog.push({ k, type: 'p', id: ev.id, v: ev.v, from: ev.from, at: ev.at }); }
+  else if (ev.type !== 'on' && ev.type !== 'off') return;
+  else S.lockLog.push({ k, type: ev.type, note: ev.note, vel: ev.vel, at: ev.at });
   if (S.lockLog.length > 20000) S.lockLog.splice(0, 5000);
 }
 // big messages (a song snapshot) go in pieces
@@ -902,6 +903,7 @@ const compose = makeCompose({
   play: (mode, sid) => startTransport(mode, sid), stop: () => stopTransport(), loopRange: (a, b) => loopRange(a, b), jamThis: (sid) => { startTransport('loop', sid); goRoom('jam'); },
   importFile: (f) => importSketch(f), exportMidi: () => download(new Blob([SONG.songToMidi(songForExport())], { type: 'audio/midi' }), slugName() + '.mid'), exportJson: () => download(new Blob([JSON.stringify(songForExport(), null, 1)], { type: 'application/json' }), slugName() + '.megajam.json'),
   removePart: (sid, pid) => setSong(`part:${sid}:${pid}`, null), choose, vote, saveVariation, restoreVariation, editTake,
+  paramsOf: (inst) => engine.defs.get(inst)?.params || [], baseOf: (p) => partCfg({ ...p, ...SONG.laneCfg(songStore.song, p) }).params,
   now: () => clock.now(),   exportStems: (o, prog) => exportStemsTo(o, prog), canFolder: () => typeof window.showDirectoryPicker === 'function',
   draftPart, previewNote, mixPreview: (id, patch) => mixPreview(id, patch), addLane: (o) => addLane(o), setLane: (id, patch) => setLane(id, patch), removeLane: (id) => removeLane(id), jamLane: (id) => jamLane(id),
   solo: (key) => { S.solo = S.solo || new Set(); if (S.solo.has(key)) S.solo.delete(key); else S.solo.add(key); compose.render(); }, soloed: () => S.solo || new Set(),
@@ -1045,7 +1047,7 @@ async function bouncePart(p, beats, bpm) {
   // a clock for instruments that follow the beat: the top of the section is a downbeat, LEAD seconds in
   const env = { audioTime: (ms) => LEAD + ms / 1000, roomTime: (t) => (t - LEAD) * 1000, bpm: () => bpm, beatAt: (ms) => (ms / 1000) * (bpm / 60), timeOf: (b) => (b * 60000) / bpm };
   const inst = def.create(ctx, ctx.destination, params, env);
-  for (const e of p.takeEvents || []) { const t = LEAD + (e.b * 60) / bpm; if (e.type === 'on') inst.noteOn(e.note, e.vel ?? 100, t); else if (e.type === 'off') inst.noteOff(e.note, t); }
+  for (const e of SONG.expandMoves(p.takeEvents || [], bpm)) { const t = LEAD + (e.b * 60) / bpm; if (e.type === 'on') inst.noteOn(e.note, e.vel ?? 100, t); else if (e.type === 'off') inst.noteOff(e.note, t); else if (e.type === 'p' && inst.set) inst.set(e.id, e.v, t); }
   const hold = ctx.suspend(256 / sr).then(async () => { await new Promise((r) => setTimeout(r, 40)); ctx.resume(); });
   const full = await ctx.startRendering(); await hold; try { inst.dispose(); } catch (_) {}
   const n = Math.round(L * sr), s0 = Math.round(LEAD * sr), out = engine.ctx.createBuffer(2, n, sr);
@@ -1104,16 +1106,30 @@ function liveSchedule(p, seg, b0, b1, end) {
   if (!engine.ch.get(k)?.insts.length || engine.ch.get(k).partKey !== partKey) { engine.setCfg(k, partCfg(p), -Infinity); engine.ch.get(k).partKey = partKey; }
   const c = engine.ch.get(k), bus = trackBus(p); if (c && c.bus !== bus) { c.out.disconnect(); c.out.connect(bus); c.bus = bus; }   // through the track's fader and pan
   const lo = seg.lo ?? seg.start, hi = seg.hi ?? seg.start + seg.beats;
-  (p.takeEvents || []).forEach((e, i) => {
+  const evs = SONG.movesOf(p.takeEvents) ? movesCache(p) : p.takeEvents || [];
+  evs.forEach((e, i) => {
+    if (e.type === 'p') {   // a knob move in the take
+      const b = seg.start + e.b;
+      if (b < lo - 1e-6 || b > hi || b < b0 - 0.02 || b >= b1 || b > end + 0.01) return;
+      const tag = `${p.id}@${seg.start}:p${i}`; if (songPlay.done.has(tag)) return; songPlay.done.add(tag);
+      engine.event(k, { type: 'p', id: e.id, v: e.v, at: tempo.timeOf(b) });
+      return;
+    }
     if (e.type !== 'on') return;
     const b = seg.start + e.b;
     if (b < lo - 1e-6 || b >= hi || b < b0 - 0.02 || b >= b1 || b > end + 0.01) return;
     const tag = `${p.id}@${seg.start}:${i}`; if (songPlay.done.has(tag)) return; songPlay.done.add(tag);
     engine.event(k, { type: 'on', note: e.note, vel: e.vel ?? 100, at: tempo.timeOf(b) });
     // a note that starts is owed its end, even if this part goes over to its render or the ticks come late
-    const off = p.takeEvents.slice(i + 1).find((q) => q.type === 'off' && q.note === e.note);
+    const off = evs.slice(i + 1).find((q) => q.type === 'off' && q.note === e.note);
     songPlay.ending.push({ k, note: e.note, b: off ? Math.min(seg.start + off.b, hi) : hi });
   });
+  // the knobs this take moved go back to the track's settings when its block ends
+  const ids = SONG.movesOf(p.takeEvents);
+  if (ids && hi >= b0 - 0.02 && hi < b1) {
+    const tag = `${p.id}@${seg.start}:reset`, base = partCfg(p).params;
+    if (!songPlay.done.has(tag)) { songPlay.done.add(tag); for (const id of ids) if (base[id] != null) engine.event(k, { type: 'p', id, v: base[id], at: tempo.timeOf(hi) }); }
+  }
 }
 function endLiveNotes(b1, end) {
   songPlay.ending = songPlay.ending.filter((q) => {
@@ -1122,6 +1138,8 @@ function endLiveNotes(b1, end) {
     return false;
   });
 }
+const MOVES = new WeakMap();   // a take's events with its drawn ramps filled in, worked out once
+function movesCache(p) { const ev = p.takeEvents; let m = MOVES.get(ev); if (!m) { m = SONG.expandMoves(ev, tempo.bpm(clock.now())); MOVES.set(ev, m); } return m; }
 setInterval(songTick, 40);
 
 // ---------- the loop meter: where in the loop you are, bar by bar, beat by beat ----------
@@ -1210,7 +1228,19 @@ function lockIn(e, opts = {}) {
   const say = (t) => { if (!opts.auto) setStatus(t, 'error'); };
   const k = key(S.me, e.r);
   // what you played over [from, from + span) room beats, relative to `from`
-  const played = (from, span) => { const evs = []; for (const x of S.lockLog) { if (x.k !== k) continue; const bb = tempo.beatAt(x.at) - from; if (bb >= -0.05 && bb < span) evs.push({ b: Math.max(0, bb), type: x.type, note: x.note, vel: x.vel }); } return evs; };
+  // what you played over [from, from + span) room beats, relative to `from`: the notes, and every knob move (always
+  // recorded), each knob starting from where it was when the pass began
+  const played = (from, span) => {
+    const evs = [], at0 = new Map(), last = new Map();
+    for (const x of S.lockLog) {
+      if (x.k !== k) continue;
+      const bb = tempo.beatAt(x.at) - from;
+      if (x.type === 'p') { if (bb < -0.05) { last.set(x.id, x.v); continue; } if (bb >= span) continue; if (!at0.has(x.id)) at0.set(x.id, last.has(x.id) ? last.get(x.id) : x.from); evs.push({ b: Math.max(0, bb), type: 'p', id: x.id, v: x.v }); continue; }
+      if (bb >= -0.05 && bb < span) evs.push({ b: Math.max(0, bb), type: x.type, note: x.note, vel: x.vel });
+    }
+    for (const [id, v] of at0) if (v != null && Number.isFinite(v)) evs.unshift({ b: 0, type: 'p', id, v });
+    return evs;
+  };
   if (tr.mode === 'range') {
     // a dragged loop: your last full pass, cut at the section lines, each piece a take in its own section
     const L = pos.seg.passBeats; let ps = opts.pass ?? pos.seg.pass; if (opts.pass == null && b - ps < L * 0.9 && pos.seg.k > 0) ps -= L;
@@ -2062,6 +2092,7 @@ function knobSet(id) { knobEls.get(id)?.show(); }
 
 // --- Machina: a machine-drum panel with a 16-64 step sequencer and parameter locks
 const MD_PARAMS = ['m', 'pitch', 'decay', 'tone', 'snap', 'crush', 'level', 'pan'];
+const MD_DEPTH = ['body', 'noise', 'color', 'ndecay', 'sweep', 'stime', 'sub', 'bursts', 'spread', 'drive', 'velo'];   // the second row: deeper synthesis, where a slot has it
 function mdView(sq) { const v = new StepSeq(sq.nt); v.load(sq.snapshot()); v.applyUpTo(Infinity); return v; }
 function renderMachina(e, def, unit) {
   const k = key(S.me, e.r), sq = seqs.get(k), tracks = def.seq.tracks;
@@ -2069,7 +2100,7 @@ function renderMachina(e, def, unit) {
   const v = mdView(sq);
   if (S.mdPage * 16 >= v.len) S.mdPage = 0;
   const lcd = h('div', { class: 'md-lcd' });
-  const master = h('div', { class: 'md-master' }, ...['drive', 'bits', 'level'].map((id, i) => {
+  const master = h('div', { class: 'md-master' }, ...['drive', 'bits', 'glue', 'level'].filter((id) => def.params.some((p) => p.id === id)).map((id, i) => {
     const P = def.params.find((p) => p.id === id);
     return paramControl(P, '#d9dbe0', { get: () => e.cfg.params[id] ?? P.def, set: (x) => setParam(e, id, x), reset: () => setParam(e, id, def.presets[e.cfg.patch]?.[id] ?? P.def), locked: () => false }, skinOf(def));
   }));
@@ -2080,7 +2111,12 @@ function renderMachina(e, def, unit) {
       h('i'), t.label, h('small', {}, P.options[Math.round(e.cfg.params[`${t.id}.m`] ?? 0)]));
     return b;
   });
-  const encWrap = h('div', { class: 'md-encs' });
+  const encWrap = h('div', { class: 'md-encs' }), encWrap2 = h('div', { class: 'md-encs depth' });
+  // two LFOs, each aimed at any knob (a list, since there are a hundred-odd), locked to the room's beat or free
+  const lfoIo = (id) => { const P = def.params.find((p) => p.id === id); return P && { P, io: { get: () => e.cfg.params[id] ?? P.def, set: (x) => setParam(e, id, x), reset: () => setParam(e, id, def.presets[e.cfg.patch]?.[id] ?? P.def), locked: () => false } }; };
+  const lfos = [1, 2].map((n) => lfoIo(`lfo${n}.dest`) && h('div', { class: 'md-lfo' }, h('b', {}, `LFO ${n}`),
+    (() => { const { P, io } = lfoIo(`lfo${n}.dest`); const sel = h('select', { class: 'lcdsel md-dest', 'aria-label': `LFO ${n} goes to`, onchange: (ev) => { io.set(+ev.target.value); } }, ...P.options.map((o, i) => h('option', { value: P.min + i, selected: Math.round(io.get()) === P.min + i }, o))); knobEls.set(P.id, { show: () => { sel.value = String(Math.round(io.get())); } }); return h('label', { class: 'md-destw' }, h('small', {}, 'to'), sel); })(),
+    ...['shape', 'rate', 'hz', 'depth'].map((x, i) => { const q = lfoIo(`lfo${n}.${x}`); return q ? paramControl(q.P, KNOB_COLORS[(i + n) % 4], q.io, skinOf(def)) : null; }).filter(Boolean))).filter(Boolean);
   const lenBtns = [16, 32, 48, 64].map((n) => h('button', { class: 'md-btn', onclick: () => seqEdit(e, ['len', n]) }, String(n)));
   const pageBtns = [0, 1, 2, 3].map((p) => h('button', { class: 'md-btn', onclick: () => { S.mdPage = p; renderMachinaDyn(true); } }, String(p + 1)));
   const playBtn = h('button', { class: 'md-btn play', onclick: () => seqEdit(e, ['play', Math.ceil(tempo.beatAt(clock.now() + editLead() + 30) / 4 - 1e-9) * 4]) }, '▶ PLAY');
@@ -2109,12 +2145,13 @@ function renderMachina(e, def, unit) {
     return el;
   });
   const cfg = h('div', { class: 'screen lcd', style: 'grid-template-columns:repeat(5,minmax(0,1fr));min-height:0;padding:6px 10px' }, ...configFields(e, def, unit));
-  S.md = { e, def, k, lcd, trackKeys, lenBtns, pageBtns, playBtn, stopBtn, lockBtn, trigEls, encWrap, rev: -1 };
+  S.md = { e, def, k, lcd, trackKeys, lenBtns, pageBtns, playBtn, stopBtn, lockBtn, trigEls, encWrap, encWrap2, rev: -1 };
   $('#plate').replaceChildren(
     h('div', { class: 'md-top' }, h('div', { class: 'md-logo' }, unit ? unit.model.toUpperCase() : 'MACHINA', h('small', {}, unit ? 'HEARD AS MACHINA' : 'SYNTHESIS DRUM MACHINE')), lcd, master),
     cfg,
     h('div', { class: 'md-tracks' }, ...trackKeys),
-    encWrap,
+    encWrap, encWrap2,
+    lfos.length ? h('div', { class: 'md-lfos' }, ...lfos) : null,
     h('div', { class: 'md-transport' }, playBtn, stopBtn, h('span', { class: 'md-sep' }), h('span', { class: 'md-hint' }, 'LEN'), ...lenBtns, h('span', { class: 'md-sep' }), h('span', { class: 'md-hint' }, 'PAGE'), ...pageBtns, h('span', { class: 'md-sep' }), lockBtn, clrBtn,
       h('span', { class: 'md-hint', style: 'margin-left:auto' }, 'tap a trig to toggle · hold it (or shift-click, or LOCK) and turn a knob to p-lock')),
     h('div', { class: 'md-trigs' }, ...trigEls),
@@ -2126,8 +2163,8 @@ function renderMdEncoders(e, def) {
   if (!S.md) return;
   const t = def.seq.tracks[S.mdTrack], sq = seqs.get(key(S.me, e.r));
   const held = S.held && S.held.track === S.mdTrack ? S.held : null;
-  knobEls = new Map();
-  S.md.encWrap.replaceChildren(...MD_PARAMS.map((x, i) => {
+  for (const k of [...knobEls.keys()]) if (!k.startsWith('lfo')) knobEls.delete(k);
+  const enc = (x, i) => {
     const id = `${t.id}.${x}`, P = def.params.find((p) => p.id === id);
     const lockOf = () => (held ? (mdView(sq).locks.get(held.track + ':' + held.step) || {})[id] : undefined);
     const io = {
@@ -2137,7 +2174,10 @@ function renderMdEncoders(e, def) {
       locked: () => lockOf() != null,
     };
     return paramControl({ ...P, name: P.name }, KNOB_COLORS[i % 4], io, skinOf(def));
-  }));
+  };
+  S.md.encWrap.replaceChildren(...MD_PARAMS.map(enc));
+  const deep = MD_DEPTH.filter((x) => def.params.some((p) => p.id === `${t.id}.${x}`));
+  S.md.encWrap2.replaceChildren(...deep.map(enc)); S.md.encWrap2.classList.toggle('hide', !deep.length);
 }
 // the live parts of the Machina panel (playhead, LEDs, pattern), refreshed ten times a second
 function renderMachinaDyn(force = false, relabel = false) {

@@ -54,6 +54,10 @@
       "file": "analog.js"
     },
     {
+      "id": "bigmacro",
+      "file": "bigmacro.js"
+    },
+    {
       "id": "wobbler",
       "file": "wobbler.js"
     },

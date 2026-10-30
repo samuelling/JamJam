@@ -3,6 +3,7 @@
 // track's fader and pan and before the master, so the stems added together are the song's mix.
 import * as SONG from './song.js';
 import { STEMS as MIX_STEMS, stemOf, masterSettings, consoleValues, consoleBytes, renderMaster } from './console.js';
+import { buildAls, notesOf } from './ableton.js';
 
 const TAIL = 4, LEAD = 0.05;
 export const safeName = (s) => String(s || 'Untitled').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'Untitled';
@@ -45,12 +46,14 @@ export async function renderTrack(o) {
       if (take.audio) { audioInto(ctx, g, o.clip(take.audio.id), take.audio, t, spb); continue; }
       if (!take.events?.length) continue;
       const inst = await instFor({ ...p, ...SONG.laneCfg(song, p) }); if (!inst) continue;
-      const at = (b) => LEAD + (t.start + b) * spb;
-      for (const e of take.events) {
+      const at = (b) => LEAD + (t.start + b) * spb, base = { ...o.resolve({ inst: (SONG.laneCfg(song, p).inst || p.inst), patch: (SONG.laneCfg(song, p).patch || p.patch) }).params, ...(SONG.laneCfg(song, p).params || p.params || {}) };
+      const moved = SONG.movesOf(take.events);
+      for (const e of SONG.expandMoves(take.events, bpm)) {
         if (e.type === 'on') { if (e.b >= t.beats) continue; inst.noteOn(e.note, e.vel ?? 100, at(e.b)); notes++; }
         else if (e.type === 'off') inst.noteOff(e.note, at(Math.min(e.b, t.beats)));
         else if (e.type === 'p' && inst.set && e.b <= t.beats) inst.set(e.id, e.v, at(e.b));
       }
+      if (moved && inst.set) for (const id of moved) if (base[id] != null) inst.set(id, base[id], at(t.beats));
     }
   }
   // instruments with files to load get a moment before the first block (as the song's own bounces do)
@@ -97,6 +100,7 @@ export async function exportStems(o) {
   const all = trackList(o.song).filter((t) => !t.muted && (!o.only || o.only.includes(t.id)));
   if (!all.length) throw new Error('No tracks to export');
   const title = safeName(o.song.title), mixL = [], mixR = [], mixT = [], done = [], clipped = [], skipped = [];
+  let alsOk = false, alsErr = null;
   for (let i = 0; i < all.length; i++) {
     const t = all[i]; o.onProgress?.(`Rendering ${t.name} (${i + 1} of ${all.length})…`);
     const r = await renderTrack({ ...o, track: t });
@@ -126,16 +130,28 @@ export async function exportStems(o) {
     await o.write(`${title} (mix).wav`, wav24(mix, o.sr));
     await o.write(`${title}.mid`, SONG.songToMidi(o.song));
     await o.write(`${title}.megajam.json`, JSON.stringify(o.song, null, 1));
+    // a Live set with the stems lined up at the song's tempo, and each instrument track's notes as MIDI clips
+    o.onProgress?.('Writing the Ableton Live set…');
+    try {
+      const tl = timeline(o.song), midi = done.filter((t) => t.kind !== 'audio').map((t) => ({ name: t.name, clips: tl.flatMap((s) => {
+        const p = Object.values(o.song.sections[s.id]?.parts || {}).find((q) => trackOf(q) === t.id && !q.muted), take = p && SONG.currentTake(p);
+        const notes = take && !take.audio ? notesOf(take.events, s.beats) : [];
+        return notes.length ? [{ name: o.song.sections[s.id].name, start: s.start, beats: s.beats, notes }] : [];
+      }) }));
+      await o.write(`${title}.als`, await buildAls({ song: o.song, bpm: o.bpm, meter: o.song.meter || 4, sr: o.sr, frames: L.length, stems: done.map((t) => ({ name: t.name, file: `Stems/${t.file}` })), midi }));
+      alsOk = true;
+    } catch (e) { alsErr = e?.message || String(e); }
   }
   const key = o.song.key ? `${SONG.NOTE_NAMES[o.song.key.root]} ${o.song.key.mode}` : '';
   await o.write(`About ${o.only ? `${safeName(o.by)}'s ` : ''}stems.txt`, [
     `${o.song.title}: stems from MEGAjam${o.by ? `, exported by ${o.by}` : ''} on ${new Date().toLocaleString()}`, '',
     `Tempo ${o.bpm} bpm, ${o.song.meter || 4}/4${key ? `, ${key}` : ''}. ${o.sr} Hz, 24-bit stereo WAV.`,
     'Every stem starts at bar 1 and they are all the same length: drop them in at the start of a project at this tempo and they line up.',
-    'Each stem is after its track\'s fader and pan and before the master.', ...(mastered ? ['The mix went through the Stem Console (auto-levelled and mastered); the stems did not, so they are yours to master.'] : []), '',
+    'Each stem is after its track\'s fader and pan and before the master.', ...(mastered ? ['The mix went through the Stem Console (auto-levelled and mastered); the stems did not, so they are yours to master.'] : []),
+    ...(alsOk ? [`${title}.als opens in Ableton Live 11 or later: the stems on audio tracks from bar 1 (warped to the tempo), each instrument's notes on a MIDI track below them (pick an instrument for it). Keep the .als in this folder, next to Stems.`] : alsErr ? [`(No Live set this time: ${alsErr}.)`] : []), '',
     ...done.map((t) => `${t.file}  ${t.inst}${t.patch ? ' · ' + t.patch : ''}${t.ownerName ? ' · ' + t.ownerName : ''}${t.hw ? ' (played on hardware; rendered here on its software twin)' : ''}`),
     ...(clipped.length ? ['', `Louder than full scale (clipped in the file): ${clipped.join(', ')}. Pull those tracks' faders down and export again.`] : []),
     ...(skipped.length ? ['', `Couldn't render offline (silent in the stems): ${skipped.join('; ')}.`] : []),
   ].join('\n') + '\n');
-  return { files: done.length, clipped, skipped };
+  return { files: done.length, clipped, skipped, als: alsOk };
 }

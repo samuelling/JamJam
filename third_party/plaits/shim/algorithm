@@ -1,0 +1,13 @@
+// MEGAjam shim: the parts of <algorithm> the Plaits DSP uses.
+#pragma once
+#include <stddef.h>
+namespace std {
+template <class T> inline const T& min(const T& a, const T& b) { return b < a ? b : a; }
+template <class T> inline const T& max(const T& a, const T& b) { return a < b ? b : a; }
+template <class T> inline void swap(T& a, T& b) { T t = a; a = b; b = t; }
+template <class I, class O> inline O copy(I first, I last, O out) { while (first != last) *out++ = *first++; return out; }
+template <class I, class T> inline void fill(I first, I last, const T& v) { while (first != last) *first++ = v; }
+template <class I> inline void sort(I first, I last) {   // insertion sort: only ever used on a handful of items
+  for (I i = first; i != last; ++i) for (I j = i; j != first && *j < *(j - 1); --j) swap(*j, *(j - 1));
+}
+}  // namespace std

@@ -92,8 +92,9 @@ export class Room {
     if (!to) return false;
     const s = JSON.stringify(e);
     if (s.length <= RELAY_MAX) return this.relaySend({ t: 'ev', to, e });
-    const id = Math.random().toString(36).slice(2, 8), parts = Math.ceil(s.length / (RELAY_MAX - 120));
-    for (let i = 0; i < parts; i++) this.relaySend({ t: 'ev', to, e: { k: 'chunk', id, i, n: parts, s: s.slice(i * (RELAY_MAX - 120), (i + 1) * (RELAY_MAX - 120)) } });
+    // a chunk is JSON in JSON, so its quotes double when sent: small enough to fit however many there are
+    const N = Math.floor((RELAY_MAX - 120) / 2), id = Math.random().toString(36).slice(2, 8), parts = Math.ceil(s.length / N);
+    for (let i = 0; i < parts; i++) this.relaySend({ t: 'ev', to, e: { k: 'chunk', id, i, n: parts, s: s.slice(i * N, (i + 1) * N) } });
     return true;
   }
 
