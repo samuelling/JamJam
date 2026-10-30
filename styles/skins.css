@@ -1,0 +1,38 @@
+/* Instrument skins: Juniper, Monolith, Poly, Tine. Loaded in order from index.html: later files win ties, as in the one stylesheet they came from. */
+/* ---- skin: Juniper (black slab, colour stripe, white-cap faders, LED buttons) ---- */
+.skin-juniper .plate { background: linear-gradient(180deg, #151516, #0e0e0f); }
+.skin-juniper .plate::before { content: ''; display: block; height: 6px; margin: -14px -16px 4px; background: linear-gradient(90deg, #e2502a 0 33%, #f0a12a 33% 66%, #d7d4c8 66%); }
+.skin-juniper .brand .name { font: 800 30px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: #f0efe8; }
+.skin-juniper .page { border-radius: 2px; background: #0a0a0b; }
+.skin-juniper .page.on { background: #e2502a; color: #fff; }
+.skin-juniper .encoders { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+.skin-juniper .encname { color: #dcd8cc; }
+/* ---- skin: Monolith (wood cheeks, black panel, knurled black knobs, white legends) ---- */
+.skin-monolith .plate { background: linear-gradient(180deg, #c9cbcf 0 6px, #111 6px, #0b0b0b); }
+.skin-monolith .brand .name { font: 600 30px/1 Georgia, 'Times New Roman', serif; letter-spacing: .02em; text-transform: none; font-style: italic; color: #f4f1e8; }
+.skin-monolith .enc { width: 58px; height: 58px; background: repeating-conic-gradient(from 225deg, #eee 0 1.4deg, transparent 1.4deg 27deg); -webkit-mask: radial-gradient(circle, #000 70%, transparent 71%); }
+.skin-monolith .enc::after { inset: 5px; background: #0b0b0b; }
+.skin-monolith .enc .cap { inset: 8px; background: repeating-conic-gradient(#222 0 6deg, #0e0e0e 6deg 12deg); box-shadow: 0 4px 8px #000, inset 0 0 0 3px #1a1a1a; }
+.skin-monolith .enc .cap::before { width: 3px; height: 16px; top: 3px; margin-left: -1.5px; background: #f2f0e8; }
+.skin-monolith .encname { color: #f2efe6; font-family: var(--sans); font-weight: 600; letter-spacing: .06em; }
+.skin-monolith .page { background: #1a1a1a; border-radius: 3px; }
+.skin-monolith .page.on { background: #f2efe6; color: #111; }
+.skin-monolith .stepper .lcd { background: #3a2410; color: #ffb35a; border-color: #000; box-shadow: inset 0 0 8px #000; }
+/* ---- skin: Poly (light grey, OP-style) ---- */
+.skin-poly .plate { background: linear-gradient(180deg, #e7e7e2, #d3d3cd); color: #111; }
+.skin-poly .brand .name { color: #111; font: 500 30px/1 var(--mono); letter-spacing: -.02em; }
+.skin-poly .brand .fam, .skin-poly .encname, .skin-poly .help { color: #555; }
+.skin-poly .encval { color: #111; }
+.skin-poly .enc::after { background: #c8c8c2; }
+.skin-poly .enc .cap { background: radial-gradient(circle at 35% 30%, #fff, #dcdcd6 60%, #bdbdb6); box-shadow: 0 3px 5px #0004; }
+.skin-poly .page { background: #cfcfc8; color: #444; border-color: #b9b9b2; box-shadow: none; }
+.skin-poly .page.on { background: #111; color: #fff; }
+.skin-poly .devfoot { border-top-color: #0002; box-shadow: none; }
+.skin-poly .btn { background: #f1f1ec; border-color: #bbb; color: #111; }
+/* ---- skin: Tine (tolex, chrome nameplate, ivory legends) ---- */
+.skin-tine .plate { background: radial-gradient(#0000 0 1px, #0003 1px) 0 0 / 3px 3px, linear-gradient(180deg, #1a1513, #0f0c0b); }
+.skin-tine .brand .name { display: inline-block; padding: 4px 10px; border-radius: 4px; color: #2a2a2a; background: linear-gradient(180deg, #f4f4f4, #a9a9a9 50%, #e6e6e6); box-shadow: inset 0 1px 0 #fff, 0 2px 4px #000; text-transform: none; font: 700 24px/1 Georgia, serif; font-style: italic; }
+.skin-tine .enc .cap { background: radial-gradient(circle at 35% 30%, #fff, #bcbcbc 45%, #6d6d6d 80%); }
+.skin-tine .enc .cap::before { background: #222; }
+.skin-tine .encname { color: #e9dcc4; }
+.skin-tine .page.on { background: #e9dcc4; }

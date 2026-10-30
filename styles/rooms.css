@@ -1,0 +1,66 @@
+/* The two rooms, and the corners while a section plays. Loaded in order from index.html: later files win ties, as in the one stylesheet they came from. */
+/* the two rooms */
+/* the two rooms: a big two-door switch in the rooms' own colours (the doors in the hall are pink and blue) */
+.roomseg { padding: 3px; gap: 3px; border-radius: 9px; background: #0b0b0d; border: 1px solid #000; box-shadow: inset 0 1px 0 #ffffff10, 0 2px 0 #000; }
+.roomseg button { position: relative; font: 400 15px/1 var(--display); letter-spacing: .03em; padding: 8px 14px 7px 30px; border-radius: 7px; border: 0; color: var(--mz-muted); background: transparent; transition: background .15s, color .15s; }
+.roomseg button::before { content: ''; position: absolute; left: 11px; top: 50%; width: 11px; height: 15px; margin-top: -8px; border-radius: 2px 2px 0 0; border: 2px solid currentColor; border-bottom-width: 0; opacity: .7; }
+.roomseg button[data-room="jam"] { --rc: #FF68BA; } .roomseg button[data-room="compose"] { --rc: #7DB0FF; }
+.roomseg button:hover { color: var(--mz-toner); background: color-mix(in srgb, var(--rc) 14%, transparent); }
+.roomseg button.on { background: var(--rc); color: #18181b; box-shadow: 0 0 0 1px #18181b, 0 0 14px color-mix(in srgb, var(--rc) 45%, transparent); }
+.roomseg button.on::before { opacity: 1; background: #18181b22; }
+.roomseg .rdots { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: middle; }
+.roomseg .rdots:empty { display: none; }
+.roomseg .rdots i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 1.5px #18181b; }
+body.where-compose .deskrow, body.where-compose .keybed, body.where-compose #secbar { display: none !important; }
+body.where-compose #compose { display: flex !important; }
+.hall { position: fixed; inset: 0; z-index: 35; display: grid; place-items: center; background: radial-gradient(800px 400px at 50% 30%, #2a2018, #0b0b0d 70%); }
+.hallin { display: grid; gap: 18px; justify-items: center; text-align: center; padding: 20px; }
+.hallin h2 { margin: 0; font: 400 40px/1 var(--display); color: var(--mz-toner); }
+.doors { display: flex; gap: 34px; flex-wrap: wrap; justify-content: center; }
+.door2 { position: relative; width: 210px; height: 320px; border: 0; border-radius: 6px 6px 0 0; padding: 70px 16px 16px; display: grid; align-content: end; justify-items: center; gap: 6px; color: #18181b;
+  background: repeating-linear-gradient(90deg, #00000010 0 2px, #0000 2px 9px), linear-gradient(180deg, var(--dc), color-mix(in srgb, var(--dc) 70%, #000)); box-shadow: inset 0 0 0 8px #0003, 0 0 0 6px #1b1712, 0 20px 40px #000a; transition: transform .2s; }
+.door2:hover { transform: perspective(600px) rotateY(-7deg); }
+.door2.jam { --dc: #FF68BA; } .door2.comp { --dc: #7DB0FF; }
+.door2 .sign { position: absolute; top: 22px; left: 50%; transform: translateX(-50%) rotate(-2deg); background: var(--mz-toner); padding: 5px 10px; font: 400 15px/1 var(--display); letter-spacing: .04em; box-shadow: 0 3px 6px #0006; white-space: nowrap; }
+.door2 .knob { position: absolute; right: 18px; top: 52%; width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff6c0, #b08a2a); box-shadow: 0 2px 3px #0008; }
+.door2 b { font: 700 18px/1 var(--sans); }
+.door2 small { font: 400 12px var(--type); }
+/* while a section plays, the corners give the desk some room */
+body.looping:not(.where-compose) .corner { min-height: 0; padding-top: 7px; padding-bottom: 7px; }
+body.looping:not(.where-compose) .corner .cfoot, body.looping:not(.where-compose) .corner .cstats, body.looping:not(.where-compose) .corner .vpctl + .vpctl, body.looping:not(.where-compose) .corner.empty .help { display: none; }
+body.looping:not(.where-compose) .corner .gearitem .ico { width: 40px; height: 27px; }
+.secbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 10px; background: #141518; border: 1px solid #000; box-shadow: inset 4px 0 0 var(--sc, #888); }
+.loopmeter { flex: 1 1 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: stretch; position: relative; --p: 0; }
+.lmbars { position: relative; display: flex; gap: 3px; min-height: 34px; min-width: 0; }
+.lmbars.many .lmbar b { font-size: 10px; } .lmbars.many .lmbeats i { width: 3px; height: 3px; } .lmbars.many .lmbeats { gap: 2px; } .lmbars.many .lmbar { padding: 3px 3px; }
+.lmbar { position: relative; flex: 1 1 0; min-width: 0; overflow: hidden; display: grid; align-content: space-between; padding: 4px 6px; border-radius: 4px; background: #0e0f12; border: 1px solid #23262d; z-index: 1; transition: background .08s; }
+.lmbar.newsec { margin-left: 6px; box-shadow: -4px 0 0 -1px var(--sc); }
+.lmbar b { font: 700 13px/1 var(--sans); color: var(--mz-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lmbar small { position: absolute; top: -9px; left: 4px; font: 400 9px var(--type); color: var(--mz-muted); }
+.lmbar.now { background: color-mix(in srgb, var(--sc) 30%, #0e0f12); border-color: var(--sc); }
+.lmbar.now b { color: var(--mz-toner); }
+.lmbeats { display: flex; gap: 4px; }
+.lmbeats i { width: 6px; height: 6px; border-radius: 50%; background: #2c3039; }
+.lmbeats i:first-child { width: 8px; }
+.lmbeats i.on { background: var(--sc); box-shadow: 0 0 6px var(--sc); }
+.lmfill { position: absolute; inset: 0 auto 0 0; width: calc(var(--p) * 100%); background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--sc) 22%, transparent)); border-radius: 4px; z-index: 2; pointer-events: none; }
+.loopmeter.rec .lmfill { background: linear-gradient(90deg, #e5383b10, #e5383b44); }
+.lmhead { position: absolute; top: -3px; bottom: -3px; left: calc(var(--p) * 100%); width: 2px; background: var(--mz-toner); box-shadow: 0 0 8px var(--mz-toner); z-index: 3; pointer-events: none; }
+.loopmeter.rec .lmhead { background: #ff5a5f; box-shadow: 0 0 10px #ff5a5f; }
+.lmpass { display: grid; justify-items: center; align-content: center; min-width: 52px; padding: 2px 8px; border-radius: 6px; background: #0e0f12; border: 1px solid #23262d; }
+.lmpass small { font: 400 9px var(--type); color: var(--mz-muted); text-transform: uppercase; letter-spacing: .08em; }
+.lmpass b { font: 400 22px/1 var(--display); color: var(--mz-toner); }
+.loopmeter.rec .lmpass { border-color: #e5383b; }
+.loopmeter.wrap .lmbars { animation: lmwrap .45s ease-out; }
+@keyframes lmwrap { from { filter: brightness(1.9); } to { filter: none; } }
+.lmcount { position: absolute; inset: 0; display: grid; place-items: center; z-index: 4; font: 400 20px/1 var(--display); color: var(--mz-toner); background: #141518d0; border-radius: 4px; }
+.secchip { font: 400 18px/1 var(--display); color: var(--sc); }
+.barno { font: 400 12px var(--type); color: var(--mz-muted); min-width: 70px; }
+.chordnow { font: 700 26px/1 var(--sans); color: var(--mz-toner); min-width: 70px; }
+.chordnext { font: 400 13px var(--type); color: var(--mz-muted); min-width: 70px; }
+.compose { flex-direction: column; gap: 10px; min-height: 0; }
+.songhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.songtitle { font: 400 26px/1 var(--display); background: transparent; border: 0; border-bottom: 1px dashed #333; color: var(--mz-toner); min-width: 200px; max-width: 420px; }
+.presence { display: inline-flex; gap: 4px; }
+.presence .who { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 700 11px var(--sans); background: #2a2c31; color: var(--mz-muted); }
+.presence .who.here { background: var(--mz-blue); color: #0a1a30; }
