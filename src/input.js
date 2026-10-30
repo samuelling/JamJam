@@ -18,7 +18,7 @@ export class Input {
     this.sustained = new Set();   // keys held only by the pedal
     this.down = new Set();
     this.keysDown = new Map();
-    this.midi = null; this.inputs = []; this.outputs = []; this.lastChannel = 0;
+    this.midi = null; this.inputs = []; this.outputs = []; this.lastChannel = 0; this.padKeys = null;
     window.addEventListener('keydown', (e) => this.onKey(e, true));
     window.addEventListener('keyup', (e) => this.onKey(e, false));
     window.addEventListener('blur', () => this.panic());
@@ -62,6 +62,8 @@ export class Input {
       return;
     }
     if (e.repeat) return;
+    // a pad instrument on the desk: the keys are its 4×4 grid (1234 / QWER / ASDF / ZXCV, top row to bottom)
+    if (this.padKeys && this.padKeys[k] !== undefined) { const note = this.padKeys[k]; this.keysDown.set(k, note); this.press(note, this.velocity, 0); return; }
     if (k === 'z') { this.octave = Math.max(0, this.octave - 1); this.cb.status(); return; }
     if (k === 'x') { this.octave = Math.min(8, this.octave + 1); this.cb.status(); return; }
     if (k === 'c') { this.velocity = Math.max(20, this.velocity - 15); this.cb.status(); return; }

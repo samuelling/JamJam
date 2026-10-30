@@ -18,6 +18,10 @@
       "file": "studio.js"
     },
     {
+      "id": "pads",
+      "file": "pads.js"
+    },
+    {
       "id": "poly",
       "file": "poly.js"
     },

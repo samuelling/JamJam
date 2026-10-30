@@ -101,7 +101,12 @@
   .meter i { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, var(--te-green), var(--te-yellow) 60%, var(--te-orange)); transition: width .2s; }
   .onair { font: 700 10px var(--mono); letter-spacing: .2em; padding: 4px 8px; border-radius: 5px; border: 1px solid #3a1a12; color: #5a2a1d; background: #140906; }
   .onair.live { color: #fff; background: #d6331a; border-color: #ff6a4d; box-shadow: 0 0 14px #ff3d1a88; text-shadow: 0 0 6px #fff8; }
-  #status { color: var(--dim); font: 11px var(--mono); max-width: 36ch; }
+  #status { color: var(--dim); font: 11px var(--mono); flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #status:not(:empty)::before { content: '› '; color: var(--mz-gold, #ffcf26); }
+  .console > .badge-logo { order: -2; } .console > .roomseg { order: -1; margin-right: 4px; }
+  #leaveBtn { margin-left: auto; }
+  .console #keySel { width: 128px; max-width: 128px; }
+  .console { gap: 8px 10px; }
   #status[data-kind=error] { color: var(--bad); }
   #lookHelp { flex-basis: 100%; font-size: 11px; }
 
@@ -151,6 +156,28 @@
   @keyframes recpulse { 50% { box-shadow: 0 0 0 4px #e5383b44; } }
   .sidetab.techtab { margin-top: auto; opacity: .7; }
   .sidetab.techtab[aria-pressed="true"] { opacity: 1; color: var(--mz-toner); box-shadow: inset 0 0 0 1px #ffcf2666; }
+  /* the Pads screen */
+  .padwrap { display: grid; grid-template-columns: minmax(240px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; padding: 4px 0 6px; }
+  .padgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .padbtn { position: relative; aspect-ratio: 5 / 4; display: grid; align-content: end; justify-items: start; gap: 2px; padding: 8px; border-radius: 8px; border: 1px solid #000; touch-action: none;
+    background: linear-gradient(180deg, #34363c, #24262b); box-shadow: inset 0 1px 0 #ffffff1a, 0 4px 0 #0c0d0f, 0 5px 8px #0008; color: var(--mz-toner); transition: transform .04s, box-shadow .04s, background .1s; }
+  .padbtn b { font: 700 11px/1.1 var(--sans); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .padbtn .pnum { position: absolute; top: 6px; left: 8px; font: 700 10px var(--sans); color: var(--mz-muted); }
+  .padbtn .pkey { position: absolute; top: 6px; right: 8px; font: 400 10px var(--type); color: #ffffff40; }
+  .padbtn .pwave { width: 100%; color: #ffcf26aa; line-height: 0; }
+  .padbtn .pwait { position: absolute; top: 8px; left: 50%; width: 6px; height: 6px; border-radius: 50%; background: #ffcf26; animation: recpulse 1s infinite; }
+  .padbtn.empty { background: #18191c; color: var(--mz-muted); box-shadow: inset 0 0 0 1px #2c3039, 0 3px 0 #0c0d0f; }
+  .padbtn.sel { box-shadow: inset 0 0 0 2px #ffcf26, 0 4px 0 #0c0d0f, 0 5px 8px #0008; }
+  .padbtn.hit { transform: translateY(3px); box-shadow: inset 0 0 0 2px #ffcf26, 0 1px 0 #0c0d0f; background: linear-gradient(180deg, #5a4a1c, #3a3014); }
+  .padbtn.drop { background: #2a2412; box-shadow: inset 0 0 0 2px #ffcf26; }
+  .padedit { display: grid; gap: 10px; align-content: start; }
+  .padedit .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .padedit .pname { font: 400 18px/1 var(--display); color: #ffcf26; }
+  .pwavebig { color: #ffcf26; background: #0e0f12; border: 1px solid #23262d; border-radius: 4px; padding: 6px; min-height: 44px; display: grid; place-items: center; }
+  .pedit { display: grid; gap: 2px; }
+  .pedit small { font: 400 10px var(--type); color: var(--mz-muted); text-transform: uppercase; letter-spacing: .06em; }
+  .pedit input[type=range] { width: 110px; }
+  @media (max-width: 1000px) { .padwrap { grid-template-columns: 1fr; } }
   .gearitem { position: relative; display: grid; justify-items: center; gap: 2px; width: 56px; }
   .gearitem .ico { width: 54px; height: 36px; }
   .gearitem .led { position: absolute; top: 0; right: 2px; width: 6px; height: 6px; }
@@ -777,13 +804,12 @@
     <div class="lookbar tech"><span class="legend">Look</span><div class="meter" title="How far ahead your notes are scheduled"><i id="lookMeter"></i></div><span id="lookVal" class="lcd" style="min-width:72px;text-align:center;font-size:13px;padding:3px 6px">0 ms</span>
       <button id="lookAutoBtn" class="btn small" title="Back to the measured lookahead">AUTO</button><input id="lookSlider" type="range" min="0" max="600" value="40" aria-label="Lookahead (manual)" style="width:70px"></div>
     <button id="selfBtn" class="btn small tech" title="Hear your own parts the moment you play them; the band still hears everything in sync">Hear myself</button>
-    <span id="status" role="status"></span>
     <div class="seg roomseg" id="roomSeg" role="group" aria-label="Room"><button data-room="jam" class="on">Jam Room</button><button data-room="compose">Compose Room</button></div>
     <button id="leaveBtn" class="btn small ghost" style="margin-left:auto">Leave</button>
     <span id="lookHelp" class="help tech"></span>
   </div>
 
-  <div class="audience"><span id="listeners" class="help hide"></span><span class="reacts"><button class="react" data-react="clap" aria-label="Applause" title="Applause">👏</button><button class="react" data-react="fire" aria-label="Fire" title="Fire">🔥</button><button class="react" data-react="heart" aria-label="Love it" title="Love it">❤️</button><button class="react" data-react="laugh" aria-label="Ha" title="Ha">😂</button><button class="react" data-react="wow" aria-label="Wow" title="Wow">🤯</button></span></div>
+  <div class="audience"><span id="status" role="status" title=""></span><span id="listeners" class="help hide"></span><span class="reacts"><button class="react" data-react="clap" aria-label="Applause" title="Applause">👏</button><button class="react" data-react="fire" aria-label="Fire" title="Fire">🔥</button><button class="react" data-react="heart" aria-label="Love it" title="Love it">❤️</button><button class="react" data-react="laugh" aria-label="Ha" title="Ha">😂</button><button class="react" data-react="wow" aria-label="Wow" title="Wow">🤯</button></span></div>
   <div id="corners"></div>
   <div id="secbar" class="secbar hide" aria-live="polite"></div>
   <div id="compose" class="compose hide" aria-label="Compose Room"></div>
