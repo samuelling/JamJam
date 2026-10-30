@@ -32,6 +32,22 @@
     {
       "id": "chip",
       "file": "chip.js"
+    },
+    {
+      "id": "hammerwork",
+      "file": "hammerwork.js"
+    },
+    {
+      "id": "blown",
+      "file": "blown.js"
+    },
+    {
+      "id": "complexosc",
+      "file": "complexosc.js"
+    },
+    {
+      "id": "analog",
+      "file": "analog.js"
     }
   ]
 }

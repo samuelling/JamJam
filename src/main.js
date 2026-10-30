@@ -897,7 +897,7 @@ const compose = makeCompose({
   setSong, transport: () => songStore.song.transport, keyName: () => keyName(), bpm: () => Math.round(tempo.bpm(clock.now() + 1000)),
   play: (mode, sid) => startTransport(mode, sid), stop: () => stopTransport(), loopRange: (a, b) => loopRange(a, b), jamThis: (sid) => { startTransport('loop', sid); goRoom('jam'); },
   importFile: (f) => importSketch(f), exportMidi: () => download(new Blob([SONG.songToMidi(songForExport())], { type: 'audio/midi' }), slugName() + '.mid'), exportJson: () => download(new Blob([JSON.stringify(songForExport(), null, 1)], { type: 'application/json' }), slugName() + '.megajam.json'),
-  removePart: (sid, pid) => setSong(`part:${sid}:${pid}`, null), choose, vote, saveVariation, restoreVariation,
+  removePart: (sid, pid) => setSong(`part:${sid}:${pid}`, null), choose, vote, saveVariation, restoreVariation, editTake,
   setRole: (sid, pid, role) => { for (const s of songStore.sections()) for (const p of Object.values(s.parts || {})) if (SONG.laneOf(p) === SONG.laneOf(songStore.song.sections[sid].parts[pid])) setSong(`part:${s.id}:${p.id}`, { ...p, role }); },
   me: () => S.me, myName: () => S.name,
   working: () => { const tr = songStore.song.transport, pos = positionAt(tr, tempo.beatAt(clock.now())); if (!pos) return [];
@@ -1257,6 +1257,18 @@ function lockTake(e, sid, ev, pos, opts = {}) {
   commitTake(sid, pid, base, take, takes, old, pos, opts);
 }
 const TAKES_MAX = 32;
+// note corrections from the Compose Room: the first change makes an edited copy of the take (the original stays),
+// later ones update that copy; every change gets a new id, so a rendered loop of it is made again
+function editTake(sid, pid, events, what) {
+  const p = songStore.song.sections[sid]?.parts?.[pid]; if (!p) return;
+  const cur = SONG.currentTake(p); if (!cur || cur.audio) return;
+  const id = Math.random().toString(36).slice(2, 7);
+  let takes;
+  if (cur.edit && cur.by === S.me) takes = SONG.takesOf(p).map((t) => (t.id === cur.id ? { ...t, id, events, at: clock.now() } : t));
+  else takes = [...SONG.takesOf(p), { id, events, by: S.me, byName: `${S.name}'s edit of ${cur.byName || 'a take'}`, edit: true, of: cur.id, at: clock.now() }].slice(-TAKES_MAX);
+  setSong(`part:${sid}:${pid}`, { ...p, takes, current: id, prev: id, switchAt: null });
+  if (what === 'quantize') setStatus('Quantized. The original take is still in the list.');
+}
 // a new take in a lane: it becomes the one that sounds by the room's rule, switching at the next pass
 function commitTake(sid, pid, base, take, takes, old, pos, opts = {}) {
   const rule = songStore.song.rule || 'newest', owner = base.by;
@@ -2625,7 +2637,7 @@ Object.assign(window.JJ, {
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
   own: (id, v) => setOwned(id, v),
-  loopRange: (a, b) => loopRange(a, b), lockAudio: () => lockAudio(), recAll: (on) => setRecAll(on), audio: () => ({ have: [...AUD.bytes.keys()], started: AUD.started }), lane: () => lane,
+  loopRange: (a, b) => loopRange(a, b), editTake: (sid, pid, ev, w) => editTake(sid, pid, ev, w), lockAudio: () => lockAudio(), recAll: (on) => setRecAll(on), audio: () => ({ have: [...AUD.bytes.keys()], started: AUD.started }), lane: () => lane,
   addVirtual: (kind, style) => addVirtual(kind, style), setVirtual: (id, p) => setVirtual(id, p), removeVirtual: (id) => removeVirtual(id), lockVirtual: (id, sid) => lockVirtual(id, sid), vplan: (id) => VP.plan.get(id), players: () => songStore.song.players || {},
   setKey: (root, mode) => setKey(root, mode), choose: (sid, pid, t) => choose(sid, pid, t), vote: (sid, pid, t) => vote(sid, pid, t), saveVar: (n) => saveVariation(n), restoreVar: (n) => restoreVariation(n), song: () => songStore.song, setSong: (k, v) => setSong(k, v), loadSong: (sg) => loadSong(sg), songFromTracker: (j) => SONG.songFromTracker(j), songFromMidi: (b) => SONG.songFromMidi(b), songMidi: () => Array.from(SONG.songToMidi(songForExport())), play: (mode, sid) => startTransport(mode, sid), stopSong: () => stopTransport(), lockIn: (r) => lockIn(entry(r)), goRoom: (w) => goRoom(w), bounced: () => [...songPlay.bounce].filter(([, v]) => v.buf).map(([k]) => k), match: (r, on) => { const e = entry(r); if (e) return on ? startMatch(e) : stopMatch(e); }, matchScore: async (r, params) => { const m = entry(r)?.match; return m && m.fitter.scoreAll(params); }, matchObs: (r) => entry(r)?.match?.fitter.obs.map((o) => ({ note: o.note, held: o.held, att: o.att, noise: +o.noise.toFixed(2), hSus: o.hSus && o.hSus.map(Math.round).join(' '), curve: o.curve.slice(0, 40).map(Math.round).join(' ') })),
   matchState: (r) => { const m = entry(r)?.match; return m && { why: m.why, on: m.on, obs: m.fitter.obs.length, renders: m.fitter.renders, ms: m.fitter.ms, lag: m.lag, sim: m.sim, applied: m.applied, d: m.fitter.bestD, params: entry(r).cfg.params }; }, react: (r) => react(r), listen: (code) => enter(code, true), assist: (v) => { S.assist = v; },

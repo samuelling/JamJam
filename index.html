@@ -698,6 +698,10 @@
   .lvkeys span { position: absolute; right: 5px; font: 400 9px var(--type); color: var(--mz-muted); white-space: nowrap; }
   .lvroll { position: relative; background: #0e0f12; border-radius: 0 3px 3px 0; overflow: hidden; }
   .lvroll svg { display: block; }
+  .lvroll.editable .lvnote { cursor: grab; }
+  .lvroll.editable .lvnote:hover { stroke: #fff; stroke-width: 1; }
+  .lvroll.editable { cursor: crosshair; touch-action: none; }
+  .lvtools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .lvroll rect title { pointer-events: none; }
   .lvhead-play { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--mz-toner); box-shadow: 0 0 6px var(--mz-toner); pointer-events: none; }
   .details.lane { max-height: 62%; }
