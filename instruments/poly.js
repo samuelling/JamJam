@@ -58,6 +58,7 @@ export default {
   id: 'poly',
   name: 'Poly',
   family: 'Analog subtractive',
+  blurb: "A light two-oscillator subtractive poly with a mono/glide mode and chorus. Quick to dial, easy on the CPU.",
   params: PARAMS,
   presets: PRESETS,
   create(ctx, out, init = {}) {

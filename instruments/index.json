@@ -1,8 +1,25 @@
 {
   "about": "Instruments every jammer loads from this site. Each file is hashed when it loads, so the app can warn if two jammers are running different versions.",
   "instruments": [
-    { "id": "poly", "file": "poly.js" },
-    { "id": "tine", "file": "tine.js" },
-    { "id": "kit", "file": "kit.js" }
+    {
+      "id": "juniper",
+      "file": "juniper.js"
+    },
+    {
+      "id": "monolith",
+      "file": "monolith.js"
+    },
+    {
+      "id": "machina",
+      "file": "machina.js"
+    },
+    {
+      "id": "poly",
+      "file": "poly.js"
+    },
+    {
+      "id": "tine",
+      "file": "tine.js"
+    }
   ]
 }

@@ -1,5 +1,7 @@
-// The room: a WebSocket to the Cloudflare relay for the handshake, then a direct WebRTC DataChannel to every other jammer
-// (a full mesh: 4 jammers = 6 links). After the handshake the relay carries nothing, unless a pair of jammers can't
+// The room: a WebSocket to the Cloudflare relay for the handshake, then direct WebRTC DataChannels to every other jammer
+// (a full mesh: 4 jammers = 6 links). Each link has two channels: "jam" (reliable, ordered) for everything, and
+// "fast" (unordered, never retransmitted) for notes and pings, where a lost packet is simply recovered from the
+// redundant copy in the next one instead of holding every later note back while it is retransmitted. After the handshake the relay carries nothing, unless a pair of jammers can't
 // connect directly (some strict or carrier-grade NATs), in which case that pair falls back to passing messages
 // through the relay. Audio-lane chunks are only ever sent directly.
 
@@ -22,7 +24,8 @@ export class Room {
     this.chunks = new Map();
     // testing aid: ?lag=80&jitter=20 delays everything this browser receives, to feel a long-distance link
     const q = new URLSearchParams(location.search);
-    this.lag = q.get('lag') ? { ms: +q.get('lag') || 0, jitter: +q.get('jitter') || 0 } : null;
+    this.lag = q.get('lag') || q.get('loss') ? { ms: +q.get('lag') || 0, jitter: +q.get('jitter') || 0, loss: +q.get('loss') || 0 } : null;
+    this.fastOn = q.get('fast') !== '0';
   }
 
   join(code, name) {
@@ -120,6 +123,7 @@ export class Room {
     this.makePC(p);
     if (initiator) {
       this.wireDC(p, p.pc.createDataChannel('jam', { ordered: true }));
+      if (this.fastOn) this.wireDC(p, p.pc.createDataChannel('fast', { ordered: false, maxRetransmits: 0 }));
       p.pc.createOffer().then((o) => p.pc.setLocalDescription(o)).then(() => this.relayEvent(p.id, { k: 'sig', sdp: p.pc.localDescription.toJSON() })).catch(() => this.setPath(p, 'relay'));
     }
     p.fallbackT = setTimeout(() => { if (p.path === 'connecting') this.setPath(p, 'relay'); }, DIRECT_TIMEOUT_MS);
@@ -156,12 +160,22 @@ export class Room {
   }
 
   wireDC(p, dc) {
-    p.dc = dc;
     dc.binaryType = 'arraybuffer';
+    if (dc.label === 'fast') {
+      p.fast = dc;
+      dc.onmessage = (ev) => {
+        if (typeof ev.data !== 'string') return;
+        if (this.lag && this.lag.loss && Math.random() < this.lag.loss) return; // simulated loss
+        let m; try { m = JSON.parse(ev.data); } catch (_) { return; }
+        this.deliver(p, m, true);
+      };
+      return;
+    }
+    p.dc = dc;
     dc.onopen = () => { clearTimeout(p.fallbackT); this.setPath(p, 'direct'); };
     dc.onclose = () => { if (this.peers.get(p.id) === p && p.path === 'direct') this.setPath(p, 'relay'); };
     dc.onmessage = (ev) => {
-      if (typeof ev.data === 'string') { let m; try { m = JSON.parse(ev.data); } catch (_) { return; } this.deliver(p, m); }
+      if (typeof ev.data === 'string') { let m; try { m = JSON.parse(ev.data); } catch (_) { return; } this.deliver(p, m, false); }
       else {
         p.bytesIn += ev.data.byteLength;
         if (this.lag) setTimeout(() => this.h.binary(p, ev.data), this.lagDelay(p));
@@ -177,15 +191,29 @@ export class Room {
     if (was !== path) this.h.roster();
   }
 
-  // simulated delay that, like a real ordered channel, never reorders messages from one peer
-  lagDelay(p) {
-    const now = performance.now(), t = Math.max(p.lagLast || 0, now + this.lag.ms + Math.random() * this.lag.jitter);
+  // Simulated network (testing): delay plus jitter. On the reliable channel a lost packet is retransmitted after
+  // about an RTO and, being ordered, holds back everything behind it; on the fast channel it is just gone.
+  lagDelay(p, fast) {
+    const now = performance.now();
+    let t = now + this.lag.ms + Math.random() * this.lag.jitter;
+    if (fast) return t - now;
+    if (this.lag.loss && Math.random() < this.lag.loss) t += 2 * this.lag.ms + 200;
+    t = Math.max(p.lagLast || 0, t);
     p.lagLast = t; return t - now;
   }
-  deliver(p, m) {
+  deliver(p, m, fast = false) {
     if (!m || typeof m !== 'object') return;
-    if (this.lag) setTimeout(() => this.h.message(p, m), this.lagDelay(p));
+    if (this.lag) setTimeout(() => this.h.message(p, m), this.lagDelay(p, fast));
     else this.h.message(p, m);
+  }
+  // notes and pings: the fast channel when it's open, otherwise the normal path
+  sendFast(m, id) {
+    const targets = id ? [this.peers.get(id)].filter(Boolean) : [...this.peers.values()];
+    let s = null;
+    for (const p of targets) {
+      if (p.fast && p.fast.readyState === 'open') { s = s || JSON.stringify(m); try { p.fast.send(s); } catch (_) {} }
+      else this.send(m, p.id);
+    }
   }
 
   // send to one peer (id) or everyone (no id)
@@ -206,7 +234,8 @@ export class Room {
   closePeer(p) {
     clearTimeout(p.fallbackT);
     try { p.dc && p.dc.close(); } catch (_) {}
+    try { p.fast && p.fast.close(); } catch (_) {}
     try { p.pc && p.pc.close(); } catch (_) {}
-    p.dc = p.pc = null;
+    p.dc = p.fast = p.pc = null;
   }
 }

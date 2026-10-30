@@ -22,6 +22,7 @@ export class Engine {
     this.metro = { on: false, level: 0.5, next: -1 };
     this.log = [];        // recent scheduled events, for the latency view and the tests
     this.logMax = 4000;
+    this.silent = new URLSearchParams(location.search).get('silent') === '1';
   }
 
   async start() {
@@ -56,17 +57,33 @@ export class Engine {
     this.hashes.hardware = await sha(hwText);
   }
 
-  // A channel config: {inst, params, patch, hw, source}. Remote jammers only need inst + params to sound the same.
+  // A channel config: {inst, params, patch, hw}. Remote jammers only need inst + params to sound the same.
+  // For a hardware unit with no instrument chosen, the best-ranked twin is used.
   resolve({ inst, patch, hw }) {
-    const unit = hw ? this.hardware.hardware.find((h) => h.id === hw) : null;
-    if (unit) inst = this.hardware.families[unit.family]?.twin || inst;
+    const unit = hw ? this.unit(hw) : null;
+    if (unit && !inst) inst = this.twinCandidates(unit)[0]?.inst;
     const def = this.defs.get(inst) || this.defs.values().next().value;
-    const types = unit ? unit.types : Object.keys(def.presets);
-    if (!patch || !def.presets[patch]) patch = types.find((t) => def.presets[t]) || Object.keys(def.presets)[0];
+    let types = unit ? unit.types.filter((t) => def.presets[t]) : [];
+    if (!types.length) types = Object.keys(def.presets);
+    if (!patch || !def.presets[patch]) patch = types[0];
     const params = {};
     for (const p of def.params) params[p.id] = p.def;
-    Object.assign(params, def.presets[patch] || {}, unit ? unit.character || {} : {});
+    Object.assign(params, def.presets[patch] || {});
+    if (unit) for (const [k, v] of Object.entries(unit.character || {})) if (k in params) params[k] = v;
     return { inst: def.id, patch, hw: unit ? unit.id : null, params };
+  }
+  unit(id) { return this.hardware.hardware.find((h) => h.id === id) || null; }
+  patchTypes(cfg) {
+    const def = this.defs.get(cfg.inst), unit = cfg.hw && this.unit(cfg.hw);
+    const t = unit ? unit.types.filter((x) => def.presets[x]) : [];
+    return t.length ? t : Object.keys(def.presets);
+  }
+  // ranked software twins for a hardware unit: its own named twin first, then its family's candidates
+  twinCandidates(unit) {
+    const fam = this.hardware.families[unit.family] || {};
+    const list = (fam.twins || []).map(([inst, score]) => ({ inst, score }));
+    if (unit.twin) { const own = list.find((c) => c.inst === unit.twin); if (own) own.score = Math.max(own.score, 0.95); else list.push({ inst: unit.twin, score: 0.95 }); }
+    return list.filter((c) => this.defs.has(c.inst)).sort((a, b) => b.score - a.score);
   }
 
   channel(pid) {
@@ -120,7 +137,8 @@ export class Engine {
     g.gain.setValueAtTime(c.insts.length ? 0 : 1, now);
     g.gain.setValueAtTime(1, t);
     g.connect(c.out);
-    const inst = def.create(ctx, g, cfg.params);
+    // ?silent=1 (benchmarks): keep all timing and bookkeeping but skip synthesis
+    const inst = this.silent ? { noteOn() {}, noteOff() {}, set() {}, allOff() {}, dispose() {} } : def.create(ctx, g, cfg.params);
     for (const old of c.insts) {
       try { old.inst.allOff(t); } catch (_) {}
       old.gain.gain.setTargetAtTime(0, t + 1.2, 0.3);
@@ -132,7 +150,7 @@ export class Engine {
   }
 
   // one timestamped event for a jammer's channel: {type:'on'|'off'|'p', at, seq, note?, vel?, id?, v?}
-  event(pid, ev, { now = false } = {}) {
+  event(pid, ev, { now = false, loose = false } = {}) {
     const c = this.channel(pid);
     const I = c.insts[c.insts.length - 1];
     if (!I) return;
@@ -141,7 +159,7 @@ export class Engine {
     let lateMs = 0;
     if (!now && t < ctx.currentTime) {
       lateMs = (ctx.currentTime - t) * 1000;
-      if (lateMs > 3) { c.late++; c.lateWorst = Math.max(c.lateWorst, lateMs); }
+      if (lateMs > 3 && !loose) { c.late++; c.lateWorst = Math.max(c.lateWorst, lateMs); }
       t = ctx.currentTime;
     }
     c.events++;
@@ -157,7 +175,7 @@ export class Engine {
         if (c.pLog.length > 3000) c.pLog.splice(0, 1000);
       }
     }
-    this.log.push({ pid, type: ev.type, note: ev.note, id: ev.id, at: ev.at, ctxT: t, heard: this.roomTime(t), lateMs, now });
+    this.log.push({ pid, type: ev.type, note: ev.note, id: ev.id, at: ev.at, ctxT: t, heard: this.roomTime(t), lateMs, now, b: ev.b });
     if (this.log.length > this.logMax) this.log.splice(0, this.log.length - this.logMax);
   }
 

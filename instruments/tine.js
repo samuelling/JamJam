@@ -41,6 +41,7 @@ export default {
   id: 'tine',
   name: 'Tine',
   family: 'FM keys',
+  blurb: "Two-operator FM keys: electric pianos, bells, FM bass and plucks, with tremolo and drive.",
   params: PARAMS,
   presets: PRESETS,
   create(ctx, out, init = {}) {

@@ -3,245 +3,345 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>JamJam — jam live, in lockstep</title>
-<meta name="description" content="Jam live with up to four people. Every browser runs everyone's instrument, so only the notes travel.">
+<title>JamJam — a studio for jamming live, in lockstep</title>
+<meta name="description" content="Walk into a shared virtual studio with up to three friends. Every browser runs everyone's instruments, so only the notes travel.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d0f14; --panel: #151922; --panel2: #1b2030; --line: #283044; --ink: #efe9dc; --dim: #9aa0ae; --faint: #5f6678;
-    --hot: #ff8a5c; --ok: #7fd99a; --warn: #f2c14e; --bad: #ff6b6b;
+    --room: #0a0a0b; --face: #17181a; --face2: #1e1f22; --edge: #2c2e33; --line: #33363c;
+    --ink: #ecebe6; --dim: #9b9da3; --faint: #5d6066; --legend: #f4f2ea;
+    --lcd: #0c0e0d; --lcdink: #e8f1e4; --lcddim: #6f7a70;
+    --te-blue: #2f80ff; --te-green: #1fc46e; --te-white: #e9e9e4; --te-orange: #ff5a1f; --te-yellow: #ffcf26;
+    --ok: #3ddc84; --warn: #ffcf26; --bad: #ff4d4d;
     --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-    --sans: 'Space Grotesk', system-ui, -apple-system, Segoe UI, sans-serif;
+    --sans: 'Inter Tight', system-ui, -apple-system, Segoe UI, sans-serif;
+    --wood: repeating-linear-gradient(92deg, #5b3720 0 3px, #6a4127 3px 7px, #4e2f1b 7px 9px, #734730 9px 14px, #5f3a22 14px 19px),
+            linear-gradient(180deg, #6e4429, #3e2414);
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); }
-  body { min-height: 100vh; background:
-    radial-gradient(1200px 500px at 85% -10%, #2a1f3a55, transparent 60%),
-    radial-gradient(900px 400px at -10% 110%, #1f3a3455, transparent 60%), var(--bg); }
-  a { color: var(--hot); }
-  header { display: flex; align-items: center; gap: 14px; padding: 16px 22px; border-bottom: 1px solid var(--line); }
-  .logo { font-weight: 700; font-size: 22px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 10px; }
-  .logo i { display: inline-flex; gap: 3px; }
-  .logo i b { width: 6px; height: 18px; border-radius: 2px; display: block; animation: bob 1.2s ease-in-out infinite; }
-  .logo i b:nth-child(1) { background: #ff8a5c; } .logo i b:nth-child(2) { background: #56c8f0; animation-delay: .15s; }
-  .logo i b:nth-child(3) { background: #b9e35f; animation-delay: .3s; } .logo i b:nth-child(4) { background: #c98cff; animation-delay: .45s; }
-  @keyframes bob { 0%, 100% { transform: scaleY(.55); } 50% { transform: scaleY(1); } }
-  @media (prefers-reduced-motion: reduce) { .logo i b { animation: none; } }
-  .tag { color: var(--dim); font-size: 13px; }
-  #status { margin-left: auto; color: var(--dim); font-size: 13px; text-align: right; }
-  #status[data-kind=error] { color: var(--bad); }
-  main { max-width: 1180px; margin: 0 auto; padding: 22px; }
-  button, select, input[type=text], input[type=number] {
-    font: inherit; color: var(--ink); background: var(--panel2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 12px;
-  }
-  button { cursor: pointer; transition: background .12s, border-color .12s; }
-  button:hover { border-color: #3b4560; background: #212842; }
-  button.primary { background: var(--hot); border-color: var(--hot); color: #1a0f08; font-weight: 600; }
-  button.primary:hover { filter: brightness(1.07); }
-  button.on { background: #2b3a2f; border-color: var(--ok); color: var(--ok); }
-  button.mini { padding: 3px 8px; font-size: 12px; border-radius: 6px; }
-  select { padding: 7px 10px; }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
-  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); margin: 0 0 12px; font-weight: 500; }
-  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-  .help { color: var(--dim); font-size: 13px; }
+  html, body { margin: 0; background: var(--room); color: var(--ink); font: 14px/1.45 var(--sans); }
+  body { min-height: 100vh; background: radial-gradient(1400px 600px at 50% -200px, #1b1d22, transparent 70%), var(--room); }
+  button, select, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  ::selection { background: var(--te-orange); color: #000; }
   .mono { font-family: var(--mono); }
+  .hide { display: none !important; }
 
-  /* lobby */
-  #lobby { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
-  .hero h1 { font-size: 40px; line-height: 1.05; letter-spacing: -0.03em; margin: 6px 0 14px; }
-  .hero h1 em { font-style: normal; color: var(--hot); }
-  .hero p { color: var(--dim); max-width: 46ch; }
-  .how { display: grid; gap: 10px; margin-top: 18px; }
-  .how div { display: grid; grid-template-columns: 26px 1fr; gap: 10px; color: var(--dim); font-size: 14px; }
-  .how b { color: var(--ink); font-family: var(--mono); font-size: 13px; }
-  .join { display: grid; gap: 12px; }
-  .join label { display: grid; gap: 6px; font-size: 13px; color: var(--dim); }
-  .join input { width: 100%; }
-  #codeIn { text-transform: uppercase; letter-spacing: .3em; font-family: var(--mono); }
-  .or { text-align: center; color: var(--faint); font-size: 12px; }
+  /* ---------- top bar ---------- */
+  header.top { display: flex; align-items: center; gap: 14px; padding: 12px 20px; border-bottom: 1px solid #1c1d20; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -0.02em; font-size: 19px; line-height: 1.05; }
+  .logo svg { display: block; }
+  .logo small { font: 500 10px var(--mono); color: var(--faint); letter-spacing: .14em; text-transform: uppercase; }
+  #status { margin-left: auto; color: var(--dim); font: 12px var(--mono); text-align: right; max-width: 50ch; }
+  #status[data-kind=error] { color: var(--bad); }
+  main { max-width: 1320px; margin: 0 auto; padding: 18px 20px 40px; }
 
-  /* jam */
-  #jam { display: grid; gap: 16px; }
-  .bar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
-  .code { font-family: var(--mono); font-size: 20px; letter-spacing: .25em; background: var(--panel2); border: 1px dashed #3b4560; border-radius: 9px; padding: 4px 12px; }
-  .grp { display: flex; align-items: center; gap: 8px; padding-left: 14px; border-left: 1px solid var(--line); }
-  #bpm { width: 72px; font-family: var(--mono); }
-  .look { display: grid; grid-template-columns: auto 1fr auto auto; gap: 6px 12px; align-items: center; margin-top: 12px; }
-  #lookVal { font-family: var(--mono); font-size: 18px; color: var(--hot); min-width: 9ch; }
-  #lookHelp { grid-column: 1 / -1; }
-  input[type=range] { accent-color: var(--hot); }
+  /* ---------- shared bits ---------- */
+  .btn { background: var(--face2); border: 1px solid var(--edge); color: var(--ink); border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 500; transition: background .1s, border-color .1s, transform .05s; }
+  .btn:hover { border-color: #474a51; background: #26282c; }
+  .btn:active { transform: translateY(1px); }
+  .btn.hot { background: var(--te-orange); border-color: var(--te-orange); color: #110600; font-weight: 600; }
+  .btn.ghost { background: transparent; }
+  .btn.small { padding: 3px 8px; font-size: 12px; border-radius: 6px; }
+  .btn.on { border-color: var(--te-green); color: var(--te-green); }
+  .round { width: 32px; height: 32px; border-radius: 50%; padding: 0; display: inline-grid; place-items: center; background: #26282c; border: 1px solid var(--edge); color: var(--ink); }
+  .round.on { background: var(--te-orange); border-color: var(--te-orange); color: #110600; }
+  .legend { font: 600 10px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+  .lcd { background: var(--lcd); border: 1px solid #000; box-shadow: inset 0 0 0 1px #222, inset 0 2px 12px #000; border-radius: 6px; color: var(--lcdink); font-family: var(--mono); padding: 6px 10px; }
+  .lcd b { color: #fff; font-weight: 700; }
+  select.lcdsel { background: var(--lcd); border: 1px solid #000; border-radius: 6px; color: var(--lcdink); font: 12px var(--mono); padding: 5px 8px; }
+  .help { color: var(--dim); font-size: 12px; }
+  .led { width: 8px; height: 8px; border-radius: 50%; background: #2a2c30; flex: none; box-shadow: inset 0 1px 1px #000; transition: background .05s, box-shadow .05s; }
+  .led.lit { background: var(--c, var(--te-orange)); box-shadow: 0 0 8px var(--c, var(--te-orange)); }
+  input[type=range] { accent-color: var(--te-orange); }
+  input[type=text] { background: var(--lcd); border: 1px solid #000; border-radius: 8px; padding: 9px 12px; color: var(--lcdink); font-family: var(--mono); }
+  input[type=text]:focus-visible, .btn:focus-visible, select:focus-visible, .enc:focus-visible, .lcd[tabindex]:focus-visible { outline: 2px solid var(--te-blue); outline-offset: 2px; }
 
-  #players { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-  .player { background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--pc, var(--line)); border-radius: 12px; padding: 12px; display: grid; gap: 6px; min-height: 128px; }
-  .player.me { background: linear-gradient(180deg, color-mix(in srgb, var(--pc) 9%, var(--panel)), var(--panel)); }
-  .player.empty { border-style: dashed; border-top-width: 1px; opacity: .55; place-content: center; text-align: center; }
-  .prow { display: flex; align-items: center; gap: 8px; }
-  .pname { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .pmeta { color: var(--dim); font-size: 13px; }
-  .pstats { color: var(--faint); font-size: 12px; min-height: 18px; }
-  .led { width: 10px; height: 10px; border-radius: 50%; background: #2a3042; flex: none; transition: background .06s, box-shadow .06s; }
-  .led.lit { background: var(--pc); box-shadow: 0 0 10px var(--pc); }
-  .badge { margin-left: auto; font: 11px var(--mono); padding: 2px 7px; border-radius: 99px; border: 1px solid var(--line); color: var(--dim); white-space: nowrap; }
-  .badge[data-kind=ok] { color: var(--ok); border-color: #2f5a3b; }
-  .badge[data-kind=warn] { color: var(--warn); border-color: #5c4b22; }
-  .mix input[type=range] { flex: 1; min-width: 0; }
-  .lanemeter { width: 36px; height: 6px; border-radius: 3px; background: #22283a; overflow: hidden; opacity: .3; }
-  .lanemeter.active { opacity: 1; }
-  .lanemeter i { display: block; height: 100%; width: 0; background: var(--pc); transition: width .08s; }
+  /* ---------- lobby ---------- */
+  #lobby { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 28px; align-items: center; min-height: calc(100vh - 160px); }
+  .hero h1 { font-size: 64px; line-height: .95; letter-spacing: -0.045em; margin: 0 0 18px; font-weight: 800; }
+  .hero h1 span { color: var(--te-orange); }
+  .hero p { color: var(--dim); font-size: 16px; max-width: 52ch; }
+  .steps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 22px; }
+  .step { border: 1px solid #1f2024; border-radius: 12px; padding: 12px; background: #111214; }
+  .step b { display: block; font: 700 11px var(--mono); color: var(--c); letter-spacing: .1em; margin-bottom: 4px; }
+  .step span { color: var(--dim); font-size: 13px; }
+  .door { position: relative; display: grid; grid-template-columns: 22px 1fr 22px; border-radius: 16px; overflow: hidden; box-shadow: 0 30px 60px #000a, 0 0 0 1px #000; }
+  .cheek { background: var(--wood); box-shadow: inset -3px 0 6px #0006, inset 3px 0 4px #ffffff12; }
+  .door .faceplate { background: linear-gradient(180deg, #1c1d20, #141517); padding: 22px; display: grid; gap: 12px; }
+  .door input { width: 100%; }
+  #codeIn { letter-spacing: .5em; text-transform: uppercase; font-size: 18px; text-align: center; }
+  .or { text-align: center; font: 10px var(--mono); color: var(--faint); letter-spacing: .2em; }
 
-  .two { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
-  .src { display: flex; gap: 6px; margin-bottom: 12px; }
-  .src label { display: flex; gap: 6px; align-items: center; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line); cursor: pointer; color: var(--dim); }
-  .src input { display: none; }
-  .src label:has(input:checked) { background: var(--panel2); color: var(--ink); border-color: var(--hot); }
-  #knobs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 14px; margin-top: 14px; }
-  .knob { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 12px; color: var(--dim); }
-  .knob input { grid-column: 1 / -1; width: 100%; }
-  .kval { font-family: var(--mono); color: var(--ink); }
-  #twinNote { margin-top: 8px; }
+  /* ---------- studio ---------- */
+  #studio { display: grid; gap: 14px; }
+  .console { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 10px 14px; background: linear-gradient(180deg, #1a1b1e, #141518); border: 1px solid #000; box-shadow: inset 0 1px 0 #ffffff0d; border-radius: 12px; }
+  .readout { display: flex; align-items: center; gap: 8px; }
+  .readout .lcd { font-size: 16px; min-width: 60px; text-align: center; padding: 4px 10px; letter-spacing: .08em; }
+  #roomCode { letter-spacing: .4em; }
+  #bpmLcd { cursor: ns-resize; user-select: none; touch-action: none; }
+  .seg { display: inline-flex; border: 1px solid #000; border-radius: 7px; overflow: hidden; background: var(--lcd); }
+  .seg button { background: transparent; border: 0; color: var(--lcddim); font: 11px var(--mono); padding: 6px 9px; }
+  .seg button.on { background: var(--te-white); color: #000; }
+  .lookbar { display: flex; align-items: center; gap: 10px; flex: 1 1 300px; min-width: 260px; }
+  .meter { position: relative; flex: 1; height: 8px; background: #08090a; border-radius: 4px; overflow: hidden; box-shadow: inset 0 1px 2px #000; }
+  .meter i { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, var(--te-green), var(--te-yellow) 60%, var(--te-orange)); transition: width .2s; }
+  #lookHelp { flex-basis: 100%; }
 
-  .keys { position: relative; }
-  #keyboard { display: flex; height: 150px; position: relative; user-select: none; touch-action: none; margin-top: 10px; }
-  .key { flex: 1; position: relative; background: linear-gradient(#f3eee2, #d9d2c2); border: 1px solid #0d0f14; border-radius: 0 0 7px 7px; margin-right: -1px; z-index: 1; background-image: var(--dots, none), linear-gradient(#f3eee2, #d9d2c2); }
-  .key.black { flex: 0 0 0; z-index: 2; }
-  .key.black::before { content: ''; position: absolute; left: -14px; width: 28px; top: 0; height: 62%; background: linear-gradient(#2a2f3c, #12151d); border-radius: 0 0 5px 5px; box-shadow: 0 2px 0 #000; background-image: var(--dots, none), linear-gradient(#2a2f3c, #12151d); }
-  .key.black { pointer-events: none; }
-  .key.black::before { pointer-events: auto; }
-  .key.down { background: linear-gradient(#ffc6a8, #ff9d72); }
-  .key.black.down::before { background: linear-gradient(#ff9d72, #c4572c); }
-  .klabel { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font: 10px var(--mono); color: #6b6455; pointer-events: none; }
-  .key.black .klabel { bottom: auto; top: 40%; left: -14px; right: auto; width: 28px; color: #c9c2b0; z-index: 3; }
-  details summary { cursor: pointer; color: var(--dim); }
-  table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 10px; }
-  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); }
-  th { color: var(--dim); font-weight: 500; }
-  td { font-family: var(--mono); }
-  .lane .row { margin-top: 8px; }
-  .lane select { max-width: 100%; }
-  @media (max-width: 900px) {
-    #lobby, .two { grid-template-columns: 1fr; }
-    #players { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .grp { border-left: 0; padding-left: 0; }
+  /* corners: the band */
+  #corners { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .corner { position: relative; background: linear-gradient(180deg, #17181b, #121315); border: 1px solid #000; border-radius: 12px; padding: 14px 12px 10px; display: grid; gap: 8px; align-content: start; box-shadow: inset 0 1px 0 #ffffff0a; min-height: 150px; }
+  .corner::before { content: ''; position: absolute; left: 12px; right: 12px; top: 0; height: 3px; border-radius: 0 0 3px 3px; background: var(--c); }
+  .corner.me { box-shadow: inset 0 1px 0 #ffffff0a, 0 0 0 1px var(--c); }
+  .corner.empty { border: 1px dashed #26282c; background: transparent; place-content: center; text-align: center; color: var(--faint); box-shadow: none; }
+  .corner.empty::before { display: none; }
+  .chead { display: flex; align-items: center; gap: 8px; }
+  .cname { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tag { margin-left: auto; font: 10px var(--mono); padding: 2px 7px; border-radius: 99px; border: 1px solid #2d3036; color: var(--dim); white-space: nowrap; }
+  .tag[data-kind=ok] { color: var(--ok); border-color: #1d4a31; }
+  .tag[data-kind=warn] { color: var(--warn); border-color: #4d4116; }
+  .gear { display: grid; gap: 4px; }
+  .gear div { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; align-items: center; gap: 7px; font-size: 12px; }
+  .gear div span:not(.led) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gear em { font: 10px var(--mono); font-style: normal; color: var(--dim); white-space: nowrap; }
+  .cfoot { display: flex; align-items: center; gap: 8px; }
+  .cfoot input { flex: 1; min-width: 0; }
+  .cstats { font: 11px var(--mono); color: var(--faint); min-height: 15px; }
+  .lanem { width: 34px; height: 5px; border-radius: 3px; background: #222428; overflow: hidden; opacity: .35; }
+  .lanem.active { opacity: 1; }
+  .lanem i { display: block; height: 100%; width: 0; background: var(--c); }
+
+  /* your corner */
+  .mycorner { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 14px; align-items: start; }
+  .rack { background: #101113; border: 1px solid #000; border-radius: 12px; padding: 10px; display: grid; gap: 8px; }
+  .rack h3 { margin: 2px 2px 0; }
+  #rackList { display: grid; gap: 6px; }
+  .cart { display: grid; grid-template-columns: 6px 1fr auto; gap: 10px; align-items: center; padding: 9px 10px 9px 0; border-radius: 9px; background: #1a1b1e; border: 1px solid #26282c; cursor: pointer; text-align: left; width: 100%; color: var(--ink); }
+  .cart .stripe { align-self: stretch; border-radius: 9px 0 0 9px; background: var(--k); }
+  .cart.sel { border-color: var(--te-white); background: #212226; }
+  .cart b { display: block; font-size: 13px; }
+  .cart small { display: block; color: var(--dim); font-size: 11px; font-family: var(--mono); }
+  .addrow { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+  .device { display: grid; grid-template-columns: 20px minmax(0, 1fr) 20px; border-radius: 14px; overflow: hidden; box-shadow: 0 18px 40px #0009, 0 0 0 1px #000; }
+  .plate { background: linear-gradient(180deg, #1d1e21 0, #16171a 100%); padding: 14px 16px 16px; display: grid; gap: 14px; min-width: 0; }
+  .devtop { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: stretch; }
+  .brand { display: grid; align-content: space-between; min-width: 140px; gap: 8px; }
+  .brand .name { font: 800 28px/1 var(--sans); letter-spacing: -0.04em; color: var(--legend); text-transform: lowercase; }
+  .brand .fam { font: 10px var(--mono); color: var(--dim); letter-spacing: .1em; text-transform: uppercase; max-width: 26ch; }
+  .screen { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 16px; font-size: 12px; min-height: 76px; align-content: center; }
+  .screen > div { display: flex; flex-direction: column; min-width: 0; }
+  .screen label { color: var(--lcddim); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+  .screen select { background: transparent; border: 0; color: var(--lcdink); font: 600 13px var(--mono); padding: 0; appearance: none; -webkit-appearance: none; cursor: pointer; text-overflow: ellipsis; max-width: 100%; }
+  .screen select option { background: #111; }
+  .screen .val { font: 600 13px var(--mono); color: var(--lcdink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .screen .wide { grid-column: 1 / -1; color: var(--lcddim); font-size: 11px; white-space: normal; }
+  .pages { display: flex; flex-wrap: wrap; gap: 6px; }
+  .page { background: #101113; border: 1px solid #000; color: var(--dim); font: 600 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; padding: 7px 10px; border-radius: 6px; box-shadow: inset 0 1px 0 #ffffff0a; }
+  .page.on { color: #000; background: var(--te-white); }
+  .encoders { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 16px 10px; }
+  .encw { display: grid; justify-items: center; gap: 4px; text-align: center; }
+  .enc { --u: 0.5; --c: var(--te-blue); position: relative; width: 54px; height: 54px; border-radius: 50%; cursor: ns-resize; touch-action: none; outline-offset: 3px;
+    background: conic-gradient(from 225deg, var(--c) calc(var(--u) * 270deg), #2a2c31 0 270deg, transparent 0); }
+  .enc::after { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: #0d0e10; }
+  .enc .cap { position: absolute; inset: 9px; border-radius: 50%; z-index: 1;
+    background: radial-gradient(circle at 35% 30%, #4a4d55, #23252a 60%, #191a1d); box-shadow: 0 3px 6px #000a, inset 0 1px 1px #ffffff26;
+    transform: rotate(calc(-135deg + var(--u) * 270deg)); }
+  .enc .cap::before { content: ''; position: absolute; left: 50%; top: 4px; width: 4px; height: 11px; margin-left: -2px; border-radius: 2px; background: var(--c); }
+  .encval { font: 500 11px var(--mono); color: var(--legend); min-height: 15px; white-space: nowrap; }
+  .encname { font: 600 9px var(--mono); color: var(--dim); letter-spacing: .1em; text-transform: uppercase; line-height: 1.2; max-width: 13ch; }
+  .stepper { display: grid; grid-template-columns: 20px minmax(0, 1fr) 20px; align-items: center; width: 100%; min-height: 54px; }
+  .stepper button { background: transparent; border: 0; color: var(--dim); font-size: 12px; padding: 0; height: 30px; }
+  .stepper button:hover { color: var(--ink); }
+  .stepper .lcd { font-size: 11px; text-align: center; padding: 6px 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+  .devfoot { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; border-top: 1px solid #000; box-shadow: 0 -1px 0 #ffffff08; padding-top: 12px; }
+  .devfoot .help { flex: 1; min-width: 240px; }
+
+  /* keyboard */
+  .keybed { background: linear-gradient(180deg, #1a1b1e, #131416); border: 1px solid #000; border-radius: 12px; padding: 10px 12px 12px; }
+  .keyhead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  #keyboard { display: flex; height: 150px; margin-top: 10px; user-select: none; touch-action: none; position: relative; }
+  .key { flex: 1; position: relative; background-image: var(--dots, none), linear-gradient(180deg, #e9e8e3, #d5d3cb); border-radius: 0 0 6px 6px; margin-right: 2px; box-shadow: inset 0 -4px 0 #b9b6ac, 0 2px 0 #000; }
+  .key.black { flex: 0 0 0; margin: 0; z-index: 2; pointer-events: none; box-shadow: none; background: none; }
+  .key.black::before { content: ''; position: absolute; left: -13px; width: 24px; top: 0; height: 60%; border-radius: 0 0 5px 5px; pointer-events: auto;
+    background-image: var(--dots, none), linear-gradient(180deg, #2b2d33, #121316); box-shadow: inset 0 -3px 0 #000, 0 2px 0 #000; }
+  .key.down { background-image: var(--dots, none), linear-gradient(180deg, #ffb48f, var(--te-orange)); box-shadow: inset 0 -2px 0 #c53d0a; }
+  .key.black.down::before { background-image: var(--dots, none), linear-gradient(180deg, #ff8d5e, #c43e0b); }
+  .klabel { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font: 600 9px var(--mono); color: #7b776c; pointer-events: none; letter-spacing: .05em; }
+  .key.black .klabel { bottom: auto; top: 34%; left: -13px; right: auto; width: 24px; color: #bdb8aa; z-index: 3; font-size: 8px; }
+
+  /* lower modules */
+  .lower { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+  .module { background: linear-gradient(180deg, #17181b, #121315); border: 1px solid #000; border-radius: 12px; padding: 12px; display: grid; gap: 10px; box-shadow: inset 0 1px 0 #ffffff0a; }
+  .module .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  #chatLog { height: 170px; overflow-y: auto; display: grid; gap: 4px; align-content: start; font-size: 13px; padding: 8px 10px; }
+  .cmsg { display: flex; gap: 6px; align-items: baseline; color: var(--lcdink); }
+  .cmsg span { flex: 1; overflow-wrap: anywhere; }
+  .cmsg i { color: var(--lcddim); font-style: normal; font-size: 10px; }
+  .cmsg.sys { color: var(--lcddim); font-size: 11px; }
+  .cmsg.old { opacity: .6; }
+  .chatrow { display: flex; gap: 8px; }
+  .chatrow input { flex: 1; min-width: 0; }
+  .badge { background: var(--te-orange); color: #110600; font: 700 10px var(--mono); border-radius: 99px; padding: 1px 7px; }
+  table { border-collapse: collapse; width: 100%; font: 11px var(--mono); }
+  th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #222428; }
+  th { color: var(--faint); font-weight: 500; }
+
+  /* drawers */
+  .drawer { position: fixed; inset: 0; background: #000b; display: grid; place-items: center; z-index: 20; padding: 20px; }
+  .sheet { width: min(980px, 100%); max-height: calc(100vh - 40px); overflow: auto; background: #131416; border: 1px solid #000; border-radius: 16px; box-shadow: 0 40px 80px #000; padding: 18px; display: grid; gap: 14px; }
+  .sheet header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .sheet h2 { margin: 0; font-size: 20px; letter-spacing: -0.02em; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .card { text-align: left; background: #1a1b1e; border: 1px solid #2a2c31; border-radius: 12px; padding: 14px; display: grid; gap: 8px; align-content: start; color: var(--ink); }
+  .card:hover { border-color: #46494f; }
+  .card .name { font: 800 24px/1 var(--sans); letter-spacing: -0.04em; text-transform: lowercase; color: var(--legend); }
+  .card .fam { font: 10px var(--mono); color: var(--k, var(--dim)); letter-spacing: .1em; text-transform: uppercase; }
+  .card p { margin: 0; color: var(--dim); font-size: 12px; }
+  .card .row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .card .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip { font: 10px var(--mono); border: 1px solid #2d3036; border-radius: 99px; padding: 1px 7px; color: var(--dim); }
+  .score { font: 700 12px var(--mono); color: var(--te-green); }
+  .hwlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; max-height: 240px; overflow: auto; }
+  .hwlist button { text-align: left; background: #1a1b1e; border: 1px solid #26282c; border-radius: 8px; padding: 7px 9px; color: var(--ink); }
+  .hwlist button.on { border-color: var(--te-orange); }
+  .hwlist small { display: block; color: var(--dim); font: 10px var(--mono); }
+  #hwSearch { width: 100%; }
+
+  @media (max-width: 1100px) {
+    .lower { grid-template-columns: 1fr 1fr; }
+    #corners { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .screen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 820px) {
+    #lobby, .mycorner, .lower { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 46px; }
+    .devtop { grid-template-columns: 1fr; }
   }
 </style>
 <script src="mp-config.js"></script>
 </head>
 <body>
-<header>
-  <div class="logo"><i><b></b><b></b><b></b><b></b></i>JamJam</div>
-  <div class="tag">Jam live in lockstep. Only the notes travel.</div>
+<header class="top">
+  <div class="logo">
+    <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="#2f80ff"/><circle cx="21" cy="9" r="6.5" fill="#1fc46e"/><circle cx="9" cy="21" r="6.5" fill="#e9e9e4"/><circle cx="21" cy="21" r="6.5" fill="#ff5a1f"/></svg>
+    <div>JamJam<br><small>lockstep studio</small></div>
+  </div>
   <div id="status" role="status"></div>
+  <button id="leaveBtn" class="btn small hide">Leave studio</button>
 </header>
 <main>
   <section id="lobby">
     <div class="hero">
-      <h1>Play together,<br><em>land together.</em></h1>
-      <p>Up to four people jam in real time. Every browser runs everyone's instrument from the same shared engine, so instead of streaming audio, JamJam sends what your hands do, stamped with the moment it should sound. Everyone hears the same thing at the same instant.</p>
-      <div class="how">
-        <div><b>01</b><span>A tiny Cloudflare relay introduces the browsers, then gets out of the way: notes go directly from player to player.</span></div>
-        <div><b>02</b><span>The browsers agree on one clock. Each note is scheduled a little ahead (the lookahead), just past the slowest link, so it lands everywhere at once.</span></div>
-        <div><b>03</b><span>Bring your own hardware: pick your synth or drum machine, and the others hear a software twin from the same family.</span></div>
-        <div><b>04</b><span>The audio lane streams a mic or guitar alongside, a set number of bars late, NINJAM style.</span></div>
+      <h1>Walk into the studio.<br><span>Land together.</span></h1>
+      <p>Up to four of you, each in your own corner. Rack up instruments from the shared library, bring your own hardware, and play. Every browser runs everyone's instruments, so instead of streaming audio JamJam sends what your hands do, stamped with the moment it should sound, and everyone hears the same thing at the same instant.</p>
+      <div class="steps">
+        <div class="step" style="--c:var(--te-blue)"><b>01 · CORNER</b><span>Pick instruments from the library for your corner: Juniper, Monolith, Machina and more.</span></div>
+        <div class="step" style="--c:var(--te-green)"><b>02 · HARDWARE</b><span>Say what you've got. JamJam ranks software twins of it, and the band hears the one you choose.</span></div>
+        <div class="step" style="--c:var(--te-white)"><b>03 · LOCKSTEP</b><span>One shared clock. Each part gets its own latency budget, measured, not guessed.</span></div>
+        <div class="step" style="--c:var(--te-orange)"><b>04 · AUDIO LANE</b><span>Stream a mic or guitar alongside, a few bars late, NINJAM-style.</span></div>
       </div>
     </div>
-    <div class="panel join">
-      <h2>Get in</h2>
-      <label>Your name<input id="nameIn" type="text" maxlength="16" placeholder="Name" autocomplete="nickname"></label>
-      <button id="startBtn" class="primary">Start a new room</button>
-      <div class="or">or join a friend</div>
-      <label>Room code<input id="codeIn" type="text" maxlength="4" placeholder="ABCD" autocomplete="off"></label>
-      <button id="joinBtn">Join room</button>
-      <p class="help">Use headphones, especially with the audio lane. Works best in Chrome or Edge on a wired connection.</p>
+    <div class="door">
+      <div class="cheek"></div>
+      <div class="faceplate">
+        <span class="legend">Your name</span>
+        <input id="nameIn" type="text" maxlength="16" placeholder="NAME" autocomplete="nickname">
+        <button id="startBtn" class="btn hot">Open a new studio</button>
+        <div class="or">— OR JOIN THE BAND —</div>
+        <input id="codeIn" type="text" maxlength="4" placeholder="ABCD" autocomplete="off" aria-label="Room code">
+        <button id="joinBtn" class="btn">Join studio</button>
+        <p class="help">Headphones, Chrome or Edge, and a wired connection make the tightest jams.</p>
+      </div>
+      <div class="cheek"></div>
     </div>
   </section>
 
-  <section id="jam" hidden>
-    <div class="panel">
-      <div class="bar">
-        <span class="help">Room</span><span id="roomCode" class="code"></span>
-        <button id="copyBtn">Copy invite link</button>
-        <div class="grp"><span class="help">Tempo</span><input id="bpm" type="number" min="40" max="240" value="96"><span id="tempoNote" class="help"></span><button id="metroBtn">Metronome</button></div>
-        <div class="grp"><span class="help">Quantize</span>
-          <select id="quantSel"><option value="0">Off</option><option value="0.25">1/16</option><option value="0.5">1/8</option><option value="1">1/4</option></select>
-        </div>
-        <div class="grp"><button id="selfBtn" title="Hear your own notes the moment you play them. The others still hear everything in sync.">Hear myself instantly</button></div>
-        <button id="leaveBtn" style="margin-left:auto">Leave</button>
+  <section id="studio" class="hide">
+    <div class="console">
+      <div class="readout"><span class="legend">Room</span><span id="roomCode" class="lcd"></span><button id="copyBtn" class="btn small">Copy invite</button></div>
+      <div class="readout"><span class="legend">BPM</span><button id="bpmDown" class="btn small" aria-label="Slower">−</button><span id="bpmLcd" class="lcd" tabindex="0" role="spinbutton" aria-label="Tempo" title="Drag, scroll or use the arrow keys">96</span><button id="bpmUp" class="btn small" aria-label="Faster">+</button>
+        <button id="metroBtn" class="round" title="Metronome" aria-label="Metronome"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M5 15h6L9.5 2h-3z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 11l4-6" stroke="currentColor" stroke-width="1.5"/></svg></button><span id="tempoNote" class="help"></span></div>
+      <div class="readout"><span class="legend">Quantize</span><div class="seg" id="quantSeg"><button data-q="0" class="on">OFF</button><button data-q="0.25">1/16</button><button data-q="0.5">1/8</button><button data-q="1">1/4</button></div></div>
+      <div class="lookbar"><span class="legend">Lookahead</span><div class="meter" title="How far ahead your notes are scheduled"><i id="lookMeter"></i></div><span id="lookVal" class="lcd" style="min-width:80px;text-align:center">0 ms</span>
+        <button id="lookAutoBtn" class="btn small" title="Back to the measured lookahead">AUTO</button><input id="lookSlider" type="range" min="0" max="600" value="40" aria-label="Lookahead (manual)" style="width:90px"></div>
+      <button id="selfBtn" class="btn small" title="Hear every part of yours the moment you play it; the band still hears everything in sync">Hear myself instantly</button>
+      <span id="lookHelp" class="help"></span>
+    </div>
+
+    <div id="corners"></div>
+
+    <div class="mycorner">
+      <div class="rack">
+        <h3 class="legend">Your corner</h3>
+        <div id="rackList"></div>
+        <div class="addrow"><button id="addInstBtn" class="btn small">+ Instrument</button><button id="addHwBtn" class="btn small">+ My hardware</button></div>
+        <p class="help" style="margin:0">The computer keys play the selected instrument. Give each a MIDI channel to play several from your controllers.</p>
       </div>
-      <div class="look">
-        <span class="help">Lookahead</span>
-        <input id="lookSlider" type="range" min="0" max="600" step="1" value="40" aria-label="Lookahead in milliseconds">
-        <span id="lookVal">0 ms</span>
-        <span><span id="lookMode" class="help">auto</span> <button id="lookAutoBtn" class="mini">auto</button></span>
-        <span id="lookHelp" class="help"></span>
+      <div class="device">
+        <div class="cheek"></div>
+        <div class="plate">
+          <div class="devtop">
+            <div class="brand"><div class="name" id="devName">—</div><div class="fam" id="devFam"></div></div>
+            <div class="screen lcd" id="devScreen"></div>
+          </div>
+          <div class="pages" id="devPages"></div>
+          <div class="encoders" id="devKnobs"></div>
+          <div class="devfoot" id="devFoot"></div>
+        </div>
+        <div class="cheek"></div>
       </div>
     </div>
 
-    <div id="players"></div>
-
-    <div class="two">
-      <div class="panel" id="me">
-        <h2>Your sound</h2>
-        <div class="src">
-          <label><input type="radio" name="source" value="soft" checked>Software instrument</label>
-          <label><input type="radio" name="source" value="hw">My hardware</label>
-        </div>
-        <div id="softRow" class="row">
-          <select id="instSel" aria-label="Instrument"></select>
-          <select id="patchSel" aria-label="Patch type"></select>
-        </div>
-        <div id="hwRow" hidden>
-          <div class="row">
-            <select id="hwSel" aria-label="Your hardware"></select>
-            <select id="patchSel2" aria-label="Patch type"></select>
-            <button id="twinBtn" title="Also hear the software twin, to compare it with your hardware">Hear the twin too</button>
-          </div>
-          <div class="row" style="margin-top:8px">
-            <span class="help">JamJam plays my synth over</span>
-            <select id="midiOutSel" aria-label="MIDI output to your synth"></select>
-            <span class="help">latency</span><input id="hwLat" type="range" min="0" max="40" value="0" aria-label="Hardware latency compensation"><span id="hwLatVal" class="mono help">0 ms</span>
-          </div>
-          <p class="help">Choose a MIDI output (and turn Local Control off on the synth) for lockstep, or leave it on None and play the synth directly to hear yourself instantly.</p>
-          <p id="twinNote" class="help"></p>
-        </div>
-        <div id="knobs"></div>
-      </div>
-      <div class="panel lane">
-        <h2>Audio lane</h2>
-        <p class="help">Stream a mic, guitar or a synth only you own. It's played for the others exactly this many bars late, so set it to the length of the loop or chord cycle. The notes lane stays live.</p>
-        <div class="row">
-          <button id="laneBtn">Start audio lane</button>
-          <select id="laneBars" aria-label="Bars of delay"><option value="1">1 bar late</option><option value="2">2 bars late</option><option value="4">4 bars late</option><option value="8">8 bars late</option></select>
-        </div>
-        <div class="row">
-          <select id="laneDev" aria-label="Audio input"><option value="">Default input</option></select>
-          <select id="laneQ" aria-label="Quality"><option value="hi">48 kHz (≈0.8 Mbit/s per jammer)</option><option value="lo">24 kHz (≈0.4 Mbit/s)</option></select>
-        </div>
-        <div class="row"><span class="help">Timing nudge</span><input id="laneOff" type="range" min="-80" max="80" value="0" aria-label="Audio lane timing nudge"><span id="laneOffVal" class="mono help">0 ms</span></div>
-        <p id="laneHelp" class="help">Use headphones: speakers would feed the others' sound back into your mic, a bar later.</p>
-      </div>
-    </div>
-
-    <div class="panel keys">
-      <div class="row">
-        <h2 style="margin:0">Play</h2>
-        <span id="inputStatus" class="help"></span>
-        <button id="midiBtn" class="mini" style="margin-left:auto">Enable MIDI</button>
-        <button id="panicBtn" class="mini" title="Stop all notes">Panic</button>
-      </div>
+    <div class="keybed">
+      <div class="keyhead"><span class="legend">Keys</span><span id="inputStatus" class="help mono"></span><span style="margin-left:auto"></span>
+        <button id="midiBtn" class="btn small">Enable MIDI</button><button id="panicBtn" class="btn small" title="Stop every note">Panic</button></div>
       <div id="keyboard" aria-label="On-screen keyboard"></div>
-      <p class="help">Keys: A W S E D F T G Y H U J K. Coloured dots on the keys show what the others are holding.</p>
+      <p class="help" style="margin:8px 0 0">A W S E D F T G Y H U J K play · Z X octave · C V velocity · Space sustain. Coloured dots show what the band is holding.</p>
     </div>
 
-    <details class="panel">
-      <summary>How it's connected</summary>
-      <table id="netTable"></table>
-      <p id="netSummary" class="help"></p>
-    </details>
+    <div class="lower">
+      <div class="module">
+        <div class="row"><h3 class="legend" style="margin:0">Band chat</h3><span id="chatBadge" class="badge hide">0</span></div>
+        <div id="chatLog" class="lcd" aria-live="polite"></div>
+        <div class="chatrow"><input id="chatIn" type="text" maxlength="500" placeholder="Say something to the band" autocomplete="off"><button id="chatSend" class="btn small">Send</button></div>
+      </div>
+      <div class="module">
+        <h3 class="legend" style="margin:0">Audio lane</h3>
+        <p class="help" style="margin:0">Stream a mic, guitar or anything you can't twin. The band hears it exactly this many bars late, so match it to your loop or chord cycle. Use headphones.</p>
+        <div class="row"><button id="laneBtn" class="btn small">Start audio lane</button>
+          <select id="laneBars" class="lcdsel" aria-label="Bars late"><option value="1">1 bar late</option><option value="2">2 bars late</option><option value="4">4 bars late</option><option value="8">8 bars late</option></select>
+          <select id="laneQ" class="lcdsel" aria-label="Quality"><option value="hi">48 kHz</option><option value="lo">24 kHz</option></select></div>
+        <div class="row"><select id="laneDev" class="lcdsel" aria-label="Input" style="max-width:100%"><option value="">Default input</option></select></div>
+        <div class="row"><span class="legend">Nudge</span><input id="laneOff" type="range" min="-80" max="80" value="0" aria-label="Audio lane timing nudge"><span id="laneOffVal" class="mono help">0 ms</span></div>
+        <p id="laneHelp" class="help" style="margin:0"></p>
+      </div>
+      <div class="module">
+        <h3 class="legend" style="margin:0">Wiring</h3>
+        <table id="netTable"></table>
+        <p id="netSummary" class="help" style="margin:0"></p>
+      </div>
+    </div>
   </section>
 </main>
+
+<div id="libDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="Instrument library">
+  <div class="sheet">
+    <header><h2>The library</h2><span class="help">Everyone in the room loads these same files, so whatever you pick plays the same for the whole band.</span><button class="btn small" data-close style="margin-left:auto">Close</button></header>
+    <div class="cards" id="libCards"></div>
+  </div>
+</div>
+<div id="hwDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="Add your hardware">
+  <div class="sheet">
+    <header><h2>What have you got?</h2><span class="help">Pick a unit and JamJam ranks the software twins the band can hear it as.</span><button class="btn small" data-close style="margin-left:auto">Close</button></header>
+    <input id="hwSearch" type="text" placeholder="Search: juno, 909, minimoog, dx7…" autocomplete="off">
+    <div class="hwlist" id="hwList"></div>
+    <div id="twinPick"></div>
+  </div>
+</div>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>
