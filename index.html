@@ -601,9 +601,9 @@
   .door2 b { font: 700 18px/1 var(--sans); }
   .door2 small { font: 400 12px var(--type); }
   /* while a section plays, the corners give the desk some room */
-  body.looping .corner { min-height: 0; padding-top: 7px; padding-bottom: 7px; }
-  body.looping .corner .cfoot, body.looping .corner .cstats, body.looping .corner .vpctl + .vpctl, body.looping .corner.empty .help { display: none; }
-  body.looping .corner .gearitem .ico { width: 40px; height: 27px; }
+  body.looping:not(.where-compose) .corner { min-height: 0; padding-top: 7px; padding-bottom: 7px; }
+  body.looping:not(.where-compose) .corner .cfoot, body.looping:not(.where-compose) .corner .cstats, body.looping:not(.where-compose) .corner .vpctl + .vpctl, body.looping:not(.where-compose) .corner.empty .help { display: none; }
+  body.looping:not(.where-compose) .corner .gearitem .ico { width: 40px; height: 27px; }
   .secbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 10px; background: #141518; border: 1px solid #000; box-shadow: inset 4px 0 0 var(--sc, #888); }
   .loopmeter { flex: 1 1 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: stretch; position: relative; --p: 0; }
   .lmbars { position: relative; display: flex; gap: 3px; min-height: 34px; min-width: 0; }

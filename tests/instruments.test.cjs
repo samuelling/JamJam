@@ -59,7 +59,7 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     const tag = `${r.inst}/${r.patch}`.padEnd(20);
     console.log(`  ${tag} peak ${r.peak.toFixed(2)}  rms ${r.rms.toFixed(3)}  ${r.speed.toFixed(0)}× realtime  diff ${r.diff.toExponential(1)}`);
     check(r.bad === 0, `${tag} no NaN/Inf`);
-    check(r.rms > 0.005, `${tag} makes sound`);
+    if (r.patch === 'empty') check(r.rms < 1e-4, `${tag} is silent, as an empty kit should be`); else check(r.rms > 0.005, `${tag} makes sound`);
     check(r.peak < 1.2, `${tag} peak under 1.2`);
     check(r.diff < 1e-4, `${tag} renders identically twice (within float rounding)`);
     check(r.speed > 3, `${tag} renders at least 3× faster than realtime`);
