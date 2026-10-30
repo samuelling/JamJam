@@ -35,20 +35,50 @@ const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 // ---------- the kit (General MIDI numbers, as every drum instrument here reads them) ----------
 export const KIT = { kick: 36, snare: 38, xstick: 37, hhFoot: 44, hhClosed: 42, ride: 51, bell: 53, crash: 49, tomHi: 48, tomMid: 47, tomLo: 45, floor: 43 };
 
+// styles, grouped by genre. Jazz styles run the jazz drummer below; the others run the groove drummer (grooveBar),
+// which shares its form, intensity, fill and feel layers and swaps in a genre's patterns.
 export const STYLES = [
-  { id: 'medium', name: 'Medium swing', patch: 'jazz' },
-  { id: 'two', name: 'Two-feel', patch: 'jazz' },
-  { id: 'up', name: 'Up-tempo', patch: 'jazz' },
-  { id: 'brushes', name: 'Ballad, brushes', patch: 'brushes' },
-  { id: 'waltz', name: 'Jazz waltz', patch: 'jazz' },
-  { id: 'bossa', name: 'Bossa nova', patch: 'jazz' },
+  { id: 'medium', name: 'Medium swing', genre: 'Jazz', kit: 'studio' },
+  { id: 'two', name: 'Two-feel', genre: 'Jazz', kit: 'studio' },
+  { id: 'up', name: 'Up-tempo', genre: 'Jazz', kit: 'studio' },
+  { id: 'brushes', name: 'Ballad, soft', genre: 'Jazz', kit: 'studio-dark' },
+  { id: 'waltz', name: 'Jazz waltz', genre: 'Jazz', kit: 'studio' },
+  { id: 'bossa', name: 'Bossa nova', genre: 'Latin', kit: 'studio' },
+  { id: 'rock', name: 'Rock', genre: 'Rock', kit: 'studio' },
+  { id: 'halftime', name: 'Half-time rock', genre: 'Rock', kit: 'studio-fat' },
+  { id: 'funk', name: 'Funk', genre: 'Funk', kit: 'studio-tight' },
+  { id: 'hiphop', name: 'Boom bap', genre: 'Hip-hop', kit: 'lofi' },
+  { id: 'trap', name: 'Trap', genre: 'Hip-hop', kit: '808' },
+  { id: 'house', name: 'House', genre: 'Electronic', kit: '909' },
+  { id: 'dnb', name: 'Drum & bass', genre: 'Electronic', kit: 'hybrid' },
+  { id: 'reggae', name: 'Reggae one-drop', genre: 'Reggae', kit: 'studio-dark' },
+  { id: 'afro', name: 'Afrobeat', genre: 'Afro', kit: 'studio-tight' },
 ];
+export const GENRES = [...new Set(STYLES.map((s) => s.genre))];
+// the kit a drummer plays: recorded acoustic drums, or one of Machina's synthesised kits
+export const KITS = [
+  { id: 'studio', name: 'Studio kit (recorded)', inst: 'studio', patch: 'sticks' },
+  { id: 'studio-dark', name: 'Studio kit, dark', inst: 'studio', patch: 'dark' },
+  { id: 'studio-tight', name: 'Studio kit, tight', inst: 'studio', patch: 'tight' },
+  { id: 'studio-fat', name: 'Studio kit, fat', inst: 'studio', patch: 'fat' },
+  { id: '909', name: 'Machina 909', inst: 'machina', patch: '909', gain: 0.5 },
+  { id: '808', name: 'Machina 808', inst: 'machina', patch: '808', gain: 0.5 },
+  { id: 'lofi', name: 'Machina lo-fi', inst: 'machina', patch: 'lofi', gain: 0.5 },
+  { id: 'hybrid', name: 'Machina hybrid', inst: 'machina', patch: 'hybrid', gain: 0.5 },
+  { id: 'efm', name: 'Machina FM', inst: 'machina', patch: 'efm', gain: 0.5 },
+  { id: 'synth-jazz', name: 'Machina jazz (synth)', inst: 'machina', patch: 'jazz', gain: 0.5 },
+];
+// 'auto' (or nothing): the kit that suits the style
+export function kitOf(o) { const id = o.kit && o.kit !== 'auto' ? o.kit : styleOf(o.style).kit; return KITS.find((k) => k.id === id) || KITS[0]; }
+export const styleOf = (id) => STYLES.find((s) => s.id === id) || STYLES[0];
+export const drummerName = (style) => { const st = styleOf(style); return st.genre === 'Jazz' ? 'Jazz drummer' : `${st.name} drummer`; };
 export const VIRTUAL = {
-  'jazz-drums': { name: 'Jazz drummer', inst: 'machina', blurb: 'Keeps time, comps, builds through solos and fills into the next section. Follows the song.', styles: STYLES },
+  drums: { name: 'Drummer', inst: 'machina', blurb: 'Keeps time in its genre, builds through the song and fills into the next section. Follows the song.', styles: STYLES },
 };
-export function newVirtual(kind, by, byName) {
-  const def = VIRTUAL[kind];
-  return { id: Math.random().toString(36).slice(2, 7), kind, name: def.name, inst: def.inst, patch: 'jazz', style: 'medium', feel: 'auto',
+VIRTUAL['jazz-drums'] = VIRTUAL.drums;
+export function newVirtual(kind, by, byName, style = 'medium') {
+  const def = VIRTUAL[kind] || VIRTUAL.drums;
+  return { id: Math.random().toString(36).slice(2, 7), kind: 'drums', name: drummerName(style), inst: kitOf({ style }).inst, kit: 'auto', style, feel: 'auto',
     intensity: 0.5, busy: 0.5, fills: 0.6, listen: true, seed: Math.floor(Math.random() * 1e9), level: 0.8, on: false, start: 0, by, byName };
 }
 
@@ -62,7 +92,11 @@ export function sectionKind(name = '', label = '') {
   if (/bass solo|drum solo/.test(s)) return /drum/.test(s) ? 'drumsolo' : 'basssolo';
   if (/solo|blow|improv|trumpet|alto|tenor|sax|piano|guitar|horn|trombone|vibes|keys|organ/.test(s)) return 'solo';
   if (/bridge|^b\b| b$|middle/.test(s)) return 'bridge';
+  if (/breakdown/.test(s)) return 'breakdown';
   if (/break|stop/.test(s)) return 'break';
+  if (/pre.?chorus|build|lift|riser/.test(s)) return 'pre';
+  if (/chorus|hook|drop|refrain/.test(s)) return 'chorus';
+  if (/verse/.test(s)) return 'verse';
   return 'head';
 }
 // with no song playing, the drummer plays an endless 32-bar AABA: a head, then choruses of solo
@@ -112,6 +146,10 @@ export function intensityAt(o, form, n) {
   else if (form.kind === 'trade') I += 0.18;
   else if (form.kind === 'out') I += 0.06;
   else if (form.kind === 'ending') I += 0.1;
+  else if (form.kind === 'chorus') I += 0.16;
+  else if (form.kind === 'pre') I += -0.05 + 0.3 * prog;
+  else if (form.kind === 'verse') I -= 0.06;
+  else if (form.kind === 'breakdown') I -= 0.35;
   I += vnoise(o.seed, 'wander', n / 8) * 0.1;
   if (form.band != null) I += (form.band - 1.2) * 0.07;   // listens: more when the band plays more
   return clamp(I);
@@ -121,6 +159,7 @@ export function intensityAt(o, form, n) {
 // (the seed for everything that varies); meter: beats per bar; bpm. Returns [{b, note, vel, ms}]: b in beats from the
 // bar's start, ms a timing nudge, sorted by time.
 export function drummerBar(o, form, n, meter = 4, bpm = 120) {
+  if (GROOVES[o.style]) return grooveBar(o, form, n, meter, bpm, GROOVES[o.style]);
   const out = [], seed = o.seed | 0, R = rng(seed, 'bar', n), I = intensityAt(o, form, n);
   const style = o.style || 'medium', busy = o.busy ?? 0.5;
   const r = swingRatio(bpm, style), sw = r / (r + 1);
@@ -217,3 +256,76 @@ export function drummerBar(o, form, n, meter = 4, bpm = 120) {
 }
 // fills land on the next bar's downbeat: the bar after a fill opens on a crash
 export function withPrevFill(o, form, prevForm, n) { return { ...form, prevFill: !!(prevForm && planFill(o, prevForm, n - 1)) && form.kind !== 'ending' }; }
+
+// ---------- the groove drummer: rock, funk, hip-hop, house, drum & bass, reggae, afrobeat, trap ----------
+// Patterns are 16 steps of a 4/4 bar (cut or repeated for other meters): X accent, x hit, g ghost, o open hi-hat,
+// . rest. Each limb has a main pattern and a few variations; a bar picks one, a two-bar phrase tends to reuse it.
+const GROOVES = {
+  rock: { swing: 0, loose: 5, hat: ['x.x.x.x.x.x.x.x.', 'x.x.x.x.x.x.xxx.', 'x.x.x.x.x.x.x.o.'], kick: ['x.......x.x.....', 'x......xx.......', 'x.....x.x.x.....', 'x.......x...x...'], snare: ['....X.......X...', '....X.......X..g', '....X..g....X...'], chorusRide: true, fill: 'toms' },
+  halftime: { swing: 0, loose: 6, hat: ['x.x.x.x.x.x.x.x.', 'x...x...x...x...'], kick: ['x.........x.....', 'x......x..x.....', 'x.x.......x.....'], snare: ['........X.......', '........X......g'], chorusRide: true, fill: 'toms' },
+  funk: { swing: 0.06, loose: 3, hat: ['xxXxxxXxxxXxxxXx', 'xxXxxxXxxxXxxoXx', 'x.Xx.xXxx.Xx.xXx'], kick: ['x.x....x..x.....', 'x..x...x.xx.....', 'x.....x...x..x..', 'x.x...x....x..x.'], snare: ['....X..g.g..X..g', '.g..X.g..g..X.gg', '....X..g.g.gX...'], fill: 'snare16' },
+  hiphop: { swing: 0.22, loose: 9, lazy: 14, hat: ['x.x.x.x.x.x.x.x.', 'x.x.x.xxx.x.x.x.', 'x.x.x.x.x.x.x.o.'], kick: ['x......x..x.....', 'x.........xx....', 'x......x.x....x.', 'x.x.......x.....'], snare: ['....X.......X...', '....X.......X..g', '....X....g..X...'], fill: 'sparse' },
+  trap: { swing: 0, loose: 2, hat: ['x.x.x.x.x.x.x.x.', 'x.x.x.x.xxxxx.x.', 'x.x.xxx.x.x.xxxx'], rolls: true, kick: ['x.......x.....x.', 'x.....x...x.....', 'x..x......x...x.'], snare: ['........X.......', '........X......x'], clap: true, fill: 'hats' },
+  house: { swing: 0.05, loose: 2, hat: ['..o...o...o...o.', 'x.o.x.o.x.o.x.o.', 'xxoxxxoxxxoxxxox'], kick: ['x...x...x...x...'], snare: ['....x.......x...'], clap: true, fill: 'build' },
+  dnb: { swing: 0, loose: 3, hat: ['x.x.x.x.x.x.x.x.', 'xxx.xxx.xxx.xxx.'], kick: ['x.........x.....', 'x.........x..x..', 'x......x..x.....'], snare: ['....X.......X...', '....X..g....X.g.', '....X......gX...'], fill: 'snare16' },
+  reggae: { swing: 0.18, loose: 6, hat: ['x.x.x.x.x.x.x.x.', 'x.xxx.x.x.xxx.x.'], kick: ['........x.......'], snare: ['........X.......'], xstick: true, fill: 'sparse' },
+  afro: { swing: 0.04, loose: 4, hat: ['x.xxx.xxx.xxx.x.', 'x.x.xxx.x.xxx.x.'], kick: ['x..x..x...x..x..', 'x.....x.x.....x.'], snare: ['....x..g.g..x...', '.g..x....g..x.g.'], ride: 'x..x..x...x.x...', fill: 'toms' },
+};
+export function grooveBar(o, form, n, meter, bpm, G) {
+  const out = [], seed = o.seed | 0, R = rng(seed, 'gbar', n), I = intensityAt(o, form, n), busy = o.busy ?? 0.5;
+  const steps = meter * 4, sw = (G.swing || 0) * (bpm > 150 ? 0.5 : 1);
+  const pos = (st) => st / 4 + (st % 2 ? sw * 0.25 : 0);
+  const add = (b, note, vel, ms = 0) => { if (b < meter - 1e-6 && vel > 0) out.push({ b, note, vel: Math.round(clamp(vel, 1, 127)), ms }); };
+  const human = (v, k) => v * (0.72 + 0.45 * I) + (rnd1(seed, 'gv', n, k) - 0.5) * 9;
+  if (form.final) { add(0, KIT.crash, 112); add(0, KIT.kick, 110); add(0, KIT.snare, 96); return out; }
+  const fill = planFill(o, form, n), fillFrom = fill ? meter - fill.beats : meter, landed = form.prevFill || (form.sectionBar === 0 && form.pass === 0 && n > 0 && form.kind !== 'intro');
+  const pick = (arr, tag) => { if (arr.length === 1) return arr[0]; const motif = Math.floor(rnd1(seed, tag + 'm', Math.floor(form.sectionBar / 2)) * arr.length); return rnd1(seed, tag + 'r', n) < 0.6 ? arr[motif] : arr[Math.floor(R() * arr.length)]; };
+  const cell = (pat, st) => pat[st % 16] || '.';
+  const sparse = form.kind === 'breakdown' || form.kind === 'break', intro = form.kind === 'intro' && form.sectionBar < Math.max(1, form.bars / 2);
+  // hats (or the ride in a chorus, for the styles that open up there)
+  const useRide = G.chorusRide && (form.kind === 'chorus' || form.kind === 'solo') && I > 0.45;
+  const hat = pick(G.hat, 'h'), thin = I < 0.3 && !hat.includes('o');
+  for (let st = 0; st < steps; st++) {
+    const b = pos(st); if (b >= fillFrom) break;
+    let c = cell(hat, st); if (c === '.' || (thin && st % 2)) continue;
+    if (sparse && st % 4) continue;
+    if (landed && st === 0) continue;
+    const note = useRide ? KIT.ride : c === 'o' ? 46 : KIT.hhClosed;
+    add(b, note, human(c === 'X' || st % 4 === 0 ? 78 : c === 'o' ? 70 : 54, 'h' + st), -3);
+  }
+  // trap hi-hat rolls: a beat of 16th triplets or 32nds now and then
+  if (G.rolls && R() < 0.25 + 0.4 * I) { const q = Math.floor(R() * Math.min(meter, fillFrom)), div = R() < 0.5 ? 6 : 8; for (let k = 0; k < div; k++) add(q + k / div, KIT.hhClosed, 40 + 40 * (k / div)); }
+  if (G.ride && !sparse) for (let st = 0; st < steps; st++) { const b = pos(st); if (b < fillFrom && cell(G.ride, st) !== '.') add(b, KIT.bell, human(52, 'rb' + st)); }
+  // kick and snare
+  if (!intro) {
+    const kick = pick(G.kick, 'k'), snare = pick(G.snare, 's');
+    for (let st = 0; st < steps; st++) {
+      const b = pos(st); if (b >= fillFrom) break;
+      const k = cell(kick, st), sn = cell(snare, st);
+      if (k !== '.' && !(sparse && st !== 0) && !(landed && st === 0)) add(b, KIT.kick, human(k === 'X' || st === 0 ? 100 : 84, 'k' + st), 0);
+      if (sn !== '.' && !sparse) {
+        if (sn === 'g') { if (R() < 0.3 + 0.6 * busy * I) add(b, KIT.snare, human(26, 'g' + st), 4); }
+        else { const note = G.xstick ? KIT.xstick : KIT.snare; add(b, note, human(sn === 'X' ? 100 : 82, 's' + st), G.lazy || 0); if (G.clap) add(b, 39, human(88, 'cl' + st), (G.lazy || 0) + 2); }
+      }
+    }
+    if (!sparse && R() < 0.12 * busy * (0.5 + I)) { const st = 2 * Math.floor(R() * Math.min(steps, fillFrom * 4) / 2) + 1; add(pos(st), KIT.kick, human(70, 'kx')); }
+  }
+  if (landed) { add(0, KIT.crash, 80 + 35 * I); add(0, KIT.kick, 100); }
+  // fills in the genre's way
+  if (fill) {
+    const n16 = fill.beats * 4, toms = [KIT.tomHi, KIT.tomMid, KIT.tomLo, KIT.floor];
+    for (let i = 0; i < n16; i++) {
+      const b = fillFrom + i / 4, cres = 0.5 + 0.5 * (i / Math.max(1, n16 - 1)), v = (55 + 55 * cres) * (0.6 + 0.5 * fill.I);
+      if (G.fill === 'toms') add(b, i < 2 ? KIT.snare : toms[Math.min(3, Math.floor(((i - 2) / Math.max(1, n16 - 2)) * 4))], v, 2);
+      else if (G.fill === 'snare16') add(b, KIT.snare, v * (i % 2 ? 0.8 : 1), 2);
+      else if (G.fill === 'hats') { add(b, KIT.hhClosed, v * 0.7); add(b + 1 / 8, KIT.hhClosed, v * 0.6); }
+      else if (G.fill === 'build') { if (i % 2 === 0 || fill.I > 0.6) add(b, KIT.snare, v); }
+      else if (G.fill === 'sparse') { if (i % 3 === 0) add(b, i % 2 ? KIT.kick : KIT.snare, v); }
+      if (i % 4 === 0 && G.fill !== 'hats') add(b, KIT.kick, v * 0.85);
+    }
+  }
+  if (form.kind === 'ending' && form.last) { out.length = 0; add(0, KIT.crash, 108); add(0, KIT.kick, 106); add(0, KIT.snare, 92); }
+  const drift = (b) => pink(seed, 'gtime', n * meter + b) * (G.loose ?? 4);
+  for (const e of out) e.ms = Math.round((e.ms + drift(e.b)) * 10) / 10;
+  return out.sort((a, b) => a.b - b.b || a.note - b.note);
+}

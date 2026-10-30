@@ -30,8 +30,8 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     for (let i = 0; i < 60; i++) { const ok = await Promise.all([A, B].map((p) => p.evaluate(() => JJ.clock.locked && JJ.S.players.size === 1 && [...JJ.room.peers.values()].every((x) => x.path === 'direct')))); if (ok.every(Boolean)) break; await sleep(300); }
     await sleep(600);
     // no button in the corners any more; the drummer is still added through the API
-    check(await A.$('.corner.empty .addvp') === null, 'empty corners no longer offer a jazz drummer');
-    await A.evaluate(() => JJ.addVirtual('jazz-drums'));
+    check(await A.$('.corner.empty .addvp') === null, 'empty corners no longer offer a drummer');
+    await A.evaluate(() => JJ.addVirtual('drums', 'medium'));
     await sleep(800);
     const vid = await A.evaluate(() => Object.keys(JJ.players())[0]);
     check(!!vid && (await B.evaluate((id) => !!JJ.players()[id], vid)), 'the drummer reaches Matt');
@@ -50,6 +50,13 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     const bossaA = await A.evaluate(({ T }) => JJ.engine.log.filter((e) => e.pid.startsWith('vp:') && e.type === 'on' && e.note === 37 && e.at > T).length, { T });
     check(bossaA > 2, `the bossa's cross-stick comes in (${bossaA} hits)`);
     T = await same(A, B, T, 'and the change landed together');
+    // other genres: funk, then house, the same in both
+    for (const st of ['funk', 'house', 'trap']) {
+      await A.evaluate(({ id, st }) => JJ.setVirtual(id, { style: st }), { id: vid, st });
+      await sleep(4500);
+      T = await same(A, B, T + 2600, `a ${st} drummer plays the same in both`);
+    }
+    check(/Trap drummer/.test(await B.textContent('.corner.vp .cname')), 'its corner names the genre');
     // follow a song: head, solo, ending, with nothing locked
     await A.evaluate(() => { JJ.setSong('sec:h1', { name: 'Head', bars: 2, chords: ['Dm7', 'G7'], notes: '' }); JJ.setSong('sec:s1', { name: 'Solo', bars: 2, chords: ['Dm7', 'G7'], notes: '' }); JJ.setSong('sec:e1', { name: 'Ending', bars: 1, chords: ['Dm7'], notes: '' }); JJ.setSong('order', ['h1', 's1', 'e1']); });
     await A.evaluate((id) => JJ.setVirtual(id, { style: 'medium' }), vid);

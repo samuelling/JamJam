@@ -619,6 +619,14 @@
   .secnote1 { margin: 0; font-style: italic; }
   .btn.danger:hover { color: #ff8a8a; }
   .addsel { font: 600 12px var(--sans); }
+  .shead { position: relative; cursor: grab; touch-action: none; user-select: none; }
+  .shead.dragging { cursor: grabbing; z-index: 5; opacity: .85; box-shadow: 0 8px 20px #000a; }
+  .shead.dropbefore { box-shadow: inset 4px 0 0 var(--mz-toner); }
+  .shead.dropafter { box-shadow: inset -4px 0 0 var(--mz-toner); }
+  .shead .secx { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; border: 0; padding: 0; background: #0003; color: #18181b; font: 700 12px/1 var(--sans); cursor: pointer; opacity: 0; transition: opacity .12s; }
+  .shead:hover .secx, .shead.sel .secx, .shead:focus-within .secx { opacity: 1; }
+  .shead .secx:hover { background: #18181b; color: #ff8a8a; }
+  @media (hover: none) { .shead .secx { opacity: .8; } }
   .playhead { position: absolute; top: 0; width: 2px; background: var(--mz-toner); box-shadow: 0 0 6px var(--mz-toner); pointer-events: none; z-index: 3; }
   .addsec { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 6px; }
   .addsec b { font: 400 14px/1 var(--display); color: var(--mz-muted); margin-right: 4px; }

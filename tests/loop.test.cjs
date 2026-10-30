@@ -67,6 +67,21 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     const okA = got[0] && got[0].length && got[0].every((b) => b >= tl[0].beats - 2 * meter - 0.05), okB = got[1] && got[1].length && got[1].every((b) => b < 2 * meter + 0.05);
     check(okA && okB, `a pass across the line becomes a take at the end of ${tl[0].name} and the start of ${tl[1].name} (${got[0]?.length || 0} + ${got[1]?.length || 0} notes)`);
     await A.evaluate(() => JJ.stopSong());
+    await sleep(600);
+    // rearrange: drag the third section's header to the front
+    const before = await A.evaluate(() => JJ.song().order.slice());
+    const h3 = await A.evaluate(() => { const r = document.querySelectorAll('#compose .shead')[2].getBoundingClientRect(); return [r.left + 30, r.top + 12]; });
+    const h1 = await A.evaluate(() => { const r = document.querySelectorAll('#compose .shead')[0].getBoundingClientRect(); return [r.left + 5, r.top + 12]; });
+    await drag(h3[0], h1[0], h3[1]);
+    const after = await B.evaluate(() => JJ.song().order.slice());
+    check(after[0] === before[2] && after[1] === before[0] && after[2] === before[1] && after.length === before.length, `dragging a section's header moves it in the song, for Matt too (${after.slice(0, 3).map((id) => tl.find((t) => t.id === id)?.name).join(', ')})`);
+    // and removing one is one click on its ×
+    A.on('dialog', (d) => d.accept());
+    await A.hover('#compose .shead >> nth=1');
+    await A.click('#compose .shead >> nth=1 >> .secx');
+    await sleep(700);
+    const removed = await B.evaluate(() => JJ.song().order.slice());
+    check(removed.length === after.length - 1 && !removed.includes(after[1]), `the × on a section removes it (${removed.length} sections left)`);
     await A.screenshot({ path: '/tmp/loop.png' });
     check(errors.length === 0, `no page errors${errors.length ? ': ' + errors.join(' | ') : ''}`);
   } catch (e) { console.error(e); failures++; }

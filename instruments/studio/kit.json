@@ -1,0 +1,362 @@
+{
+ "source": "Virtuosity Drums by Versilian Studios, CC0 1.0 (github.com/sfzinstruments/virtuosity_drums)",
+ "voices": {
+  "kick": {
+   "notes": [
+    35,
+    36
+   ],
+   "layers": [
+    {
+     "top": 32,
+     "files": [
+      "kick_1_1.mp3",
+      "kick_1_2.mp3"
+     ]
+    },
+    {
+     "top": 64,
+     "files": [
+      "kick_2_1.mp3",
+      "kick_2_2.mp3"
+     ]
+    },
+    {
+     "top": 95,
+     "files": [
+      "kick_3_1.mp3",
+      "kick_3_2.mp3"
+     ]
+    },
+    {
+     "top": 127,
+     "files": [
+      "kick_4_1.mp3",
+      "kick_4_2.mp3"
+     ]
+    }
+   ],
+   "choke": null
+  },
+  "snare": {
+   "notes": [
+    38,
+    40
+   ],
+   "layers": [
+    {
+     "top": 21,
+     "files": [
+      "snare_1.mp3"
+     ]
+    },
+    {
+     "top": 42,
+     "files": [
+      "snare_2.mp3"
+     ]
+    },
+    {
+     "top": 64,
+     "files": [
+      "snare_3.mp3"
+     ]
+    },
+    {
+     "top": 85,
+     "files": [
+      "snare_4.mp3"
+     ]
+    },
+    {
+     "top": 106,
+     "files": [
+      "snare_5.mp3"
+     ]
+    },
+    {
+     "top": 127,
+     "files": [
+      "snare_6.mp3"
+     ]
+    }
+   ],
+   "choke": null
+  },
+  "xstick": {
+   "notes": [
+    37
+   ],
+   "layers": [
+    {
+     "top": 42,
+     "files": [
+      "xstick_1.mp3"
+     ]
+    },
+    {
+     "top": 85,
+     "files": [
+      "xstick_2.mp3"
+     ]
+    },
+    {
+     "top": 127,
+     "files": [
+      "xstick_3.mp3"
+     ]
+    }
+   ],
+   "choke": null
+  },
+  "rimshot": {
+   "notes": [
+    39
+   ],
+   "layers": [
+    {
+     "top": 42,
+     "files": [
+      "rimshot_1.mp3"
+     ]
+    },
+    {
+     "top": 85,
+     "files": [
+      "rimshot_2.mp3"
+     ]
+    },
+    {
+     "top": 127,
+     "files": [
+      "rimshot_3.mp3"
+     ]
+    }
+   ],
+   "choke": null
+  },
+  "tomhi": {
+   "notes": [
+    48,
+    50,
+    47
+   ],
+   "layers": [
+    {
+     "top": 42,
+     "files": [
+      "tomhi_1.mp3"
+     ]
+    },
+    {
+     "top": 85,
+     "files": [
+      "tomhi_2.mp3"
+     ]
+    },
+    {
+     "top": 127,
+     "files": [
+      "tomhi_3.mp3"
+     ]
+    }
+   ],
+   "choke": null
+  },
+  "tomlo": {
+   "notes": [
+    45,
+    43,
+    41
+   ],
+   "layers": [
+    {
+     "top": 42,
+     "files": [
+      "tomlo_1.mp3"
+     ]
+    },
+    {
+     "top": 85,
+     "files": [
+      "tomlo_2.mp3"
+     ]
+    },
+    {
+     "top": 127,
+     "files": [
+      "tomlo_3.mp3"
+     ]
+    }
+   ],
+   "choke": null
+  },
+  "hhclosed": {
+   "notes": [
+    42
+   ],
+   "layers": [
+    {
+     "top": 32,
+     "files": [
+      "hhclosed_1_1.mp3",
+      "hhclosed_1_2.mp3"
+     ]
+    },
+    {
+     "top": 64,
+     "files": [
+      "hhclosed_2_1.mp3",
+      "hhclosed_2_2.mp3"
+     ]
+    },
+    {
+     "top": 95,
+     "files": [
+      "hhclosed_3_1.mp3",
+      "hhclosed_3_2.mp3"
+     ]
+    },
+    {
+     "top": 127,
+     "files": [
+      "hhclosed_4_1.mp3",
+      "hhclosed_4_2.mp3"
+     ]
+    }
+   ],
+   "choke": "hh"
+  },
+  "hhpedal": {
+   "notes": [
+    44
+   ],
+   "layers": [
+    {
+     "top": 42,
+     "files": [
+      "hhpedal_1.mp3"
+     ]
+    },
+    {
+     "top": 85,
+     "files": [
+      "hhpedal_2.mp3"
+     ]
+    },
+    {
+     "top": 127,
+     "files": [
+      "hhpedal_3.mp3"
+     ]
+    }
+   ],
+   "choke": "hh"
+  },
+  "hhopen": {
+   "notes": [
+    46
+   ],
+   "layers": [
+    {
+     "top": 64,
+     "files": [
+      "hhopen_1.mp3"
+     ]
+    },
+    {
+     "top": 127,
+     "files": [
+      "hhopen_2.mp3"
+     ]
+    }
+   ],
+   "choke": "hh"
+  },
+  "ride": {
+   "notes": [
+    51,
+    59
+   ],
+   "layers": [
+    {
+     "top": 42,
+     "files": [
+      "ride_1_1.mp3",
+      "ride_1_2.mp3"
+     ]
+    },
+    {
+     "top": 85,
+     "files": [
+      "ride_2_1.mp3",
+      "ride_2_2.mp3"
+     ]
+    },
+    {
+     "top": 127,
+     "files": [
+      "ride_3_1.mp3",
+      "ride_3_2.mp3"
+     ]
+    }
+   ],
+   "choke": null
+  },
+  "bell": {
+   "notes": [
+    53
+   ],
+   "layers": [
+    {
+     "top": 42,
+     "files": [
+      "bell_1.mp3"
+     ]
+    },
+    {
+     "top": 85,
+     "files": [
+      "bell_2.mp3"
+     ]
+    },
+    {
+     "top": 127,
+     "files": [
+      "bell_3.mp3"
+     ]
+    }
+   ],
+   "choke": null
+  },
+  "crash": {
+   "notes": [
+    49,
+    57,
+    52,
+    55
+   ],
+   "layers": [
+    {
+     "top": 42,
+     "files": [
+      "crash_1.mp3"
+     ]
+    },
+    {
+     "top": 85,
+     "files": [
+      "crash_2.mp3"
+     ]
+    },
+    {
+     "top": 127,
+     "files": [
+      "crash_3.mp3"
+     ]
+    }
+   ],
+   "choke": null
+  }
+ }
+}
