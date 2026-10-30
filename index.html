@@ -140,6 +140,12 @@
   .cart b { font-size: 11px; max-width: 92px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cart small { font: 9px var(--mono); color: var(--dim); max-width: 92px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cart .led { position: absolute; top: 6px; right: 6px; }
+  .cartwrap { position: relative; }
+  .cartx { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; padding: 0; border-radius: 50%; display: grid; place-items: center; z-index: 2;
+    font: 700 14px/1 var(--sans); color: var(--dim); background: #141518; border: 1px solid #2c2e33; opacity: .55; transition: opacity .12s, color .12s, background .12s; }
+  .cartwrap:hover .cartx, .cartx:focus-visible { opacity: 1; }
+  .cartx:hover { color: #1a0010; background: var(--mz-pink); border-color: var(--mz-pink); }
+  @media (hover: none) { .cartx { opacity: 1; } }
   .shelf .add { display: grid; gap: 6px; margin-top: auto; }
   .shelf .add .btn { font-size: 11px; padding: 6px 4px; }
   .deskwrap { min-height: 0; overflow: auto; border-radius: 14px; padding: 2px; }

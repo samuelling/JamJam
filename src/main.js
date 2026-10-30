@@ -637,10 +637,12 @@ function renderRack() {
   const box = $('#rackList'); if (!box) return;
   box.replaceChildren(...S.rack.map((e, i) => {
     const def = engine.defs.get(e.cfg.inst), unit = e.cfg.hw && engine.unit(e.cfg.hw);
-    return h('button', { class: 'cart' + (e.r === (selEntry() || {}).r ? ' sel' : ''), style: `--k:${RACK_COLORS[i % 4]}`, title: describe(e.cfg), onclick: () => { S.sel = e.r; S.knobGroup = null; S.held = null; renderRack(); renderDevice(); renderKeyboard(); } },
+    const name = e.cfg.ext ? e.cfg.ext.name : unit ? unit.model : def.name;
+    return h('div', { class: 'cartwrap' }, h('button', { class: 'cart' + (e.r === (selEntry() || {}).r ? ' sel' : ''), style: `--k:${RACK_COLORS[i % 4]}`, title: describe(e.cfg), onclick: () => { S.sel = e.r; S.knobGroup = null; S.held = null; renderRack(); renderDevice(); renderKeyboard(); } },
       iconEl(e.cfg.ext ? { id: 'midi' } : def),
       h('b', {}, e.cfg.ext ? e.cfg.ext.name : unit ? unit.model : def.name), h('small', {}, e.cfg.ext ? `MIDI out ${e.midiOut ? 'ch' + (e.outCh || 1) : '—'}` : `${unit ? def.name + ' · ' : ''}${e.cfg.patch} · ${e.midiCh ? 'ch' + e.midiCh : 'any'}`),
-      h('span', { class: 'led', 'data-led': key(S.me, e.r), style: `--c:${RACK_COLORS[i % 4]}` }));
+      h('span', { class: 'led', 'data-led': key(S.me, e.r), style: `--c:${RACK_COLORS[i % 4]}` })),
+      S.rack.length > 1 ? h('button', { class: 'cartx', title: `Remove ${name}`, 'aria-label': `Remove ${name}`, onclick: () => removeEntry(e) }, '×') : null);
   }));
 }
 
