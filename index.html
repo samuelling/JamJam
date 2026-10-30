@@ -149,6 +149,8 @@
   .micico { display: grid; place-items: center; width: 34px; height: 24px; border-radius: 4px; background: #2a2412; color: #ffcf26; font-size: 14px; }
   .btn.recall.on { background: #e5383b; color: #fff; border-color: #18181b; animation: recpulse 1.4s ease-in-out infinite; }
   @keyframes recpulse { 50% { box-shadow: 0 0 0 4px #e5383b44; } }
+  .sidetab.techtab { margin-top: auto; opacity: .7; }
+  .sidetab.techtab[aria-pressed="true"] { opacity: 1; color: var(--mz-toner); box-shadow: inset 0 0 0 1px #ffcf2666; }
   .gearitem { position: relative; display: grid; justify-items: center; gap: 2px; width: 56px; }
   .gearitem .ico { width: 54px; height: 36px; }
   .gearitem .led { position: absolute; top: 0; right: 2px; width: 6px; height: 6px; }
@@ -728,7 +730,7 @@
       <summary>what?</summary>
       <div>
         <p>Nobody's audio travels. Every browser in the room runs every jammer's instruments, and only what your hands do goes over the wire (notes and knob moves), each stamped with the moment it should sound on a clock the room shares. So everyone hears the same music at the same instant.</p>
-        <p>Bring real gear too: tell the studio what synth or drum machine you have, and your bandmates hear its closest software twin (or their own, if they have one). There's a lane for live audio a bar or two behind, and everything technical (timing, MIDI routing, clock out, the network) is under the hood in the studio.</p>
+        <p>Bring real gear too: tell the studio what synth or drum machine you have, and your bandmates hear its closest software twin (or their own, if they have one). There's a lane for live audio a bar or two behind, and everything technical (timing, MIDI routing, clock out, the network) sits behind the gear button in the studio.</p>
       </div>
     </details>
   </div>
@@ -750,7 +752,6 @@
     <button id="selfBtn" class="btn small tech" title="Hear your own parts the moment you play them; the band still hears everything in sync">Hear myself</button>
     <span id="status" role="status"></span>
     <div class="seg roomseg" id="roomSeg" role="group" aria-label="Room"><button data-room="jam" class="on">Jam Room</button><button data-room="compose">Compose Room</button></div>
-    <button id="techBtn" class="btn small hood" title="Show or hide the technical controls: timing, quantize, lookahead, MIDI routing, the network" aria-pressed="false"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg> Under the hood</button>
     <button id="leaveBtn" class="btn small ghost" style="margin-left:auto">Leave</button>
     <span id="lookHelp" class="help tech"></span>
   </div>
@@ -779,6 +780,8 @@
       <button class="sidetab" data-panel="panel-lane" title="Live audio" aria-label="Live audio"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
       <button class="sidetab" data-panel="panel-midi" title="MIDI: clock out and the band's parts on your gear" aria-label="MIDI"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="11" r="1" fill="currentColor"/><circle cx="16" cy="11" r="1" fill="currentColor"/><circle cx="9.5" cy="14.5" r="1" fill="currentColor"/><circle cx="14.5" cy="14.5" r="1" fill="currentColor"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg></button>
       <button class="sidetab tech" data-panel="panel-wire" title="Wiring" aria-label="Wiring"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8 7.5l3 8M16 7.5l-3 8M8.5 6h7"/></svg></button>
+    
+      <button id="techBtn" class="sidetab techtab" title="Technical controls: timing, quantize, lookahead, MIDI routing, the network" aria-label="Technical controls" aria-pressed="false"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
     </div>
   </div>
 

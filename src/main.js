@@ -2593,7 +2593,7 @@ function wire() {
   $('#laneBars').onchange = (e) => { lane.bars = +e.target.value; room.send({ k: 'lane', lane: { on: lane.on, bars: lane.bars } }); };
   $('#laneQ').onchange = (e) => { lane.quality = e.target.value; };
   $('#laneOff').oninput = (e) => { lane.offsetMs = +e.target.value; $('#laneOffVal').textContent = `${lane.offsetMs > 0 ? '+' : ''}${lane.offsetMs} ms`; };
-  $$('.sidetab').forEach((t) => t.onclick = () => togglePanel(t.dataset.panel));
+  $$('.sidetab[data-panel]').forEach((t) => t.onclick = () => togglePanel(t.dataset.panel));
   $$('[data-closepanel]').forEach((b) => b.onclick = closePanels);
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePanels(); });
   wireKeyboard();

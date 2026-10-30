@@ -28,6 +28,10 @@
     {
       "id": "tonewheel",
       "file": "tonewheel.js"
+    },
+    {
+      "id": "chip",
+      "file": "chip.js"
     }
   ]
 }
