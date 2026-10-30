@@ -35,9 +35,9 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     // 1. public library from another origin
     const libId = await A.evaluate(() => JJ.addLibrary('http://localhost:8792/'));
     check(libId === 'testlab', 'a library loads from another origin (CORS server)');
-    await A.click('#addInstBtn'); await A.click('#libTabs .page:nth-child(2)'); await sleep(200);
-    const cards = await A.$$eval('#libCards .card .name', (n) => n.map((x) => x.textContent));
-    check(cards.join() === 'Wobble,Beep A,Beep B', `the gear wall lists the library's instruments (${cards.join(', ')})`);
+    await A.click('#addInstBtn'); await sleep(300);
+    const cards = await A.$$eval('#libCards .tile .ptag b', (n) => n.map((x) => x.textContent));
+    check(['Wobble', 'Beep A', 'Beep B'].every((n) => cards.includes(n)) && cards.includes('Juniper'), `the shared studio wall hangs the library's instruments with the built-ins (${cards.join(', ')})`);
     await A.keyboard.press('Escape');
     const r1 = await A.evaluate(() => JJ.addFromLibrary('testlab/wobble', 'fast'));
     await sleep(2500);
@@ -69,7 +69,7 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     const fp = await Promise.all([A, B].map((p) => p.evaluate(() => [...JJ.S.sync.values()].map((s) => s.ok))));
     check(fp.every((x) => x.length && x.every(Boolean)), `fingerprints agree once the real instrument is in (${JSON.stringify(fp)})`);
     const remembered = await B.evaluate(() => JSON.parse(localStorage.getItem('megajam.libs') || '[]'));
-    check(remembered.length === 2, 'libraries are remembered in the browser');
+    check(remembered.filter((u) => /localhost:879[23]/.test(u)).length === 2, `libraries are remembered in the browser (${remembered.join(', ')})`);
   } finally {
     check(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.slice(0, 5).join(' | ') : ''));
     await browser.close();

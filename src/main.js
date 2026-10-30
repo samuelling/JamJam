@@ -575,7 +575,7 @@ function cornerCard(id, rack) {
   const vol = h('input', { type: 'range', min: 0, max: 1.5, step: 0.01, value: v.vol, 'aria-label': 'Volume in your mix', oninput: (e) => { S.vol.set(id, { ...(S.vol.get(id) || { mute: false }), vol: +e.target.value }); applyPlayerVolume(id); } });
   const mute = h('button', { class: 'btn small' + (v.mute ? ' on' : ''), title: 'Mute in your mix', onclick: (e) => { const x = S.vol.get(id) || { vol: 1, mute: false }; x.mute = !x.mute; S.vol.set(id, x); applyPlayerVolume(id); e.target.classList.toggle('on', x.mute); } }, 'M');
   return h('div', { class: 'corner' + (mine ? ' me' : ''), style: `--c:${c}` },
-    h('div', { class: 'chead' }, h('div', { class: 'cname' }, (mine ? S.name : pl.name || peer?.name || 'Jammer') + (mine ? ' · you' : '')), h('span', { class: 'tag', 'data-path': id })),
+    h('div', { class: 'chead' }, h('div', { class: 'cname' }, (mine ? S.name : pl.name || peer?.name || 'Jammer') + (mine ? ' · you' : '')), h('span', { class: 'tag tech', 'data-path': id })),
     h('div', { class: 'gearrow' }, ...rack.map((x) => {
       const def = engine.defs.get(x.cfg?.inst), unit = x.cfg?.hw && engine.unit(x.cfg.hw);
       return h('div', { class: 'gearitem', title: describe(x.cfg) }, iconEl(x.cfg?.ext ? { id: 'midi' } : def), h('span', { class: 'led', 'data-led': key(id, x.r), style: `--c:${c}` }), h('small', { 'data-budget': key(id, x.r) }, x.cfg?.ext ? x.cfg.ext.name : unit ? unit.model : def?.name || '…'));
@@ -646,6 +646,7 @@ function renderRack() {
 
 // --- the instrument on your desk
 let knobEls = new Map();
+const techOnly = (el) => { el.classList.add('tech'); return el; };
 function configFields(e, def, unit) {
   const sel = (label, options, value, onchange) => h('div', {}, h('label', {}, label),
     h('select', { 'aria-label': label, onchange: (ev) => onchange(ev.target.value) }, ...options.map(([v, t]) => h('option', { value: v, selected: String(v) === String(value) }, t))));
@@ -653,13 +654,13 @@ function configFields(e, def, unit) {
   if (unit) f.push(sel('Twin', engine.twinCandidates(unit).map((c) => [c.inst, `${engine.defs.get(c.inst).name} ${Math.round(c.score * 100)}%`]), e.cfg.inst, (v) => changeEntry(e, { inst: v })));
   else f.push(sel('Instrument', [...engine.defs.values()].filter((d) => !d.internal).map((d) => [d.id, d.lib ? `${d.name} (${engine.libs.get(d.lib)?.name || d.lib})` : d.name]), e.cfg.inst, (v) => changeEntry(e, { inst: v, patch: null })));
   f.push(sel(def.drums ? 'Kit' : 'Patch', engine.patchTypes(e.cfg).map((t) => [t, patchName(def, t)]), e.cfg.patch, (v) => changeEntry(e, { patch: v })));
-  f.push(sel('Timing', [['auto', `Auto · ${BUDGETS[autoBudget(e.cfg)].label}`], ...Object.entries(BUDGETS).map(([k, b]) => [k, b.label])], e.budget, (v) => { e.budget = v; broadcastLook(true); renderDevice(); renderRack(); }));
-  f.push(sel('MIDI in', [[0, 'Any channel'], ...Array.from({ length: 16 }, (_, i) => [i + 1, `Channel ${i + 1}`])], e.midiCh, (v) => { e.midiCh = +v; renderRack(); }));
+  f.push(techOnly(sel('Timing', [['auto', `Auto · ${BUDGETS[autoBudget(e.cfg)].label}`], ...Object.entries(BUDGETS).map(([k, b]) => [k, b.label])], e.budget, (v) => { e.budget = v; broadcastLook(true); renderDevice(); renderRack(); })));
+  f.push(techOnly(sel('MIDI in', [[0, 'Any channel'], ...Array.from({ length: 16 }, (_, i) => [i + 1, `Channel ${i + 1}`])], e.midiCh, (v) => { e.midiCh = +v; renderRack(); })));
   if (unit) f.push(sel('Plays my synth via', [['', input.outputs.length ? 'None (I play it)' : 'None · enable MIDI'], ...input.outputs.map((o) => [o.id, o.name])], e.midiOut, (v) => { e.midiOut = v; renderDevice(); }));
   return f;
 }
 function deviceFoot(e, def, unit) {
-  const foot = [h('span', { class: 'help' }, BUDGETS[budgetOf(e)].help), h('button', { class: 'btn small', onclick: () => audition(e.cfg) }, 'Audition')];
+  const foot = [h('span', { class: 'help tech' }, BUDGETS[budgetOf(e)].help), h('span', { style: 'flex:1' }), h('button', { class: 'btn small', onclick: () => audition(e.cfg) }, 'Audition')];
   if (unit) {
     foot.push(h('button', { class: 'btn small' + (e.hearTwin ? ' on' : ''), title: 'Also hear the twin yourself, to compare with your hardware', onclick: () => { e.hearTwin = !e.hearTwin; applyVolume(key(S.me, e.r)); renderDevice(); } }, 'Hear twin'));
     if (e.midiOut) {
@@ -922,35 +923,98 @@ function libCard(meta, def) {
       h('button', { class: 'btn small hot', onclick: () => withDef((d) => { addEntry({ inst: d.id }); closeDrawers(); }) }, 'Put it on my desk')),
     status);
 }
+// the shared studio: every instrument hung on a pegboard. One click puts it on your desk.
+const FEATURED = ['github:samuelling/Acoustic@6e0b67071e68aac5259558e1412f2eedcbed8746'];   // pinned, so every jammer loads the identical code
+let featuredTried = false;
+async function loadFeatured() {
+  if (featuredTried) return; featuredTried = true;
+  for (const u of FEATURED) {
+    try { if (![...engine.libs.values()].some((l) => l.url === Engine.resolveLibraryUrl(u))) { await engine.addLibrary(u); saveLibs(); } } catch (_) { /* offline: the wall just shows the built-ins */ }
+  }
+  if (!$('#libDrawer').classList.contains('hide')) renderLibrary();
+}
+const tilt = (id) => { let x = 0; for (const c of String(id)) x = (x * 31 + c.charCodeAt(0)) | 0; return ((x >>> 0) % 7 - 3) * 0.7; };
+function tile(meta, def) {
+  const id = meta.id, name = def?.name || meta.name, lib = meta.lib && engine.libs.get(meta.lib);
+  const status = h('span', { class: 'status hide' });
+  const withDef = async (fn) => {
+    try { if (!def) { status.textContent = 'fetching…'; status.classList.remove('hide'); } const d = await engine.ensureDef(id); status.classList.add('hide'); fn(d); }
+    catch (err) { status.textContent = "couldn't load it: " + err.message; status.classList.remove('hide'); }
+  };
+  const take = () => withDef((d) => { addEntry({ inst: d.id }); closeDrawers(); });
+  return h('div', { class: 'tile', style: `--r:${tilt(id)}deg` },
+    h('span', { class: 'peg' }),
+    lib ? h('span', { class: 'from', title: lib.url }, lib.by ? 'by ' + lib.by.split(' ')[0] : lib.name) : null,
+    h('button', { class: 'face', title: `Put ${name} on my desk`, onclick: take }, iconEl(def || { id, icon: meta.icon, accent: meta.accent, lib: meta.lib })),
+    h('div', { class: 'ptag' }, h('b', {}, name), h('small', {}, def?.family || meta.family || '')),
+    h('div', { class: 'acts' },
+      h('button', { class: 'btn small', onclick: () => withDef((d) => audition(engine.resolve({ inst: d.id }))) }, '▶ Hear it'),
+      h('button', { class: 'btn small hot', onclick: take }, 'Take it')),
+    status);
+}
+function plainTile(label, sub, onclick, cls = '') {
+  return h('div', { class: 'tile plain ' + cls, style: `--r:${tilt(label)}deg` }, h('span', { class: 'peg' }),
+    h('button', { class: 'face', onclick }, label), h('div', { class: 'ptag' }, h('b', {}, sub[0]), h('small', {}, sub[1])));
+}
 function renderLibrary() {
-  if (S.libTab !== 'builtin' && S.libTab !== 'add' && !engine.libs.has(S.libTab)) S.libTab = 'builtin';
-  const tab = (id, label) => h('button', { class: 'page' + (S.libTab === id ? ' on' : ''), onclick: () => { S.libTab = id; renderLibrary(); } }, label);
-  $('#libTabs').replaceChildren(tab('builtin', 'Built in'), ...[...engine.libs.values()].map((l) => tab(l.id, l.name)), tab('add', '+ Add a library'));
-  const cards = $('#libCards'), extra = $('#libExtra');
-  extra.replaceChildren();
-  if (S.libTab === 'builtin') {
-    cards.replaceChildren(...[...engine.defs.values()].filter((d) => !d.lib && !d.internal).map((d) => libCard({ id: d.id, name: d.name, family: d.family, blurb: d.blurb }, d)));
-  } else if (S.libTab === 'add') {
-    cards.replaceChildren();
-    const inp = h('input', { type: 'text', placeholder: 'github:owner/repo   or   http://localhost:8780/megajam/', style: 'flex:1;min-width:260px', onkeydown: (e) => { e.stopPropagation(); if (e.key === 'Enter') add(); } });
-    const msg = h('p', { class: 'help', style: 'margin:0' });
-    const add = async () => {
-      msg.textContent = 'Looking…';
-      try { const lib = await engine.addLibrary(inp.value); saveLibs(); S.libTab = lib.id; renderLibrary(); retryStandins(); }
-      catch (err) { msg.textContent = err.message; }
-    };
-    extra.replaceChildren(
-      h('div', { class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap' }, inp, h('button', { class: 'btn hot', onclick: add }, 'Add library')), msg,
-      h('p', { class: 'help', style: 'margin:0' }, 'A library is any folder with a megajam.json listing instruments. Use github:owner/repo (or owner/repo@branch/path) for a public GitHub repo, or the address of a library served from your own machine, such as a private build a friend shared with you. Libraries you add are remembered in this browser.'),
-      h('p', { class: 'help', style: 'margin:0' }, 'Public libraries load automatically for your bandmates when you play from them. A private library\'s address is never shared: each jammer adds their own copy, and anyone without it hears the closest built-in stand-in.'));
-  } else {
-    const lib = engine.libs.get(S.libTab);
-    cards.replaceChildren(...lib.entries.map((id) => libCard(engine.catalog.get(id), engine.defs.get(id))));
-    extra.replaceChildren(h('div', { class: 'row', style: 'display:flex;gap:10px;align-items:center' },
-      h('span', { class: 'help' }, `${lib.name}${lib.by ? ' by ' + lib.by : ''} · ${lib.entries.length} instruments · ${lib.private ? 'private: its address stays in this browser' : 'public'} · ${lib.url}`),
-      h('button', { class: 'btn small ghost', onclick: () => { engine.removeLibrary(lib.id); saveLibs(); S.libTab = 'builtin'; renderLibrary(); } }, 'Remove library')));
+  loadFeatured();
+  const tiles = [...engine.defs.values()].filter((d) => !d.lib && !d.internal).map((d) => tile({ id: d.id, name: d.name, family: d.family }, d));
+  for (const lib of engine.libs.values()) for (const id of lib.entries) tiles.push(tile({ ...engine.catalog.get(id), id, lib: lib.id }, engine.defs.get(id)));
+  if (!featuredTried || engine.loadingLibs) tiles.push(h('div', { class: 'tile plain' }, h('span', { class: 'peg' }), h('div', { class: 'face' }, 'hanging more…')));
+  tiles.push(plainTile('Bring your own', ['My hardware', 'Tell us your synth or drum machine; the band hears its twin'], () => { closeDrawers(); $('#addHwBtn').click(); }));
+  tiles.push(plainTile('Plug in MIDI', ['External MIDI', 'A synth or DAW track on a MIDI port'], () => { closeDrawers(); $('#addExtBtn').click(); }, 'tech'));
+  tiles.push(plainTile('More shelves', ['Libraries', 'Instruments from another GitHub repo or a friend\'s build'], () => { S.libTab = S.libTab === 'add' ? 'builtin' : 'add'; renderLibrary(); }, 'tech'));
+  $('#libCards').replaceChildren(...tiles);
+  const extra = $('#libExtra');
+  if (S.libTab !== 'add') { extra.replaceChildren(); return; }
+  const inp = h('input', { type: 'text', placeholder: 'github:owner/repo   or   http://localhost:8780/megajam/', style: 'flex:1;min-width:260px', onkeydown: (e) => { e.stopPropagation(); if (e.key === 'Enter') add(); } });
+  const msg = h('p', { class: 'help', style: 'margin:0' });
+  const add = async () => {
+    msg.textContent = 'Looking…';
+    try { await engine.addLibrary(inp.value); saveLibs(); renderLibrary(); retryStandins(); }
+    catch (err) { msg.textContent = err.message; }
+  };
+  extra.replaceChildren(
+    h('h3', { class: 'legend', style: 'margin:6px 0 0' }, 'Libraries'),
+    h('div', { class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap' }, inp, h('button', { class: 'btn hot', onclick: add }, 'Add library')), msg,
+    h('p', { class: 'help', style: 'margin:0' }, 'A library is any folder with a megajam.json listing instruments: github:owner/repo (or owner/repo@branch/path) for a public GitHub repo, or the address of a build served from your own machine. Public libraries load by themselves for your bandmates when you play from them. A private library\'s address is never shared: each jammer adds their own copy, and anyone without it hears the closest built-in stand-in.'),
+    ...[...engine.libs.values()].map((lib) => h('div', { class: 'row', style: 'display:flex;gap:10px;align-items:center' },
+      h('span', { class: 'help' }, `${lib.name}${lib.by ? ' by ' + lib.by : ''} · ${lib.entries.length} instrument${lib.entries.length === 1 ? '' : 's'} · ${lib.private ? 'private' : 'public'} · ${lib.url}`),
+      FEATURED.some((u) => Engine.resolveLibraryUrl(u) === lib.url) ? null : h('button', { class: 'btn small ghost', onclick: () => { engine.removeLibrary(lib.id); saveLibs(); renderLibrary(); } }, 'Remove'))));
+}
+
+// --- string lights draped over the logo: a sad attempt at decorating the studio
+function drapeLights(svg, { bulbs = 18, seed = 1 } = {}) {
+  if (!svg) return;
+  const box = svg.getBoundingClientRect(); if (!box.width) return;
+  const W = box.width, H = box.height, NS = 'http://www.w3.org/2000/svg';
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  let x = seed * 9301 + 49297; const rnd = () => ((x = (x * 9301 + 49297) % 233280) / 233280);
+  // taped at a few uneven points, sagging between (one span droops more than the rest)
+  const hooks = [[W * 0.02, H * 0.1], [W * 0.3, H * 0.02], [W * 0.62, H * 0.16], [W * 0.97, H * 0.04]];
+  const sags = [0.55, 0.9, 0.62].map((k) => k * H);
+  let d = `M${hooks[0][0]},${hooks[0][1]}`;
+  for (let i = 1; i < hooks.length; i++) { const [x0, y0] = hooks[i - 1], [x1, y1] = hooks[i]; d += ` Q${(x0 + x1) / 2},${(y0 + y1) / 2 + sags[i - 1] * 2 * 0.9} ${x1},${y1}`; }
+  const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  svg.replaceChildren();
+  const wire = el('path', { d, class: 'wire' }); svg.appendChild(wire);
+  const tw = Math.max(7, Math.min(18, H * 0.3)), th = tw / 2;
+  for (const [hx, hy] of hooks) svg.appendChild(el('rect', { x: hx - tw / 2, y: hy - th / 2, width: tw, height: th, class: 'tape', transform: `rotate(${(rnd() - 0.5) * 30} ${hx} ${hy})` }));
+  const L = wire.getTotalLength(), size = Math.max(4, Math.min(9, H / 9));
+  const dead = Math.floor(rnd() * bulbs), flicker = (dead + 5 + Math.floor(rnd() * 6)) % bulbs;
+  for (let i = 0; i < bulbs; i++) {
+    const pt = wire.getPointAtLength(((i + 0.5) / bulbs) * L), a = (rnd() - 0.5) * 34;
+    const g = el('g', { transform: `translate(${pt.x} ${pt.y}) rotate(${a})` });
+    g.appendChild(el('rect', { x: -size * 0.32, y: 0, width: size * 0.64, height: size * 0.55, rx: 1, class: 'socket' }));
+    const b = el('ellipse', { cx: 0, cy: size * 1.15, rx: size * 0.42, ry: size * 0.72, class: 'bulb' + (i === dead ? ' dead' : i === flicker ? ' flicker' : rnd() < 0.3 ? ' blink' : '') });
+    b.style.setProperty('--d', (5 + rnd() * 9).toFixed(1) + 's'); b.style.setProperty('--o', (-rnd() * 10).toFixed(1) + 's');
+    g.appendChild(b); svg.appendChild(g);
   }
 }
+function hangLights() { drapeLights($('#lobbyLights'), { bulbs: 22, seed: 3 }); drapeLights($('#consoleLights'), { bulbs: 7, seed: 5 }); }
+if (typeof ResizeObserver === 'function') { const ro = new ResizeObserver(() => { clearTimeout(hangLights.t); hangLights.t = setTimeout(hangLights, 60); }); for (const id of ['#lobbyLights', '#consoleLights']) { const el = document.querySelector(id); if (el) ro.observe(el); } }
+window.addEventListener('resize', () => { clearTimeout(hangLights.t); hangLights.t = setTimeout(hangLights, 150); });
+
 let hwPick = null;
 const HW_FILTERS = [['all', 'All'], ['poly', 'Polysynths', (u) => /poly|string|organ/.test(u.family)], ['mono', 'Monos & bass', (u) => /mono|bass/.test(u.family)],
   ['drum', 'Drum machines', (u) => /drum|groove/.test(u.family)], ['digital', 'Digital & FM', (u) => /digital|fm/.test(u.family)], ['keys', 'Keys', (u) => /piano|organ/.test(u.family)],
@@ -1290,6 +1354,10 @@ function wire() {
   $('#lookSlider').oninput = (e) => { S.lookOverride = +e.target.value; broadcastLook(); renderLook(); };
   $('#lookAutoBtn').onclick = () => { S.lookOverride = null; broadcastLook(); renderLook(); };
   $('#addInstBtn').onclick = () => { renderLibrary(); openDrawer('#libDrawer'); };
+  const setTech = (on) => { document.body.classList.toggle('simple', !on); $('#techBtn').setAttribute('aria-pressed', String(on)); try { store.set('tech', on ? '1' : '0'); } catch (_) {} };
+  setTech((() => { try { return store.get('tech') === '1'; } catch (_) { return false; } })());
+  $('#techBtn').onclick = () => { setTech(document.body.classList.contains('simple')); renderDevice(); };
+  document.fonts?.ready.then(hangLights); setTimeout(hangLights, 300);
   $('#addHwBtn').onclick = () => { renderHardware(); openDrawer('#hwDrawer'); setTimeout(() => $('#hwSearch').focus(), 50); };
   $('#addExtBtn').onclick = async () => { if (!input.midi) await input.enableMIDI(); addEntry({ ext: { name: 'My synth', port: input.outputs[0]?.id || '', ch: 1 } }); };
   $('#hwSearch').addEventListener('input', renderHardware);

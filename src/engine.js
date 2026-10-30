@@ -260,7 +260,7 @@ export class Engine {
     g.gain.setValueAtTime(1, t);
     g.connect(c.out);
     // ?silent=1 (benchmarks): keep all timing and bookkeeping but skip synthesis
-    const inst = this.silent ? { noteOn() {}, noteOff() {}, set() {}, allOff() {}, dispose() {} } : def.create(ctx, g, cfg.params);
+    const inst = this.silent ? { noteOn() {}, noteOff() {}, set() {}, allOff() {}, dispose() {} } : def.create(ctx, g, cfg.params, this.env());
     for (const old of c.insts) {
       try { old.inst.allOff(t); } catch (_) {}
       old.gain.gain.setTargetAtTime(0, t + 1.2, 0.3);
@@ -288,10 +288,10 @@ export class Engine {
     if (ev.type === 'on') {
       c.notes.push(ev.at); c.flashT = performance.now(); c.held.add(ev.note);
       if (c.notes.length > 6000) { const cut = c.notes.length - 3000; c.noteBase += cut; c.notes.splice(0, cut); }
-      I.inst.noteOn(ev.note, ev.vel, t);
-    } else if (ev.type === 'off') { c.held.delete(ev.note); I.inst.noteOff(ev.note, t); }
+      I.inst.noteOn(ev.note, ev.vel, t, ev.at);
+    } else if (ev.type === 'off') { c.held.delete(ev.note); I.inst.noteOff(ev.note, t, ev.at); }
     else if (ev.type === 'p') {
-      I.inst.set(ev.id, ev.v, t);
+      I.inst.set(ev.id, ev.v, t, ev.at);
       if (ev.id !== 'bend') {
         c.pLog.push({ at: ev.at, seq: ev.seq || 0, id: ev.id, v: ev.v });
         if (c.pLog.length > 3000) c.pLog.splice(0, 1000);
@@ -303,6 +303,10 @@ export class Engine {
 
   // A sequencer trig: apply its parameter locks at the trig's own sample, trigger, then put the settings back two
   // samples later, so the lock belongs to that one step (Machina reads a slot's settings at the moment of the hit).
+  // what an instrument may ask of the room (4th argument to create): room time <-> this browser's audio time.
+  // Each call also gets the event's room stamp (ms) after its audio time, identical in every browser, for anything
+  // that must decide the same way everywhere (seeding, a performer model's timing).
+  env() { return this._env || (this._env = { audioTime: (ms) => this.audioTime(ms), roomTime: (t) => this.roomTime(t) }); }
   seqTrig(k, note, vel, locks, at, base) {
     const c = this.ch.get(k);
     const I = c && c.insts[c.insts.length - 1];
@@ -311,7 +315,7 @@ export class Engine {
     let t = this.audioTime(at), lateMs = 0;
     if (t < ctx.currentTime) { lateMs = (ctx.currentTime - t) * 1000; if (lateMs > 3) { c.late++; c.lateWorst = Math.max(c.lateWorst, lateMs); } t = ctx.currentTime; }
     if (locks) for (const [id, v] of Object.entries(locks)) I.inst.set(id, v, t);
-    I.inst.noteOn(note, vel, t);
+    I.inst.noteOn(note, vel, t, at);
     if (locks) for (const id of Object.keys(locks)) if (base && id in base) I.inst.set(id, base[id], t + 2 / ctx.sampleRate);
     c.notes.push(at); c.flashT = performance.now(); c.events++;
     if (c.notes.length > 6000) { const cut = c.notes.length - 3000; c.noteBase += cut; c.notes.splice(0, cut); }

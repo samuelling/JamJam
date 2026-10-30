@@ -46,6 +46,14 @@ export const ICONS = {
     <rect x="14" y="10" width="92" height="60" rx="8" fill="#1d1f23"/><circle cx="60" cy="40" r="20" fill="#0c0d0f" stroke="#55585f" stroke-width="2"/>
     ${[[-12, 0], [12, 0], [-8.5, 8.5], [8.5, 8.5], [0, 12]].map(([dx, dy]) => `<circle cx="${60 + dx}" cy="${38 + dy - 6}" r="2.4" fill="#c9cbd0"/>`).join('')}
     <rect x="56" y="57" width="8" height="4" rx="1" fill="#55585f"/><text x="60" y="20" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="6" font-weight="700" fill="#ffcf26">MIDI</text></svg>`,
+  'acoustic/guitar': `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <defs><linearGradient id="agw" x1="0" x2="1"><stop offset="0" stop-color="#c98a45"/><stop offset=".5" stop-color="#e2ad62"/><stop offset="1" stop-color="#b8743a"/></linearGradient></defs>
+    <rect x="62" y="35" width="52" height="8" rx="2" fill="#4a2f1c"/>${[0, 1, 2, 3, 4, 5, 6].map((i) => `<rect x="${68 + i * 6.5}" y="35" width="1" height="8" fill="#c9cbd0"/>`).join('')}
+    <rect x="110" y="32" width="9" height="14" rx="2" fill="#3b2617"/>
+    <path d="M20 22c10-6 22-3 27 4 4-5 13-6 18 0 6 8 5 22-2 28-5 4-12 4-16 0-6 8-19 10-28 4-10-7-12-27 1-36z" fill="url(#agw)" stroke="#5a3418" stroke-width="2"/>
+    <circle cx="47" cy="39" r="7" fill="#20140c"/><circle cx="47" cy="39" r="9" fill="none" stroke="#3a2414" stroke-width="1.5"/>
+    <rect x="25" y="34" width="4" height="10" rx="1" fill="#2a1a10"/>
+    ${[0, 1, 2, 3, 4, 5].map((i) => `<line x1="27" y1="${35.5 + i * 1.4}" x2="118" y2="${35.5 + i * 1.4}" stroke="#ece6d6" stroke-width=".45"/>`).join('')}</svg>`,
   generic: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
     <rect x="10" y="16" width="100" height="50" rx="6" fill="#25272b"/>${[28, 46, 64, 82].map((x) => `<circle cx="${x}" cy="32" r="5" fill="#3b3e44"/>`).join('')}${keys(16, 44, 88, 16, 14)}</svg>`,
 };

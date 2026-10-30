@@ -7,7 +7,7 @@
 <meta name="description" content="Walk into a shared virtual studio with up to three friends. Every browser runs everyone's instruments, so only the notes travel.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500;700&family=Monoton&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One+SC&family=Courier+Prime:wght@400;700&family=Spline+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink: #ecebe6; --dim: #9b9da3; --faint: #5d6066; --legend: #f4f2ea;
@@ -15,7 +15,11 @@
     --te-blue: #2f80ff; --te-green: #1fc46e; --te-white: #e9e9e4; --te-orange: #ff5a1f; --te-yellow: #ffcf26;
     --ok: #3ddc84; --warn: #ffcf26; --bad: #ff4d4d;
     --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-    --sans: 'Inter Tight', system-ui, -apple-system, Segoe UI, sans-serif;
+    --sans: 'Spline Sans', 'Helvetica Neue', system-ui, sans-serif;
+    --display: 'Bowlby One SC', 'Arial Black', Impact, sans-serif;
+    --type: 'Courier Prime', 'Courier New', Courier, monospace;
+    /* megaZINE's dark riso inks */
+    --mz-paper: #101217; --mz-sheet: #171A21; --mz-toner: #ECEBE5; --mz-pink: #FF68BA; --mz-blue: #7DB0FF; --mz-gold: #D8A83A; --mz-gold-lo: #94671A; --mz-muted: #A0A6AF;
     --wood: repeating-linear-gradient(92deg, #5b3720 0 3px, #6a4127 3px 7px, #4e2f1b 7px 9px, #734730 9px 14px, #5f3a22 14px 19px), linear-gradient(180deg, #6e4429, #3e2414);
     --desk: repeating-linear-gradient(0deg, #2a1c13 0 2px, #2f2016 2px 5px, #261911 5px 7px), linear-gradient(180deg, #3a271a, #1e140d);
   }
@@ -82,7 +86,6 @@
   /* wall-mounted display */
   .console { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 12px; background: linear-gradient(180deg, #16171a, #0f1012); border: 1px solid #000; border-radius: 12px; box-shadow: inset 0 1px 0 #ffffff0d, 0 10px 30px #0008; }
   .neon .mega { color: #fff3a8; text-shadow: 0 0 6px #ffb300, 0 0 22px #ff7a00, 0 0 48px #ff5a1f; }
-  .badge-logo .mega { font-weight: 900; letter-spacing: .02em; color: var(--te-orange); }
   .badge-logo { display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: -.02em; }
   .readout { display: flex; align-items: center; gap: 6px; }
   .readout .lcd { font-size: 15px; min-width: 56px; text-align: center; padding: 3px 9px; letter-spacing: .08em; }
@@ -339,51 +342,119 @@
     .md-trigs { grid-template-columns: repeat(8, minmax(0, 1fr)); }
     .md-encs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   }
+
+  /* ===== the MEGAjam look: a slightly sad shared studio, inked like megaZINE ===== */
+  .mzlogo { margin: 0; font: 400 clamp(64px, 12vw, 150px)/.86 var(--display); color: var(--mz-toner); letter-spacing: -.01em; white-space: nowrap; position: relative; }
+  .mzlogo .mega { position: relative; display: inline-block; }
+  .mzlogo .mega::before { content: attr(data-t); position: absolute; inset: 0; color: var(--mz-pink); mix-blend-mode: screen; opacity: .85; z-index: -1;
+    transform: translate(.035em, .03em) rotate(-.6deg); animation: misreg 9s steps(1) infinite; }
+  @keyframes misreg { 0% { transform: translate(.035em, .03em) rotate(-.6deg); } 20% { transform: translate(.075em, .012em) rotate(-1.3deg); } 45% { transform: translate(.008em, .055em) rotate(.25deg); } 70% { transform: translate(.055em, .038em) rotate(-.95deg); } }
+  .mzlogo .lc { font-family: var(--sans); font-weight: 600; letter-spacing: -.05em; font-size: .62em; vertical-align: .62em; margin-left: .05em; color: var(--mz-blue); text-transform: none; }
+  .mzlogo.small { font-size: 24px; }
+  .mzlogo.small .lc { vertical-align: .5em; }
+  .logo-wrap { position: relative; padding-top: 26px; }
+  .lights { position: absolute; left: -4%; top: 0; width: 108%; height: 70%; overflow: visible; pointer-events: none; }
+  .lights .wire { fill: none; stroke: #2b2a26; stroke-width: 2; stroke-linecap: round; }
+  .lights .tape { fill: #d9d2b8; opacity: .85; }
+  .lights .socket { fill: #3a3934; }
+  .lights .bulb { fill: #fffbe9; filter: drop-shadow(0 0 3px #fff6cf) drop-shadow(0 0 9px #ffe9a3aa); transform-box: fill-box; transform-origin: 50% 0; }
+  .lights .bulb.dead { fill: #6b6a62; filter: none; }
+  .lights .bulb.blink { animation: bulbBlink var(--d, 7s) var(--o, 0s) infinite steps(1); }
+  .lights .bulb.flicker { animation: bulbFlicker var(--d, 3.1s) var(--o, 0s) infinite; }
+  @keyframes bulbBlink { 0%, 86% { opacity: 1; } 87%, 91% { opacity: .18; } 92% { opacity: 1; } 94%, 96% { opacity: .2; } }
+  @keyframes bulbFlicker { 0%, 100% { opacity: 1; } 8% { opacity: .35; } 10% { opacity: .9; } 13% { opacity: .25; } 15%, 60% { opacity: 1; } 62% { opacity: .5; } 64% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .lights .bulb.blink, .lights .bulb.flicker, .mzlogo .mega::before { animation: none; } }
+  .badge-logo { position: relative; padding: 6px 6px 0 2px; }
+  .badge-logo .lights { top: -6px; height: 100%; left: -10%; width: 120%; }
+  .tagline { font: 400 15px/1.5 var(--sans); color: var(--mz-muted); max-width: 46ch; }
+  .door { grid-template-columns: minmax(0, 360px); border-radius: 4px; transform: rotate(-.6deg); box-shadow: 0 1px 0 #000, 0 24px 50px #000a; position: relative; }
+  .door::before, .door::after { content: ''; position: absolute; top: -9px; width: 64px; height: 20px; background: #d9d2b8cc; transform: rotate(-4deg); z-index: 1; }
+  .door::before { left: 18px; } .door::after { right: 18px; transform: rotate(5deg); }
+  .door .faceplate { background: var(--mz-sheet); border: 1px solid #262a33; border-radius: 4px; }
+  .door .legend, .or { font-family: var(--type); letter-spacing: .08em; text-transform: lowercase; font-size: 12px; }
+  .btn.big { padding: 12px 14px; font: 400 20px/1 var(--display); letter-spacing: .02em; }
+  .joinrow { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .what { max-width: 520px; text-align: left; }
+  .what summary { display: inline-block; cursor: pointer; list-style: none; font: 700 .82rem/1 var(--type); letter-spacing: .08em; border: 1.5px solid var(--mz-toner); padding: 7px 11px; transform: rotate(-1deg); color: var(--mz-toner); }
+  .what summary::-webkit-details-marker { display: none; }
+  .what[open] summary, .what summary:hover { background: var(--mz-toner); color: var(--mz-paper); }
+  .what p { font: 400 .9rem/1.5 var(--type); color: var(--mz-muted); margin: 12px 0 0; }
+  .btn.hot { background: var(--mz-pink); border-color: var(--mz-pink); color: #1a0010; }
+  .btn.hood[aria-pressed="true"] { border-color: var(--mz-gold); color: var(--mz-gold); }
+  body.simple .tech { display: none !important; }
+  .legend { font-family: var(--type); letter-spacing: .1em; }
+
+  /* the shared studio: instruments hung on a pegboard */
+  .sheet.wall { width: min(1120px, 100%); background: #1b1712; border-color: #000; }
+  .sheet.wall h2 { font: 400 26px/1 var(--display); letter-spacing: .01em; color: var(--mz-toner); }
+  .pegboard { --hole: 26px; position: relative; display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 30px 22px; padding: 34px 26px 30px; border-radius: 6px;
+    background: radial-gradient(circle at calc(var(--hole) / 2) calc(var(--hole) / 2), #120d08 0 2.6px, #0000 3.4px) 0 0 / var(--hole) var(--hole),
+      linear-gradient(170deg, #b48a5c, #9c7448 45%, #8a643c); box-shadow: inset 0 0 0 1px #0006, inset 0 10px 30px #0004, inset 0 -20px 50px #0005; }
+  .pegboard > * { position: relative; z-index: 1; }
+  .pegboard::after { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: 6px; pointer-events: none; opacity: .18; background: repeating-linear-gradient(91deg, #000 0 1px, #0000 1px 7px); mix-blend-mode: multiply; }
+  .tile .face { width: 100%; }
+  .tile .face .ico svg { width: 100%; height: 100%; display: block; }
+  .tile .ptag b, .tile .ptag small { overflow-wrap: anywhere; }
+  .tile { min-width: 0; grid-template-columns: minmax(0, 1fr); position: relative; display: grid; gap: 6px; align-content: start; text-align: left; background: none; border: 0; padding: 0; color: var(--mz-toner); transform: rotate(var(--r, 0deg)); transition: transform .18s ease; }
+  .tile:hover, .tile:focus-within { transform: rotate(0deg) translateY(-3px); }
+  .tile .peg { position: absolute; top: -14px; left: 50%; width: 12px; height: 14px; margin-left: -6px; border-radius: 3px 3px 1px 1px; background: linear-gradient(#cfd2d6, #8c9096); box-shadow: 0 2px 2px #0007; z-index: 2; }
+  .tile .face { position: relative; border-radius: 10px; padding: 8px; background: linear-gradient(180deg, #23252a, #15161a); border: 1px solid #000; box-shadow: 0 10px 18px #0007, 0 2px 0 #ffffff10 inset; cursor: pointer; }
+  .tile .face .ico { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; border-radius: 6px; overflow: hidden; }
+  .tile .ptag { background: var(--mz-toner); color: #18181b; border-radius: 2px; padding: 6px 8px 7px; transform: rotate(calc(var(--r, 0deg) * -1.5)); box-shadow: 0 3px 6px #0006; }
+  .tile .ptag b { display: block; font: 400 17px/1 var(--display); letter-spacing: .01em; }
+  .tile .ptag small { display: block; font: 400 11px/1.25 var(--type); color: #3a3b40; margin-top: 3px; }
+  .tile .from { position: absolute; top: 6px; right: -6px; background: var(--mz-gold); color: #3F2A06; font: 700 10px/1 var(--type); padding: 4px 6px; transform: rotate(8deg); border-radius: 2px; box-shadow: 0 2px 4px #0006; z-index: 2; }
+  .tile .acts { display: flex; gap: 6px; }
+  .tile .acts .btn { flex: 1; }
+  .tile.plain .face { display: grid; place-items: center; aspect-ratio: 3 / 2.2; background: repeating-linear-gradient(45deg, #1d1f23 0 10px, #191a1e 10px 20px); color: var(--mz-toner); font: 400 22px/1.05 var(--display); text-align: center; padding: 14px; }
+  .tile .status { font: 400 11px var(--type); color: #2a1e10; background: #e7dcc0; padding: 3px 6px; border-radius: 2px; }
 </style>
 <script src="mp-config.js"></script>
 </head>
-<body>
+<body class="simple">
 <section id="lobby">
   <div class="entrance">
-    <div class="neon" aria-label="MEGAjam"><span class="mega">MEGA</span>jam<small>LOCKSTEP STUDIO</small></div>
-    <p class="tagline">Up to four of you, each in your own corner of one studio. Every browser runs everyone's instruments, so only the notes travel, stamped with the moment they should sound. Everyone hears the same thing at the same instant.</p>
+    <div class="logo-wrap">
+      <h1 class="mzlogo" aria-label="MEGAjam"><span class="mega" data-t="MEGA">MEGA</span><span class="lc">jam</span></h1>
+      <svg class="lights" id="lobbyLights" aria-hidden="true"></svg>
+    </div>
+    <p class="tagline">A shared studio for you and up to three friends, wherever they are. Pick an instrument, send the invite, play.</p>
     <div class="door">
-      <div class="cheek"></div>
       <div class="faceplate">
-        <span class="legend">Your name</span>
+        <label class="legend" for="nameIn">Your name</label>
         <input id="nameIn" type="text" maxlength="16" placeholder="NAME" autocomplete="nickname">
-        <button id="startBtn" class="btn hot">Open a new studio</button>
-        <div class="or">— OR KNOCK ON A FRIEND'S —</div>
-        <input id="codeIn" type="text" maxlength="4" placeholder="ABCD" autocomplete="off" aria-label="Room code">
-        <button id="joinBtn" class="btn">Walk in</button>
+        <button id="startBtn" class="btn hot big">Start a jam</button>
+        <div class="or">or join a friend</div>
+        <div class="joinrow"><input id="codeIn" type="text" maxlength="4" placeholder="CODE" autocomplete="off" aria-label="Room code"><button id="joinBtn" class="btn">Walk in</button></div>
         <p id="lobbyStatus" class="help" style="margin:0;min-height:1em" role="status"></p>
-        <p class="help" style="margin:0">Headphones, Chrome or Edge, and a wired connection make the tightest jams.</p>
+        <p class="help" style="margin:0">Headphones help. Chrome or Edge works best.</p>
       </div>
-      <div class="cheek"></div>
     </div>
-    <div class="plaques">
-      <span class="plaque" style="--c:var(--te-blue)"><b>●</b> rack up instruments</span>
-      <span class="plaque" style="--c:var(--te-green)"><b>●</b> bring your hardware: the band hears its twin</span>
-      <span class="plaque" style="--c:var(--te-white)"><b>●</b> one clock, measured lookahead</span>
-      <span class="plaque" style="--c:var(--te-orange)"><b>●</b> audio lane, a few bars late</span>
-    </div>
+    <details class="what">
+      <summary>what?</summary>
+      <div>
+        <p>Nobody's audio travels. Every browser in the room runs every jammer's instruments, and only what your hands do goes over the wire (notes and knob moves), each stamped with the moment it should sound on a clock the room shares. So everyone hears the same music at the same instant.</p>
+        <p>Bring real gear too: tell the studio what synth or drum machine you have, and your bandmates hear its closest software twin (or their own, if they have one). There's a lane for live audio a bar or two behind, and everything technical (timing, MIDI routing, clock out, the network) is under the hood in the studio.</p>
+      </div>
+    </details>
   </div>
 </section>
 
 <section id="studio" class="hide">
   <div class="console">
-    <div class="badge-logo"><svg width="22" height="22" viewBox="0 0 30 30" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="#2f80ff"/><circle cx="21" cy="9" r="6.5" fill="#1fc46e"/><circle cx="9" cy="21" r="6.5" fill="#e9e9e4"/><circle cx="21" cy="21" r="6.5" fill="#ff5a1f"/></svg><span><b class="mega">MEGA</b>jam</span></div>
+    <div class="badge-logo"><span class="mzlogo small"><span class="mega" data-t="MEGA">MEGA</span><span class="lc">jam</span></span><svg class="lights" id="consoleLights" aria-hidden="true"></svg></div>
     <span id="onAir" class="onair" title="Lit when the band is connected">ON AIR</span>
     <div class="readout"><span id="roomCode" class="lcd" title="Room code"></span><button id="copyBtn" class="btn small">Invite</button></div>
     <div class="readout"><span class="legend">BPM</span><button id="bpmDown" class="btn small" aria-label="Slower">−</button><span id="bpmLcd" class="lcd" tabindex="0" role="spinbutton" aria-label="Tempo" title="Drag, scroll or use the arrow keys">96</span><button id="bpmUp" class="btn small" aria-label="Faster">+</button>
       <button id="metroBtn" class="round" title="Metronome" aria-label="Metronome"><svg width="15" height="15" viewBox="0 0 16 16"><path d="M5 15h6L9.5 2h-3z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 11l4-6" stroke="currentColor" stroke-width="1.5"/></svg></button><span id="tempoNote" class="help"></span></div>
-    <div class="readout"><span class="legend">Quant</span><div class="seg" id="quantSeg"><button data-q="0" class="on">OFF</button><button data-q="0.25">1/16</button><button data-q="0.5">1/8</button><button data-q="1">1/4</button></div></div>
-    <div class="lookbar"><span class="legend">Look</span><div class="meter" title="How far ahead your notes are scheduled"><i id="lookMeter"></i></div><span id="lookVal" class="lcd" style="min-width:72px;text-align:center;font-size:13px;padding:3px 6px">0 ms</span>
+    <div class="readout tech"><span class="legend">Quant</span><div class="seg" id="quantSeg"><button data-q="0" class="on">OFF</button><button data-q="0.25">1/16</button><button data-q="0.5">1/8</button><button data-q="1">1/4</button></div></div>
+    <div class="lookbar tech"><span class="legend">Look</span><div class="meter" title="How far ahead your notes are scheduled"><i id="lookMeter"></i></div><span id="lookVal" class="lcd" style="min-width:72px;text-align:center;font-size:13px;padding:3px 6px">0 ms</span>
       <button id="lookAutoBtn" class="btn small" title="Back to the measured lookahead">AUTO</button><input id="lookSlider" type="range" min="0" max="600" value="40" aria-label="Lookahead (manual)" style="width:70px"></div>
-    <button id="selfBtn" class="btn small" title="Hear your own parts the moment you play them; the band still hears everything in sync">Hear myself</button>
+    <button id="selfBtn" class="btn small tech" title="Hear your own parts the moment you play them; the band still hears everything in sync">Hear myself</button>
     <span id="status" role="status"></span>
+    <button id="techBtn" class="btn small hood" title="Show or hide the technical controls: timing, quantize, lookahead, MIDI routing, the network" aria-pressed="false"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg> Under the hood</button>
     <button id="leaveBtn" class="btn small ghost" style="margin-left:auto">Leave</button>
-    <span id="lookHelp" class="help"></span>
+    <span id="lookHelp" class="help tech"></span>
   </div>
 
   <div id="corners"></div>
@@ -392,7 +463,7 @@
     <div class="shelf">
       <h3 class="legend">Your gear</h3>
       <div id="rackList" style="display:grid;gap:6px"></div>
-      <div class="add"><button id="addInstBtn" class="btn small">+ Instrument</button><button id="addHwBtn" class="btn small">+ Hardware</button><button id="addExtBtn" class="btn small" title="A synth, drum machine or DAW track on a MIDI port">+ External MIDI</button></div>
+      <div class="add"><button id="addInstBtn" class="btn small hot">+ Instrument</button><button id="addHwBtn" class="btn small">+ My hardware</button><button id="addExtBtn" class="btn small tech" title="A synth, drum machine or DAW track on a MIDI port">+ External MIDI</button></div>
     </div>
     <div class="deskwrap">
       <div id="device" class="device">
@@ -405,7 +476,7 @@
       <button class="sidetab" data-panel="panel-chat" title="Band chat" aria-label="Band chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v11H9l-5 4z"/></svg><span id="chatBadge" class="badge hide">0</span></button>
       <button class="sidetab" data-panel="panel-lane" title="Audio lane" aria-label="Audio lane"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
       <button class="sidetab" data-panel="panel-midi" title="MIDI: clock out and the band's parts on your gear" aria-label="MIDI"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="11" r="1" fill="currentColor"/><circle cx="16" cy="11" r="1" fill="currentColor"/><circle cx="9.5" cy="14.5" r="1" fill="currentColor"/><circle cx="14.5" cy="14.5" r="1" fill="currentColor"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg></button>
-      <button class="sidetab" data-panel="panel-wire" title="Wiring" aria-label="Wiring"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8 7.5l3 8M16 7.5l-3 8M8.5 6h7"/></svg></button>
+      <button class="sidetab tech" data-panel="panel-wire" title="Wiring" aria-label="Wiring"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8 7.5l3 8M16 7.5l-3 8M8.5 6h7"/></svg></button>
     </div>
   </div>
 
@@ -442,12 +513,12 @@
   </aside>
 </section>
 
-<div id="libDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="Instrument library">
-  <div class="sheet">
-    <header><h2>The gear wall</h2><span class="help">Everyone in the room loads the same instruments, so whatever you pick plays the same for the whole band.</span><button class="btn small" data-close style="margin-left:auto">Close</button></header>
-    <div class="pages" id="libTabs"></div>
+<div id="libDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="The shared studio">
+  <div class="sheet wall">
+    <header><h2>The shared studio</h2><span class="help">Take anything off the wall. Whatever you pick, the whole band hears the same thing.</span><button class="btn small" data-close style="margin-left:auto">Close</button></header>
+    <div class="pegboard" id="libCards"></div>
     <div id="libExtra" style="display:grid;gap:8px"></div>
-    <div class="cards" id="libCards"></div>
+    <div class="pages hide" id="libTabs"></div>
   </div>
 </div>
 <div id="hwDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="Add your hardware">

@@ -8,6 +8,8 @@ Each jammer walks into their own **corner**, racks up instruments from a shared 
 
 ## In the studio
 
+- **Simple first, technical on request.** Walking in takes a name and one button; the invite is a four-letter code. The studio shows tempo, your instruments, the keys and the chat. "Under the hood" in the console reveals the rest (quantize, lookahead, per-part timing and MIDI channels, external MIDI, the wiring view), and is remembered in this browser.
+- **The shared studio** is a pegboard wall of every instrument: the built-ins, featured libraries, and any library you've added. One click on a tile puts it on your desk; "Hear it" auditions it. Featured: **Acoustic**, Sam's physically modelled acoustic guitar with a strumming hand ([samuelling/Acoustic](https://github.com/samuelling/Acoustic)), pinned to a commit so every jammer loads identical code. Its adapter runs the strumming hand on the room's clock with seeded randomness, so every browser strums the same chord the same way.
 - **Your corner** holds up to four instruments. The computer keys and on-screen keys play the selected one; give each a MIDI channel to play several from your controllers (a drum machine on channel 10 and a synth on channel 1, say).
 - **The library** (shared by everyone, hashed on load so mismatched versions are flagged):
 
