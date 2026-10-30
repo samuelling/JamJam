@@ -31,7 +31,7 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     check(v[0] && Math.abs(v[0].pan + 0.25) < 0.01, `from Sam's corner's side (pan ${v[0]?.pan})`);
     // the fake mic beeps on and off, so watch for a couple of seconds
     let duck = { minGain: 1, mark: false };
-    for (let i = 0; i < 30; i++) { const d = await B.evaluate(() => ({ gain: JJ.engine.master.gain.value, mark: document.querySelector(`[data-talk="${JJ.S.players.keys().next().value}"]`)?.classList.contains('on') })); duck.minGain = Math.min(duck.minGain, d.gain); duck.mark ||= d.mark; await sleep(80); }
+    for (let i = 0; i < 30; i++) { const d = await B.evaluate(() => ({ gain: JJ.console?.().route === 'console' ? 0.9 * JJ.engine.songOut.gain.value : JJ.engine.master.gain.value, mark: document.querySelector(`[data-talk="${JJ.S.players.keys().next().value}"]`)?.classList.contains('on') })); duck.minGain = Math.min(duck.minGain, d.gain); duck.mark ||= d.mark; await sleep(80); }
     check(duck.minGain < 0.6, `the music dips while he talks (master down to ${duck.minGain.toFixed(2)} from 0.90)`);
     check(duck.mark, "and Sam's corner shows he's talking");
 

@@ -62,6 +62,7 @@ export class Talk {
       this.ducked = any;
       const m = this.engine.master, t = this.engine.ctx.currentTime;
       m.gain.cancelScheduledValues(t); m.gain.setTargetAtTime(any ? 0.9 * DUCK : 0.9, t, any ? 0.04 : 0.35);
+      const o = this.engine.songOut.gain; o.cancelScheduledValues(t); o.setTargetAtTime(any ? DUCK : 1, t, any ? 0.04 : 0.35);
     }
   }
   talking(id) { if (id === 'me') return !!(this.mine && this.open && this.mine.level > TALK_RMS); const v = this.voices.get(id); return !!(v && v.level > TALK_RMS); }

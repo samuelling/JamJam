@@ -1,6 +1,7 @@
 // The Compose Room: the band's song board. Sections in arrangement order, each with its length, chord chart, notes
 // and the parts locked into it; import a sketch (MIDI or a SynthLand Tracker song), export the song; loop a section
 // or play the whole song; "Jam this" takes everyone to the Jam Room with that section looping.
+import { STYLES as MASTER_STYLES, STEMS as MIX_STEMS, stemOf, masterSettings } from './console.js';
 import { SECTION_NAMES, NOTE_NAMES, newSection, parseChord, takesOf, currentTake, laneOf, laneName, ROLES } from './song.js';
 
 const COLORS = { Intro: '#7DB0FF', Verse: '#ECEBE5', 'Pre-chorus': '#D8A83A', Chorus: '#FF68BA', Bridge: '#9b8cff', Solo: '#3ddc84', Breakdown: '#8a8f98', Drop: '#ff7a3d', Outro: '#7DB0FF' };
@@ -21,7 +22,7 @@ export function fillChart(key, bars, prog) {
 
 export function makeCompose(x) {
   // x: { h, $, store, playersOf(), setSong(k, v), play(mode, sid), stop(), transport(), jamThis(sid), importFile(f), exportMidi(), exportJson(),
-  //      removePart, mutePart, choose, vote, saveVariation, restoreVariation, setRole, midiOn(), enableMidi(), presets(), loadPreset(genre, song), working(), me(), iconEl, keyName(), bpm() }
+  //      removePart, mutePart, choose, vote, saveVariation, restoreVariation, setRole, midiOn(), enableMidi(), presets(), loadPreset(genre, song), masterInfo(), masterStart(), masterTry(patch), working(), me(), iconEl, keyName(), bpm() }
   const { h, $ } = x;
   let PX = 18, sel = null, cell = null, editing = null;
   let draft = null, dragging = false;   // a loop being drawn before it plays; true while a handle is held
@@ -51,6 +52,7 @@ export function makeCompose(x) {
     return out;
   }
   let adding = false;   // the Add track form is open
+  let masterOpen = false;   // the Stem Console's panel
   let fresh = null, freshT = 0, freshShown = false;   // the track just added: its row lights up and comes into view
   // a tiny picture of a take: notes as bars across the cell (pitch up), drums as ticks
   function miniRoll(take, beats, w, ht, color, drums) {
@@ -282,12 +284,45 @@ export function makeCompose(x) {
         h('button', { class: 'btn small' + (x.canFolder?.() ? '' : ' hot'), disabled: stemsBusy, onclick: () => go('zip') }, 'Download a .zip'), say),
       last ? h('div', { class: 'stemrow' }, h('small', { class: 'help' }, `Last export: ${last.by}, ${last.files} stem${last.files === 1 ? '' : 's'}${last.mine ? ' (their tracks)' : ''}, ${ago(last.at)}.`)) : null);
   }
+  // the Stem Console, opened from beside the master fader. It runs whether or not this is open.
+  const setMasterOpt = (patch) => x.setSong('master', { ...x.store.song.master, ...patch });
+  const fmtDb1 = (v) => (Number.isFinite(v) && v > -99 ? `${v > 0 ? '+' : ''}${v.toFixed(1)}` : '–');
+  function masterPanel(song) {
+    const m = masterSettings(song), info = x.masterInfo?.() || {}, tracks = Object.values(song.lanes || {}), slider = (label, id, key, lo, hi, step, val, unit) => {
+      const out = h('small', { class: 'mono help' }, `${val} ${unit}`);
+      return h('label', { class: 'mslider' }, h('small', {}, label), h('input', { type: 'range', 'aria-label': label, min: lo, max: hi, step, value: val, onpointerdown: (e) => e.stopPropagation(),
+        oninput: (e) => { out.textContent = `${e.target.value} ${unit}`; x.masterTry?.({ [key]: +e.target.value }); }, onchange: (e) => setMasterOpt({ [key]: +e.target.value }) }), out);
+    };
+    return h('div', { class: 'masterpanel' },
+      h('div', { class: 'row' }, h('b', {}, 'Stem Console'),
+        h('button', { class: 'btn small' + (m.on ? ' on' : ''), 'aria-pressed': String(m.on), onclick: () => setMasterOpt({ on: !m.on }) }, m.on ? 'On' : 'Off'),
+        h('select', { class: 'lcdsel', 'aria-label': 'Mastering style', disabled: !m.on, onchange: (e) => setMasterOpt({ style: e.target.value, target: undefined }) }, ...MASTER_STYLES.map((s) => h('option', { value: s.id, selected: s.id === m.style, title: s.note }, s.name))),
+        h('label', { class: 'help' }, h('input', { type: 'checkbox', checked: m.ride, disabled: !m.on, onchange: (e) => setMasterOpt({ ride: e.target.checked }) }), ' Auto levels'),
+        h('span', { class: 'help' }, !m.on ? 'nothing is being mastered' : info.ready ? (MASTER_STYLES.find((s) => s.id === m.style)?.note || '') : 'starts with the song'),
+        h('span', { style: 'flex:1' }), h('button', { class: 'btn small ghost', disabled: !m.on, title: 'Back to this style\'s settings', onclick: () => x.setSong('master', { vol: song.master?.vol, style: m.style }) }, 'Reset')),
+      !m.on ? null : h('div', { class: 'row msliders' }, slider('Loudness', 'target', 'target', -24, -8, 0.5, m.target, 'LUFS'), slider('Ceiling', 'ceiling', 'ceiling', -3, -0.5, 0.1, m.ceiling, 'dBTP'), slider('Glue', 'glue', 'glue', 1, 3, 0.1, m.glue, ':1')),
+      !m.on ? null : h('div', { class: 'row mmeters', 'data-mm': '' }),
+      !m.on ? null : h('div', { class: 'mstems' }, ...MIX_STEMS.map((s) => {
+        const names = [...new Set([...tracks.filter((t) => stemOf(t) === s.k).map((t) => t.name), ...(x.liveIn?.(s.k) || [])])].join(', ') || '·', val = m.stems[s.k] || 0, out = h('small', { class: 'mono help' }, `${val > 0 ? '+' : ''}${val} dB`);
+        return h('div', { class: 'mstem' }, h('b', { title: names }, s.name), h('small', { class: 'help mname' }, names),
+          h('input', { type: 'range', 'aria-label': `${s.name} level`, min: -12, max: 12, step: 0.5, value: val, onpointerdown: (e) => e.stopPropagation(), ondblclick: () => setMasterOpt({ stems: { ...m.stems, [s.k]: 0 } }),
+            oninput: (e) => { out.textContent = `${+e.target.value > 0 ? '+' : ''}${e.target.value} dB`; x.masterTry?.({ stems: { ...m.stems, [s.k]: +e.target.value } }); }, onchange: (e) => setMasterOpt({ stems: { ...m.stems, [s.k]: +e.target.value } }) }), out,
+          h('small', { class: 'mono help', 'data-ms': s.k }, ''));
+      })));
+  }
+  function meters() {
+    const box = $('[data-mm]'); if (!box) return;
+    const q = x.masterInfo?.().meters; if (!q) return;
+    const cell = (k, v) => `<span><small>${k}</small><b class="mono">${v}</b></span>`;
+    box.innerHTML = cell('Short-term', `${fmtDb1(q.short)} LUFS`) + cell('Song', `${fmtDb1(q.integrated)} LUFS`) + cell('True peak', `${fmtDb1(q.peak)} dB`) + cell('Glue', `${fmtDb1(-Math.abs(q.glue))} dB`) + cell('Limiter', `${fmtDb1(-Math.abs(q.limiter))} dB`) + cell('Rider', `${fmtDb1(q.ride)} dB`);
+    for (const s of q.stems) { const el = $(`[data-ms="${s.k}"]`); if (el) el.textContent = s.active ? `${fmtDb1(s.lufs)} · ride ${fmtDb1(s.ride)}` : '·'; }
+  }
   // the song's master fader: everyone's song playback (and the stems' mix) goes through it
   function masterFader(song) {
     const vol = song.master?.vol ?? 0, readout = h('small', { class: 'mono help' }, fmtDb(vol));
     return h('label', { class: 'tmix master', title: 'The whole song, for everyone (double-click for 0 dB)' }, h('small', {}, 'Master'),
       h('input', { type: 'range', class: 'mfader', min: -60, max: 6, step: 0.5, value: vol, 'aria-label': 'Master volume',
-        oninput: (e) => { readout.textContent = fmtDb(+e.target.value); x.mixPreview?.('master', { vol: +e.target.value }); }, onchange: (e) => x.setSong('master', { vol: +e.target.value }), ondblclick: () => x.setSong('master', { vol: 0 }) }), readout);
+        oninput: (e) => { readout.textContent = fmtDb(+e.target.value); x.mixPreview?.('master', { vol: +e.target.value }); }, onchange: (e) => x.setSong('master', { ...x.store.song.master, vol: +e.target.value }), ondblclick: () => x.setSong('master', { vol: 0 }) }), readout);
   }
   // a track's own settings, above its takes: its name, its instrument and patch, put it on your desk, remove it
   function trackBar(id) {
@@ -350,6 +385,7 @@ export function makeCompose(x) {
       empty ? importBtn('btn') : null, empty ? presetPick('presets') : null,
       h('span', { class: 'help mono songstats' }, `${order.length} sections · ${totalBars} bars · ${Math.floor(mins)}:${String(Math.round((mins % 1) * 60)).padStart(2, '0')}`),
       order.length ? masterFader(song) : null,
+      order.length ? h('button', { class: 'btn small ghost masterbtn' + (masterOpen ? ' on' : ''), 'aria-expanded': String(masterOpen), title: 'Stem Console: automatic levels and mastering for the whole room', onclick: () => { masterOpen = !masterOpen; x.masterStart?.(); render(); } }, `${masterOpen ? '▾' : '▸'} Mastering${masterSettings(song).on ? '' : ' off'}`) : null,
       h('span', { style: 'flex:1' }),
       h('span', { class: 'presence' }, ...x.playersOf().map((p) => h('span', { class: 'who' + (p.where === 'compose' ? ' here' : ''), title: `${p.name}: ${p.where === 'compose' ? 'in the Compose Room' : 'in the Jam Room'}` }, p.name.slice(0, 1).toUpperCase()))),
       h('button', { class: 'btn small ghost moretoggle', 'aria-expanded': String(songMore), onclick: () => { songMore = !songMore; remember('songMore', songMore); render(); } }, songMore ? '▾ Song options' : '▸ Song options'), file);
@@ -480,7 +516,7 @@ export function makeCompose(x) {
         h('div', { class: 'addsec' }, h('select', { class: 'lcdsel addsel', 'aria-label': 'Add a section', onchange: (e) => { if (e.target.value) addSection(e.target.value); e.target.value = ''; } }, h('option', { value: '' }, '+ Add a section'), ...SECTION_NAMES.map((nm) => h('option', { value: nm }, nm))))));
     const panes = 'arranger', was = [...box.querySelectorAll(`.${panes},.details .pane`)].map((e) => [e.scrollLeft, e.scrollTop]);
     const det = details(sel, cell);
-    box.replaceChildren(...[head, opts, songMore && stemsOpen && !empty ? stemsPanel(song) : null, grid, divider(det), det].filter(Boolean));
+    box.replaceChildren(...[head, opts, songMore && stemsOpen && !empty ? stemsPanel(song) : null, masterOpen && order.length ? masterPanel(song) : null, grid, divider(det), det].filter(Boolean));
     [...box.querySelectorAll(`.${panes},.details .pane`)].forEach((e, i) => { if (was[i]) [e.scrollLeft, e.scrollTop] = was[i]; });   // a redraw doesn't lose your place
     if (fresh && !freshShown) { freshShown = true; const r = box.querySelector('.arow.fresh'); if (r) { r.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); setTimeout(() => render(), 4100); } }
     if (adding) box.querySelector('.addform select')?.focus();
@@ -623,5 +659,5 @@ export function makeCompose(x) {
     if (/INPUT|TEXTAREA/.test(e.target?.tagName || '')) return;   // their own undo
     e.preventDefault(); if (e.shiftKey) stepAt.redo(); else stepAt.undo();
   });
-  return { render, tick, addSection, takeNote };
+  return { render, tick, addSection, takeNote, meters };
 }

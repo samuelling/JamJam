@@ -835,6 +835,13 @@
   .arranger { min-height: 100px; }
   .details .pane { min-width: 0; overflow-x: hidden; grid-template-columns: minmax(0, 1fr); }
   .details .pane > * { min-width: 0; }
+  .masterpanel { flex: 0 0 auto; display: grid; gap: 8px; padding: 10px 12px; border-radius: 6px; background: var(--mz-sheet); border: 1px solid #262a33; max-height: 45%; overflow-y: auto; }
+  .masterpanel .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .mslider { display: inline-flex; align-items: center; gap: 6px; } .mslider input { width: 110px; }
+  .mmeters { gap: 16px; min-height: 30px; } .mmeters span { display: grid; } .mmeters small { font: 400 10px var(--type); color: var(--mz-muted); }
+  .mstems { display: grid; gap: 3px; }
+  .mstem { display: grid; grid-template-columns: 62px minmax(0, 1fr) 120px 56px 118px; gap: 8px; align-items: center; font-size: 12px; }
+  .mstem input { width: 100%; } .mname { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .hsplit { flex: 0 0 10px; margin: -5px 0; cursor: row-resize; position: relative; touch-action: none; }
   .vsplit { cursor: col-resize; touch-action: none; position: relative; }
   .hsplit::after, .vsplit::after { content: ''; position: absolute; border-radius: 2px; background: #3a3f4a; }

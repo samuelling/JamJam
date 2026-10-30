@@ -8,6 +8,7 @@ import * as MATCH from './match.js';
 import * as SONG from './song.js';
 import { makeCompose, colorOfSection } from './compose.js';
 import { GENRES, presetSong } from './presets.js';
+import { STYLES, STEMS as MIX_STEMS, stemOf, masterSettings, consoleValues, startConsole } from './console.js';
 import { Input, sendToHardware, bendBytes, srcOf } from './input.js';
 import { AudioLane, decodeChunk } from './lane.js';
 import { StepSeq } from './seq.js';
@@ -907,6 +908,7 @@ const compose = makeCompose({
   instruments: () => [...engine.defs.values()].filter((d) => !d.internal && d.id !== 'none').map((d) => ({ id: d.id, name: d.name + (d.lib ? ` (${engine.libs.get(d.lib)?.name || d.lib})` : ''), patches: engine.patchTypes({ inst: d.id }).map((t) => [t, patchName(d, t)]) })),
   desk: () => (S.listener ? [] : S.rack.filter((e) => e.cfg.inst !== 'audio').map((e) => ({ r: e.r, name: describe(e.cfg, true), lane: laneFor(e, false).draft ? null : laneFor(e, false).id }))),
   setRole: (sid, pid, role) => { for (const s of songStore.sections()) for (const p of Object.values(s.parts || {})) if (SONG.laneOf(p) === SONG.laneOf(songStore.song.sections[sid].parts[pid])) setSong(`part:${s.id}:${p.id}`, { ...p, role }); },
+  masterInfo: () => ({ ready: !!MASTER.console, route: MASTER.route, meters: MASTER.console?.meters ?? null }), liveIn: (k) => [...new Set([...engine.ch.values()].filter((c) => c.stem === k && !c.bus && !c.pid.startsWith('preview')).map((c) => c.insts.at(-1)?.def?.name).filter(Boolean))], masterStart: () => { if (engine.ctx) songMaster(); }, masterTry: (patch) => { if (!MASTER.console) return; const s = songStore.song; MASTER.console.set(consoleValues({ ...s, master: { ...s.master, ...patch } })); },
   presets: () => GENRES.map((g) => ({ name: g.name, songs: g.songs.map((q) => q[0]) })), loadPreset, midiOn: () => !!input.midi, enableMidi: () => input.enableMIDI(), me: () => S.me, myName: () => S.name,
   working: () => { const tr = songStore.song.transport, pos = positionAt(tr, tempo.beatAt(clock.now())); if (!pos) return [];
     const out = [{ who: S.name, color: colorOf(S.me), where: S.where, parts: S.rack.map((e) => describe(e.cfg, true)), insts: S.rack.map((e) => ({ inst: e.cfg.inst, lane: e.laneId || null })), sid: pos.sid, me: true }];
@@ -970,7 +972,7 @@ function loadSong(song) {
   for (const t of Object.values(song.lanes)) setSong('lane:' + t.id, t);
   setSong('title', song.title);
   for (const id of song.order) { const sec = song.sections[id]; if (!sec) continue; setSong('sec:' + id, { name: sec.name, bars: sec.bars, chords: sec.chords || [], notes: sec.notes || '' }); for (const p of Object.values(sec.parts || {})) setSong(`part:${id}:${p.id}`, p); }
-  setSong('order', song.order.filter((id) => song.sections[id])); setSong('labels', song.labels || []);
+  setSong('order', song.order.filter((id) => song.sections[id])); setSong('labels', song.labels || []); setSong('master', song.master || {});
   if (song.bpm) setTempo(song.bpm);
   if (song.key && MODES[song.key.mode]) setKey(song.key.root, song.key.mode);
 }
@@ -1272,9 +1274,28 @@ const dbToGain = (db) => (db <= -60 ? 0 : Math.pow(10, db / 20));
 // the song's master fader: every track's bus goes through it (the live desk doesn't)
 const MASTER = { ctx: null, g: null, vol: null };
 function songMaster() {
-  if (MASTER.ctx !== engine.ctx) { MASTER.ctx = engine.ctx; MASTER.g = engine.ctx.createGain(); MASTER.g.connect(engine.master); MASTER.vol = null; for (const m of MIX.values()) m.ctx = null; }
+  if (MASTER.ctx !== engine.ctx) {
+    const ctx = MASTER.ctx = engine.ctx; MASTER.g = ctx.createGain(); MASTER.vol = null; MASTER.console = null; MASTER.route = '';
+    MASTER.tracks = MIX_STEMS.map(() => ctx.createGain());   // the song's tracks, by stem; they join the live channels in the console
+    for (const m of MIX.values()) m.ctx = null;
+    MASTER.g.connect(engine.master); routeMaster();
+    if (ctx.audioWorklet && !engine.silent) startConsole(ctx, consoleValues(songStore.song), () => compose.meters()).then((c) => { if (c && MASTER.ctx === ctx) { MASTER.console = c; c.node.connect(engine.songOut); routeMaster(); compose.render(); } });
+  }
   setMaster(songStore.song.master?.vol ?? 0);
   return MASTER.g;
+}
+engine.stemFor = (cfg, def) => stemOf({ drums: def?.drums, role: SONG.guessRole({ name: def?.name, inst: cfg.inst, patch: cfg.patch, drums: def?.drums }) });
+// the console in or out of the whole mix (out while it loads, is switched off, or can't run here). Without it the song
+// goes through the master fader and the live channels straight to the master, as they always did.
+function routeMaster() {
+  if (!MASTER.ctx) return;
+  const c = masterSettings(songStore.song).on ? MASTER.console : null, want = c ? 'console' : 'plain';
+  if (c) c.set(consoleValues(songStore.song));
+  if (MASTER.route === want) return;
+  MASTER.route = want;
+  engine.stems.forEach((g, i) => { try { g.disconnect(); } catch (_) {} g.connect(c ? c.node : engine.master, 0, c ? i : 0); });
+  MASTER.tracks.forEach((g, i) => { try { g.disconnect(); } catch (_) {} g.connect(c ? engine.stems[i] : MASTER.g); });
+  engine.busLatency = c ? c.latency / engine.ctx.sampleRate : 0;
 }
 function setMaster(vol) { if (!MASTER.g || MASTER.vol === vol) return; MASTER.g.gain.setTargetAtTime(dbToGain(vol), engine.ctx.currentTime, 0.02); MASTER.vol = vol; }
 function trackBus(p) {
@@ -1282,9 +1303,11 @@ function trackBus(p) {
   let m = MIX.get(id);
   if (!m || m.ctx !== engine.ctx) {
     const ctx = engine.ctx, g = ctx.createGain(), pn = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
-    const out = songMaster(); if (pn) { g.connect(pn); pn.connect(out); } else g.connect(out);
-    m = { ctx, in: g, pan: pn, vol: null, panV: null }; MIX.set(id, m);
+    songMaster(); if (pn) g.connect(pn);
+    m = { ctx, in: g, pan: pn, vol: null, panV: null, stem: 0 }; MIX.set(id, m);
   }
+  const k = stemOf(t || p);
+  if (m.stem !== k) { const o = m.pan || m.in; if (m.stem) { try { o.disconnect(); } catch (_) {} } o.connect(MASTER.tracks[k - 1]); m.stem = k; }
   setMix(m, t?.vol ?? 0, t?.pan ?? 0);
   return m.in;
 }
@@ -1295,14 +1318,15 @@ function setMix(m, vol, pan) {
 }
 // while a fader or pan is dragged: hear it at once, here; the song gets it when you let go
 function mixPreview(id, patch) {
-  if (id === 'master') { if (engine.ctx) { songMaster(); setMaster(patch.vol ?? 0); } return; }
+  if (id === 'master') { if (engine.ctx) { songMaster(); setMaster(patch.vol ?? 0); MASTER.console?.set({ 'out.level': patch.vol ?? 0 }); } return; }
   const m = MIX.get(id), t = songStore.song.lanes?.[id]; if (!m || !engine.ctx) return;
   setMix(m, patch.vol ?? t?.vol ?? 0, patch.pan ?? t?.pan ?? 0);
 }
 window.JJ.exportStems = (o) => exportStemsTo(o); window.JJ.readWav24 = STEMS.readWav24;
-window.JJ.master = () => (engine.ctx ? (songMaster(), MASTER.g.gain.value) : null);
+window.JJ.master = () => (engine.ctx ? (songMaster(), MASTER.route === 'console' ? dbToGain(songStore.song.master?.vol ?? 0) : MASTER.g.gain.value) : null);
+window.JJ.console = () => ({ route: MASTER.route, latency: MASTER.console?.latency ?? 0, meters: MASTER.console?.meters ?? null });
 window.JJ.mix = (id) => { const m = MIX.get(id) || (engine.ctx && (trackBus({ laneId: id }), MIX.get(id))); return m ? { gain: m.in.gain.value, pan: m.pan ? m.pan.pan.value : 0 } : null; };
-songStore.listeners.add((k, v) => { if (k === 'master' && MASTER.g) setMaster(v?.vol ?? 0); if (k.startsWith('lane:') && engine.ctx) { const m = MIX.get(k.slice(5)); if (m) setMix(m, v?.vol ?? 0, v?.pan ?? 0); } });
+songStore.listeners.add((k, v) => { if (k === 'master' && MASTER.g) setMaster(v?.vol ?? 0); if (k === 'master' || k.startsWith('lane:')) routeMaster(); if (k.startsWith('lane:') && engine.ctx) { const m = MIX.get(k.slice(5)); if (m) setMix(m, v?.vol ?? 0, v?.pan ?? 0); } });
 // a track you can hear: not muted for the band, and (if you've soloed tracks, which only changes what you hear) soloed
 function laneAudible(p) {
   const t = p.laneId && songStore.song.lanes?.[p.laneId];
@@ -2585,7 +2609,7 @@ async function enter(code, listen = false) {
   S.name = name;
   try { store.set('name', name); } catch (_) {}
   setStatus('Loading the library…');
-  try { await engine.start(); if (!engine.defs.size) { await engine.loadInstruments('.'); await restoreLibs(); } }
+  try { await engine.start(); if (!engine.defs.size) { await engine.loadInstruments('.'); await restoreLibs(); } songMaster(); }
   catch (e) { setStatus("Couldn't start audio or load the instruments: " + e.message, 'error'); return; }
   // you walk in with an empty desk and pick what to play (automated tests start with keys unless they ask, ?empty=1)
   if (!S.rack.length && !S.listener && navigator.webdriver && !EMPTY_START) {

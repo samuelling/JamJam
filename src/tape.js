@@ -28,7 +28,7 @@ export class Tape {
     const url = URL.createObjectURL(new Blob([WORKLET], { type: 'text/javascript' }));
     try { await ctx.audioWorklet.addModule(url); } finally { URL.revokeObjectURL(url); }
     this.node = new AudioWorkletNode(ctx, 'jj-tape', { numberOfInputs: 1, numberOfOutputs: 0, channelCount: 2, channelCountMode: 'explicit' });
-    this.engine.master.connect(this.node);
+    this.engine.master.connect(this.node); this.engine.songOut?.connect(this.node);
     this.node.port.onmessage = (m) => {
       if (!this.on) return;
       const [L, R] = m.data, n = L.length, pcm = new Int16Array(n * 2);

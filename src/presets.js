@@ -110,6 +110,9 @@ function comp(g, L, bars, key, last) {
   return ev;
 }
 
+// the mastering style each genre starts on (see console.js)
+const STYLE_OF = { Jazz: 'jazz', 'Bossa Nova': 'jazz', Folk: 'acoustic', House: 'club', Techno: 'club', 'Drum & Bass': 'club', Trap: 'club', Disco: 'electronic', 'Hip Hop': 'electronic' };
+
 export const GENRES = [
   { name: 'Rock', swing8: 0, d: { k: 'x.....x.x.......', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.' }, b: '1.1.1.1.1.1.1.1.', c: 'x-----x-x-----x-', kit: ['studio', 'tight'], low: ['monolith', 'bass'], keys: ['tonewheel', 'rock'], songs: [
     ['Arena Anthem', 'A', 126, 'IVCVCBCO', { I: [4, 'I V vi IV'], V: [8, 'I V vi IV'], C: [8, 'IV I V vi'], B: [8, 'vi IV I V'], O: [4, 'I'] }],
@@ -256,7 +259,7 @@ export const GENRES = [
 // the song a preset makes; ids are new each time, so it never lands on an earlier copy of itself
 export function presetSong(gi, si) {
   const g = GENRES[gi], [title, keyName, bpm, form, secs] = g.songs[si], key = parseKey(keyName), song = emptySong();
-  Object.assign(song, { title, bpm, key, meter: 4 });
+  Object.assign(song, { title, bpm, key, meter: 4, master: { style: STYLE_OF[g.name] || 'band' } });
   const made = new Map();
   for (const L of form) {
     if (!made.has(L)) {

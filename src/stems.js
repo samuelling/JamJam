@@ -2,6 +2,7 @@
 // the same length, so they drop into a DAW lined up at bar 1. Rendered offline (faster than real time), after the
 // track's fader and pan and before the master, so the stems added together are the song's mix.
 import * as SONG from './song.js';
+import { STEMS as MIX_STEMS, stemOf, masterSettings, consoleValues, consoleBytes, renderMaster } from './console.js';
 
 const TAIL = 4, LEAD = 0.05;
 export const safeName = (s) => String(s || 'Untitled').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'Untitled';
@@ -92,16 +93,17 @@ export function readWav24(u) {
 // the whole export: stems, the mix (through the master fader), the song as MIDI and as a MEGAjam song, and a note.
 // o: { song, bpm, sr, defs, resolve, clip, only (track ids or null), master (dB), by, onProgress(text), write(name, Uint8Array|string) }
 export async function exportStems(o) {
+  let mastered = false;
   const all = trackList(o.song).filter((t) => !t.muted && (!o.only || o.only.includes(t.id)));
   if (!all.length) throw new Error('No tracks to export');
-  const title = safeName(o.song.title), mixL = [], mixR = [], done = [], clipped = [], skipped = [];
+  const title = safeName(o.song.title), mixL = [], mixR = [], mixT = [], done = [], clipped = [], skipped = [];
   for (let i = 0; i < all.length; i++) {
     const t = all[i]; o.onProgress?.(`Rendering ${t.name} (${i + 1} of ${all.length})…`);
     const r = await renderTrack({ ...o, track: t });
     if (r.skipped.length) skipped.push(`${t.name} (${[...new Set(r.skipped)].join(', ')})`);
     if (r.peak > 1) clipped.push(t.name);
     await o.write(`Stems/${t.file}`, wav24(r, o.sr)); done.push(t);
-    if (!o.only) { mixL.push(r.L); mixR.push(r.R); }
+    if (!o.only) { mixL.push(r.L); mixR.push(r.R); mixT.push(t); }
   }
   if (!o.only && mixL.length) {
     o.onProgress?.('Mixing…');
@@ -109,7 +111,19 @@ export async function exportStems(o) {
     for (let k = 0; k < mixL.length; k++) { const a = mixL[k], b = mixR[k]; for (let i = 0; i < n; i++) { L[i] += a[i]; R[i] += b[i]; } }
     let pk = 0; for (let i = 0; i < n; i++) { L[i] *= m; R[i] *= m; pk = Math.max(pk, Math.abs(L[i]), Math.abs(R[i])); }
     if (pk > 0.98) { const s = 0.98 / pk; for (let i = 0; i < n; i++) { L[i] *= s; R[i] *= s; } }
-    await o.write(`${title} (mix).wav`, wav24({ L, R }, o.sr));
+    // the mix as the room hears it: through the Stem Console when it's on
+    let mix = { L, R };
+    if (masterSettings(o.song).on) {
+      o.onProgress?.('Mastering…');
+      try {
+        const stems = MIX_STEMS.map(() => null);
+        mixT.forEach((t, k) => { const i = stemOf(t) - 1, s = stems[i] || (stems[i] = { L: new Float32Array(n), R: new Float32Array(n) }); for (let j = 0; j < n; j++) { s.L[j] += mixL[k][j]; s.R[j] += mixR[k][j]; } });
+        const r = await renderMaster(await consoleBytes(), stems, o.sr, consoleValues(o.song));
+        for (let j = 0; j < n; j++) { r.L[j] *= m; r.R[j] *= m; }
+        mix = r; mastered = true;
+      } catch (e) { console.warn('Stem Console:', e); }
+    }
+    await o.write(`${title} (mix).wav`, wav24(mix, o.sr));
     await o.write(`${title}.mid`, SONG.songToMidi(o.song));
     await o.write(`${title}.megajam.json`, JSON.stringify(o.song, null, 1));
   }
@@ -118,7 +132,7 @@ export async function exportStems(o) {
     `${o.song.title}: stems from MEGAjam${o.by ? `, exported by ${o.by}` : ''} on ${new Date().toLocaleString()}`, '',
     `Tempo ${o.bpm} bpm, ${o.song.meter || 4}/4${key ? `, ${key}` : ''}. ${o.sr} Hz, 24-bit stereo WAV.`,
     'Every stem starts at bar 1 and they are all the same length: drop them in at the start of a project at this tempo and they line up.',
-    'Each stem is after its track\'s fader and pan (so together they make the mix), before the master fader.', '',
+    'Each stem is after its track\'s fader and pan and before the master.', ...(mastered ? ['The mix went through the Stem Console (auto-levelled and mastered); the stems did not, so they are yours to master.'] : []), '',
     ...done.map((t) => `${t.file}  ${t.inst}${t.patch ? ' · ' + t.patch : ''}${t.ownerName ? ' · ' + t.ownerName : ''}${t.hw ? ' (played on hardware; rendered here on its software twin)' : ''}`),
     ...(clipped.length ? ['', `Louder than full scale (clipped in the file): ${clipped.join(', ')}. Pull those tracks' faders down and export again.`] : []),
     ...(skipped.length ? ['', `Couldn't render offline (silent in the stems): ${skipped.join('; ')}.`] : []),

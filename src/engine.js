@@ -47,6 +47,11 @@ export class Engine {
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -10; comp.knee.value = 6; comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.15;
     this.master.connect(comp).connect(ctx.destination);
+    // everything that plays goes into the mix's stems, then the Stem Console (see console.js) or, without it, the master.
+    // The console's output goes past the compressor: it has its own limiter, and the compressor adds makeup gain.
+    this.stems = Array.from({ length: 8 }, () => ctx.createGain()); this.stems.forEach((g) => g.connect(this.master));
+    this.songOut = ctx.createGain(); this.songOut.connect(ctx.destination);
+    this.busLatency = 0;   // seconds the console adds; note times allow for it, so they're still heard on the room's clock
     this.comp = comp;   // the metronome and the doorbell join after the master, so the tape (which records the master) leaves them out
     this.clickBus = ctx.createGain(); this.clickBus.connect(comp);
     if (ctx.state !== 'running') await ctx.resume().catch(() => {});
@@ -223,9 +228,9 @@ export class Engine {
     if (c) return c;
     const out = this.ctx.createGain();
     const lane = this.ctx.createGain();
-    out.connect(this.master); lane.connect(out);
+    out.connect(this.stems[4]); lane.connect(out);
     const pre = this.ctx.createGain(); pre.connect(out);   // the instruments, before your mix's fader: what sync record takes
-    c = { pid, out, pre, lane, vol: 1, mute: false, insts: [], cfgLog: [], pLog: [], notes: [], noteBase: 0, late: 0, lateWorst: 0, events: 0, flashT: 0, laneNext: 0, laneLate: 0, laneT: 0, held: new Set() };
+    c = { pid, out, pre, lane, stem: 5, vol: 1, mute: false, insts: [], cfgLog: [], pLog: [], notes: [], noteBase: 0, late: 0, lateWorst: 0, events: 0, flashT: 0, laneNext: 0, laneLate: 0, laneT: 0, held: new Set() };
     this.ch.set(pid, c);
     return c;
   }
@@ -246,8 +251,8 @@ export class Engine {
   audioTime(roomMs) {
     const local = this.clock.toLocal(roomMs), ctx = this.ctx;
     const ts = ctx.getOutputTimestamp ? ctx.getOutputTimestamp() : null;
-    if (ts && ts.performanceTime > 0 && ts.contextTime > 0) return ts.contextTime + (local - ts.performanceTime) / 1000;
-    return ctx.currentTime + (local - performance.now()) / 1000 - (ctx.outputLatency || ctx.baseLatency || 0);
+    if (ts && ts.performanceTime > 0 && ts.contextTime > 0) return ts.contextTime + (local - ts.performanceTime) / 1000 - this.busLatency;
+    return ctx.currentTime + (local - performance.now()) / 1000 - (ctx.outputLatency || ctx.baseLatency || 0) - this.busLatency;
   }
   // AudioContext time (s) -> room time (ms) of when that sample is heard
   roomTime(ctxT) {
@@ -255,7 +260,7 @@ export class Engine {
     let local;
     if (ts && ts.performanceTime > 0 && ts.contextTime > 0) local = ts.performanceTime + (ctxT - ts.contextTime) * 1000;
     else local = performance.now() + (ctxT - ctx.currentTime + (ctx.outputLatency || ctx.baseLatency || 0)) * 1000;
-    return local + this.clock.offset;
+    return local + this.busLatency * 1000 + this.clock.offset;
   }
 
   // switch a jammer's instrument at room time `at` (-Infinity: from the start)
@@ -270,6 +275,8 @@ export class Engine {
     g.gain.setValueAtTime(c.insts.length ? 0 : 1, now);
     g.gain.setValueAtTime(1, t);
     g.connect(c.pre);
+    const k = this.stemFor?.(cfg, def) || 5;   // its stem in the mix (a song's part goes by its track instead)
+    if (k !== c.stem && !c.bus) { c.out.disconnect(); c.out.connect(this.stems[k - 1]); c.stem = k; }
     // ?silent=1 (benchmarks): keep all timing and bookkeeping but skip synthesis
     const inst = this.silent ? { noteOn() {}, noteOff() {}, set() {}, allOff() {}, dispose() {} } : def.create(ctx, g, cfg.params, this.env());
     for (const old of c.insts) {
