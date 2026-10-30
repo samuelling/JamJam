@@ -24,6 +24,10 @@ export function makeCompose(x) {
   //      removePart, mutePart, choose, vote, saveVariation, restoreVariation, setRole, working(), me(), iconEl, keyName(), bpm() }
   const { h, $ } = x;
   let PX = 18, sel = null, cell = null, editing = null;
+  let draft = null, dragging = false;   // a loop being drawn before it plays; true while a handle is held
+  const mem = (k, d) => { try { const v = localStorage.getItem('megajam.' + k); return v == null ? d : v === '1'; } catch (_) { return d; } };
+  const remember = (k, v) => { try { localStorage.setItem('megajam.' + k, v ? '1' : '0'); } catch (_) {} };
+  let songMore = mem('songMore', false), secMore = mem('secMore', false);
   let open = false; try { open = localStorage.getItem('megajam.lanes') === '1'; } catch (_) {}   // lanes folded into one row by default   // px per bar; the selected section and lane
   const LANE_COLORS = ['#FF68BA', '#7DB0FF', '#D8A83A', '#3ddc84', '#b892ff', '#ff8a3d', '#5fd4d4', '#ECEBE5'];
   const laneColor = (i) => LANE_COLORS[i % LANE_COLORS.length];
@@ -44,37 +48,42 @@ export function makeCompose(x) {
     return `<svg viewBox="0 0 ${w} ${ht}" width="${w}" height="${ht}" preserveAspectRatio="none"><g fill="${color}">${r}</g></svg>`;
   }
   function render() {
-    const box = $('#compose'); if (!box) return;
+    const box = $('#compose'); if (!box || dragging) return;
     const song = x.store.song, order = song.order.filter((id) => song.sections[id]), tl = x.store.timeline(), tr = x.transport(), meter = song.meter || 4;
     const L = lanes(), work = x.working();
     if (!sel || !song.sections[sel]) sel = order[0] || null;
     const totalBars = order.reduce((a, id) => a + song.sections[id].bars, 0), mins = (totalBars * meter) / x.bpm();
     const file = h('input', { type: 'file', accept: '.mid,.midi,.json,audio/midi,application/json', style: 'display:none', onchange: (e) => { const f = e.target.files[0]; if (f) x.importFile(f); e.target.value = ''; } });
     const vars = Object.values(song.variations || {});
+    const playing = tr?.on && tr.mode === 'song', empty = !order.length || !L.length;
+    const importBtn = (cls) => h('button', { class: cls, onclick: () => file.click(), title: "Bring in a sketch: a MIDI file, or a song from SynthLand's Tracker (.json)" }, 'Import a sketch…');
     const head = h('div', { class: 'songhead' },
       h('input', { class: 'songtitle', value: song.title, maxlength: 60, 'aria-label': 'Song title', onkeydown: (e) => e.stopPropagation(), onchange: (e) => x.setSong('title', e.target.value.trim() || 'Untitled') }),
-      h('span', { class: 'help mono' }, `${order.length} sections · ${totalBars} bars · ${Math.floor(mins)}:${String(Math.round((mins % 1) * 60)).padStart(2, '0')} · ${x.bpm()} bpm · ${x.keyName()}`),
+      order.length ? h('button', { class: 'btn playsong' + (playing ? ' on' : ' hot'), onclick: () => (playing ? x.stop() : x.play('song')) }, playing ? '■ Stop' : '▶ Play the song') : null,
+      empty ? importBtn('btn') : null,
+      h('span', { class: 'help mono songstats' }, `${order.length} sections · ${totalBars} bars · ${Math.floor(mins)}:${String(Math.round((mins % 1) * 60)).padStart(2, '0')}`),
       h('span', { style: 'flex:1' }),
       h('span', { class: 'presence' }, ...x.playersOf().map((p) => h('span', { class: 'who' + (p.where === 'compose' ? ' here' : ''), title: `${p.name}: ${p.where === 'compose' ? 'in the Compose Room' : 'in the Jam Room'}` }, p.name.slice(0, 1).toUpperCase()))),
+      h('button', { class: 'btn small ghost moretoggle', 'aria-expanded': String(songMore), onclick: () => { songMore = !songMore; remember('songMore', songMore); render(); } }, songMore ? '▾ Song options' : '▸ Song options'), file);
+    const opts = !songMore ? null : h('div', { class: 'songopts' },
       h('label', { class: 'help', title: 'What happens when someone locks in a new take of a lane' }, 'New takes ',
         h('select', { class: 'lcdsel', onchange: (e) => x.setSong('rule', e.target.value) }, ...[['newest', 'take over'], ['owner', 'wait for the owner'], ['vote', 'go to a vote']].map(([v, t]) => h('option', { value: v, selected: (song.rule || 'newest') === v }, t)))),
-      h('select', { class: 'lcdsel', 'aria-label': 'Variations', onchange: (e) => { const v = e.target.value; e.target.value = ''; if (v === '__save') { const n = prompt('Name this version of the song', `Version ${vars.length + 1}`); if (n) x.saveVariation(n.slice(0, 40)); } else if (v) x.restoreVariation(v); } },
+      h('select', { class: 'lcdsel', 'aria-label': 'Versions', onchange: (e) => { const v = e.target.value; e.target.value = ''; if (v === '__save') { const n = prompt('Name this version of the song', `Version ${vars.length + 1}`); if (n) x.saveVariation(n.slice(0, 40)); } else if (v) x.restoreVariation(v); } },
         h('option', { value: '' }, vars.length ? `Versions (${vars.length})` : 'Versions'), h('option', { value: '__save' }, 'Save this version…'), ...vars.map((v) => h('option', { value: v.name }, `Go to “${v.name}”`))),
-      h('button', { class: 'btn small' + (tr?.on && tr.mode === 'song' ? ' on' : ''), onclick: () => (tr?.on && tr.mode === 'song' ? x.stop() : x.play('song')) }, tr?.on && tr.mode === 'song' ? '■ Stop' : '▶ Play the song'),
-      h('button', { class: 'btn small', onclick: () => file.click(), title: "Bring in a sketch: a MIDI file, or a song from SynthLand's Tracker (.json)" }, 'Import…'), file,
-      h('button', { class: 'btn small', onclick: () => x.exportMidi() }, 'Save MIDI'), h('button', { class: 'btn small ghost', onclick: () => x.exportJson() }, 'Save song'),
-      h('span', { class: 'zoom' }, h('button', { class: 'btn small ghost', 'aria-label': 'Zoom out', onclick: () => { PX = Math.max(8, PX - 4); render(); } }, '−'), h('button', { class: 'btn small ghost', 'aria-label': 'Zoom in', onclick: () => { PX = Math.min(48, PX + 4); render(); } }, '+')));
+      empty ? null : importBtn('btn small'), h('button', { class: 'btn small', onclick: () => x.exportMidi() }, 'Save MIDI'), h('button', { class: 'btn small', onclick: () => x.exportJson() }, 'Save song'),
+      h('span', { class: 'help mono' }, `${x.bpm()} bpm · ${x.keyName()}`),
+      h('span', { class: 'zoom' }, h('small', { class: 'help' }, 'zoom'), h('button', { class: 'btn small ghost', 'aria-label': 'Zoom out', onclick: () => { PX = Math.max(8, PX - 4); render(); } }, '−'), h('button', { class: 'btn small ghost', 'aria-label': 'Zoom in', onclick: () => { PX = Math.min(48, PX + 4); render(); } }, '+')));
     // the arrangement: sections left to right along the top, one row per lane, a block per take that sounds there
-    const loopId = tr && tr.on && tr.mode === 'loop' ? tr.sid : null;
+    const loopId = tr && tr.on ? (tr.mode === 'loop' ? tr.sid : tr.mode === 'range' ? work[0]?.sid || null : null) : null;
     const busy = new Map();   // lane -> the jammer playing it in the looping section right now
     if (loopId) for (const w of work) if (w.where === 'jam' && w.active) for (const name of w.parts) busy.set(`${w.who} · ${name}`, w);
     const cols = order.map((id, i) => ({ id, i, s: song.sections[id], label: (song.labels || [])[i] || '', w: Math.max(70, song.sections[id].bars * PX) }));
     const toggle = () => { open = !open; try { localStorage.setItem('megajam.lanes', open ? '1' : '0'); } catch (_) {} render(); };
-    const ruler = h('div', { class: 'arow ruler' }, h('div', { class: 'lhead' }, h('button', { class: 'lanetoggle', 'aria-expanded': String(open), title: open ? 'Fold the lanes into one row' : 'Show a row per lane, with its takes', onclick: toggle }, open ? '▾ ' : '▸ ', h('b', {}, `${L.length} lane${L.length === 1 ? '' : 's'}`)), h('small', {}, 'locked · being played · empty')),
+    const ruler = h('div', { class: 'arow ruler' }, h('div', { class: 'lhead' }, h('button', { class: 'lanetoggle', 'aria-expanded': String(open), title: open ? 'Fold the lanes into one row' : 'Show a row per lane, with its takes', onclick: toggle }, open ? '▾ ' : '▸ ', h('b', {}, `${L.length} lane${L.length === 1 ? '' : 's'}`)), null),
       ...cols.map((c) => {
-        const tlc = tl[c.i], live = tr && tr.on && (tr.mode === 'song' ? true : tr.sid === c.id);
+        const t0 = tl[c.i], live = tr && tr.on && (tr.mode === 'song' ? true : tr.mode === 'range' ? t0 && t0.start < tr.b && t0.start + t0.beats > tr.a : tr.sid === c.id);
         const here = c.id === loopId ? [...new Set(busy.values())] : [];
-        return h('button', { class: 'shead' + (sel === c.id ? ' sel' : '') + (live && tr.mode === 'loop' ? ' live' : ''), style: `width:${c.w}px;--sc:${colorOfSection(c.s.name)}`, 'data-col': c.i, 'data-sec': c.id, onclick: () => { sel = c.id; cell = null; render(); } },
+        return h('button', { class: 'shead' + (sel === c.id ? ' sel' : '') + (live && tr.mode !== 'song' ? ' live' : ''), style: `width:${c.w}px;--sc:${colorOfSection(c.s.name)}`, 'data-col': c.i, 'data-sec': c.id, onclick: () => { sel = c.id; cell = null; render(); } },
           h('b', {}, c.s.name), c.label ? h('small', { class: 'rm' }, c.label) : null, h('small', {}, `${c.s.bars} bars`),
           h('span', { class: 'ticks' }, ...Array.from({ length: c.s.bars }, (_, b) => h('i', { class: (b % 4 === 0 ? 'bar4' : '') + (c.s.chords[b] ? ' ch' : ''), title: c.s.chords[b] || '' }))),
           here.length ? h('span', { class: 'herein' }, ...here.map((w) => h('i', { style: `--c:${w.color}`, title: `${w.who} is jamming here` }, w.who.slice(0, 1)))) : null);
@@ -97,7 +106,7 @@ export function makeCompose(x) {
     for (const [lane, w] of busy) if (!known.has(lane)) ghosts.push(h('div', { class: 'arow ghost' }, h('div', { class: 'lhead', style: `--lc:${w.color}` }, h('span', {}, h('b', {}, lane), h('small', {}, 'jamming now'))),
       ...cols.map((c) => h('div', { class: c.id === loopId ? 'cell working' : 'cell blank', style: `width:${c.w}px;--lc:${w.color}` }, c.id === loopId ? h('span', {}, '● being played · not locked') : null))));
     // folded: one row, a block per section with a thin stripe for each locked lane
-    const summary = open ? [] : [h('div', { class: 'arow sumrow' }, h('div', { class: 'lhead', style: '--lc:#555' }, h('span', {}, h('b', {}, 'The band'), h('small', {}, L.length ? 'open the lanes to pick takes' : 'nothing locked yet'))),
+    const summary = open ? [] : [h('div', { class: 'arow sumrow' }, h('div', { class: 'lhead', style: '--lc:#555' }, h('span', {}, h('b', {}, 'Locked'), h('small', {}, L.length ? '' : 'nothing yet'))),
       ...cols.map((c) => {
         const parts = Object.values(c.s.parts || {}), wk = c.id === loopId ? [...new Set(busy.values())] : [];
         const fresh = wk.filter((w) => !parts.some((p) => w.parts.some((n) => laneOf(p) === `${w.who} · ${n}`)));
@@ -107,10 +116,43 @@ export function makeCompose(x) {
           h('span', { class: 'lock' }, `🔒 ${parts.length}`), fresh.length ? h('span', { class: 'retaking', style: `--c:${fresh[0].color}` }, `${fresh.map((w) => w.who).join(', ')} trying something`) : null);
         return blk;
       }))];
-    const grid = h('div', { class: 'arranger' + (open ? '' : ' folded') }, ruler, ...summary, ...rows, ...(open ? ghosts : []), h('div', { class: 'playhead hide', 'data-playhead': '' }),
-      h('div', { class: 'arow' }, h('div', { class: 'lhead addl' }, h('small', {}, L.length ? 'New lanes appear when someone locks in a take.' : 'No lanes yet: jam a section and Lock it in, or import a sketch.')),
-        h('div', { class: 'addsec' }, h('b', {}, '+ Section'), ...SECTION_NAMES.map((nm) => h('button', { class: 'btn small ghost', onclick: () => addSection(nm) }, nm)))));
-    box.replaceChildren(head, grid, details(sel, cell));
+    // the loop: drag across the strip to draw one, drag an end to crop it, drag the middle to move it
+    const tlx = x.store.timeline(), x0 = []; { let acc = 0; for (const c of cols) { x0.push(acc); acc += c.w + 2; } }
+    const beatToX = (bt) => { for (let i = 0; i < cols.length; i++) { const t = tlx[i]; if (bt <= t.start + t.beats + 1e-6) return x0[i] + Math.max(0, Math.min(1, (bt - t.start) / t.beats)) * cols[i].w; } return x0.length ? x0[x0.length - 1] + cols[cols.length - 1].w : 0; };
+    const xToBeat = (px) => { for (let i = 0; i < cols.length; i++) { if (px < x0[i] + cols[i].w + 1 || i === cols.length - 1) { const t = tlx[i]; return Math.round((t.start + Math.max(0, Math.min(1, (px - x0[i]) / cols[i].w)) * t.beats) / meter) * meter; } } return 0; };
+    const loopNow = tr && tr.on ? (tr.mode === 'range' ? [tr.a, tr.b] : tr.mode === 'loop' ? (() => { const t = tlx.find((q) => q.id === tr.sid); return t ? [t.start, t.start + t.beats] : null; })() : null) : null;
+    const region = loopNow || draft;
+    const band = h('div', { class: 'band' + (loopNow ? ' live' : ' draft') + (region ? '' : ' hide') }, h('span', { class: 'lh a', 'data-h': 'a', title: 'Drag to move the start' }), h('span', { class: 'lh b', 'data-h': 'b', title: 'Drag to move the end' }));
+    const place = (r) => { if (!r) { band.classList.add('hide'); return; } band.classList.remove('hide'); const l = beatToX(r[0]), rr = beatToX(r[1]); band.style.left = `${l}px`; band.style.width = `${Math.max(6, rr - l)}px`; band.title = `Loop: bar ${r[0] / meter + 1} to ${r[1] / meter} (${(r[1] - r[0]) / meter} bars)`; };
+    place(region);
+    const track = h('div', { class: 'looptrack', style: `width:${x0.length ? x0[x0.length - 1] + cols[cols.length - 1].w : 0}px`, title: 'Drag across to set a loop' }, band);
+    track.addEventListener('pointerdown', (ev) => {
+      if (!cols.length) return;
+      const rect = track.getBoundingClientRect(), px = (e) => e.clientX - rect.left, startX = px(ev), r0 = region ? [...region] : null;
+      const which = ev.target.dataset?.h || (ev.target === band ? 'move' : 'new'), anchor = xToBeat(startX);
+      let cur = r0, moved = false;
+      dragging = true; track.setPointerCapture(ev.pointerId); ev.preventDefault();
+      const move = (e) => {
+        if (Math.abs(px(e) - startX) > 3) moved = true; if (!moved) return;
+        const bt = xToBeat(px(e)), total = tlx.length ? tlx[tlx.length - 1].start + tlx[tlx.length - 1].beats : 0;
+        if (which === 'a' && r0) cur = [Math.min(bt, r0[1] - meter), r0[1]];
+        else if (which === 'b' && r0) cur = [r0[0], Math.max(bt, r0[0] + meter)];
+        else if (which === 'move' && r0) { const d = bt - xToBeat(startX), len = r0[1] - r0[0], a = Math.max(0, Math.min(total - len, r0[0] + d)); cur = [a, a + len]; }
+        else cur = [Math.min(anchor, bt), Math.max(anchor, bt) === Math.min(anchor, bt) ? Math.min(anchor, bt) + meter : Math.max(anchor, bt)];
+        place(cur);
+      };
+      const up = () => {
+        track.removeEventListener('pointermove', move); dragging = false;
+        if (moved && cur) { draft = cur; x.loopRange(cur[0], cur[1]); } else render();
+      };
+      track.addEventListener('pointermove', move); track.addEventListener('pointerup', up, { once: true }); track.addEventListener('pointercancel', up, { once: true });
+    });
+    const looprow = h('div', { class: 'arow looprow' }, h('div', { class: 'lhead' },
+      loopNow ? h('button', { class: 'btn small on loopbtn', onclick: () => x.stop() }, '■ Stop loop') : region ? h('button', { class: 'btn small hot loopbtn', onclick: () => x.loopRange(region[0], region[1]) }, '↻ Loop') : h('small', {}, 'Drag across to loop ⟶')), track);
+    const grid = h('div', { class: 'arranger' + (open ? '' : ' folded') }, looprow, ruler, ...summary, ...rows, ...(open ? ghosts : []), h('div', { class: 'playhead hide', 'data-playhead': '' }),
+      h('div', { class: 'arow' }, h('div', { class: 'lhead addl' }, L.length ? null : h('small', {}, 'Jam a section and Lock it in to fill this up.')),
+        h('div', { class: 'addsec' }, h('select', { class: 'lcdsel addsel', 'aria-label': 'Add a section', onchange: (e) => { if (e.target.value) addSection(e.target.value); e.target.value = ''; } }, h('option', { value: '' }, '+ Add a section'), ...SECTION_NAMES.map((nm) => h('option', { value: nm }, nm))))));
+    box.replaceChildren(...[head, opts, grid, details(sel, cell)].filter(Boolean));
     if (editing) $(`[data-cell="${editing}"]`)?.focus();
   }
   function details(sid, c) {
@@ -130,22 +172,28 @@ export function makeCompose(x) {
     const prog = h('select', { class: 'lcdsel', 'aria-label': 'Fill the chart', onchange: (e) => { const p = PROGS.find((q) => q[0] === e.target.value); if (p) save({ chords: fillChart(song.key, s.bars, p[1]) }); e.target.value = ''; } },
       h('option', { value: '' }, `Fill in ${x.keyName()}…`), ...PROGS.map(([n]) => h('option', { value: n }, n)));
     const secPane = h('div', { class: 'pane', style: `--sc:${colorOfSection(s.name)}` },
-      h('div', { class: 'row' }, h('span', { class: 'secno' }, String(i + 1).padStart(2, '0')), nameSel,
-        h('span', { class: 'bars' }, h('button', { class: 'btn small', 'aria-label': 'Fewer bars', onclick: () => { const b = Math.max(1, s.bars - (s.bars > 4 ? 4 : 1)); save({ bars: b, chords: s.chords.slice(0, b) }); } }, '−'), h('b', {}, `${s.bars} bars`), h('button', { class: 'btn small', 'aria-label': 'More bars', onclick: () => { const b = Math.min(64, s.bars + (s.bars >= 4 ? 4 : 1)); save({ bars: b, chords: [...s.chords, ...Array(Math.max(0, b - s.chords.length)).fill('')] }); } }, '+')),
+      h('div', { class: 'row' }, nameSel,
+        h('span', { class: 'bars' }, h('button', { class: 'btn small ghost', 'aria-label': 'Fewer bars', onclick: () => { const b = Math.max(1, s.bars - (s.bars > 4 ? 4 : 1)); save({ bars: b, chords: s.chords.slice(0, b) }); } }, '−'), h('b', {}, `${s.bars} bars`), h('button', { class: 'btn small ghost', 'aria-label': 'More bars', onclick: () => { const b = Math.min(64, s.bars + (s.bars >= 4 ? 4 : 1)); save({ bars: b, chords: [...s.chords, ...Array(Math.max(0, b - s.chords.length)).fill('')] }); } }, '+')),
+        (song.labels || [])[i] ? h('i', { class: 'help' }, song.labels[i]) : null,
         h('span', { style: 'flex:1' }),
-        h('button', { class: 'btn small ghost', disabled: i <= 0, onclick: () => move(i, -1) }, '←'), h('button', { class: 'btn small ghost', disabled: i >= song.order.length - 1, onclick: () => move(i, 1) }, '→'),
-        h('button', { class: 'btn small ghost', onclick: () => { const o = [...song.order]; o.splice(i + 1, 0, s.id); x.setSong('order', o); } }, 'Repeat'),
-        h('button', { class: 'btn small ghost', onclick: () => { const o = [...song.order]; o.splice(i, 1); x.setSong('order', o); if (!o.includes(s.id)) x.setSong('sec:' + s.id, null); sel = null; } }, 'Remove')),
-      label, chart, h('div', { class: 'row' }, prog,
         h('button', { class: 'btn small' + (live ? ' on' : ''), onclick: () => (live ? x.stop() : x.play('loop', s.id)) }, live ? '■ Stop' : '↻ Loop it'),
-        h('button', { class: 'btn small hot', onclick: () => x.jamThis(s.id) }, 'Jam this section')),
-      h('textarea', { class: 'secnotes', rows: 2, placeholder: 'Ideas: feel, who plays what, lyrics…', onkeydown: (e) => e.stopPropagation(), onchange: (e) => save({ notes: e.target.value.slice(0, 2000) }) }, s.notes || ''));
-    let takePane = h('div', { class: 'pane takes' }, h('p', { class: 'help' }, 'Pick a block in the arrangement to see its takes.'));
+        h('button', { class: 'btn hot', onclick: () => x.jamThis(s.id) }, 'Jam this section')),
+      chart,
+      h('button', { class: 'linkbtn', 'aria-expanded': String(secMore), onclick: () => { secMore = !secMore; remember('secMore', secMore); render(); } }, secMore ? '▾ Less' : '▸ More: fill chords from the key, notes, road map, arrange'),
+      secMore ? h('div', { class: 'secmore' },
+        h('div', { class: 'row' }, prog, label),
+        h('textarea', { class: 'secnotes', rows: 2, placeholder: 'Ideas: feel, who plays what, lyrics…', onkeydown: (e) => e.stopPropagation(), onchange: (e) => save({ notes: e.target.value.slice(0, 2000) }) }, s.notes || ''),
+        h('div', { class: 'row' }, h('span', { class: 'help' }, `Section ${i + 1} of ${song.order.length}`),
+          h('button', { class: 'btn small ghost', disabled: i <= 0, onclick: () => move(i, -1) }, '← Earlier'), h('button', { class: 'btn small ghost', disabled: i >= song.order.length - 1, onclick: () => move(i, 1) }, 'Later →'),
+          h('button', { class: 'btn small ghost', onclick: () => { const o = [...song.order]; o.splice(i + 1, 0, s.id); x.setSong('order', o); } }, 'Repeat it'),
+          h('span', { style: 'flex:1' }),
+          h('button', { class: 'btn small ghost danger', onclick: () => { const o = [...song.order]; o.splice(i, 1); x.setSong('order', o); if (!o.includes(s.id)) x.setSong('sec:' + s.id, null); sel = null; } }, 'Remove section'))) : (s.notes ? h('p', { class: 'help secnote1' }, s.notes.slice(0, 140)) : null));
+    let takePane = null;   // only when a block is picked
     const p = c && s.parts?.[c.pid];
     if (p) {
       const cur = currentTake(p), rule = song.rule || 'newest', ts = takesOf(p);
       takePane = h('div', { class: 'pane takes' },
-        h('div', { class: 'row' }, h('b', {}, `${laneOf(p)} in ${s.name}`), h('span', { class: 'help' }, `${p.role || ''}${p.by && p.by !== 'import' ? ` · owner ${p.byName || ''}` : ''} · ${rule === 'vote' ? 'the band votes' : rule === 'owner' ? 'the owner picks' : 'newest take wins'}`), h('span', { style: 'flex:1' }),
+        h('div', { class: 'row' }, h('b', {}, `${laneOf(p)} in ${s.name}`), h('button', { class: 'gearx', style: 'position:static', 'aria-label': 'Close', onclick: () => { cell = null; render(); } }, '×'), h('span', { class: 'help' }, `${p.role || ''}${p.by && p.by !== 'import' ? ` · owner ${p.byName || ''}` : ''} · ${rule === 'vote' ? 'the band votes' : rule === 'owner' ? 'the owner picks' : 'newest take wins'}`), h('span', { style: 'flex:1' }),
           h('button', { class: 'btn small ghost', onclick: () => x.mutePart(s.id, p.id, !p.muted) }, p.muted ? 'Unmute lane here' : 'Mute here'), h('button', { class: 'btn small ghost', onclick: () => { x.removePart(s.id, p.id); cell = null; } }, 'Remove')),
         ...[...ts].reverse().map((t, k) => {
           const votes = (p.votes?.[t.id] || []).length, on = cur && cur.id === t.id;
@@ -154,7 +202,7 @@ export function makeCompose(x) {
             on ? h('b', { class: 'curtag' }, 'sounding') : h('button', { class: 'btn small', onclick: () => (rule === 'vote' ? x.vote(s.id, p.id, t.id) : x.choose(s.id, p.id, t.id)) }, rule === 'vote' ? 'Vote for it' : 'Use this take'));
         }));
     }
-    return h('div', { class: 'details' }, secPane, takePane);
+    return h('div', { class: 'details' + (takePane ? '' : ' one') }, secPane, takePane);
   }
   function move(i, d) { const o = [...x.store.song.order]; const [v] = o.splice(i, 1); o.splice(i + d, 0, v); x.setSong('order', o); const l = [...(x.store.song.labels || [])]; const [lv] = l.splice(i, 1); l.splice(i + d, 0, lv || ''); x.setSong('labels', l.map((q) => q || '')); }
   function addSection(name) {

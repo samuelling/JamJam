@@ -1,4 +1,4 @@
-// The tape: one button records the band's mix as you hear it (every instrument and the audio lane, not the
+// The tape: one button records the band's mix as you hear it (every instrument and live audio, not the
 // metronome or the doorbell), then plays it back or saves it as a WAV. Kept in memory as 16-bit stereo, about
 // 11 MB a minute; a take stops by itself at 30 minutes.
 
