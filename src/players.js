@@ -57,10 +57,10 @@ export const STYLES = [
 export const GENRES = [...new Set(STYLES.map((s) => s.genre))];
 // the kit a drummer plays: recorded acoustic drums, or one of Machina's synthesised kits
 export const KITS = [
-  { id: 'studio', name: 'Studio kit (recorded)', inst: 'studio', patch: 'sticks' },
-  { id: 'studio-dark', name: 'Studio kit, dark', inst: 'studio', patch: 'dark' },
-  { id: 'studio-tight', name: 'Studio kit, tight', inst: 'studio', patch: 'tight' },
-  { id: 'studio-fat', name: 'Studio kit, fat', inst: 'studio', patch: 'fat' },
+  { id: 'studio', name: 'Studio kit (recorded)', inst: 'studio', patch: 'sticks', gain: 1.3 },
+  { id: 'studio-dark', name: 'Studio kit, dark', inst: 'studio', patch: 'dark', gain: 1.3 },
+  { id: 'studio-tight', name: 'Studio kit, tight', inst: 'studio', patch: 'tight', gain: 1.3 },
+  { id: 'studio-fat', name: 'Studio kit, fat', inst: 'studio', patch: 'fat', gain: 1.3 },
   { id: '909', name: 'Machina 909', inst: 'machina', patch: '909', gain: 0.5 },
   { id: '808', name: 'Machina 808', inst: 'machina', patch: '808', gain: 0.5 },
   { id: 'lofi', name: 'Machina lo-fi', inst: 'machina', patch: 'lofi', gain: 0.5 },

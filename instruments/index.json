@@ -24,6 +24,10 @@
     {
       "id": "tine",
       "file": "tine.js"
+    },
+    {
+      "id": "tonewheel",
+      "file": "tonewheel.js"
     }
   ]
 }

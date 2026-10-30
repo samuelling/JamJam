@@ -77,7 +77,7 @@ export default {
         const file = layer.files[Math.abs(Math.floor(at)) % layer.files.length], buf = kit.bufs.get(file); if (!buf) return;
         if (voice.choke === 'hh' && voice.name !== 'hhopen') for (const v of hats) { stop(v, t); hats.delete(v); }
         const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = Math.pow(2, P.tune / 12);
-        const g = ctx.createGain(); g.gain.value = Math.pow(Math.max(1, vel) / layer.top, 0.7) * (CYMBALS.has(voice.name) ? P.cymbals : 1) * (BAL[voice.name] || 1) * 1.8;   // the recordings sit well below a synth drum machine's level
+        const g = ctx.createGain(); g.gain.value = Math.pow(Math.max(1, vel) / layer.top, 0.7) * (CYMBALS.has(voice.name) ? P.cymbals : 1) * (BAL[voice.name] || 1) * 1.4;   // the recordings sit below a synth drum machine's level (the drummer adds the rest)
         src.connect(g).connect(lp); src.start(t);
         const v = { src, g }; live.add(v); if (voice.name === 'hhopen') hats.add(v);
         src.onended = () => { live.delete(v); hats.delete(v); g.disconnect(); };
