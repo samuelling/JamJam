@@ -790,6 +790,16 @@
   .lvkeys span { position: absolute; right: 5px; font: 400 9px var(--type); color: var(--mz-muted); white-space: nowrap; }
   .lvroll { position: relative; background: #0e0f12; border-radius: 0 3px 3px 0; overflow: hidden; }
   .lvroll svg { display: block; }
+  /* tracks: mute and solo on the row header, the track's own settings above its takes, + Add track */
+  .lhead .ms { display: inline-flex; gap: 3px; margin-left: auto; }
+  .msb { font: 700 10px var(--type); width: 20px; height: 18px; padding: 0; border-radius: 3px; border: 1px solid #ffffff2a; background: #0003; color: var(--mz-muted); cursor: pointer; }
+  .msb.on { background: #ffb24d; color: #111; border-color: #ffb24d; }
+  .msb.solo.on { background: #7DB0FF; border-color: #7DB0FF; }
+  .arow.tmuted .cell.take, .arow.unsolo .cell.take { opacity: .35; }
+  .trackbar { gap: 8px; align-items: center; flex-wrap: wrap; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px dashed #ffffff1a; }
+  .trackbar .tname { font-weight: 700; min-width: 160px; }
+  .addtrack { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .addtrack.open { margin: 8px 0; padding: 10px 12px; border-radius: 8px; background: #ffffff08; }
   .lvroll.editable .lvnote { cursor: grab; }
   .lvroll.editable .lvnote:hover { stroke: #fff; stroke-width: 1; }
   .lvroll.editable { cursor: crosshair; touch-action: none; }
