@@ -151,6 +151,18 @@
   @keyframes recpulse { 50% { box-shadow: 0 0 0 4px #e5383b44; } }
   .sidetab.techtab { margin-top: auto; opacity: .7; }
   .sidetab.techtab[aria-pressed="true"] { opacity: 1; color: var(--mz-toner); box-shadow: inset 0 0 0 1px #ffcf2666; }
+  /* My gear */
+  .gearmine { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 14px; }
+  .gearmine h3, .hwhead { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .6; margin: 8px 0 2px; }
+  .gearrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 10px; border-radius: 8px; background: #ffffff08; }
+  .gearrow > span:first-child { display: flex; flex-direction: column; flex: 1; min-width: 200px; }
+  .gearrow small { opacity: .7; }
+  .gearrow.linked { box-shadow: inset 3px 0 0 #3ddc84; }
+  .gearrow.gone { opacity: .6; }
+  .gearrow.sysex { background: transparent; box-shadow: inset 0 0 0 1px #ffffff14; }
+  .owned.linkto { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .gearprompt { position: fixed; right: 18px; bottom: 18px; z-index: 50; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; max-width: 420px; padding: 12px 14px; border-radius: 10px; background: #1d1e22; box-shadow: 0 8px 30px #0008, inset 0 0 0 1px #ffffff1a; }
+  .gearprompt .help { flex-basis: 100%; order: 1; }
   /* the Pads screen */
   .padwrap { display: grid; grid-template-columns: minmax(240px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; padding: 4px 0 6px; }
   .kitsel { margin: 6px 0 4px; max-width: 190px; font-weight: 600; }
@@ -831,7 +843,7 @@
     <div class="shelf">
       <h3 class="legend">Your gear</h3>
       <div id="rackList" style="display:grid;gap:6px"></div>
-      <div class="add"><button id="addInstBtn" class="hide" aria-hidden="true" tabindex="-1"></button><button id="addHwBtn" class="btn small ghost" title="Tell us your synth or drum machine; the band hears its twin">My synth</button><button id="addLiveBtn" class="btn small ghost" title="A mic, a guitar, anything with a cable: the band hears it a few bars later">Live audio</button><button id="addExtBtn" class="btn small tech" title="A synth, drum machine or DAW track on a MIDI port">+ External MIDI</button></div>
+      <div class="add"><button id="addInstBtn" class="hide" aria-hidden="true" tabindex="-1"></button><button id="addHwBtn" class="btn small ghost" title="Link the synths you brought: bandmates with the same one hear it on theirs, the rest hear its twin">My gear</button><button id="addLiveBtn" class="btn small ghost" title="A mic, a guitar, anything with a cable: the band hears it a few bars later">Live audio</button><button id="addExtBtn" class="btn small tech" title="A synth, drum machine or DAW track on a MIDI port">+ External MIDI</button></div>
     </div>
     <div class="deskwrap">
       <div id="device" class="device">
@@ -917,7 +929,9 @@
 </div>
 <div id="hwDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="Add your hardware">
   <div class="sheet">
-    <header><h2>What did you bring?</h2><span class="help">Pick your unit and MEGAjam ranks the software twins the band can hear it as.</span><button class="btn small" data-close style="margin-left:auto">Close</button></header>
+    <header><h2>My gear</h2><span class="help">Link the synths you brought. Play one, and bandmates with the same model hear it on theirs; everyone else hears its software twin.</span><button class="btn small" data-close style="margin-left:auto">Close</button></header>
+    <div id="gearMine" class="gearmine"></div>
+    <h3 class="hwhead">All 260 units: find yours, see its twins</h3>
     <div class="row" style="gap:8px;align-items:center"><input id="hwSearch" type="text" placeholder="Search 260 units: moog one, 808, wavetable, ladder, 70s…" autocomplete="off" style="flex:1"><span id="hwCount" class="help"></span></div>
     <div class="pages" id="hwFilters"></div>
     <div class="hwlist" id="hwList"></div>

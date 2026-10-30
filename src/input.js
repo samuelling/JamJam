@@ -6,13 +6,16 @@
 
 const KEYMAP = { a: 0, w: 1, s: 2, e: 3, d: 4, f: 5, t: 6, g: 7, y: 8, h: 9, u: 10, j: 11, k: 12, o: 13, l: 14, p: 15, ';': 16, "'": 17 };
 const key = (ch, note) => ch * 128 + note;
+const NRPN_CC = new Set([99, 98, 101, 100, 6, 38, 96, 97]);   // parameter number, data entry, increment/decrement
 
 // read once at load: the app rewrites the address bar to ?room=… after you walk in
 const MIDI_MOCK = typeof location !== 'undefined' && new URLSearchParams(location.search).get('midimock') === '1';
 
 export class Input {
-  constructor({ note, cc, bend, status, plugged }) {
-    this.cb = { note, cc, bend, status, plugged };
+  constructor({ note, cc, bend, status, plugged, raw, sysex }) {
+    this.cb = { note, cc, bend, status, plugged, raw, sysex };
+    this.sysex = false;            // SysEx access granted (asked for only when patches are shared)
+    this.nrpn = new Map();         // channel -> a parameter message being gathered (CC 99/98/6/38 arrive one by one)
     this.octave = 4; this.velocity = 100;
     this.sustain = new Set();     // channels with the pedal down
     this.sustained = new Set();   // keys held only by the pedal
@@ -74,18 +77,31 @@ export class Input {
     this.press(note, this.velocity, 0);
   }
 
-  async enableMIDI() {
+  // SysEx needs its own permission: asked for when you share patches between two of the same synth, not before
+  async enableSysex() {
+    if (this.sysex) return true;
+    if (MIDI_MOCK) { if (!this.midi) await this.enableMIDI(); this.sysex = true; return true; }
+    if (!navigator.requestMIDIAccess) return false;
+    try { const m = await navigator.requestMIDIAccess({ sysex: true }); this.midi = null; await this.enableMIDI(m); this.sysex = true; return true; }
+    catch (_) { this.cb.status('SysEx access was refused: patches can\'t be shared, but notes and knob moves still are.'); return false; }
+  }
+
+  async enableMIDI(granted) {
     // testing aid: ?midimock=1 gives two fake output ports that record what they're sent (window.JJ.midiLog)
     if (MIDI_MOCK) {
       this.mockLog = [];
-      const port = (id, name) => ({ id, name, send: (data, ts) => this.mockLog.push({ port: id, data: [...data], ts: ts ?? performance.now(), sent: performance.now() }) });
+      // a mock port can answer like a synth (tests set input.mockReply(data, portId) -> replies)
+      const port = (id, name) => ({ id, name, send: (data, ts) => {
+        this.mockLog.push({ port: id, data: [...data], ts: ts ?? performance.now(), sent: performance.now() });
+        const rep = this.mockReply?.(data, id); if (rep) setTimeout(() => { for (const d of rep) this.onMIDI({ data: d, target: { id: 'in:' + id } }); }, 15);
+      } });
       this.midi = { inputs: new Map(), outputs: new Map([['mock-a', port('mock-a', 'Mock Synth A')], ['mock-b', port('mock-b', 'Mock Drum Machine')]]) };
       this.inputs = []; this.outputs = [...this.midi.outputs.values()];
       this.cb.status();
       return true;
     }
     if (!navigator.requestMIDIAccess) { this.cb.status('Web MIDI isn\'t available in this browser (try Chrome, Edge or Firefox).'); return false; }
-    try { this.midi = await navigator.requestMIDIAccess({ sysex: false }); }
+    try { this.midi = granted || await navigator.requestMIDIAccess({ sysex: false }); }
     catch (_) { this.cb.status('MIDI access was refused.'); return false; }
     let known = null;
     const refresh = () => {
@@ -103,17 +119,36 @@ export class Input {
     return true;
   }
 
-  onMIDI({ data }) {
+  onMIDI({ data, target }) {
     const [st, a = 0, b = 0] = data, type = st & 0xf0, ch = (st & 15) + 1;
+    if (st === 0xf0) { this.cb.sysex?.([...data], target?.id || ''); return; }
     if (type < 0x80 || type > 0xe0) return;
     this.lastChannel = ch;
     if (type === 0x90 && b > 0) this.press(a, b, ch);
     else if (type === 0x80 || (type === 0x90 && b === 0)) this.release(a, ch);
     else if (type === 0xb0) {
+      if (NRPN_CC.has(a)) { this.gather(ch, st, a, b); return; }
+      this.flush(ch);
       if (a === 64) this.pedal(b >= 64, ch);
       else if (a === 123 || a === 120) { for (const k of [...this.down]) if (Math.floor(k / 128) === ch) this.release(k % 128, ch); this.pedal(false, ch); }
-      else this.cb.cc(a, b, ch);
+      else { this.cb.cc(a, b, ch); this.cb.raw?.([st, a, b], ch); }
     } else if (type === 0xe0) this.cb.bend((((b << 7) | a) - 8192) / 8192 * 2, ch);
+    else if (type === 0xc0 || type === 0xd0) { this.flush(ch); this.cb.raw?.([st, a], ch); }   // program change, channel pressure
+    else if (type === 0xa0) this.cb.raw?.([st, a, b], ch);                                     // poly pressure
+  }
+  // NRPN and RPN: a parameter number (CC 99/98 or 101/100) then a value (CC 6, maybe 38), sent as separate messages.
+  // They travel as one group, so a bandmate's synth can't get the value of one parameter applied to another.
+  gather(ch, st, a, b) {
+    let g = this.nrpn.get(ch); if (!g) this.nrpn.set(ch, (g = { bytes: [], timer: 0 }));
+    if ((a === 99 || a === 101) && g.bytes.some((x, i) => i % 3 === 1 && (x === 6 || x === 38))) this.flush(ch);   // a new parameter starts
+    g.bytes.push(st, a, b);
+    clearTimeout(g.timer);
+    if (a === 38) this.flush(ch); else g.timer = setTimeout(() => this.flush(ch), 4);
+  }
+  flush(ch) {
+    const g = this.nrpn.get(ch); if (!g || !g.bytes.length) return;
+    clearTimeout(g.timer); const bytes = g.bytes; g.bytes = [];
+    this.cb.raw?.(bytes, ch);
   }
 }
 

@@ -1,5 +1,5 @@
 {
- "about": "Hardware twins. If you play a real synth or drum machine, the other jammers hear a software twin from the same family: the twin instrument (the unit's own 'twin' if it names one, else its family's), loaded with the preset for your patch type, with this unit's character settings on top. Twins are family resemblances, not emulations. 'character' values override the patch-type preset; 'types' lists the patch types that suit the unit (first is the default). Add a unit by adding an entry. 'osc' and 'filter' describe the circuit (vco, dco, va, wavetable, sample, fm; ladder, ota, ssm, cem, sem, diode, ms20, steiner, arp, svf, digital, none) and refine the twin ranking: a twin or library instrument that declares matching traits ranks higher. Each family lists candidate twins with a rough match score; a unit's own 'twin' is ranked first.",
+ "about": "Hardware twins. If you play a real synth or drum machine, the other jammers hear a software twin from the same family: the twin instrument (the unit's own 'twin' if it names one, else its family's), loaded with the preset for your patch type, with this unit's character settings on top. Twins are family resemblances, not emulations. 'character' values override the patch-type preset; 'types' lists the patch types that suit the unit (first is the default). Add a unit by adding an entry. 'osc' and 'filter' describe the circuit (vco, dco, va, wavetable, sample, fm; ladder, ota, ssm, cem, sem, diode, ms20, steiner, arp, svf, digital, none) and refine the twin ranking: a twin or library instrument that declares matching traits ranks higher. Each family lists candidate twins with a rough match score; a unit's own 'twin' is ranked first. Patch sharing: 'dump' holds a model's request for its current sound (SysEx, edit buffer), the reply's prefix and how many messages it has, or failing that how to send a dump from the front panel; gathered from makers' MIDI documentation and open-source editors, merged by tools/merge_patch_specs.py.",
  "version": 2,
  "families": {
   "analog-poly": {
@@ -177,7 +177,8 @@
    "character": {
     "chorus": 2
    },
-   "note": "DCO per voice plus sub, BBD chorus, no patch memory."
+   "note": "DCO per voice plus sub, BBD chorus, no patch memory.",
+   "midi": false
   },
   {
    "id": "roland-juno-60",
@@ -202,7 +203,8 @@
     "hpf": 1
    },
    "note": "One DCO per voice plus sub, BBD chorus.",
-   "twin": "juniper"
+   "twin": "juniper",
+   "midi": false
   },
   {
    "id": "roland-juno-106",
@@ -226,7 +228,14 @@
     "chorus": 1
    },
    "note": "One DCO per voice plus sub, BBD chorus.",
-   "twin": "juniper"
+   "twin": "juniper",
+   "dump": {
+    "reply": "F0 41 31",
+    "deviceIdByte": 3,
+    "manualDump": "No request command. With the rear MIDI FUNCTION switch set to II or III (sysex enabled), selecting a patch sends its full tone as one sysex (F0 41 30 0n pp + 18",
+    "params": "sysex",
+    "source": "https://www.atarimagazines.com/st-log/issue33/64_1_THE_ST_AND_THE_ROLAND_JUNO_106_SYNTHESIZER.php"
+   }
   },
   {
    "id": "roland-alpha-juno-2",
@@ -247,7 +256,14 @@
    "character": {
     "chorus": 1
    },
-   "note": "DCO with pulse/saw variants; the \"hoover\" synth."
+   "note": "DCO with pulse/saw variants; the \"hoover\" synth.",
+   "dump": {
+    "reply": "F0 41 35 00 23 20 01",
+    "deviceIdByte": 3,
+    "manualDump": "No edit-buffer request. When a tone is selected (MIDI exclusive on in the MIDI functions), the synth sends the tone as one APR message: F0 41 35 0n 23 20 01 + t",
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland_MKS50.py"
+   }
   },
   {
    "id": "roland-jx-3p",
@@ -291,7 +307,14 @@
    "character": {
     "chorus": 1
    },
-   "note": "Two DCOs per voice, velocity and aftertouch."
+   "note": "Two DCOs per voice, velocity and aftertouch.",
+   "dump": {
+    "reply": "F0 41 35 00 21 20 01",
+    "deviceIdByte": 3,
+    "manualDump": "No request command. Selecting a tone sends it as an APR (All Parameters) message, F0 41 35 0n 21 20 01 + 10 name bytes + params + F7. So the source player resel",
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland%20JX-8P.py"
+   }
   },
   {
    "id": "roland-super-jx-mks-70",
@@ -310,7 +333,14 @@
    "character": {
     "chorus": 1
    },
-   "note": "Two JX-10 voice boards; layered and wide."
+   "note": "Two JX-10 voice boards; layered and wide.",
+   "dump": {
+    "reply": "F0 41 35",
+    "deviceIdByte": 3,
+    "manualDump": "Stock ROM has no request. Changing patch makes it send a PGR message, then an APR for the patch (F0 41 35 0n 24 30 01 ...) and an APR for each RAM tone used (F0",
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland_MKS-70.py"
+   }
   },
   {
    "id": "roland-jupiter-4",
@@ -330,7 +360,8 @@
    "character": {
     "chorus": 1.5
    },
-   "note": "Roland's first polysynth, with ensemble."
+   "note": "Roland's first polysynth, with ensemble.",
+   "midi": false
   },
   {
    "id": "roland-jupiter-6",
@@ -375,7 +406,8 @@
     "chorus": 0.15,
     "drive": 0.15
    },
-   "note": "Two VCOs per voice, big and bright."
+   "note": "Two VCOs per voice, big and bright.",
+   "midi": false
   },
   {
    "id": "roland-mks-80-super-jupiter",
@@ -459,7 +491,8 @@
     "chorus": 0,
     "drive": 0.15
    },
-   "note": "Two VCOs per voice, no built-in chorus."
+   "note": "Two VCOs per voice, no built-in chorus.",
+   "midi": false
   },
   {
    "id": "sequential-prophet-10",
@@ -481,7 +514,8 @@
     "chorus": 0,
     "drive": 0.15
    },
-   "note": "Two Prophet-5 voice sets in one case."
+   "note": "Two Prophet-5 voice sets in one case.",
+   "midi": false
   },
   {
    "id": "sequential-prophet-600",
@@ -546,6 +580,13 @@
     "detune": 7,
     "chorus": 0.2,
     "drive": 0.2
+   },
+   "dump": {
+    "request": "F0 01 2D 06 F7",
+    "reply": "F0 01 2D 03",
+    "replies": 1,
+    "params": "nrpn+cc",
+    "source": "https://analoguehaven.com/sequential/prophet-6/manual.pdf"
    }
   },
   {
@@ -569,7 +610,14 @@
     "chorus": 0.2,
     "drive": 0.2
    },
-   "note": "SEM-style filter, wide and brassy."
+   "note": "SEM-style filter, wide and brassy.",
+   "dump": {
+    "request": "F0 01 2E 06 F7",
+    "reply": "F0 01 2E 03",
+    "replies": 1,
+    "params": "nrpn+cc",
+    "source": "https://www.davesmithinstruments.com/wp-content/uploads/2016/03/OB-6-Operation-Manual.pdf"
+   }
   },
   {
    "id": "sequential-prophet-rev2",
@@ -591,7 +639,14 @@
     "detune": 6,
     "chorus": 0.15
    },
-   "note": "DCOs and a Curtis-type filter."
+   "note": "DCOs and a Curtis-type filter.",
+   "dump": {
+    "request": "F0 01 2F 06 F7",
+    "reply": "F0 01 2F 03",
+    "replies": 1,
+    "params": "nrpn+cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/tree/master/synths/sequential-rev2"
+   }
   },
   {
    "id": "sequential-take-5",
@@ -611,6 +666,13 @@
    "character": {
     "detune": 6,
     "drive": 0.2
+   },
+   "dump": {
+    "request": "F0 01 35 06 F7",
+    "reply": "F0 01 35 03",
+    "replies": 1,
+    "params": "nrpn+cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Sequential_Take_5.py"
    }
   },
   {
@@ -631,7 +693,14 @@
    "character": {
     "detune": 4
    },
-   "note": "Samples plus digital oscillators into analog filters."
+   "note": "Samples plus digital oscillators into analog filters.",
+   "dump": {
+    "request": "F0 01 30 06 F7",
+    "reply": "F0 01 30 03",
+    "replies": 1,
+    "params": "nrpn+cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Sequential%20Prophet%20X.py"
+   }
   },
   {
    "id": "oberheim-ob-x",
@@ -654,7 +723,8 @@
     "chorus": 0.15,
     "drive": 0.25
    },
-   "note": "Two VCOs per voice, two-pole filter."
+   "note": "Two VCOs per voice, two-pole filter.",
+   "midi": false
   },
   {
    "id": "oberheim-ob-xa",
@@ -676,7 +746,8 @@
     "chorus": 0.15,
     "drive": 0.25
    },
-   "note": "The \"Jump\" brass."
+   "note": "The \"Jump\" brass.",
+   "midi": false
   },
   {
    "id": "oberheim-ob-8",
@@ -720,7 +791,14 @@
     "chorus": 0.15,
     "drive": 0.25
    },
-   "note": "Combines OB-X, OB-Xa and OB-8 voice modes."
+   "note": "Combines OB-X, OB-Xa and OB-8 voice modes.",
+   "dump": {
+    "request": "F0 10 58 06 F7",
+    "reply": "F0 10 58 03",
+    "replies": 1,
+    "params": "nrpn+cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/OberheimOBX8.py"
+   }
   },
   {
    "id": "oberheim-matrix-12",
@@ -804,7 +882,8 @@
     "reso": 1.5,
     "drive": 0.3
    },
-   "note": "Two SEM modules side by side."
+   "note": "Two SEM modules side by side.",
+   "midi": false
   },
   {
    "id": "oberheim-four-voice",
@@ -825,7 +904,8 @@
     "reso": 1.5,
     "drive": 0.3
    },
-   "note": "Four SEM modules."
+   "note": "Four SEM modules.",
+   "midi": false
   },
   {
    "id": "moog-memorymoog",
@@ -846,7 +926,8 @@
     "detune": 10,
     "drive": 0.35
    },
-   "note": "Three VCOs per voice into ladder filters."
+   "note": "Three VCOs per voice into ladder filters.",
+   "midi": false
   },
   {
    "id": "moog-polymoog",
@@ -865,7 +946,8 @@
     "chorus": 0.3,
     "detune": 3
    },
-   "note": "Divide-down, fully polyphonic."
+   "note": "Divide-down, fully polyphonic.",
+   "midi": false
   },
   {
    "id": "moog-moog-one",
@@ -931,7 +1013,8 @@
     "chorus": 3,
     "sub": 0.3
    },
-   "twin": "juniper"
+   "twin": "juniper",
+   "midi": false
   },
   {
    "id": "korg-mono-poly",
@@ -952,7 +1035,8 @@
     "detune": 12,
     "drive": 0.3
    },
-   "note": "Four VCOs, mono or four-voice paraphonic."
+   "note": "Four VCOs, mono or four-voice paraphonic.",
+   "midi": false
   },
   {
    "id": "korg-poly-61",
@@ -972,7 +1056,8 @@
    "character": {
     "detune": 5,
     "chorus": 0.3
-   }
+   },
+   "midi": false
   },
   {
    "id": "korg-poly-800",
@@ -1012,7 +1097,15 @@
    "character": {
     "chorus": 0.4
    },
-   "note": "Digital waveforms, analog filters, delay."
+   "note": "Digital waveforms, analog filters, delay.",
+   "dump": {
+    "request": "F0 42 30 03 10 F7",
+    "reply": "F0 42 30 03 40",
+    "replies": 1,
+    "deviceIdByte": 2,
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/KorgDW8000.py"
+   }
   },
   {
    "id": "korg-ps-3300",
@@ -1030,7 +1123,8 @@
    "character": {
     "chorus": 0.3
    },
-   "note": "Fully polyphonic, three synths in one."
+   "note": "Fully polyphonic, three synths in one.",
+   "midi": false
   },
   {
    "id": "korg-minilogue",
@@ -1051,6 +1145,14 @@
    "character": {
     "detune": 6,
     "chorus": 0.1
+   },
+   "dump": {
+    "request": "F0 42 30 00 01 2C 10 F7",
+    "reply": "F0 42 30 00 01 2C 40",
+    "replies": 1,
+    "deviceIdByte": 2,
+    "params": "cc",
+    "source": "https://cdn.korg.com/jp/support/download/files/ff9fbf05d3dd4b89390f2ffcf1450bdb.txt"
    }
   },
   {
@@ -1073,7 +1175,15 @@
     "detune": 6,
     "chorus": 0.1
    },
-   "note": "Two VCOs plus a digital multi-engine."
+   "note": "Two VCOs plus a digital multi-engine.",
+   "dump": {
+    "request": "F0 42 30 00 01 51 10 F7",
+    "reply": "F0 42 30 00 01 51 40",
+    "replies": 1,
+    "deviceIdByte": 2,
+    "params": "nrpn+cc",
+    "source": "https://cdn.korg.com/jp/support/download/files/432b65f8355a288eac5d091f338d08aa.txt"
+   }
   },
   {
    "id": "korg-prologue",
@@ -1093,6 +1203,15 @@
    "character": {
     "detune": 6,
     "chorus": 0.15
+   },
+   "dump": {
+    "request": "F0 42 30 00 01 4B 10 F7",
+    "reply": "F0 42 30 00 01 4B 40",
+    "replies": 1,
+    "deviceIdByte": 2,
+    "manualDump": "Front panel: in Edit mode go to FUNCTION, button 7 (DUMP), turn to 'Press WRITE' and press WRITE. It sends a Program Dump of the current program.",
+    "params": "cc",
+    "source": "https://cdn.korg.com/jp/support/download/files/3200e18af22d1668d51f8ca5069fe9f3.txt"
    }
   },
   {
@@ -1136,7 +1255,8 @@
     "chorus": 0.25,
     "drive": 0.15
    },
-   "note": "Two layers per voice, polyphonic aftertouch, ribbon."
+   "note": "Two layers per voice, polyphonic aftertouch, ribbon.",
+   "midi": false
   },
   {
    "id": "elka-synthex",
@@ -1156,7 +1276,8 @@
    "character": {
     "detune": 8,
     "chorus": 0.3
-   }
+   },
+   "midi": false
   },
   {
    "id": "behringer-deepmind-12",
@@ -1177,7 +1298,15 @@
    "character": {
     "chorus": 2
    },
-   "twin": "juniper"
+   "twin": "juniper",
+   "dump": {
+    "request": "F0 00 20 32 20 00 03 F7",
+    "reply": "F0 00 20 32 20 00 04",
+    "replies": 1,
+    "deviceIdByte": 5,
+    "params": "nrpn+cc",
+    "source": "https://manualowl.com/m/Behringer/DEEPMIND-12/Manual/613573?page=141"
+   }
   },
   {
    "id": "behringer-deepmind-6",
@@ -1196,6 +1325,14 @@
    ],
    "character": {
     "chorus": 2
+   },
+   "dump": {
+    "request": "F0 00 20 32 20 00 03 F7",
+    "reply": "F0 00 20 32 20 00 04",
+    "replies": 1,
+    "deviceIdByte": 5,
+    "params": "nrpn+cc",
+    "source": "https://www.manualowl.com/m/Behringer/DEEPMIND-6/Manual/613580?page=140"
    }
   },
   {
@@ -1327,7 +1464,14 @@
     "detune": 6,
     "drive": 0.3
    },
-   "note": "Two Peaks in one."
+   "note": "Two Peaks in one.",
+   "dump": {
+    "request": "F0 00 20 29 01 11 01 33 40 00 00 00 00 00 F7",
+    "reply": "F0 00 20 29 01 11 01 33 00",
+    "replies": 1,
+    "params": "nrpn+cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Novation_Summit.py"
+   }
   },
   {
    "id": "dave-smith-instruments-tetra",
@@ -1346,6 +1490,13 @@
    ],
    "character": {
     "detune": 6
+   },
+   "dump": {
+    "request": "F0 01 26 06 F7",
+    "reply": "F0 01 26 03",
+    "replies": 1,
+    "params": "nrpn+cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/DSI_Tetra.py"
    }
   },
   {
@@ -1366,7 +1517,12 @@
    "character": {
     "drive": 0.3
    },
-   "note": "Four analog voices with a sequencer."
+   "note": "Four analog voices with a sequencer.",
+   "dump": {
+    "manualDump": "SysEx dump menu (Settings > SysEx dump > SysEx send) can send the current kit or sounds; receiving side uses SysEx receive in the same menu.",
+    "params": "nrpn+cc",
+    "source": "https://www.elektronauts.com/t/sysex-edit-buffer-dump-possible/18662"
+   }
   },
   {
    "id": "elektron-analog-keys",
@@ -1385,6 +1541,10 @@
    ],
    "character": {
     "drive": 0.3
+   },
+   "dump": {
+    "manualDump": "Same SysEx dump menu as Analog Four (SysEx send of kit/sound).",
+    "params": "nrpn+cc"
    }
   },
   {
@@ -1405,7 +1565,8 @@
    ],
    "character": {},
    "note": "Three VCOs, ladder filter, low-note priority.",
-   "twin": "monolith"
+   "twin": "monolith",
+   "midi": false
   },
   {
    "id": "moog-prodigy",
@@ -1425,7 +1586,8 @@
     "mix3": 0,
     "drive": 0.3
    },
-   "note": "Two VCOs, sync."
+   "note": "Two VCOs, sync.",
+   "midi": false
   },
   {
    "id": "moog-rogue",
@@ -1442,7 +1604,8 @@
    ],
    "character": {
     "mix3": 0
-   }
+   },
+   "midi": false
   },
   {
    "id": "moog-source",
@@ -1462,7 +1625,8 @@
     "mix3": 0,
     "drive": 0.3
    },
-   "note": "Programmable, touch panel."
+   "note": "Programmable, touch panel.",
+   "midi": false
   },
   {
    "id": "moog-taurus",
@@ -1479,7 +1643,8 @@
    "character": {
     "drive": 0.4
    },
-   "note": "Bass pedals, deep and huge."
+   "note": "Bass pedals, deep and huge.",
+   "midi": false
   },
   {
    "id": "moog-minitaur",
@@ -1615,7 +1780,8 @@
     "detune": 10,
     "drive": 0.3
    },
-   "note": "Duophonic, sync and ring mod."
+   "note": "Duophonic, sync and ring mod.",
+   "midi": false
   },
   {
    "id": "arp-2600",
@@ -1637,7 +1803,8 @@
     "detune": 8,
     "drive": 0.3
    },
-   "note": "Semi-modular with spring reverb."
+   "note": "Semi-modular with spring reverb.",
+   "midi": false
   },
   {
    "id": "arp-axxe",
@@ -1656,7 +1823,8 @@
     "mono": 1,
     "detune": 0
    },
-   "note": "Single VCO."
+   "note": "Single VCO.",
+   "midi": false
   },
   {
    "id": "roland-sh-101",
@@ -1679,7 +1847,8 @@
     "sub": 0.55,
     "wave": 0.4
    },
-   "note": "One VCO plus sub."
+   "note": "One VCO plus sub.",
+   "midi": false
   },
   {
    "id": "roland-sh-09",
@@ -1699,7 +1868,8 @@
     "mono": 1,
     "detune": 0,
     "sub": 0.5
-   }
+   },
+   "midi": false
   },
   {
    "id": "roland-sh-2",
@@ -1719,7 +1889,8 @@
     "detune": 7,
     "sub": 0.5
    },
-   "note": "Two VCOs plus sub."
+   "note": "Two VCOs plus sub.",
+   "midi": false
   },
   {
    "id": "roland-sh-1000",
@@ -1738,7 +1909,8 @@
    "character": {
     "mono": 1
    },
-   "note": "Japan's first commercial synth, with presets."
+   "note": "Japan's first commercial synth, with presets.",
+   "midi": false
   },
   {
    "id": "roland-system-100",
@@ -1758,7 +1930,8 @@
     "mono": 1,
     "detune": 6
    },
-   "note": "Semi-modular system."
+   "note": "Semi-modular system.",
+   "midi": false
   },
   {
    "id": "roland-promars-mrs-2",
@@ -1777,7 +1950,8 @@
    "character": {
     "mono": 1,
     "detune": 7
-   }
+   },
+   "midi": false
   },
   {
    "id": "roland-mc-202",
@@ -1797,7 +1971,8 @@
     "mono": 1,
     "sub": 0.5
    },
-   "note": "SH-101 voice with a sequencer."
+   "note": "SH-101 voice with a sequencer.",
+   "midi": false
   },
   {
    "id": "roland-se-02",
@@ -1836,7 +2011,8 @@
     "detune": 7,
     "drive": 0.3
    },
-   "note": "Two VCOs, a Prophet-5 voice."
+   "note": "Two VCOs, a Prophet-5 voice.",
+   "midi": false
   },
   {
    "id": "sequential-pro-3",
@@ -1855,7 +2031,14 @@
    "character": {
     "drive": 0.4
    },
-   "note": "Three oscillators, three filter types."
+   "note": "Three oscillators, three filter types.",
+   "dump": {
+    "request": "F0 01 31 06 F7",
+    "reply": "F0 01 31 03",
+    "replies": 1,
+    "params": "nrpn+cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Sequential%20Pro%203.py"
+   }
   },
   {
    "id": "oberheim-sem",
@@ -1877,7 +2060,8 @@
     "reso": 1.5,
     "drive": 0.3
    },
-   "note": "Two VCOs into a two-pole multimode filter."
+   "note": "Two VCOs into a two-pole multimode filter.",
+   "midi": false
   },
   {
    "id": "korg-ms-20",
@@ -1899,7 +2083,8 @@
     "reso": 9,
     "drive": 0.5
    },
-   "note": "Aggressive high/low-pass filters."
+   "note": "Aggressive high/low-pass filters.",
+   "midi": false
   },
   {
    "id": "korg-ms-10",
@@ -1921,7 +2106,8 @@
     "reso": 9,
     "drive": 0.5
    },
-   "note": "One VCO version of the MS-20."
+   "note": "One VCO version of the MS-20.",
+   "midi": false
   },
   {
    "id": "korg-minikorg-700",
@@ -1939,7 +2125,8 @@
    "character": {
     "mono": 1
    },
-   "note": "Korg's first synth."
+   "note": "Korg's first synth.",
+   "midi": false
   },
   {
    "id": "korg-monologue",
@@ -1959,6 +2146,14 @@
     "mono": 1,
     "detune": 6,
     "drive": 0.4
+   },
+   "dump": {
+    "request": "F0 42 30 00 01 44 10 F7",
+    "reply": "F0 42 30 00 01 44 40",
+    "replies": 1,
+    "deviceIdByte": 2,
+    "params": "cc",
+    "source": "https://cdn.korg.com/jp/support/download/files/e3733d5dacc8a3b7e73f1c2a3367225b.txt"
    }
   },
   {
@@ -2017,7 +2212,8 @@
    "character": {
     "mono": 1,
     "detune": 6
-   }
+   },
+   "midi": false
   },
   {
    "id": "yamaha-cs-01",
@@ -2036,7 +2232,8 @@
     "mono": 1,
     "detune": 0
    },
-   "note": "Portable, with a breath controller input."
+   "note": "Portable, with a breath controller input.",
+   "midi": false
   },
   {
    "id": "ems-vcs3",
@@ -2057,7 +2254,8 @@
     "detune": 12,
     "drive": 0.5
    },
-   "note": "Pin-matrix patching."
+   "note": "Pin-matrix patching.",
+   "midi": false
   },
   {
    "id": "ems-synthi-aks",
@@ -2078,7 +2276,8 @@
     "detune": 12,
     "drive": 0.5
    },
-   "note": "A VCS3 in a briefcase."
+   "note": "A VCS3 in a briefcase.",
+   "midi": false
   },
   {
    "id": "octave-cat",
@@ -2096,7 +2295,8 @@
    "character": {
     "mono": 1,
     "detune": 8
-   }
+   },
+   "midi": false
   },
   {
    "id": "novation-bass-station",
@@ -2134,7 +2334,14 @@
     "mix3": 0.3,
     "drive": 0.5
    },
-   "twin": "monolith"
+   "twin": "monolith",
+   "dump": {
+    "request": "F0 00 20 29 00 33 00 40 F7",
+    "reply": "F0 00 20 29 00 33 00 00",
+    "replies": 1,
+    "params": "nrpn+cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Novation_Bass_Station_II.py"
+   }
   },
   {
    "id": "arturia-minibrute",
@@ -2410,6 +2617,13 @@
    ],
    "character": {
     "drive": 0.3
+   },
+   "dump": {
+    "request": "F0 01 25 06 F7",
+    "reply": "F0 01 25 03",
+    "replies": 1,
+    "params": "nrpn+cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/DSI_Mopho.py"
    }
   },
   {
@@ -2429,7 +2643,14 @@
    "character": {
     "drive": 0.4
    },
-   "note": "Analog and digital oscillators, feedback delay."
+   "note": "Analog and digital oscillators, feedback delay.",
+   "dump": {
+    "request": "F0 01 20 01 06 F7",
+    "reply": "F0 01 20 01 03",
+    "replies": 1,
+    "params": "nrpn",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/DSI_Evolver.py"
+   }
   },
   {
    "id": "waldorf-pulse-2",
@@ -2447,6 +2668,14 @@
    ],
    "character": {
     "drive": 0.4
+   },
+   "dump": {
+    "request": "F0 3E 16 00 00 7F 00 F7",
+    "reply": "F0 3E 16 00 10 7F 00",
+    "replies": 1,
+    "deviceIdByte": 3,
+    "params": "cc",
+    "source": "https://github.com/eclab/edisyn/tree/master/edisyn/synth/waldorfpulse2"
    }
   },
   {
@@ -2467,7 +2696,8 @@
     "sub": 0,
     "detune": 0
    },
-   "note": "One VCO, the acid squelch."
+   "note": "One VCO, the acid squelch.",
+   "midi": false
   },
   {
    "id": "roland-tb-3",
@@ -2487,7 +2717,15 @@
     "sub": 0,
     "detune": 0
    },
-   "note": "Digital model of the TB-303."
+   "note": "Digital model of the TB-303.",
+   "dump": {
+    "request": "F0 41 10 00 00 7B 11 00 20 00 00 00 00 00 21 3F F7 F0 41 10 00 00 7B 11 00 20 10 00 00 00 00 07 49 F7 F0 41 10 00 00 7B 11 00 20 20 00 00 00 00 1A 26 F7 F0 41 10 00 00 7B 11 00 20 30 00 00 00 00 16 1A F7",
+    "reply": "F0 41 10 00 00 7B 12 00 20",
+    "replies": 4,
+    "deviceIdByte": 2,
+    "params": "cc",
+    "source": "https://static.roland.com/assets/media/pdf/TB-3_MI_1.pdf"
+   }
   },
   {
    "id": "roland-tb-03",
@@ -2548,7 +2786,15 @@
    "character": {
     "chorus": 0.5
    },
-   "note": "Sample attacks plus synthesized sustain; \"Fantasia\"."
+   "note": "Sample attacks plus synthesized sustain; \"Fantasia\".",
+   "dump": {
+    "request": "F0 41 00 14 11 00 00 00 00 00 40 40 F7 F0 41 00 14 11 00 00 40 00 00 40 00 F7 F0 41 00 14 11 00 01 00 00 00 40 3F F7 F0 41 00 14 11 00 01 40 00 00 40 7F F7 F0 41 00 14 11 00 02 00 00 00 40 3E F7 F0 41 00 14 11 00 02 40 00 00 40 7E F7 F0 41 00 14 11 00 03 00 00 00 40 3D F7",
+    "reply": "F0 41 00 14 12 00",
+    "replies": 7,
+    "deviceIdByte": 2,
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/RolandD50.py"
+   }
   },
   {
    "id": "roland-jd-800",
@@ -2590,7 +2836,15 @@
    "character": {
     "chorus": 0.4
    },
-   "note": "The 90s studio rompler."
+   "note": "The 90s studio rompler.",
+   "dump": {
+    "request": "F0 41 10 6A 11 03 00 00 00 00 00 00 48 35 F7 F0 41 10 6A 11 03 00 10 00 00 00 01 01 6B F7 F0 41 10 6A 11 03 00 12 00 00 00 01 01 69 F7 F0 41 10 6A 11 03 00 14 00 00 00 01 01 67 F7 F0 41 10 6A 11 03 00 16 00 00 00 01 01 65 F7",
+    "reply": "F0 41 10 6A 12 03 00",
+    "replies": 5,
+    "deviceIdByte": 2,
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland_JV1080.py"
+   }
   },
   {
    "id": "roland-jp-8000",
@@ -2611,7 +2865,15 @@
     "detune": 14,
     "chorus": 0.3
    },
-   "note": "The original supersaw."
+   "note": "The original supersaw.",
+   "dump": {
+    "request": "F0 41 10 00 06 11 01 00 00 00 00 00 43 6F 4D F7",
+    "reply": "F0 41 10 00 06 12 01 00",
+    "replies": 5,
+    "deviceIdByte": 2,
+    "params": "cc",
+    "source": "https://static.roland.com/assets/media/pdf/JP-8000_OM.pdf"
+   }
   },
   {
    "id": "roland-juno-x",
@@ -2669,7 +2931,15 @@
    "character": {
     "chorus": 0.3
    },
-   "note": "The M1 piano and organ house sounds."
+   "note": "The M1 piano and organ house sounds.",
+   "dump": {
+    "request": "F0 42 30 19 10 F7",
+    "reply": "F0 42 30 19 40",
+    "replies": 1,
+    "deviceIdByte": 2,
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Korg_M1.py"
+   }
   },
   {
    "id": "korg-wavestation",
@@ -2709,6 +2979,11 @@
    ],
    "character": {
     "chorus": 0.3
+   },
+   "dump": {
+    "manualDump": "With Global P1: MIDI 'Enable Exclusive' checked, selecting a program in Program P0: Play (or a combi in Combination P0) transmits that program's edit-buffer dat",
+    "params": "nrpn+cc",
+    "source": "https://m.barryrudolph.com/recall/manuals/korgtriton.pdf"
    }
   },
   {
@@ -2730,7 +3005,15 @@
     "detune": 8,
     "drive": 0.3
    },
-   "note": "Virtual analog with vocoder."
+   "note": "Virtual analog with vocoder.",
+   "dump": {
+    "request": "F0 42 30 58 10 F7",
+    "reply": "F0 42 30 58 40",
+    "replies": 1,
+    "deviceIdByte": 2,
+    "params": "nrpn+cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/KorgMS2000.py"
+   }
   },
   {
    "id": "korg-microkorg",
@@ -2752,7 +3035,15 @@
     "detune": 8,
     "drive": 0.25
    },
-   "note": "Virtual analog with vocoder."
+   "note": "Virtual analog with vocoder.",
+   "dump": {
+    "request": "F0 42 30 58 10 F7",
+    "reply": "F0 42 30 58 40",
+    "replies": 1,
+    "deviceIdByte": 2,
+    "params": "nrpn+cc",
+    "source": "https://cdn.korg.com/jp/support/download/files/302b2c88d5ee7778b5cc817108398ff6.txt"
+   }
   },
   {
    "id": "korg-wavestate",
@@ -2812,7 +3103,15 @@
    "character": {
     "chorus": 0.2
    },
-   "note": "PPG wavetables with analog filters."
+   "note": "PPG wavetables with analog filters.",
+   "dump": {
+    "request": "F0 3E 00 00 02 00 F7",
+    "reply": "F0 3E 00 00 42",
+    "replies": 1,
+    "deviceIdByte": 3,
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Waldorf_MicroWave.py"
+   }
   },
   {
    "id": "waldorf-blofeld",
@@ -2832,6 +3131,14 @@
    ],
    "character": {
     "detune": 6
+   },
+   "dump": {
+    "request": "F0 3E 13 00 00 7F 00 F7",
+    "reply": "F0 3E 13 00 10 7F 00",
+    "replies": 1,
+    "deviceIdByte": 3,
+    "params": "cc",
+    "source": "https://www.deepsonic.ch/deep/docs_manuals/waldorf_blofeld_sysex_documentation_v.1.04.txt"
    }
   },
   {
@@ -2893,7 +3200,8 @@
    "character": {
     "chorus": 0.2
    },
-   "note": "Wavetables into analog filters."
+   "note": "Wavetables into analog filters.",
+   "midi": false
   },
   {
    "id": "ppg-wave-2-3",
@@ -2952,6 +3260,14 @@
    "character": {
     "detune": 12,
     "drive": 0.3
+   },
+   "dump": {
+    "request": "F0 00 20 33 01 10 30 00 40 F7",
+    "reply": "F0 00 20 33 01 10 10 00",
+    "replies": 1,
+    "deviceIdByte": 5,
+    "params": "cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/synths/access-virus/Virus.cpp"
    }
   },
   {
@@ -2971,6 +3287,14 @@
    ],
    "character": {
     "detune": 8
+   },
+   "dump": {
+    "request": "F0 33 00 04 0A 00 F7",
+    "reply": "F0 33 00 04 00 00",
+    "replies": 1,
+    "deviceIdByte": 2,
+    "params": "cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Clavia_Nord_Lead.py"
    }
   },
   {
@@ -3025,6 +3349,13 @@
    ],
    "character": {
     "detune": 8
+   },
+   "dump": {
+    "request": "F0 00 20 29 03 01 7F 40 21 00 00 00 00 F7",
+    "reply": "F0 00 20 29 03 01 7F 00",
+    "replies": 1,
+    "params": "nrpn+cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Novation_UltraNova.py"
    }
   },
   {
@@ -3126,7 +3457,15 @@
    "character": {
     "chorus": 0.2
    },
-   "note": "Digital waves, analog filters."
+   "note": "Digital waves, analog filters.",
+   "dump": {
+    "request": "F0 0F 02 00 09 F7",
+    "reply": "F0 0F 02 00 01",
+    "replies": 1,
+    "deviceIdByte": 3,
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Ensoniqesq1.py"
+   }
   },
   {
    "id": "ensoniq-sq-80",
@@ -3320,7 +3659,8 @@
    "character": {
     "chorus": 0.1
    },
-   "note": "The original sampling workstation."
+   "note": "The original sampling workstation.",
+   "midi": false
   },
   {
    "id": "kurzweil-k2000",
@@ -3378,6 +3718,10 @@
    ],
    "character": {
     "drive": 0.3
+   },
+   "dump": {
+    "manualDump": "Global > SysEx dump send (kits/patterns); menu path not verified.",
+    "params": "cc"
    }
   },
   {
@@ -3439,7 +3783,14 @@
     "drive": 0,
     "trem": 0.15
    },
-   "note": "Six-operator FM; the twin has two."
+   "note": "Six-operator FM; the twin has two.",
+   "dump": {
+    "reply": "F0 43 00 00 01 1B",
+    "deviceIdByte": 2,
+    "manualDump": "The original DX7 doesn't answer dump requests (KnobKraft: initiate dumps from the DX7). From memory (check against the DX7 manual): with FUNCTION 8 set to SYS I",
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/YamahaDX7.py"
+   }
   },
   {
    "id": "yamaha-dx7ii",
@@ -3459,6 +3810,14 @@
    "character": {
     "drive": 0,
     "trem": 0.15
+   },
+   "dump": {
+    "request": "F0 43 20 00 F7",
+    "reply": "F0 43 00 00 01 1B",
+    "replies": 1,
+    "deviceIdByte": 2,
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/YamahaDX7II.py"
    }
   },
   {
@@ -3478,7 +3837,15 @@
    "character": {
     "drive": 0
    },
-   "note": "Four-operator FM."
+   "note": "Four-operator FM.",
+   "dump": {
+    "request": "F0 43 20 03 F7",
+    "reply": "F0 43 00 03 00 5D",
+    "replies": 1,
+    "deviceIdByte": 2,
+    "params": "sysex",
+    "source": "https://www.manualsdir.com/manuals/228881/yamaha-dx21.html?page=46"
+   }
   },
   {
    "id": "yamaha-dx100",
@@ -3497,7 +3864,15 @@
    "character": {
     "drive": 0
    },
-   "note": "Four-operator FM, the \"Solid Bass\"."
+   "note": "Four-operator FM, the \"Solid Bass\".",
+   "dump": {
+    "request": "F0 43 20 03 F7",
+    "reply": "F0 43 00 03 00 5D",
+    "replies": 1,
+    "deviceIdByte": 2,
+    "params": "sysex",
+    "source": "https://caraudio.manualsonline.com/manuals/mfg/yamaha/dx100.html?p=48"
+   }
   },
   {
    "id": "yamaha-tx81z",
@@ -3517,7 +3892,15 @@
    "character": {
     "drive": 0
    },
-   "note": "Four-op FM with extra waveforms; \"Lately Bass\"."
+   "note": "Four-op FM with extra waveforms; \"Lately Bass\".",
+   "dump": {
+    "request": "F0 43 20 7E 4C 4D 20 20 38 39 37 36 41 45 F7",
+    "reply": "F0 43 00",
+    "replies": 2,
+    "deviceIdByte": 2,
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Yamaha_TX81Z.py"
+   }
   },
   {
    "id": "yamaha-sy77",
@@ -3556,7 +3939,15 @@
    "character": {
     "trem": 0.1
    },
-   "note": "FM with formant shaping."
+   "note": "FM with formant shaping.",
+   "dump": {
+    "request": "F0 43 20 5E 10 00 00 F7",
+    "reply": "F0 43 00 5E",
+    "replies": "1-5",
+    "deviceIdByte": 2,
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Yamaha_FS1R.py"
+   }
   },
   {
    "id": "yamaha-reface-dx",
@@ -3575,6 +3966,14 @@
    ],
    "character": {
     "drive": 0.05
+   },
+   "dump": {
+    "request": "F0 43 20 7F 1C 05 0E 0F 00 F7",
+    "reply": "F0 43 00 7F 1C",
+    "replies": 7,
+    "deviceIdByte": 2,
+    "params": "sysex",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/YamahaRefaceDX.py"
    }
   },
   {
@@ -3633,6 +4032,11 @@
    ],
    "character": {
     "drive": 0.15
+   },
+   "dump": {
+    "manualDump": "SysEx dump menu can send the current sound or kit; menu path not verified.",
+    "params": "nrpn+cc",
+    "source": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Elektron_Digitone.py"
    }
   },
   {
@@ -3666,7 +4070,8 @@
     "pad"
    ],
    "character": {},
-   "note": "FM and additive, later sampling."
+   "note": "FM and additive, later sampling.",
+   "midi": false
   },
   {
    "id": "fender-rhodes-mk1",
@@ -3682,7 +4087,8 @@
    "character": {
     "bell": 0.4,
     "trem": 0.3
-   }
+   },
+   "midi": false
   },
   {
    "id": "rhodes-mark-ii",
@@ -3698,7 +4104,8 @@
    "character": {
     "bell": 0.35,
     "trem": 0.25
-   }
+   },
+   "midi": false
   },
   {
    "id": "wurlitzer-200a",
@@ -3711,7 +4118,8 @@
    "types": [
     "wurly"
    ],
-   "character": {}
+   "character": {},
+   "midi": false
   },
   {
    "id": "wurlitzer-140b",
@@ -3727,7 +4135,8 @@
    ],
    "character": {
     "drive": 0.25
-   }
+   },
+   "midi": false
   },
   {
    "id": "yamaha-cp-70",
@@ -3745,7 +4154,8 @@
     "trem": 0,
     "bright": 0.6
    },
-   "note": "Electric grand: real strings, pickups."
+   "note": "Electric grand: real strings, pickups.",
+   "midi": false
   },
   {
    "id": "yamaha-cp-80",
@@ -3763,7 +4173,8 @@
     "trem": 0,
     "bright": 0.6
    },
-   "note": "Electric grand."
+   "note": "Electric grand.",
+   "midi": false
   },
   {
    "id": "hohner-pianet-t",
@@ -3780,7 +4191,8 @@
    ],
    "character": {
     "decay": 1.2
-   }
+   },
+   "midi": false
   },
   {
    "id": "hohner-clavinet-d6",
@@ -3798,7 +4210,8 @@
     "bright": 0.8,
     "decay": 0.8
    },
-   "note": "Struck strings, funky and percussive."
+   "note": "Struck strings, funky and percussive.",
+   "midi": false
   },
   {
    "id": "rmi-electra-piano",
@@ -3812,7 +4225,8 @@
     "keys",
     "pluck"
    ],
-   "character": {}
+   "character": {},
+   "midi": false
   },
   {
    "id": "roland-mks-20",
@@ -3844,7 +4258,8 @@
    "character": {
     "chorus": 3
    },
-   "note": "Divide-down strings through ensemble."
+   "note": "Divide-down strings through ensemble.",
+   "midi": false
   },
   {
    "id": "arp-omni",
@@ -3861,7 +4276,8 @@
    ],
    "character": {
     "chorus": 3
-   }
+   },
+   "midi": false
   },
   {
    "id": "roland-rs-505-paraphonic",
@@ -3878,7 +4294,8 @@
    ],
    "character": {
     "chorus": 3
-   }
+   },
+   "midi": false
   },
   {
    "id": "elka-rhapsody-610",
@@ -3894,7 +4311,8 @@
    ],
    "character": {
     "chorus": 3
-   }
+   },
+   "midi": false
   },
   {
    "id": "crumar-performer",
@@ -3911,7 +4329,8 @@
    ],
    "character": {
     "chorus": 2.5
-   }
+   },
+   "midi": false
   },
   {
    "id": "mellotron-m400",
@@ -3930,7 +4349,8 @@
     "chorus": 0.5,
     "lfoPitch": 0.05
    },
-   "note": "Tape replay: strings, flutes, choirs."
+   "note": "Tape replay: strings, flutes, choirs.",
+   "midi": false
   },
   {
    "id": "hammond-b-3",
@@ -3947,7 +4367,8 @@
    "character": {
     "chorus": 0.4
    },
-   "note": "Tonewheel organ, drawbars, Leslie."
+   "note": "Tonewheel organ, drawbars, Leslie.",
+   "midi": false
   },
   {
    "id": "vox-continental",
@@ -3961,7 +4382,8 @@
     "keys"
    ],
    "character": {},
-   "note": "Transistor combo organ."
+   "note": "Transistor combo organ.",
+   "midi": false
   },
   {
    "id": "farfisa-compact",
@@ -3975,7 +4397,8 @@
     "keys"
    ],
    "character": {},
-   "note": "Transistor combo organ."
+   "note": "Transistor combo organ.",
+   "midi": false
   },
   {
    "id": "roland-cr-78",
@@ -3992,7 +4415,8 @@
    "character": {
     "drive": 0.1
    },
-   "note": "Preset rhythms, analog voices."
+   "note": "Preset rhythms, analog voices.",
+   "midi": false
   },
   {
    "id": "roland-tr-606",
@@ -4011,7 +4435,8 @@
     "snare.snap": 0.85,
     "snare.pitch": 3,
     "chh.decay": 0.7
-   }
+   },
+   "midi": false
   },
   {
    "id": "roland-tr-707",
@@ -4059,7 +4484,8 @@
    "types": [
     "808"
    ],
-   "character": {}
+   "character": {},
+   "midi": false
   },
   {
    "id": "roland-tr-909",
@@ -4270,7 +4696,8 @@
    "character": {
     "bits": 8
    },
-   "note": "The first sampled drum machine."
+   "note": "The first sampled drum machine.",
+   "midi": false
   },
   {
    "id": "linn-linndrum",
@@ -4286,7 +4713,8 @@
    ],
    "character": {
     "bits": 8
-   }
+   },
+   "midi": false
   },
   {
    "id": "linn-linn-9000",
@@ -4382,7 +4810,8 @@
    "character": {
     "bits": 8
    },
-   "note": "Early hip-hop and electro."
+   "note": "Early hip-hop and electro.",
+   "midi": false
   },
   {
    "id": "oberheim-dx",
@@ -4398,7 +4827,8 @@
    ],
    "character": {
     "bits": 8
-   }
+   },
+   "midi": false
   },
   {
    "id": "e-mu-drumulator",
@@ -4414,7 +4844,8 @@
    ],
    "character": {
     "bits": 8
-   }
+   },
+   "midi": false
   },
   {
    "id": "e-mu-sp-12",
@@ -4494,7 +4925,8 @@
     "808"
    ],
    "character": {},
-   "note": "Analog electronic drum brain."
+   "note": "Analog electronic drum brain.",
+   "midi": false
   },
   {
    "id": "yamaha-rx5",
@@ -4570,7 +5002,8 @@
     "lofi"
    ],
    "character": {},
-   "note": "Preset rhythms, analog voices."
+   "note": "Preset rhythms, analog voices.",
+   "midi": false
   },
   {
    "id": "korg-ddd-1",
@@ -4679,7 +5112,15 @@
     "909",
     "808"
    ],
-   "character": {}
+   "character": {},
+   "dump": {
+    "request": "F0 42 30 00 01 23 10 F7",
+    "reply": "F0 42 30 00 01 23 40",
+    "replies": 1,
+    "deviceIdByte": 2,
+    "params": "cc",
+    "source": "https://cdn.korg.com/jp/support/download/files/7d4d8d58c389a73c82c958516d0be47d.txt"
+   }
   },
   {
    "id": "boss-dr-55",
@@ -4693,7 +5134,8 @@
     "808",
     "lofi"
    ],
-   "character": {}
+   "character": {},
+   "midi": false
   },
   {
    "id": "boss-dr-110",
@@ -4707,7 +5149,8 @@
     "808",
     "lofi"
    ],
-   "character": {}
+   "character": {},
+   "midi": false
   },
   {
    "id": "ace-tone-rhythm-ace-fr-1",
@@ -4722,7 +5165,8 @@
     "808"
    ],
    "character": {},
-   "note": "Preset rhythms."
+   "note": "Preset rhythms.",
+   "midi": false
   },
   {
    "id": "maestro-rhythm-king-mrk-2",
@@ -4737,7 +5181,8 @@
     "808"
    ],
    "character": {},
-   "note": "Preset rhythm unit heard on early-70s funk."
+   "note": "Preset rhythm unit heard on early-70s funk.",
+   "midi": false
   },
   {
    "id": "wurlitzer-sideman",
@@ -4752,7 +5197,8 @@
     "acoustic"
    ],
    "character": {},
-   "note": "The first commercial drum machine."
+   "note": "The first commercial drum machine.",
+   "midi": false
   },
   {
    "id": "elektron-machinedrum",
@@ -4772,7 +5218,11 @@
    ],
    "character": {},
    "note": "Its own synthesis machines; Machina has four families of them.",
-   "twin": "machina"
+   "twin": "machina",
+   "dump": {
+    "manualDump": "Kit SysEx send from the Global/SysEx menu; menu path not verified.",
+    "params": "cc"
+   }
   },
   {
    "id": "elektron-analog-rytm",
@@ -4790,7 +5240,15 @@
    "character": {
     "drive": 0.25
    },
-   "note": "Analog voices plus samples."
+   "note": "Analog voices plus samples.",
+   "dump": {
+    "request": "F0 00 20 3C 07 00 68 01 01 00 00 00 00 05 F7",
+    "reply": "F0 00 20 3C 07 00 58",
+    "replies": 1,
+    "deviceIdByte": 5,
+    "params": "nrpn+cc",
+    "source": "https://github.com/bsp2/libanalogrytm/blob/master/sysex.c"
+   }
   },
   {
    "id": "elektron-digitakt",
@@ -4961,7 +5419,8 @@
    "character": {
     "drive": 0.4
    },
-   "note": "Analog percussion synth with an 8-step sequencer."
+   "note": "Analog percussion synth with an 8-step sequencer.",
+   "midi": false
   },
   {
    "id": "jomox-airbase-99",
@@ -5004,7 +5463,14 @@
     "808",
     "909"
    ],
-   "character": {}
+   "character": {},
+   "dump": {
+    "request": "F0 00 20 29 01 64 40 00 F7",
+    "reply": "F0 00 20 29 01 64 00 00",
+    "replies": 1,
+    "params": "nrpn+cc",
+    "source": "https://manualsnet.com/novation/circuit-tracks"
+   }
   },
   {
    "id": "polyend-tracker",

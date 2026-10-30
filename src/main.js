@@ -14,6 +14,7 @@ import { iconEl, skinOf } from './skins.js';
 import { makeBand } from './band.js';
 import { Blobs, isBlobChunk, toPcm16 } from './blobs.js';
 import { makePadsUI, PAD_KEYS, PAD_BASE } from './padsui.js';
+import { makeGear } from './gear.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
 const store = { get: (k) => localStorage.getItem('megajam.' + k) ?? localStorage.getItem('jamjam.' + k), set: (k, v) => localStorage.setItem('megajam.' + k, v) };
 
@@ -293,7 +294,10 @@ function onMessage(p, m) {
     case 'look': { const pl = S.players.get(p.id); if (pl) { pl.peerL = m.L; if (m.budgets) for (const x of pl.rack) if (m.budgets[x.r]) x.budget = m.budgets[x.r]; } break; }
     case 'fp': checkFingerprint(p.id, m); break;
     case 'sq': { const sq = seqs.get(key(p.id, m.r)); if (sq && Array.isArray(m.op) && typeof m.at === 'number') sq.queue(m.at, m.op); break; }
-    case 'real': { const model = engine.unit(m.hw)?.model || 'synth'; const who = S.players.get(p.id)?.name || 'A bandmate'; addChat({ sys: true, text: m.on ? `${who} has a ${model} too: they hear your part on their own.` : `${who} is back to hearing your ${model} as its twin.`, t: Date.now() }); break; }
+    case 'real': gear.onReal(p, m); break;                 // a bandmate plays your part on their own same synth
+    case 'mx': gear.receiveRaw(p, m); break;                // that synth's knob moves, program changes, pressure
+    case 'sx': gear.receiveSx(p, m); break;                 // and its sound (SysEx)
+    case 'preq': gear.onPreq(p, m); break;                  // asked for it again
     case 'chat': addChat({ from: p.id, name: S.players.get(p.id)?.name || p.name, text: String(m.text || '').slice(0, 500), t: Date.now() }); break;
     case 'chatlog': if (!S.chat.some((c) => !c.sys) && Array.isArray(m.items)) for (const it of m.items.slice(-50)) addChat({ ...it, text: String(it.text || '').slice(0, 500), old: true }, false); break;
   }
@@ -659,9 +663,18 @@ const input = new Input({
     const port = e.cfg.ext ? outPort(e.midiOut) : null;
     if (port) sendToHardware(port, bendBytes(e.outCh || 1, semi), selfInstant(e) ? performance.now() : clock.toLocal(clock.now() + L) - (e.hwLatency || 0));
     sendEvent(e, { type: 'p', id: 'bend', v: semi, at: clock.now() + L, seq: ++S.seq, b: BUDGETS[budgetOf(e)].short, o: L - lookahead() }, selfInstant(e)); } },
+  raw: (bytes, ch) => gear.relayRaw(bytes, ch),      // knob moves, program changes, pressure: to a bandmate's same synth
+  sysex: (bytes) => gear.onSysex(bytes),
   status: (msg) => renderInputStatus(msg),
 });
 window.JJ.input = input;
+const gear = makeGear({
+  h, S, engine, input, room, clock, tempo, outPort, sendToHardware, targetsFor, partLook, key, entry: (r) => entry(r), rack: () => S.rack, song: () => songStore.song,
+  chat: (text) => addChat({ sys: true, text, t: Date.now() }), status: (t, k) => setStatus(t, k), setOwned: (id, v) => setOwned(id, v), addEntry: (o) => addEntry(o),
+  closeDrawers: () => closeDrawers(), renderRack: () => renderRack(), openGear: () => openGear(), findUnit: () => { $('#hwSearch')?.focus(); $('#hwList')?.scrollIntoView({ block: 'nearest' }); renderHardware(); },
+  render: () => { if ($('#hwDrawer') && !$('#hwDrawer').classList.contains('hide')) renderHardware(); renderDevice(); },
+});
+window.JJ.gear = gear;
 
 const toUnit = (P, v) => P.curve === 'exp' ? Math.log(v / P.min) / Math.log(P.max / P.min) : (v - P.min) / (P.max - P.min);
 const fromUnit = (P, u) => {
@@ -1178,7 +1191,8 @@ function editTake(sid, pid, events, what, base) {
 function draftPart(spec) {
   if (spec.lane) {
     for (const s of songStore.sections()) for (const p of Object.values(s.parts || {})) if (SONG.laneOf(p) === spec.lane && p.kind !== 'audio') {
-      const { takes, current, prev, switchAt, votes, recording, events, ...rest } = p; return { ...rest, muted: false, votes: {} };
+      const rest = { ...p }; for (const k of ['takes', 'current', 'prev', 'switchAt', 'recording', 'events']) delete rest[k];   // the lane, not its takes
+      return { ...rest, muted: false, votes: {} };
     }
     return null;
   }
@@ -1968,6 +1982,7 @@ function audition(cfg) {
 
 // --- the gear wall (library) and the hardware desk
 function openDrawer(id) { $(id).classList.remove('hide'); }
+function openGear() { renderHardware(); openDrawer('#hwDrawer'); }
 function closeDrawers() { $$('.drawer').forEach((d) => d.classList.add('hide')); }
 // the shared studio: every instrument hung on a pegboard. One click puts it on your desk.
 const FEATURED = ['github:samuelling/Acoustic@b540fd3b83f83014073f4a90e2ec769b34374763'];   // pinned, so every jammer loads the identical code
@@ -2019,7 +2034,8 @@ function renderLibrary() {
   const tiles = [...engine.defs.values()].filter((d) => !d.lib && !d.internal).map((d) => tile({ id: d.id, name: d.name, family: d.family }, d));
   for (const lib of engine.libs.values()) for (const id of lib.entries) tiles.push(tile({ ...engine.catalog.get(id), id, lib: lib.id }, engine.defs.get(id)));
   if (!featuredTried || engine.loadingLibs) tiles.push(h('div', { class: 'tile plain' }, h('span', { class: 'peg' }), h('div', { class: 'face' }, 'hanging more…')));
-  tiles.push(plainTile('Bring your own', ['My hardware', 'Tell us your synth or drum machine; the band hears its twin'], () => { closeDrawers(); $('#addHwBtn').click(); }));
+  const mineHw = [...S.owned.keys()].map((id) => engine.unit(id)?.model).filter(Boolean);
+  tiles.push(plainTile('Bring your own', ['My gear', mineHw.length ? `${mineHw.slice(0, 3).join(', ')}${mineHw.length > 3 ? '…' : ''}: play one, or link more` : 'Link the synths you brought; whoever has the same one hears it on theirs, the rest hear its twin'], () => { closeDrawers(); openGear(); }));
   tiles.push(plainTile('Drummer', ['Virtual drummer', 'A drummer the room plays: jazz, rock, funk, hip-hop, house…'], () => { S.libTab = S.libTab === 'drums' ? 'builtin' : 'drums'; renderLibrary(); setTimeout(() => $('#libExtra')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30); }, 'drums'));
   tiles.push(plainTile('Live audio', ['Mic or line in', 'Real audio, heard by the band a few bars late'], () => S.openLive(), 'live'));
   tiles.push(plainTile('Plug in MIDI', ['External MIDI', 'A synth or DAW track on a MIDI port'], () => { closeDrawers(); $('#addExtBtn').click(); }, 'tech'));
@@ -2092,6 +2108,7 @@ function renderHardware() {
   });
   $('#hwFilters').replaceChildren(...HW_FILTERS.map(([id, label]) => h('button', { class: 'page' + ((S.hwFilter || 'all') === id ? ' on' : ''), onclick: () => { S.hwFilter = id; renderHardware(); } }, label)));
   setText($('#hwCount'), `${units.length} of ${engine.hardware.hardware.length}`);
+  gear.render($('#gearMine'));
   $('#hwList').replaceChildren(...units.map((u) => h('button', { class: u.id === hwPick ? 'on' : '', onclick: () => { hwPick = u.id; renderHardware(); } },
     u.model, S.owned.has(u.id) ? h('span', { class: 'mine', title: 'You have one' }, ' ●') : null,
     h('small', {}, `${u.maker}${u.year ? ' · ' + u.year : ''} · ${engine.hardware.families[u.family]?.label || u.family}`))));
@@ -2102,7 +2119,9 @@ function renderHardware() {
   const portSel = h('select', { class: 'lcdsel', 'aria-label': 'Your ' + unit.model + "'s MIDI port", onchange: (e) => setOwned(unit.id, e.target.value ? { port: e.target.value, ch: own?.ch || 1 } : null) },
     h('option', { value: '' }, input.midi ? (input.outputs.length ? "I don't have one" : 'no MIDI outputs') : 'Enable MIDI to choose a port'), ...input.outputs.map((o) => h('option', { value: o.id, selected: own?.port === o.id }, o.name)));
   const chSel = h('select', { class: 'lcdsel', 'aria-label': 'Channel', disabled: !own, onchange: (e) => setOwned(unit.id, { ...own, ch: +e.target.value }) }, ...Array.from({ length: 16 }, (_, i) => h('option', { value: i + 1, selected: (own?.ch || 1) === i + 1 }, `ch ${i + 1}`)));
+  const linkTo = S.linkPort && outPort(S.linkPort);
   $('#twinPick').replaceChildren(
+    linkTo && !own ? h('div', { class: 'owned linkto' }, h('span', {}, `Is “${linkTo.name}” your ${unit.model}?`), h('button', { class: 'btn small hot', onclick: () => { gear.link(unit.id, linkTo.id, 1); S.linkPort = null; renderHardware(); $('#gearMine')?.scrollIntoView({ block: 'nearest' }); } }, `Link it as my ${unit.model}`)) : null,
     h('div', { class: 'owned' + (own ? ' on' : '') },
       h('div', {}, h('b', {}, unit.model.startsWith(unit.maker) ? unit.model : `${unit.maker} ${unit.model}`), h('small', {}, [unit.year, unit.voices ? (unit.voices === 1 ? 'mono' : unit.voices + ' voices') : null, unit.note].filter(Boolean).join(' · '))),
       h('div', { class: 'row' }, h('span', { class: 'help' }, `I have one too: when a bandmate plays a ${unit.model}, play it on mine`), portSel, chSel,
@@ -2133,12 +2152,12 @@ function setOwned(id, v) {
 function autoOwn(pid, r, cfg) {
   const k = key(pid, r), cur = S.routes.get(k), own = cfg?.hw && S.owned.get(cfg.hw);
   if (own && own.port && (!cur || cur.auto)) {
-    if (cur && cur.port === own.port && cur.ch === own.ch) return;
-    setRoute(k, { port: own.port, ch: own.ch || 1, mute: true, auto: true });
+    if (cur && cur.port === own.port && cur.ch === own.ch && cur.same) return;
+    setRoute(k, { port: own.port, ch: own.ch || 1, mute: true, auto: true, same: true });
     const model = engine.unit(cfg.hw)?.model || 'synth';
     addChat({ sys: true, text: `${S.players.get(pid)?.name || 'A bandmate'}'s ${model} is playing on your own ${model}.`, t: Date.now() });
-    room.send({ k: 'real', r, hw: cfg.hw, on: true }, pid);
-  } else if (!own && cur?.auto) { setRoute(k, { port: '' }); room.send({ k: 'real', r, hw: cfg?.hw, on: false }, pid); }
+    room.send(gear.realMsg(r, cfg.hw, true), pid);
+  } else if (!own && cur?.auto) { setRoute(k, { port: '' }); room.send(gear.realMsg(r, cfg?.hw, false), pid); }
 }
 
 // --- tempo, lookahead, keyboard, wiring
@@ -2165,6 +2184,7 @@ function renderInputStatus(msg) {
   const midi = input.midi ? (input.inputs.length ? `MIDI IN: ${input.inputs.map((i) => i.name).join(', ')}` : 'MIDI on · no device seen yet') : '';
   el.textContent = msg || [`OCT ${input.octave}`, `VEL ${input.velocity}`, midi].filter(Boolean).join(' · ');
   if (input.midi && !$('#midiBtn').classList.contains('on')) { $('#midiBtn').textContent = 'MIDI on'; $('#midiBtn').classList.add('on'); renderDevice(); }
+  gear.check();   // a synth MEGAjam recognises by its port name: offer to link it
   renderKeyboard();
 }
 const DRUMS = { 36: 'KICK', 37: 'RIM', 38: 'SNR', 39: 'CLAP', 41: 'TOM', 42: 'HAT', 43: 'TOM', 44: 'HAT', 45: 'TOM', 46: 'OPEN', 47: 'TOM', 48: 'TOM', 49: 'CRSH', 50: 'TOM', 51: 'RIDE', 56: 'BELL', 60: 'PERC' };
@@ -2260,8 +2280,8 @@ function routeOut(k, ev) {
   if (ev.type === 'on') sendToHardware(port, [0x90 | oc, ev.note, ev.vel ?? 100], t);
   else if (ev.type === 'off') sendToHardware(port, [0x80 | oc, ev.note, 0], t);
   else if (ev.type === 'p' && ev.id === 'bend') sendToHardware(port, bendBytes(r.ch || 1, ev.v), t);
-  else if (ev.type === 'p') {
-    // a knob with a MIDI CC goes out as that CC
+  else if (ev.type === 'p' && !r.same) {
+    // a knob with a MIDI CC goes out as that CC (not to the same synth: its own knob moves come as they are)
     const cfg = cfgOfKey(k), def = cfg && engine.defs.get(cfg.inst), P = def?.params.find((x) => x.id === ev.id);
     if (P && P.cc) sendToHardware(port, [0xb0 | oc, P.cc, Math.round(toUnit(P, ev.v) * 127)], t);
   }
@@ -2448,7 +2468,7 @@ function wire() {
     b.addEventListener('pointerup', async () => { const held = performance.now() - downAt > 350; if (wasOpen || held) await talk.setOpen(false); show(); });
     b.addEventListener('keydown', async (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); await talk.setOpen(!talk.open); show(); } }); }
   $('#tapesBtn').onclick = () => { renderTapes(); openDrawer('#tapeDrawer'); };
-  $('#addHwBtn').onclick = () => { renderHardware(); openDrawer('#hwDrawer'); setTimeout(() => $('#hwSearch').focus(), 50); };
+  $('#addHwBtn').onclick = () => openGear();
   $('#addExtBtn').onclick = async () => { if (!input.midi) await input.enableMIDI(); addEntry({ ext: { name: 'My synth', port: input.outputs[0]?.id || '', ch: 1 } }); };
   $('#hwSearch').addEventListener('input', renderHardware);
   $('#hwSearch').addEventListener('keydown', (e) => e.stopPropagation());
