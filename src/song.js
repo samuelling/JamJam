@@ -11,7 +11,7 @@ export const NOTE_NAMES = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A�
 const rid = () => Math.random().toString(36).slice(2, 8);
 
 export function emptySong() {
-  return { format: 'megajam.song/1', title: 'Untitled', bpm: 96, key: { root: 9, mode: 'minor' }, meter: 4, order: [], sections: {} };
+  return { format: 'megajam.song/1', title: 'Untitled', bpm: 96, key: { root: 9, mode: 'minor' }, meter: 4, order: [], labels: [], rule: 'newest', variations: {}, sections: {} };
 }
 export function newSection(name = 'Verse', bars = 8) { return { id: rid(), name, bars, chords: Array(bars).fill(''), notes: '', parts: {} }; }
 export const sectionBeats = (song, s) => s.bars * (song.meter || 4);
@@ -25,7 +25,8 @@ export class SongStore {
     if (st && (st[0] > at || (st[0] === at && String(st[1]) >= String(by)))) return false;
     this.stamps[k] = [at, by];
     const s = this.song;
-    if (k === 'title' || k === 'bpm' || k === 'key' || k === 'meter' || k === 'order' || k === 'transport') s[k] = v;
+    if (['title', 'bpm', 'key', 'meter', 'order', 'labels', 'rule', 'transport'].includes(k)) s[k] = v;
+    else if (k.startsWith('var:')) { s.variations = s.variations || {}; if (v == null) delete s.variations[k.slice(4)]; else s.variations[k.slice(4)] = v; }
     else if (k.startsWith('sec:')) { const id = k.slice(4); if (v == null) delete s.sections[id]; else s.sections[id] = { parts: s.sections[id]?.parts || {}, ...v, id }; }
     else if (k.startsWith('part:')) { const [, sid, pid] = k.split(':'); const sec = s.sections[sid] || (s.sections[sid] = { id: sid, name: '…', bars: 8, chords: [], notes: '', parts: {} }); if (v == null) delete sec.parts[pid]; else sec.parts[pid] = { ...v, id: pid }; }
     for (const f of this.listeners) f(k, v);
@@ -41,6 +42,7 @@ export class SongStore {
       let v;
       if (k.startsWith('sec:')) { const sec = s.sections[k.slice(4)]; v = sec ? { name: sec.name, bars: sec.bars, chords: sec.chords, notes: sec.notes } : null; }
       else if (k.startsWith('part:')) { const [, sid, pid] = k.split(':'); v = s.sections[sid]?.parts?.[pid] ?? null; }
+      else if (k.startsWith('var:')) v = s.variations?.[k.slice(4)] ?? null;
       else v = s[k];
       this.apply(k, v, at, by);
     }
@@ -78,7 +80,7 @@ export function chartFromParts(parts, bars, meter) {
     for (const p of parts) {
       if (p.drums) continue;
       const on = new Map();
-      for (const e of p.events) {
+      for (const e of p.events || currentTake(p)?.events || []) {
         if (e.type === 'on') on.set(e.note, e.b);
         else if (e.type === 'off' && on.has(e.note)) { const s = on.get(e.note); on.delete(e.note); const d = Math.min(z, e.b) - Math.max(a, s); if (d > 0) notes.push({ note: e.note, dur: d }); }
       }
@@ -172,7 +174,7 @@ export function songFromMidi(bytes, title = 'Imported') {
     const sec = newSection(c.name.slice(0, 24), bars);
     for (const p of parts) {
       const ev = sliceEvents(p.events, a, z);
-      if (ev.some((e) => e.type === 'on')) { const pid = rid(); sec.parts[pid] = { id: pid, name: p.name, inst: p.inst, patch: p.patch, drums: !!p.drums, events: ev, by: 'import' }; }
+      if (ev.some((e) => e.type === 'on')) { const pid = 'l-' + p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'); sec.parts[pid] = { id: pid, name: p.name, lane: p.name, role: guessRole(p), inst: p.inst, patch: p.patch, drums: !!p.drums, takes: [{ id: 'seed', events: ev, by: 'import', byName: 'seed', at: 0 }], current: 'seed', by: 'import' }; }
     }
     sec.chords = chartFromParts(Object.values(sec.parts), bars, meter);
     song.sections[sec.id] = sec; song.order.push(sec.id);
@@ -243,7 +245,7 @@ export function songFromTracker(t) {
     // drum tracks share one Machina part
     const drums = parts.filter((p) => p.drums), tonal = parts.filter((p) => !p.drums);
     const merged = drums.length ? [{ name: 'Drums', inst: 'machina', patch: '909', drums: true, events: drums.flatMap((p) => p.events).sort((a, b) => a.b - b.b) }] : [];
-    for (const p of [...tonal, ...merged]) { const pid = rid(); sec.parts[pid] = { id: pid, ...p, by: 'import' }; }
+    for (const p of [...tonal, ...merged]) { const pid = 'l-' + p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'); const { events, ...rest } = p; sec.parts[pid] = { id: pid, ...rest, lane: p.name, role: guessRole(p), takes: [{ id: 'seed', events, by: 'import', byName: 'seed', at: 0 }], current: 'seed', by: 'import' }; }
     sec.chords = chartFromParts(tonal, bars, meter);
     song.sections[sec.id] = sec; song.order.push(sec.id);
   });
@@ -260,8 +262,9 @@ export function songToMidi(song) {
     const s = song.sections[id]; if (!s) continue;
     markers.push({ t: at, name: s.name });
     for (const p of Object.values(s.parts || {})) {
-      const key = p.name + '|' + p.inst; if (!tracks.has(key)) tracks.set(key, { name: p.name, drums: p.drums, ev: [] });
-      for (const e of p.events) tracks.get(key).ev.push({ ...e, b: e.b + at });
+      const key = laneOf(p) + '|' + p.inst; if (!tracks.has(key)) tracks.set(key, { name: p.name, drums: p.drums, ev: [] });
+      if (p.muted) continue;
+      for (const e of currentTake(p)?.events || []) tracks.get(key).ev.push({ ...e, b: e.b + at });
     }
     at += s.bars * meter;
   }
@@ -281,3 +284,33 @@ export function songToMidi(song) {
   const hdr = [0x4d, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, (all.length >> 8) & 255, all.length & 255, PPQ >> 8, PPQ & 255];
   return new Uint8Array([...hdr, ...all.flat()]);
 }
+
+// ---------- take lanes ----------
+// A part (one lane of the arrangement, in one section) keeps every take anyone has locked into it, and one current
+// take, the one that sounds. Changing the current take is stamped for a pass boundary (switchAt, in room beats), so
+// the band hears it switch together: before switchAt the previous take plays.
+export const ROLES = ['melody', 'comping', 'bass line', 'time', 'solo', 'pad', 'hits', 'backgrounds', 'texture'];
+export function guessRole(p) {
+  const n = `${p.name || ''} ${p.inst || ''} ${p.patch || ''}`.toLowerCase();
+  if (p.drums || /drum|kit|kick|snare|hat|ride/.test(n)) return 'time';
+  if (/bass|sub/.test(n)) return 'bass line';
+  if (/pad|string|wash/.test(n)) return 'pad';
+  if (/piano|keys|comp|organ|rhodes|guitar/.test(n)) return 'comping';
+  if (/solo/.test(n)) return 'solo';
+  return 'melody';
+}
+// older parts were one take
+export function takesOf(p) { return p.takes && p.takes.length ? p.takes : p.events ? [{ id: 't0', events: p.events, by: p.by, byName: p.byName, at: 0 }] : []; }
+export function currentTake(p, beat = Infinity) {
+  const ts = takesOf(p); if (!ts.length) return null;
+  const want = beat < (p.switchAt ?? -Infinity) ? p.prev : p.current;
+  return ts.find((t) => t.id === want) || ts[ts.length - 1];
+}
+// who gets to pick: 'newest' (the latest take wins), 'owner' (the lane's owner picks), 'vote' (most votes, newest on ties)
+export function pickCurrent(p, rule, votes = p.votes || {}) {
+  const ts = takesOf(p); if (!ts.length) return null;
+  if (rule === 'vote') { let best = ts[ts.length - 1], bv = -1; for (const t of ts) { const v = (votes[t.id] || []).length; if (v > bv || (v === bv && t.at >= best.at)) { best = t; bv = v; } } return best.id; }
+  if (rule === 'owner') return p.current || ts[ts.length - 1].id;
+  return ts[ts.length - 1].id;
+}
+export const laneOf = (p) => p.lane || p.name || p.id;

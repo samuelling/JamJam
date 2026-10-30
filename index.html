@@ -526,29 +526,69 @@
   .presence { display: inline-flex; gap: 4px; }
   .presence .who { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 700 11px var(--sans); background: #2a2c31; color: var(--mz-muted); }
   .presence .who.here { background: var(--mz-blue); color: #0a1a30; }
-  .board { flex: 1 1 auto; min-height: 0; display: flex; gap: 14px; overflow-x: auto; padding: 6px 2px 12px; align-items: flex-start; }
-  .seccard { flex: 0 0 286px; display: grid; gap: 8px; padding: 12px; border-radius: 6px; background: var(--mz-sheet); border: 1px solid #262a33; box-shadow: inset 0 4px 0 var(--sc), 0 8px 20px #0007; max-height: 100%; overflow-y: auto; }
-  .seccard.live { box-shadow: inset 0 4px 0 var(--sc), 0 0 0 2px var(--sc), 0 8px 24px #000a; }
-  .seccard.add { flex-basis: 170px; align-content: start; background: transparent; border-style: dashed; box-shadow: none; }
-  .seccard.add b { font: 400 18px/1 var(--display); color: var(--mz-muted); }
-  .sechead { display: flex; align-items: center; gap: 8px; }
+  /* the arrangement: sections left to right, a row per lane */
+  .arranger { position: relative; flex: 1 1 auto; min-height: 210px; overflow: auto; padding: 0 0 8px; background: var(--mz-sheet); border: 1px solid #262a33; border-radius: 6px; }
+  .arow { display: flex; gap: 2px; align-items: stretch; width: max-content; min-width: 100%; }
+  .arow + .arow { margin-top: 3px; }
+  .lhead { position: sticky; left: 0; z-index: 2; flex: 0 0 168px; display: flex; gap: 6px; align-items: center; padding: 4px 8px; background: #121317; border-right: 1px solid #000; box-shadow: inset 3px 0 0 var(--lc, #444); }
+  .lhead .ico { width: 34px; height: 24px; flex: none; }
+  .lhead b { display: block; font: 600 12px/1.2 var(--sans); color: var(--mz-toner); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 118px; }
+  .lhead small { font: 400 10px var(--type); color: var(--mz-muted); }
+  .lhead .role { font: 400 10px var(--type); background: transparent; color: var(--mz-muted); border: 0; padding: 0; }
+  .lhead.addl { align-items: flex-start; }
+  .ruler .lhead { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; }
+  .shead { flex: none; display: grid; align-content: start; gap: 2px; padding: 6px 7px 4px; text-align: left; border: 0; border-radius: 4px 4px 0 0; color: #18181b; cursor: pointer;
+    background: linear-gradient(180deg, var(--sc), color-mix(in srgb, var(--sc) 78%, #000)); overflow: hidden; }
+  .shead b { font: 400 15px/1 var(--display); white-space: nowrap; }
+  .shead small { font: 400 10px/1.1 var(--type); opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .shead .rm { font-style: italic; opacity: 1; }
+  .shead.sel { outline: 2px solid var(--mz-toner); outline-offset: -2px; }
+  .shead.live { animation: livebar 1.2s ease-in-out infinite; }
+  @keyframes livebar { 50% { filter: brightness(1.25); } }
+  .shead .ticks { display: flex; gap: 1px; height: 5px; margin-top: 2px; }
+  .shead .ticks i { flex: 1; background: #0003; }
+  .shead .ticks i.bar4 { background: #0006; }
+  .shead .ticks i.ch { box-shadow: inset 0 2px 0 #18181b; }
+  .shead .herein { display: flex; gap: 2px; }
+  .shead .herein i { width: 15px; height: 15px; border-radius: 50%; display: grid; place-items: center; font: 700 9px var(--sans); font-style: normal; background: var(--c); color: #18181b; box-shadow: 0 0 0 1px #18181b; }
+  .cell { flex: none; position: relative; height: 40px; border-radius: 3px; overflow: hidden; display: grid; place-items: center; font: 400 10px var(--type); }
+  .cell.empty { border: 1px dashed #2c3039; color: transparent; cursor: pointer; }
+  .cell.empty:hover { color: var(--mz-muted); border-color: #4a4f5b; }
+  .cell.blank { opacity: 0; }
+  .cell.take { cursor: pointer; background: var(--lc); box-shadow: inset 0 -3px 0 #0004; }
+  .cell.take svg { position: absolute; left: 2px; top: 5px; opacity: .78; }
+  .cell.take .lock { position: absolute; left: 3px; top: 2px; font-size: 9px; filter: grayscale(1) brightness(.3); }
+  .cell.take .ntakes { position: absolute; right: 3px; bottom: 2px; font: 700 9px var(--sans); color: #18181b; background: #fff8; padding: 0 3px; border-radius: 2px; }
+  .cell.take.sel { outline: 2px solid var(--mz-toner); outline-offset: -2px; }
+  .cell.take.muted { background: repeating-linear-gradient(135deg, #2a2c31 0 5px, #1d1f23 5px 10px); }
+  .cell.take.muted svg { opacity: .3; }
+  .cell.take.retake { box-shadow: inset 0 0 0 2px #18181b, 0 0 0 2px var(--lc); }
+  .cell .retaking { position: absolute; inset: auto 0 0 0; padding: 1px 4px; font: 700 9px var(--sans); color: #18181b; background: repeating-linear-gradient(135deg, var(--c) 0 6px, color-mix(in srgb, var(--c) 70%, #fff) 6px 12px); animation: stripes 1s linear infinite; background-size: 17px 17px; }
+  .cell.working { border: 2px dashed var(--lc); color: var(--lc); font-weight: 700; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--lc) 22%, transparent) 0 6px, transparent 6px 12px); background-size: 17px 17px; animation: stripes 1s linear infinite; }
+  @keyframes stripes { to { background-position: 17px 0; } }
+  .arow.ghost .lhead { opacity: .9; }
+  .playhead { position: absolute; top: 0; width: 2px; background: var(--mz-toner); box-shadow: 0 0 6px var(--mz-toner); pointer-events: none; z-index: 3; }
+  .addsec { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 6px; }
+  .addsec b { font: 400 14px/1 var(--display); color: var(--mz-muted); margin-right: 4px; }
+  .zoom { display: inline-flex; }
+  .details { flex: 0 0 auto; display: grid; grid-template-columns: minmax(300px, 1.1fr) minmax(280px, 1fr); gap: 10px; max-height: 36%; min-height: 0; }
+  .details .pane { display: grid; gap: 8px; align-content: start; padding: 10px 12px; border-radius: 6px; background: var(--mz-sheet); border: 1px solid #262a33; overflow-y: auto; }
+  .details .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .rmlabel { background: transparent; border: 0; border-bottom: 1px dashed #333; color: var(--mz-toner); font: italic 400 12px var(--type); padding: 2px 0; }
+  .chart { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; }
+  .takerow { display: flex; align-items: center; gap: 8px; padding: 5px 7px; border-radius: 4px; background: #0e0f12; font: 400 12px var(--type); }
+  .takerow.on { box-shadow: inset 3px 0 0 var(--mz-blue); }
+  .takerow .tno { font: 700 11px var(--sans); color: var(--mz-muted); min-width: 44px; }
+  .curtag { font: 700 10px var(--sans); color: var(--mz-blue); text-transform: uppercase; letter-spacing: .05em; }
+  @media (max-width: 760px) { .details { grid-template-columns: 1fr; max-height: none; } .lhead { flex-basis: 120px; } }
+  .secnotes { width: 100%; resize: vertical; background: #0e0f12; color: var(--mz-toner); border: 1px solid #23262d; border-radius: 3px; font: 400 12px var(--type); padding: 6px; }
   .secno { font: 400 12px var(--type); color: var(--mz-muted); }
   .secname { font: 400 18px/1 var(--display); background: transparent; color: var(--sc); border: 0; max-width: 170px; }
-  .secmove { margin-left: auto; display: inline-flex; }
   .bars { display: flex; align-items: center; gap: 6px; font: 400 12px var(--type); }
-  .chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
   .chord { width: 100%; min-width: 0; padding: 6px 4px; text-align: center; font: 700 14px var(--sans); background: #0e0f12; color: var(--mz-toner); border: 1px solid #23262d; border-radius: 3px; }
   .chord.downbar { border-left: 2px solid #3a3e47; }
   .chord.bad { color: #ff8a8a; }
   .chord.now { background: var(--sc); color: #18181b; }
-  .secnotes { width: 100%; resize: vertical; background: #0e0f12; color: var(--mz-toner); border: 1px solid #23262d; border-radius: 3px; font: 400 12px var(--type); padding: 6px; }
-  .secparts { display: grid; gap: 4px; }
-  .secparts .part { display: grid; grid-template-columns: 42px 1fr auto auto; gap: 6px; align-items: center; padding: 4px; border-radius: 4px; background: #0e0f12; }
-  .secparts .part.muted { opacity: .45; }
-  .secparts .part .ico { width: 42px; height: 28px; }
-  .secparts .part b { display: block; font: 600 12px var(--sans); }
-  .secparts .part small { font: 400 10px var(--type); color: var(--mz-muted); }
-  .secacts { display: flex; flex-wrap: wrap; gap: 6px; }
 </style>
 <script src="mp-config.js"></script>
 </head>

@@ -11,8 +11,8 @@ const key = (ch, note) => ch * 128 + note;
 const MIDI_MOCK = typeof location !== 'undefined' && new URLSearchParams(location.search).get('midimock') === '1';
 
 export class Input {
-  constructor({ note, cc, bend, status }) {
-    this.cb = { note, cc, bend, status };
+  constructor({ note, cc, bend, status, plugged }) {
+    this.cb = { note, cc, bend, status, plugged };
     this.octave = 4; this.velocity = 100;
     this.sustain = new Set();     // channels with the pedal down
     this.sustained = new Set();   // keys held only by the pedal
@@ -85,8 +85,13 @@ export class Input {
     if (!navigator.requestMIDIAccess) { this.cb.status('Web MIDI isn\'t available in this browser (try Chrome, Edge or Firefox).'); return false; }
     try { this.midi = await navigator.requestMIDIAccess({ sysex: false }); }
     catch (_) { this.cb.status('MIDI access was refused.'); return false; }
+    let known = null;
     const refresh = () => {
-      this.inputs = [...this.midi.inputs.values()];
+      const live = [...this.midi.inputs.values()].filter((i) => i.state !== 'disconnected');
+      // say so when a device is plugged in or pulled out after MIDI is on (not for the ones already there)
+      if (known) { for (const i of live) if (!known.has(i.id)) this.cb.plugged?.(i.name || 'A MIDI device', true); for (const [id, n] of known) if (!live.some((i) => i.id === id)) this.cb.plugged?.(n, false); }
+      known = new Map(live.map((i) => [i.id, i.name || 'MIDI device']));
+      this.inputs = live;
       this.outputs = [...this.midi.outputs.values()];
       for (const i of this.inputs) i.onmidimessage = (m) => this.onMIDI(m);
       this.cb.status();
