@@ -1,0 +1,16 @@
+{
+ "dreadbox-artemis": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://www.soundonsound.com/reviews/dreadbox-artemis",
+   "https://synthanatomy.com/2025/08/dreadbox-artemis-new-analog-polyphonic-synthesizer-with-sinevibes-effects.html",
+   "https://www.elektronauts.com/t/dreadbox-artemis/222865?page=20"
+  ],
+  "notes": "512 patch slots; 5-pin MIDI in/out and USB. Knob CCs arrived in a firmware update. No published request for the current sound, so knob moves only."
+ }
+}

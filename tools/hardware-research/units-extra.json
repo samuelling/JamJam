@@ -1,0 +1,24 @@
+[
+ {
+  "id": "dreadbox-artemis",
+  "maker": "Dreadbox",
+  "model": "Artemis",
+  "year": 2025,
+  "family": "analog-poly",
+  "voices": 6,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "pad",
+   "brass",
+   "lead",
+   "keys"
+  ],
+  "character": {
+   "detune": 8,
+   "drive": 0.3,
+   "chorus": 0.2
+  },
+  "note": "Six-voice analog poly with two waveshaping VCOs per voice, HP and LP filters and Sinevibes effects; MPE and poly aftertouch."
+ }
+]

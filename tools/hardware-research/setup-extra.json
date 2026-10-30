@@ -1,0 +1,15 @@
+{
+ "dreadbox-artemis": {
+  "steps": [
+   "Update Artemis to the latest firmware: sending and receiving knob moves as MIDI CC came in an update.",
+   "Set its MIDI channel in its settings menu (on the screen) to match the channel you pick here.",
+   "Connect it by USB, or its 5-pin MIDI OUT and IN to your MIDI interface.",
+   "Turn on CC send and receive in its MIDI settings, so knob moves reach a bandmate's Artemis.",
+   "There's no command to fetch its current sound: both players load the same preset, and knob moves follow live."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://www.soundonsound.com/reviews/dreadbox-artemis"
+  ]
+ }
+}
