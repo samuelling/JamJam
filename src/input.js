@@ -70,7 +70,7 @@ export class Input {
       return;
     }
     if (e.repeat) return;
-    // a pad instrument on the desk: the keys are its 4×4 grid (1234 / QWER / ASDF / ZXCV, top row to bottom)
+    // a pad instrument on the desk: the keys are its 4×4 grid, laid out like it (Z X C V the bottom row, up to 1 2 3 4)
     if (this.padKeys && this.padKeys[k] !== undefined) { const note = this.padKeys[k]; this.keysDown.set(k, note); this.press(note, this.velocity, 0); return; }
     if (k === 'z') { this.octave = Math.max(0, this.octave - 1); this.cb.status(); return; }
     if (k === 'x') { this.octave = Math.min(8, this.octave + 1); this.cb.status(); return; }

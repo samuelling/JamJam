@@ -1,7 +1,7 @@
 // The Compose Room: the band's song board. Sections in arrangement order, each with its length, chord chart, notes
 // and the parts locked into it; import a sketch (MIDI or a SynthLand Tracker song), export the song; loop a section
 // or play the whole song; "Jam this" takes everyone to the Jam Room with that section looping.
-import { SECTION_NAMES, NOTE_NAMES, newSection, parseChord, takesOf, currentTake, laneOf, ROLES } from './song.js';
+import { SECTION_NAMES, NOTE_NAMES, newSection, parseChord, takesOf, currentTake, laneOf, laneName, ROLES } from './song.js';
 
 const COLORS = { Intro: '#7DB0FF', Verse: '#ECEBE5', 'Pre-chorus': '#D8A83A', Chorus: '#FF68BA', Bridge: '#9b8cff', Solo: '#3ddc84', Breakdown: '#8a8f98', Drop: '#ff7a3d', Outro: '#7DB0FF' };
 export const colorOfSection = (name) => COLORS[Object.keys(COLORS).find((k) => String(name).toLowerCase().startsWith(k.toLowerCase()))] || '#A0A6AF';
@@ -21,7 +21,7 @@ export function fillChart(key, bars, prog) {
 
 export function makeCompose(x) {
   // x: { h, $, store, playersOf(), setSong(k, v), play(mode, sid), stop(), transport(), jamThis(sid), importFile(f), exportMidi(), exportJson(),
-  //      removePart, mutePart, choose, vote, saveVariation, restoreVariation, setRole, laneSounds(drums), setLaneSound(lane, inst, patch), midiOn(), enableMidi(), presets(), loadPreset(genre, song), working(), me(), iconEl, keyName(), bpm() }
+  //      removePart, mutePart, choose, vote, saveVariation, restoreVariation, setRole, midiOn(), enableMidi(), presets(), loadPreset(genre, song), working(), me(), iconEl, keyName(), bpm() }
   const { h, $ } = x;
   let PX = 18, sel = null, cell = null, editing = null;
   let draft = null, dragging = false;   // a loop being drawn before it plays; true while a handle is held
@@ -42,11 +42,14 @@ export function makeCompose(x) {
   let open = false; try { open = localStorage.getItem('megajam.lanes') === '1'; } catch (_) {}   // lanes folded into one row by default   // px per bar; the selected section and lane
   const LANE_COLORS = ['#FF68BA', '#7DB0FF', '#D8A83A', '#3ddc84', '#b892ff', '#ff8a3d', '#5fd4d4', '#ECEBE5'];
   const laneColor = (i) => LANE_COLORS[i % LANE_COLORS.length];
+  // the song's tracks, in the order they were made (and, for an older song, any label-named lanes not made tracks yet)
   function lanes() {
-    const out = [], seen = new Map();
-    for (const s of x.store.sections()) for (const p of Object.values(s.parts || {})) { const l = laneOf(p); if (!seen.has(l)) { seen.set(l, out.length); out.push({ lane: l, role: p.role, inst: p.inst, drums: p.drums, sample: p }); } }
+    const song = x.store.song, out = [], seen = new Set();
+    for (const t of Object.values(song.lanes || {}).sort((a, b) => (a.at || 0) - (b.at || 0))) { out.push({ lane: t.id, name: t.name, role: t.role, inst: t.inst, drums: t.drums, sample: t, rec: t }); seen.add(t.id); }
+    for (const s of x.store.sections()) for (const p of Object.values(s.parts || {})) { const l = laneOf(p); if (!seen.has(l)) { seen.add(l); out.push({ lane: l, name: laneName(song, p), role: p.role, inst: p.inst, drums: p.drums, sample: p }); } }
     return out;
   }
+  let adding = false;   // the Add track form is open
   // a tiny picture of a take: notes as bars across the cell (pitch up), drums as ticks
   function miniRoll(take, beats, w, ht, color, drums) {
     if (take?.audio) {
@@ -67,7 +70,8 @@ export function makeCompose(x) {
   }
   function pickLane(lane) {
     const song = x.store.song, has = (sid) => Object.values(song.sections[sid]?.parts || {}).find((q) => laneOf(q) === lane);
-    const sid = has(sel) ? sel : song.order.find(has); if (!sid) return;
+    const sid = has(sel) ? sel : song.order.find(has);
+    if (!sid) { const at = sel || song.order[0]; if (at) writeFor(at, { lane }); return; }   // a track with nothing in it yet: its empty roll
     sel = sid; cell = { sid, pid: has(sid).id, lane }; render();
   }
   // the picked lane's notes in this section, in detail: a roll under the chord chart, with names, bars and velocities.
@@ -82,7 +86,7 @@ export function makeCompose(x) {
     for (const e of [...(take?.events || [])].sort((a, b) => a.b - b.b)) { if (e.type === 'on') on.set(e.note, e); else if (e.type === 'off' && on.has(e.note)) { const o = on.get(e.note); notes.push({ n: e.note, a: o.b, z: e.b, v: o.vel ?? 100 }); on.delete(e.note); } }
     for (const [n, o] of on) notes.push({ n, a: o.b, z: beats, v: o.vel ?? 100 });
     const close = h('button', { class: 'gearx', style: 'position:static', 'aria-label': 'Hide the notes', onclick: () => { cell = null; render(); } }, '×');
-    const head = (...k) => h('div', { class: 'row lvhead' }, h('b', { style: `color:${color}` }, laneOf(p)), ...k, h('span', { style: 'flex:1' }), close);
+    const head = (...k) => h('div', { class: 'row lvhead' }, h('b', { style: `color:${color}` }, laneName(x.store.song, p)), ...k, h('span', { style: 'flex:1' }), close);
     const canEdit = !!x.editTake && !take?.audio;
     if (!notes.length && !canEdit) return h('div', { class: 'laneview' }, head(h('span', { class: 'help' }, 'no notes in this take')));
     const name = (n) => (p.drums ? drumName(n) : NOTE_NAMES[n % 12] + (Math.floor(n / 12) - 1));
@@ -226,24 +230,61 @@ export function makeCompose(x) {
   // under the chart when no lane is open: write a part, for a lane already in the song or an instrument on your desk
   function writeRow(s, c) {
     if (!x.editTake || !x.draftPart) return null;
-    const L = lanes().filter((l) => l.sample.kind !== 'audio'), known = new Set(L.map((l) => l.lane)), desk = (x.desk?.() || []).filter((d) => !known.has(d.lane));
-    if (!L.length && !desk.length) return h('div', { class: 'row writerow' }, h('span', { class: 'help' }, 'Put an instrument on your desk to write a part for it here.'));
+    const L = lanes().filter((l) => l.sample.kind !== 'audio'), known = new Set(L.map((l) => l.lane)), desk = (x.desk?.() || []).filter((d) => !d.lane || !known.has(d.lane));
+    if (!L.length && !desk.length) return h('div', { class: 'row writerow' }, h('span', { class: 'help' }, 'Add a track (under the tracks above), or put an instrument on your desk, to write a part here.'));
     const pick = h('select', { class: 'lcdsel', 'aria-label': 'Write a part for', onchange: (e) => { const v = e.target.value; if (!v) return; writeFor(s.id, v.startsWith('r:') ? { r: +v.slice(2) } : { lane: v }); } },
       h('option', { value: '' }, '✎ Write a part for…'),
-      L.length ? h('optgroup', { label: 'Lanes in the song' }, ...L.map((l) => h('option', { value: l.lane }, l.lane + (s.parts && Object.values(s.parts).some((q) => laneOf(q) === l.lane) ? ' (has a take here)' : '')))) : null,
-      desk.length ? h('optgroup', { label: 'A new lane, from your desk' }, ...desk.map((d) => h('option', { value: 'r:' + d.r }, d.name))) : null);
-    return h('div', { class: 'row writerow' }, pick, h('span', { class: 'help' }, 'or click an empty block in a lane: notes you write here go to everyone with the song, whole, before they play'));
+      L.length ? h('optgroup', { label: 'Tracks in the song' }, ...L.map((l) => h('option', { value: l.lane }, l.name + (s.parts && Object.values(s.parts).some((q) => laneOf(q) === l.lane) ? ' (has a take here)' : '')))) : null,
+      desk.length ? h('optgroup', { label: 'A new track, from your desk' }, ...desk.map((d) => h('option', { value: 'r:' + d.r }, d.name))) : null);
+    return h('div', { class: 'row writerow' }, pick, h('span', { class: 'help' }, 'or click an empty block in a track: notes you write here go to everyone with the song, whole, before they play'));
   }
-  // the lane's instrument and patch: pick another and the notes stay, played on it, in every section
-  function soundPick(ln) {
-    if (ln.sample.kind === 'audio' || !x.laneSounds) return null;
-    const groups = x.laneSounds(ln.drums), cur = `${ln.inst}|${ln.sample.patch}`, known = groups.some((d) => d.patches.some(([t]) => `${d.id}|${t}` === cur));
-    return h('select', { class: 'role sound', 'aria-label': `${ln.lane}'s instrument`, title: 'Change the instrument: the notes stay', onchange: (e) => {
-      const [inst, patch] = e.target.value.split('|'), next = x.setLaneSound(ln.lane, inst, patch);
-      if (cell?.lane === ln.lane) cell = { ...cell, lane: next };
-      render();
-    } }, known ? null : h('option', { value: cur, selected: true }, ln.sample.name || ln.inst),
-      ...groups.map((d) => h('optgroup', { label: d.name }, ...d.patches.map(([t, name]) => h('option', { value: `${d.id}|${t}`, selected: `${d.id}|${t}` === cur }, `${d.name} · ${name}`)))));
+  // a track's fader (dB) and pan: heard at once while dragged, written to the song (for everyone) when let go;
+  // double-click puts it back to the middle
+  const fmtDb = (db) => (db <= -60 ? '−∞' : `${db > 0 ? '+' : db < 0 ? '−' : ''}${Math.abs(db).toFixed(1)} dB`);
+  const fmtPan = (v) => (Math.abs(v) < 0.02 ? 'C' : `${v < 0 ? 'L' : 'R'}${Math.round(Math.abs(v) * 100)}`);
+  function fader(t, kind) {
+    const vol = t.vol ?? 0, readout = h('small', { class: 'mono help' }, fmtDb(vol));
+    const r = h('input', { type: 'range', class: 'tfader' + (kind === 'mini' ? ' mini' : ''), min: -60, max: 6, step: 0.5, value: vol, 'aria-label': `${t.name} volume`, title: `${t.name}: ${fmtDb(vol)} (double-click for 0 dB)`,
+      onpointerdown: (e) => e.stopPropagation(), oninput: (e) => { readout.textContent = fmtDb(+e.target.value); x.mixPreview?.(t.id, { vol: +e.target.value }); }, onchange: (e) => x.setLane(t.id, { vol: +e.target.value }), ondblclick: () => x.setLane(t.id, { vol: 0 }) });
+    return kind === 'mini' ? r : h('label', { class: 'tmix' }, h('small', {}, 'Volume'), r, readout);
+  }
+  function panner(t) {
+    const v = t.pan ?? 0, readout = h('small', { class: 'mono help' }, fmtPan(v));
+    return h('label', { class: 'tmix' }, h('small', {}, 'Pan'), h('input', { type: 'range', class: 'tpan', min: -1, max: 1, step: 0.02, value: v, 'aria-label': `${t.name} pan`, title: 'Double-click for centre',
+      oninput: (e) => { readout.textContent = fmtPan(+e.target.value); x.mixPreview?.(t.id, { pan: +e.target.value }); }, onchange: (e) => x.setLane(t.id, { pan: +e.target.value }), ondblclick: () => x.setLane(t.id, { pan: 0 }) }), readout);
+  }
+  // a track's own settings, above its takes: its name, its instrument and patch, put it on your desk, remove it
+  function trackBar(id) {
+    const t = id && x.store.song.lanes?.[id]; if (!t || !x.setLane) return null;
+    const insts = x.instruments?.() || [], cur = insts.find((i) => i.id === t.inst);
+    return h('div', { class: 'row trackbar' },
+      h('input', { class: 'rmlabel tname', value: t.name, maxlength: 40, 'aria-label': 'Track name', onkeydown: (e) => { e.stopPropagation(); if (e.key === 'Enter') e.target.blur(); }, onchange: (e) => x.setLane(t.id, { name: e.target.value.trim().slice(0, 40) || t.name }) }),
+      t.kind === 'audio' ? h('span', { class: 'help' }, 'live audio') : h('select', { class: 'lcdsel', 'aria-label': 'Instrument', title: "The track's instrument: every take on the track plays on it", onchange: (e) => x.setLane(t.id, { inst: e.target.value }) }, ...insts.map((i) => h('option', { value: i.id, selected: i.id === t.inst }, i.name))),
+      t.kind === 'audio' || !cur || cur.patches.length < 2 ? null : h('select', { class: 'lcdsel', 'aria-label': 'Patch', onchange: (e) => x.setLane(t.id, { patch: e.target.value }) }, ...cur.patches.map(([v, n]) => h('option', { value: v, selected: v === t.patch }, n))),
+      t.kind === 'audio' ? null : h('button', { class: 'btn small', title: "Put this track's instrument on your desk: the takes you lock with it go into this track", onclick: () => x.jamLane(t.id) }, 'Jam it'),
+      fader(t), panner(t),
+      h('span', { style: 'flex:1' }),
+      h('button', { class: 'btn small ghost danger', onclick: () => { if (confirm(`Remove the track "${t.name}" and all its takes?`)) { x.removeLane(t.id); cell = null; render(); } } }, 'Remove track'));
+  }
+  // + Add track: any instrument, with its patch; it opens on an empty roll in the picked section
+  function addTrackRow(hasSections) {
+    if (!x.addLane) return null;
+    if (!adding) return h('div', { class: 'addtrack' }, h('button', { class: 'btn small ghost', title: 'A new track with any instrument: write its notes, or jam it from your desk', onclick: () => { adding = true; render(); } }, '+ Add track'));
+    const insts = x.instruments?.() || [];
+    const name = h('input', { class: 'rmlabel', placeholder: 'name (optional)', maxlength: 40, 'aria-label': 'Track name', onkeydown: (e) => e.stopPropagation() });
+    const patch = h('select', { class: 'lcdsel', 'aria-label': 'Patch' });
+    const inst = h('select', { class: 'lcdsel', 'aria-label': 'Instrument', onchange: () => fill() }, ...insts.map((i) => h('option', { value: i.id }, i.name)));
+    const fill = () => { const i = insts.find((q) => q.id === inst.value); patch.replaceChildren(...(i?.patches || []).map(([v, n]) => h('option', { value: v }, n))); patch.classList.toggle('hide', !i || i.patches.length < 2); };
+    fill();
+    const add = () => {
+      const id = x.addLane({ inst: inst.value, patch: patch.value, name: name.value.trim() }); adding = false; if (!id) { render(); return; }
+      open = true; try { localStorage.setItem('megajam.lanes', '1'); } catch (_) {}
+      const at = sel || x.store.song.order[0];
+      if (at) writeFor(at, { lane: id }); else render();
+    };
+    return h('div', { class: 'addtrack open' }, h('b', {}, 'New track'), inst, patch, name,
+      h('button', { class: 'btn small hot', onclick: add }, 'Add'), h('button', { class: 'btn small ghost', onclick: () => { adding = false; render(); } }, 'Cancel'),
+      hasSections ? null : h('span', { class: 'help' }, 'Add a section to the song, then write in it.'));
   }
   function SONG_TAKE(p, id) { return takesOf(p).find((t) => t.id === id); }
   function drumName(n) {
@@ -284,11 +325,14 @@ export function makeCompose(x) {
       h('span', { class: 'zoom' }, h('small', { class: 'help' }, 'zoom'), h('button', { class: 'btn small ghost', 'aria-label': 'Zoom out', onclick: () => { PX = Math.max(8, PX - 4); render(); } }, '−'), h('button', { class: 'btn small ghost', 'aria-label': 'Zoom in', onclick: () => { PX = Math.min(48, PX + 4); render(); } }, '+')));
     // the arrangement: sections left to right along the top, one row per lane, a block per take that sounds there
     const loopId = tr && tr.on ? (tr.mode === 'loop' ? tr.sid : tr.mode === 'range' ? work[0]?.sid || null : null) : null;
-    const busy = new Map();   // lane -> the jammer playing it in the looping section right now
-    if (loopId) for (const w of work) if (w.where === 'jam' && w.active) for (const name of w.parts) busy.set(`${w.who} · ${name}`, w);
+    const busy = new Map();   // track -> the jammer playing it in the looping section right now
+    const recs = Object.values(song.lanes || {});
+    // which track a jammer's instrument plays into: the one it was put on the desk for, or theirs with that instrument
+    const keyFor = (w, i) => { const ins = w.insts?.[i] || {}; if (ins.lane && song.lanes?.[ins.lane]) return ins.lane; const t = recs.find((q) => q.ownerName === w.who && q.inst === ins.inst && q.kind !== 'audio'); return t ? t.id : `${w.who} · ${w.parts[i]}`; };
+    if (loopId) for (const w of work) if (w.where === 'jam' && w.active) w.parts.forEach((_, i) => busy.set(keyFor(w, i), w));
     const cols = order.map((id, i) => ({ id, i, s: song.sections[id], label: (song.labels || [])[i] || '', w: Math.max(70, song.sections[id].bars * PX) }));
     const toggle = () => { open = !open; try { localStorage.setItem('megajam.lanes', open ? '1' : '0'); } catch (_) {} render(); };
-    const ruler = h('div', { class: 'arow ruler' }, h('div', { class: 'lhead' }, h('button', { class: 'lanetoggle', 'aria-expanded': String(open), title: open ? 'Fold the lanes into one row' : 'Show a row per lane, with its takes', onclick: toggle }, open ? '▾ ' : '▸ ', h('b', {}, `${L.length} lane${L.length === 1 ? '' : 's'}`)), null),
+    const ruler = h('div', { class: 'arow ruler' }, h('div', { class: 'lhead' }, h('button', { class: 'lanetoggle', 'aria-expanded': String(open), title: open ? 'Fold the tracks into one row' : 'Show a row per track, with its takes', onclick: toggle }, open ? '▾ ' : '▸ ', h('b', {}, `${L.length} track${L.length === 1 ? '' : 's'}`)), null),
       ...cols.map((c) => {
         const t0 = tl[c.i], live = tr && tr.on && (tr.mode === 'song' ? true : tr.mode === 'range' ? t0 && t0.start < tr.b && t0.start + t0.beats > tr.a : tr.sid === c.id);
         const here = c.id === loopId ? [...new Set(busy.values())] : [];
@@ -321,20 +365,27 @@ export function makeCompose(x) {
         });
         return hd;
       }));
-    const rows = !open ? [] : L.map((ln, li) => h('div', { class: 'arow' },
-      h('div', { class: 'lhead pick' + (cell && cell.lane === ln.lane ? ' sel' : ''), style: `--lc:${laneColor(li)}`, title: `Show ${ln.lane}'s notes below`, onclick: (e) => { if (e.target.closest('select')) return; pickLane(ln.lane); } }, x.iconEl(ln.sample), h('span', {}, h('b', {}, ln.lane), h('select', { class: 'role', 'aria-label': `${ln.lane}'s role`, onchange: (e) => { const s0 = x.store.sections().find((s) => Object.values(s.parts || {}).some((p) => laneOf(p) === ln.lane)); const p = Object.values(s0.parts).find((q) => laneOf(q) === ln.lane); x.setRole(s0.id, p.id, e.target.value); } }, ...ROLES.map((r) => h('option', { value: r, selected: (ln.role || '') === r }, r))), soundPick(ln))),
+    const solos = x.soloed?.() || new Set();
+    const setRoleOf = (ln, role) => { if (ln.rec) x.setLane(ln.lane, { role }); const s0 = x.store.sections().find((s) => Object.values(s.parts || {}).some((p) => laneOf(p) === ln.lane)); const p = s0 && Object.values(s0.parts).find((q) => laneOf(q) === ln.lane); if (p) x.setRole(s0.id, p.id, role); };
+    const rows = !open ? [] : L.map((ln, li) => h('div', { class: 'arow' + (ln.rec?.muted ? ' tmuted' : '') + (solos.size && !solos.has(ln.lane) ? ' unsolo' : '') },
+      h('div', { class: 'lhead pick' + (cell && cell.lane === ln.lane ? ' sel' : ''), style: `--lc:${laneColor(li)}`, title: `${ln.name}: show its notes below`, onclick: (e) => { if (e.target.closest('select, button')) return; pickLane(ln.lane); } }, x.iconEl(ln.sample),
+        h('span', {}, h('b', {}, ln.name), h('select', { class: 'role', 'aria-label': `${ln.name}'s role`, onchange: (e) => setRoleOf(ln, e.target.value) }, ...ROLES.map((r) => h('option', { value: r, selected: (ln.role || '') === r }, r)))),
+        h('span', { class: 'ms' },
+          ln.rec ? h('button', { class: 'msb' + (ln.rec.muted ? ' on' : ''), 'aria-pressed': String(!!ln.rec.muted), title: ln.rec.muted ? 'Unmute this track (for everyone)' : 'Mute this track for everyone', onclick: () => x.setLane(ln.lane, { muted: !ln.rec.muted }) }, 'M') : null,
+          h('button', { class: 'msb solo' + (solos.has(ln.lane) ? ' on' : ''), 'aria-pressed': String(solos.has(ln.lane)), title: 'Solo: hear only the soloed tracks (only you; the band hears everything)', onclick: () => x.solo(ln.lane) }, 'S')),
+        ln.rec ? fader(ln.rec, 'mini') : null),
       ...cols.map((c) => {
         const p = Object.values(c.s.parts || {}).find((q) => laneOf(q) === ln.lane);
         const wk = c.id === loopId ? busy.get(ln.lane) : null;
         if (!p) return wk ? h('div', { class: 'cell working', style: `width:${c.w}px;--lc:${wk.color}`, title: `${wk.who} is playing this now; nothing locked yet` }, h('span', {}, '● being played · not locked'))
-          : h('div', { class: 'cell empty', style: `width:${c.w}px`, title: `Nothing here yet: write ${ln.lane}'s notes on an empty roll, or jam it and lock a take in`, onclick: () => writeFor(c.id, { lane: ln.lane }) }, h('span', {}, '+ write or jam'));
+          : h('div', { class: 'cell empty', style: `width:${c.w}px`, title: `Nothing here yet: write ${ln.name}'s notes on an empty roll, or jam it and lock a take in`, onclick: () => writeFor(c.id, { lane: ln.lane }) }, h('span', {}, '+ write or jam'));
         const take = currentTake(p), n = takesOf(p).length, beats = c.s.bars * meter;
-        const blk = h('div', { class: 'cell take' + (p.muted ? ' muted' : '') + (wk ? ' retake' : '') + (cell && cell.sid === c.id && cell.pid === p.id ? ' sel' : ''), style: `width:${c.w}px;--lc:${laneColor(li)}`, title: `${ln.lane} in ${c.s.name}: ${n} take${n > 1 ? 's' : ''}, playing ${take?.byName || '?'}'s${p.muted ? ' (muted)' : ''}`, onclick: () => { sel = c.id; cell = { sid: c.id, pid: p.id, lane: ln.lane }; render(); } });
+        const blk = h('div', { class: 'cell take' + (p.muted ? ' muted' : '') + (wk ? ' retake' : '') + (cell && cell.sid === c.id && cell.pid === p.id ? ' sel' : ''), style: `width:${c.w}px;--lc:${laneColor(li)}`, title: `${ln.name} in ${c.s.name}: ${n} take${n > 1 ? 's' : ''}, playing ${take?.byName || '?'}'s${p.muted ? ' (muted)' : ''}`, onclick: () => { sel = c.id; cell = { sid: c.id, pid: p.id, lane: ln.lane }; render(); } });
         blk.innerHTML = miniRoll(take, beats, c.w - 4, 30, '#18181b', p.drums);
         blk.append(...[h('span', { class: 'lock', 'aria-hidden': 'true' }, '🔒'), n > 1 ? h('span', { class: 'ntakes' }, `${n} takes`) : null, wk ? h('span', { class: 'retaking', style: `--c:${wk.color}` }, `${wk.who} trying a new take`) : null].filter(Boolean));
         return blk;
       })));
-    // someone jamming the looping section on an instrument that has no lane yet: a row of its own, marked as unlocked work
+    // someone jamming the looping section on an instrument that has no track yet: a row of its own, marked as unlocked work
     const known = new Set(L.map((l) => l.lane)), ghosts = [];
     for (const [lane, w] of busy) if (!known.has(lane)) ghosts.push(h('div', { class: 'arow ghost' }, h('div', { class: 'lhead', style: `--lc:${w.color}` }, h('span', {}, h('b', {}, lane), h('small', {}, 'jamming now'))),
       ...cols.map((c) => h('div', { class: c.id === loopId ? 'cell working' : 'cell blank', style: `width:${c.w}px;--lc:${w.color}` }, c.id === loopId ? h('span', {}, '● being played · not locked') : null))));
@@ -342,10 +393,10 @@ export function makeCompose(x) {
     const summary = open ? [] : [h('div', { class: 'arow sumrow' }, h('div', { class: 'lhead', style: '--lc:#555' }, h('span', {}, h('b', {}, 'Locked'), h('small', {}, L.length ? '' : 'nothing yet'))),
       ...cols.map((c) => {
         const parts = Object.values(c.s.parts || {}), wk = c.id === loopId ? [...new Set(busy.values())] : [];
-        const fresh = wk.filter((w) => !parts.some((p) => w.parts.some((n) => laneOf(p) === `${w.who} · ${n}`)));
+        const fresh = wk.filter((w) => !parts.some((p) => w.parts.some((_, i) => laneOf(p) === keyFor(w, i))));
         if (!parts.length) return h('div', { class: 'cell ' + (wk.length ? 'working' : 'empty'), style: `width:${c.w}px;--lc:${wk[0]?.color || '#888'}`, title: wk.length ? `${wk.map((w) => w.who).join(' and ')} playing; nothing locked yet` : 'Nothing locked here yet', onclick: () => { sel = c.id; cell = null; render(); } }, h('span', {}, wk.length ? `● ${wk.map((w) => w.who).join(', ')} · not locked` : '+ jam it'));
-        const blk = h('div', { class: 'cell sum' + (wk.length ? ' retake' : ''), style: `width:${c.w}px;--lc:${wk[0]?.color || '#ECEBE5'}`, title: `${parts.length} lane${parts.length > 1 ? 's' : ''} locked in ${c.s.name}`, onclick: () => { sel = c.id; cell = null; render(); } },
-          h('span', { class: 'stripes' }, ...L.map((ln, li) => { const p = parts.find((q) => laneOf(q) === ln.lane); return h('i', { class: p ? (p.muted ? 'mu' : 'on') : '', style: `--lc:${laneColor(li)}`, title: p ? `${ln.lane}${p.muted ? ' (muted)' : ''}` : '' }); })),
+        const blk = h('div', { class: 'cell sum' + (wk.length ? ' retake' : ''), style: `width:${c.w}px;--lc:${wk[0]?.color || '#ECEBE5'}`, title: `${parts.length} track${parts.length > 1 ? 's' : ''} locked in ${c.s.name}`, onclick: () => { sel = c.id; cell = null; render(); } },
+          h('span', { class: 'stripes' }, ...L.map((ln, li) => { const p = parts.find((q) => laneOf(q) === ln.lane); return h('i', { class: p ? (p.muted ? 'mu' : 'on') : '', style: `--lc:${laneColor(li)}`, title: p ? `${ln.name}${p.muted ? ' (muted)' : ''}` : '' }); })),
           h('span', { class: 'lock' }, `🔒 ${parts.length}`), fresh.length ? h('span', { class: 'retaking', style: `--c:${fresh[0].color}` }, `${fresh.map((w) => w.who).join(', ')} trying something`) : null);
         return blk;
       }))];
@@ -383,11 +434,11 @@ export function makeCompose(x) {
     const looprow = h('div', { class: 'arow looprow' }, h('div', { class: 'lhead' },
       loopNow ? h('button', { class: 'btn small on loopbtn', onclick: () => x.stop() }, '■ Stop loop') : region ? h('button', { class: 'btn small hot loopbtn', onclick: () => x.loopRange(region[0], region[1]) }, '↻ Loop') : h('small', {}, 'Drag across to loop ⟶')), track);
     const grid = h('div', { class: 'arranger' + (open ? '' : ' folded') }, looprow, ruler, ...summary, ...rows, ...(open ? ghosts : []), h('div', { class: 'playhead hide', 'data-playhead': '' }),
-      h('div', { class: 'arow' }, h('div', { class: 'lhead addl' }, L.length ? null : h('small', {}, 'Jam a section and Lock it in to fill this up.')),
+      h('div', { class: 'arow' }, h('div', { class: 'lhead addl' }, adding ? null : addTrackRow(order.length), L.length ? null : h('small', {}, 'Or jam a section and lock it in.')),
         h('div', { class: 'addsec' }, h('select', { class: 'lcdsel addsel', 'aria-label': 'Add a section', onchange: (e) => { if (e.target.value) addSection(e.target.value); e.target.value = ''; } }, h('option', { value: '' }, '+ Add a section'), ...SECTION_NAMES.map((nm) => h('option', { value: nm }, nm))))));
     const panes = 'arranger', was = [...box.querySelectorAll(`.${panes},.details .pane`)].map((e) => [e.scrollLeft, e.scrollTop]);
     const det = details(sel, cell);
-    box.replaceChildren(...[head, opts, grid, divider(det), det].filter(Boolean));
+    box.replaceChildren(...[head, opts, grid, adding ? addTrackRow(order.length) : null, divider(det), det].filter(Boolean));
     [...box.querySelectorAll(`.${panes},.details .pane`)].forEach((e, i) => { if (was[i]) [e.scrollLeft, e.scrollTop] = was[i]; });   // a redraw doesn't lose your place
     if (editing) $(`[data-cell="${editing}"]`)?.focus();
   }
@@ -465,8 +516,9 @@ export function makeCompose(x) {
     if (p) {
       const cur = currentTake(p), rule = song.rule || 'newest', ts = takesOf(p);
       takePane = h('div', { class: 'pane takes' },
-        h('div', { class: 'row' }, h('b', {}, `${laneOf(p)} in ${s.name}`), h('button', { class: 'gearx', style: 'position:static', 'aria-label': 'Close', onclick: () => { cell = null; render(); } }, '×'), h('span', { class: 'help' }, `${p.role || ''}${p.by && p.by !== 'import' ? ` · owner ${p.byName || ''}` : ''} · ${rule === 'vote' ? 'the band votes' : rule === 'owner' ? 'the owner picks' : 'newest take wins'}`), h('span', { style: 'flex:1' }),
-          h('button', { class: 'btn small ghost', onclick: () => x.mutePart(s.id, p.id, !p.muted) }, p.muted ? 'Unmute lane here' : 'Mute here'), h('button', { class: 'btn small ghost', onclick: () => { x.removePart(s.id, p.id); cell = null; } }, 'Remove')),
+        trackBar(p.laneId),
+        h('div', { class: 'row' }, h('b', {}, `${laneName(song, p)} in ${s.name}`), h('button', { class: 'gearx', style: 'position:static', 'aria-label': 'Close', onclick: () => { cell = null; render(); } }, '×'), h('span', { class: 'help' }, `${p.role || ''}${p.by && p.by !== 'import' ? ` · owner ${p.byName || ''}` : ''} · ${rule === 'vote' ? 'the band votes' : rule === 'owner' ? 'the owner picks' : 'newest take wins'}`), h('span', { style: 'flex:1' }),
+          h('button', { class: 'btn small ghost', onclick: () => x.mutePart(s.id, p.id, !p.muted) }, p.muted ? 'Unmute lane here' : 'Mute here'), h('button', { class: 'btn small ghost', title: `Clear ${laneName(song, p)}'s takes in ${s.name} (the track stays)`, onclick: () => { x.removePart(s.id, p.id); cell = null; } }, 'Clear here')),
         ...[...ts].reverse().map((t, k) => {
           const votes = (p.votes?.[t.id] || []).length, on = cur && cur.id === t.id;
           return h('div', { class: 'takerow' + (on ? ' on' : '') }, h('span', { class: 'tno' }, `take ${ts.length - k}`), h('span', {}, `${t.byName || 'someone'}${t.at ? ' · ' + new Date(t.at > 1e12 ? t.at : Date.now()).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''} · ${t.audio ? `${(t.audio.frames / t.audio.sr).toFixed(1)} s of audio${x.audioReady?.(t.audio.id) ? '' : ' · on its way…'}` : `${t.events.filter((e) => e.type === 'on').length} notes`}`),
@@ -475,7 +527,8 @@ export function makeCompose(x) {
         }));
     }
     else if (lp) takePane = h('div', { class: 'pane takes' },   // a part about to be written: the same layout it will have
-      h('div', { class: 'row' }, h('b', {}, `${laneOf(lp)} in ${s.name}`), h('button', { class: 'gearx', style: 'position:static', 'aria-label': 'Close', onclick: () => { cell = null; render(); } }, '×')),
+      trackBar(lp.laneId),
+      h('div', { class: 'row' }, h('b', {}, `${laneName(song, lp)} in ${s.name}`), h('button', { class: 'gearx', style: 'position:static', 'aria-label': 'Close', onclick: () => { cell = null; render(); } }, '×')),
       h('p', { class: 'help' }, 'Nothing here yet. Your first note makes this part; it plays from the song for everyone, the whole part sent ahead of time.'));
     const det = h('div', { class: 'details' + (takePane ? ' lane' : ' one') }, secPane);
     if (takePane) { paint(det); det.append(paneSplit(det), takePane); }

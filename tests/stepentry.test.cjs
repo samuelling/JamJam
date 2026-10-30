@@ -24,8 +24,8 @@ const midi = (p, on, n) => p.evaluate(([on, n]) => JJ.input.onMIDI({ data: [on ?
     });
     await sleep(600);
     await A.click('.lanetoggle'); await sleep(200);
-    await A.click('.lhead.pick'); await sleep(200);
-    await A.click('button[aria-pressed]'); await sleep(200);
+    await A.click('.cell.take'); await sleep(200);
+    await A.click('text=🎹 Step entry'); await sleep(200);
     check(await A.$('.lvcursor') != null, 'a cursor shows on the roll');
     const notes = (p) => p.evaluate(() => { const q = JJ.song().sections.s.parts['l-horn'], ev = q.takes.find((t) => t.id === q.current).events; return ev.filter((e) => e.type === 'on').map((e) => [e.b, e.note]).sort((x, y) => x[0] - y[0] || x[1] - y[1]); });
     await A.selectOption('select[aria-label="Step length"]', '1'); await sleep(100);
@@ -48,7 +48,7 @@ const midi = (p, on, n) => p.evaluate(([on, n]) => JJ.input.onMIDI({ data: [on ?
     const desk = () => A.evaluate(() => JJ.engine.log.filter((e) => e.type === 'on' && e.pid.startsWith(JJ.S.me)).length);
     const d0 = await desk();
     check(d0 === 0, `step entry stays off the desk (${d0})`);
-    await A.click('button[aria-pressed]'); await sleep(150);
+    await A.click('text=🎹 Step entry'); await sleep(150);
     const n2 = JSON.stringify(await notes(A));
     await A.evaluate(() => JJ.addEntry?.({ inst: 'tine' }));
     await midi(A, true, 72); await midi(A, false, 72); await sleep(200);

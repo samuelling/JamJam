@@ -63,7 +63,7 @@
   :focus-visible { outline: 2px solid var(--te-blue); outline-offset: 2px; }
 
   /* ================= the front door ================= */
-  #lobby { height: 100vh; display: grid; place-items: center; padding: 24px; overflow: auto; }
+  #lobby { height: 100vh; display: grid; place-items: start center; padding: clamp(24px, 7vh, 80px) 24px 24px; overflow: auto; }   /* pinned from the top: opening "what?" grows the page downward, nothing above it moves */
   .entrance { display: grid; justify-items: center; gap: 26px; text-align: center; }
     text-shadow: 0 0 4px #fff, 0 0 12px #ff7a3d, 0 0 28px #ff5a1f, 0 0 60px #ff3d00, 0 0 90px #ff3d0066; animation: hum 6s infinite; }
   @keyframes hum { 0%, 100% { opacity: 1; } 92% { opacity: 1; } 93% { opacity: .55; } 94% { opacity: 1; } 96% { opacity: .8; } 97% { opacity: 1; } }
@@ -174,11 +174,17 @@
   .gearprompt { position: fixed; right: 18px; bottom: 18px; z-index: 50; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; max-width: 420px; padding: 12px 14px; border-radius: 10px; background: #1d1e22; box-shadow: 0 8px 30px #0008, inset 0 0 0 1px #ffffff1a; }
   .gearprompt .help { flex-basis: 100%; order: 1; }
   /* the Pads screen */
+  /* the Pads header in two short lines, so all four rows of pads stay in view */
+  .devtop.padtop { grid-template-columns: 1fr; gap: 6px; }
+  .devtop.padtop .brand { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+  .devtop.padtop .brand .name { font-size: 26px; }
+  .devtop.padtop .kitsel { margin: 0; }
+  .devtop.padtop .screen { min-height: 0; padding: 6px 12px; }
   .padwrap { display: grid; grid-template-columns: minmax(240px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; padding: 4px 0 6px; }
   .kitsel { margin: 6px 0 4px; max-width: 190px; font-weight: 600; }
   .fam.credit { opacity: 0.7; }
   .padgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .padbtn { position: relative; aspect-ratio: 5 / 4; display: grid; align-content: end; justify-items: start; gap: 2px; padding: 8px; border-radius: 8px; border: 1px solid #000; touch-action: none;
+  .padbtn { position: relative; aspect-ratio: 2 / 1; min-height: 40px; display: grid; align-content: end; justify-items: start; gap: 2px; padding: 8px; border-radius: 8px; border: 1px solid #000; touch-action: none;
     background: linear-gradient(180deg, #34363c, #24262b); box-shadow: inset 0 1px 0 #ffffff1a, 0 4px 0 #0c0d0f, 0 5px 8px #0008; color: var(--mz-toner); transition: transform .04s, box-shadow .04s, background .1s; }
   .padbtn b { font: 700 11px/1.1 var(--sans); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .padbtn .pnum { position: absolute; top: 6px; left: 8px; font: 700 10px var(--sans); color: var(--mz-muted); }
@@ -371,6 +377,12 @@
   .keybed { background: var(--desk); border-radius: 12px; padding: 8px 12px 10px; box-shadow: inset 0 1px 0 #ffffff12, 0 -10px 30px #0008; }
   .keyhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .keyhead .help { color: #b4a594; }
+  /* Pads selected: the keys strip is the 4×4, laid out like the keyboard (Z X C V along the bottom, up to 1 2 3 4) */
+  #keyboard.padmap { display: grid; grid-template-columns: repeat(4, minmax(0, 150px)); grid-auto-rows: 1fr; gap: 4px; justify-content: start; height: clamp(104px, 15vh, 150px); }
+  #keyboard.padmap .key.padkey { margin: 0; border-radius: 5px; display: flex; align-items: center; gap: 8px; padding: 0 10px; box-shadow: inset 0 -3px 0 #b9b6ac, 0 1px 0 #000; }
+  #keyboard.padmap .padkey kbd { font: 700 15px var(--type); color: #2a2a2a; min-width: 1.2em; }
+  #keyboard.padmap .padkey span { font: 600 10px var(--sans); color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #keyboard.padmap .padkey.down { filter: brightness(0.82); box-shadow: inset 0 0 0 2px #ffcf26; }
   #keyboard { display: flex; height: clamp(84px, 14vh, 140px); margin-top: 8px; user-select: none; touch-action: none; position: relative; }
   .key { flex: 1; position: relative; background-image: var(--dots, none), var(--kdots, none), linear-gradient(180deg, #e9e8e3, #d5d3cb); border-radius: 0 0 6px 6px; margin-right: 2px; box-shadow: inset 0 -4px 0 #b9b6ac, 0 2px 0 #000; }
   .key.black { flex: 0 0 0; margin: 0; z-index: 2; pointer-events: none; box-shadow: none; background: none; }
@@ -475,7 +487,8 @@
   .door .legend, .or { font-family: var(--type); letter-spacing: .08em; text-transform: lowercase; font-size: 12px; }
   .btn.big { padding: 12px 14px; font: 400 20px/1 var(--display); letter-spacing: .02em; }
   .joinrow { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
-  .what { max-width: 520px; text-align: left; }
+  .what { width: min(520px, 100%); text-align: center; }   /* the same width open or shut, so the button stays put */
+  .what > div { text-align: left; }
   .what summary { display: inline-block; cursor: pointer; list-style: none; font: 700 .82rem/1 var(--type); letter-spacing: .08em; border: 1.5px solid var(--mz-toner); padding: 7px 11px; transform: rotate(-1deg); color: var(--mz-toner); }
   .what summary::-webkit-details-marker { display: none; }
   .what[open] summary, .what summary:hover { background: var(--mz-toner); color: var(--mz-paper); }
@@ -672,7 +685,6 @@
   .lhead b { display: block; font: 600 12px/1.2 var(--sans); color: var(--mz-toner); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 118px; }
   .lhead small { font: 400 10px var(--type); color: var(--mz-muted); }
   .lhead .role { font: 400 10px var(--type); background: transparent; color: var(--mz-muted); border: 0; padding: 0; }
-  .lhead .role.sound { display: block; max-width: 118px; color: var(--mz-toner); }
   .lhead.addl { align-items: flex-start; }
   .ruler .lhead { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; }
   .shead { flex: none; display: grid; align-content: start; gap: 2px; padding: 6px 7px 4px; text-align: left; border: 0; border-radius: 4px 4px 0 0; color: #18181b; cursor: pointer;
@@ -778,6 +790,21 @@
   .lvkeys span { position: absolute; right: 5px; font: 400 9px var(--type); color: var(--mz-muted); white-space: nowrap; }
   .lvroll { position: relative; background: #0e0f12; border-radius: 0 3px 3px 0; overflow: hidden; }
   .lvroll svg { display: block; }
+  /* tracks: mute and solo on the row header, the track's own settings above its takes, + Add track */
+  .lhead .ms { display: inline-flex; gap: 3px; margin-left: auto; }
+  .msb { font: 700 10px var(--type); width: 20px; height: 18px; padding: 0; border-radius: 3px; border: 1px solid #ffffff2a; background: #0003; color: var(--mz-muted); cursor: pointer; }
+  .msb.on { background: #ffb24d; color: #111; border-color: #ffb24d; }
+  .msb.solo.on { background: #7DB0FF; border-color: #7DB0FF; }
+  .arow.tmuted .cell.take, .arow.unsolo .cell.take { opacity: .35; }
+  .tfader.mini { width: 58px; height: 12px; margin-left: 4px; accent-color: #ECEBE5; }
+  .tmix { display: inline-flex; align-items: center; gap: 6px; }
+  .tmix input { width: 110px; accent-color: #ffcf26; }
+  .tmix small:first-child { font: 700 10px var(--type); text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
+  .tmix .mono { min-width: 52px; }
+  .trackbar { gap: 8px; align-items: center; flex-wrap: wrap; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px dashed #ffffff1a; }
+  .trackbar .tname { font-weight: 700; min-width: 160px; }
+  .addtrack { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .addtrack.open { margin: 8px 0; padding: 10px 12px; border-radius: 8px; background: #ffffff08; }
   .lvroll.editable .lvnote { cursor: grab; }
   .lvroll.editable .lvnote:hover { stroke: #fff; stroke-width: 1; }
   .lvroll.editable { cursor: crosshair; touch-action: none; }
@@ -831,7 +858,7 @@
       <summary>what?</summary>
       <div>
         <p>Nobody's audio travels. Every browser in the room runs every jammer's instruments, and only what your hands do goes over the wire (notes and knob moves), each stamped with the moment it should sound on a clock the room shares. So everyone hears the same music at the same instant.</p>
-        <p>Bring real gear too: tell the studio what synth or drum machine you have, and your bandmates hear its closest software twin (or their own, if they have one). There's a lane for live audio a bar or two behind, and everything technical (timing, MIDI routing, clock out, the network) sits behind the gear button in the studio.</p>
+        <p>Bring real gear too: link your synths and drum machines in My gear, and your bandmates hear each one's closest software twin (or their own, if they have the same one, with your sound copied across). There's a lane for live audio a bar or two behind, and everything technical (timing, MIDI routing, clock out, the network) sits behind the gear button in the studio.</p>
       </div>
     </details>
   </div>
@@ -887,7 +914,7 @@
 
   <div class="keybed">
     <div class="keyhead"><span class="legend" style="color:#b4a594">Keys</span><span id="inputStatus" class="help mono"></span>
-      <span class="help">A W S E D F T G Y H U J K · Z X octave · C V velocity · Space sustain</span><span style="margin-left:auto"></span>
+      <span class="help" id="keyHint">A W S E D F T G Y H U J K · Z X octave · C V velocity · Space sustain</span><span style="margin-left:auto"></span>
       <button id="assistBtn" class="btn small" title="Notes you play slightly early are pulled part of the way onto the beat grid. Your timing still counts.">Rhythm help: off</button>
       <button id="lockBtn" class="btn small hide" aria-pressed="false" title="Every key you press lands on a note of the room's key">Lock to key</button>
       <button id="midiBtn" class="btn small">Enable MIDI</button><button id="panicBtn" class="btn small ghost" title="Stop every note">Panic</button></div>
