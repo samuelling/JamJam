@@ -62,7 +62,7 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
       const f = JJ.lastStems.find((x) => x.name.endsWith('.als')); if (!f) return null;
       const xml = await new Response(new Blob([f.data]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const d = new DOMParser().parseFromString(xml, 'application/xml'), q = (s) => [...d.getElementsByTagName(s)];
-      const ids = [...d.getElementsByTagName('*')].filter((e) => (e.tagName.endsWith('Target') || e.tagName === 'Pointee') && e.hasAttribute('Id')).map((e) => +e.getAttribute('Id'));
+      const ids = [...d.getElementsByTagName('*')].filter((e) => /Target|Pointee/.test(e.tagName) && e.hasAttribute('Id')).map((e) => +e.getAttribute('Id'));
       const name = (t) => t.getElementsByTagName('EffectiveName')[0].getAttribute('Value');
       return { xml, bad: !!d.querySelector('parsererror'), tempo: d.querySelector('MasterTrack Tempo Manual').getAttribute('Value'),
         audio: q('AudioTrack').map((t) => ({ name: name(t), file: t.querySelector('SampleRef RelativePath')?.getAttribute('Value'), end: +t.querySelector('AudioClip CurrentEnd').getAttribute('Value'), frames: t.querySelector('SampleRef DefaultDuration').getAttribute('Value') })),

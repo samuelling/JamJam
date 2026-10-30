@@ -4,8 +4,11 @@
 //
 // Built from a set Live itself saved (src/ableton-live11.xml, made by tools/ableton/make_template.py from a Live 11.3
 // set with everything personal and every device taken out): its MIDI and audio tracks are cloned per track, with
-// fresh ids. Live keeps one numbering ("pointee" ids) across every automation and modulation target in the set, so
-// each clone's targets get new numbers from NextPointeeId up, and NextPointeeId moves past them.
+// fresh ids. Live keeps one numbering ("pointee" ids) across every automation and modulation target in the set (and
+// a MIDI track's ControllerTargets.0..130), so each clone's get new numbers from NextPointeeId up, and NextPointeeId
+// moves past them. Stems are referenced relative to the set's own folder (Live's RelativePathType 1), so the folder
+// can be moved or shared as a whole.
+export const isPointee = (tag) => tag.endsWith('Target') || /^ControllerTargets\.\d+$/.test(tag) || tag === 'Pointee';
 
 const TEMPLATE = new URL('./ableton-live11.xml', import.meta.url).href;
 const COLORS = [16, 24, 3, 12, 20, 8, 26, 14, 5, 22, 10, 18];   // Live's clip/track palette indices
@@ -30,7 +33,7 @@ export async function buildAls(o) {
   const add = (tmpl, name, color) => {
     const t = tmpl.cloneNode(true);
     t.setAttribute('Id', String(trackId++));
-    for (const e of t.getElementsByTagName('*')) if ((e.tagName.endsWith('Target') || e.tagName === 'Pointee') && e.hasAttribute('Id')) e.setAttribute('Id', String(pointee++));
+    for (const e of t.getElementsByTagName('*')) if (isPointee(e.tagName) && e.hasAttribute('Id')) e.setAttribute('Id', String(pointee++));
     setV(t, 'Name/EffectiveName', name); setV(t, 'Name/UserName', name); setV(t, 'Color', color);
     tracks.insertBefore(t, firstReturn);
     return t;
@@ -52,7 +55,7 @@ export async function buildAls(o) {
     for (const [k, sec, bt] of [[0, 0, 0], [1, secs, beats]]) { const m = doc.createElement('WarpMarker'); m.setAttribute('Id', String(k)); m.setAttribute('SecTime', String(sec)); m.setAttribute('BeatTime', String(bt)); wm.append(m); }
     setV(c, 'MarkersGenerated', 'false');
     const ref = kid(c, 'SampleRef');
-    setV(ref, 'FileRef/RelativePathType', 3); setV(ref, 'FileRef/RelativePath', s.file); setV(ref, 'FileRef/Path', s.file); setV(ref, 'FileRef/Type', 2);
+    setV(ref, 'FileRef/RelativePathType', 1); setV(ref, 'FileRef/RelativePath', s.file); setV(ref, 'FileRef/Path', s.file); setV(ref, 'FileRef/Type', 2);
     setV(ref, 'FileRef/OriginalFileSize', 0); setV(ref, 'FileRef/OriginalCrc', 0); setV(ref, 'LastModDate', 0);
     setV(ref, 'DefaultDuration', o.frames); setV(ref, 'DefaultSampleRate', o.sr);
     kid(t, 'DeviceChain/MainSequencer/Sample/ArrangerAutomation/Events').append(c);
