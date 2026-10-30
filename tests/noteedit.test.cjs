@@ -1,5 +1,5 @@
 // Correcting a take in the Compose Room's lane view: drag a note later (it snaps to the grid), drag its end to
-// lengthen it, double-click to add and to delete, and Quantize pulls sloppy starts onto the grid. Every change is
+// lengthen it, click (or double-click) to add one, double-click to delete, and Quantize pulls sloppy starts onto the grid. Every change is
 // an edited copy of the take; the original stays and "Back to the original" returns to it.
 //   node server/dev.js &  (8787)        node tests/noteedit.test.cjs
 const { chromium } = require('playwright');
@@ -21,6 +21,7 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     await p.waitForTimeout(1000);
     if (!(await p.$('.cell.take'))) await p.click('.lanetoggle');
     await p.click('.cell.take'); await p.waitForTimeout(300);
+    await p.evaluate(() => document.querySelector('.laneview').scrollIntoView({ block: 'center' })); await p.waitForTimeout(150);
     const take = () => p.evaluate(() => { const pt = JJ.song().sections.s1.parts['l-keys']; const t = pt.takes.find((q) => q.id === pt.current); return { n: pt.takes.length, edit: !!t.edit, on: t.events.filter((e) => e.type === 'on').map((e) => [e.note, +e.b.toFixed(3)]), off: t.events.filter((e) => e.type === 'off').map((e) => [e.note, +e.b.toFixed(3)]) }; });
     const box = async (i) => p.evaluate((i) => { const r = document.querySelectorAll('.lvroll .lvnote')[i].getBoundingClientRect(); return { x: r.left, y: r.top + r.height / 2, w: r.width, right: r.right }; }, i);
     const rollW = await p.evaluate(() => document.querySelector('.lvroll').getBoundingClientRect().width), beatPx = rollW / 8;

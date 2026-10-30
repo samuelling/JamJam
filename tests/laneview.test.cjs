@@ -25,10 +25,10 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     await p.click('.cell.take'); await p.waitForTimeout(300);
     const v = await p.evaluate(() => ({ head: document.querySelector('.laneview .lvhead')?.textContent || '', notes: document.querySelectorAll('.laneview .lvroll rect title').length, bars: document.querySelector('.laneview .lvbars')?.textContent, keys: [...document.querySelectorAll('.lvkeys span')].map((s) => s.textContent).join(' ') }));
     check(v.head.includes('Bass') && v.head.includes('4 notes') && v.head.includes('A1–E2') && v.head.includes('velocity 90–120'), `clicking a block shows the lane's notes in the section block (${v.head.replace('×', '').trim()})`);
-    check(v.notes === 4 && v.bars.includes('Am') && v.keys.includes('A1'), `a roll with each note, bars, chords and note names (${v.keys})`);
+    check(v.notes === 4 && v.bars.includes('Am') && v.keys.includes('C2'), `a roll with each note, bars, chords and note names, in a two-octave window to write in (${v.keys})`);
     await p.click('.lhead.pick:has-text("Drums") b'); await p.waitForTimeout(300);
     const d = await p.evaluate(() => ({ sec: document.querySelector('.secname')?.value, head: document.querySelector('.laneview .lvhead')?.textContent || '', keys: [...document.querySelectorAll('.lvkeys span')].map((s) => s.textContent).join(' ') }));
-    check(d.head.includes('Drums') && d.keys === 'Hat Snare Kick', `clicking a lane's name shows it, drums by voice (${d.keys})`);
+    check(d.head.includes('Drums') && ['Hat', 'Snare', 'Kick'].every((k) => d.keys.split(' ').includes(k)) && d.keys.split(' ').pop() === 'Kick', `clicking a lane's name shows it, drums by voice, with a row for every kit voice to write on (${d.keys})`);
     await p.click('.laneview .gearx'); await p.waitForTimeout(300);
     check(!(await p.$('.laneview')), '× hides it');
     check(!errors.length, 'no page errors' + (errors.length ? ': ' + errors.join('; ') : ''));

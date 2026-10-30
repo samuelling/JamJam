@@ -876,6 +876,7 @@ const compose = makeCompose({
   play: (mode, sid) => startTransport(mode, sid), stop: () => stopTransport(), loopRange: (a, b) => loopRange(a, b), jamThis: (sid) => { startTransport('loop', sid); goRoom('jam'); },
   importFile: (f) => importSketch(f), exportMidi: () => download(new Blob([SONG.songToMidi(songForExport())], { type: 'audio/midi' }), slugName() + '.mid'), exportJson: () => download(new Blob([JSON.stringify(songForExport(), null, 1)], { type: 'application/json' }), slugName() + '.megajam.json'),
   removePart: (sid, pid) => setSong(`part:${sid}:${pid}`, null), choose, vote, saveVariation, restoreVariation, editTake,
+  draftPart, previewNote, desk: () => (S.listener ? [] : S.rack.filter((e) => e.cfg.inst !== 'audio').map((e) => ({ r: e.r, name: describe(e.cfg, true), lane: `${S.name} · ${describe(e.cfg, true)}` }))),
   setRole: (sid, pid, role) => { for (const s of songStore.sections()) for (const p of Object.values(s.parts || {})) if (SONG.laneOf(p) === SONG.laneOf(songStore.song.sections[sid].parts[pid])) setSong(`part:${s.id}:${p.id}`, { ...p, role }); },
   me: () => S.me, myName: () => S.name,
   working: () => { const tr = songStore.song.transport, pos = positionAt(tr, tempo.beatAt(clock.now())); if (!pos) return [];
@@ -1156,16 +1157,44 @@ function lockTake(e, sid, ev, pos, opts = {}) {
 }
 const TAKES_MAX = 32;
 // note corrections from the Compose Room: the first change makes an edited copy of the take (the original stays),
-// later ones update that copy; every change gets a new id, so a rendered loop of it is made again
-function editTake(sid, pid, events, what) {
-  const p = songStore.song.sections[sid]?.parts?.[pid]; if (!p) return;
-  const cur = SONG.currentTake(p); if (!cur || cur.audio) return;
-  const id = Math.random().toString(36).slice(2, 7);
+// later ones update that copy; every change gets a new id, so a rendered loop of it is made again.
+// Writing on an empty roll: `base` is the lane to write for (from draftPart); the first note makes the part, with a
+// written take, and later notes update that take.
+function editTake(sid, pid, events, what, base) {
+  const p = songStore.song.sections[sid]?.parts?.[pid] || null; if (!p && !base) return;
+  const id = Math.random().toString(36).slice(2, 7), cur = p && SONG.currentTake(p);
+  if (cur?.audio) return;
   let takes;
-  if (cur.edit && cur.by === S.me) takes = SONG.takesOf(p).map((t) => (t.id === cur.id ? { ...t, id, events, at: clock.now() } : t));
+  if (!cur) takes = [...SONG.takesOf(p || {}), { id, events, by: S.me, byName: S.name, written: true, at: clock.now() }].slice(-TAKES_MAX);
+  else if ((cur.edit || cur.written) && cur.by === S.me) takes = SONG.takesOf(p).map((t) => (t.id === cur.id ? { ...t, id, events, at: clock.now() } : t));
   else takes = [...SONG.takesOf(p), { id, events, by: S.me, byName: `${S.name}'s edit of ${cur.byName || 'a take'}`, edit: true, of: cur.id, at: clock.now() }].slice(-TAKES_MAX);
-  setSong(`part:${sid}:${pid}`, { ...p, takes, current: id, prev: id, switchAt: null });
+  const { events: _legacy, ...from } = p || base;
+  setSong(`part:${sid}:${pid}`, { ...from, takes, current: id, prev: id, switchAt: null });
   if (what === 'quantize') setStatus('Quantized. The original take is still in the list.');
+}
+// what a written part is for: a lane already in the song (same instrument and owner), or one of the instruments on
+// your desk (a new lane of yours, the same one a jammed take of it would make)
+function draftPart(spec) {
+  if (spec.lane) {
+    for (const s of songStore.sections()) for (const p of Object.values(s.parts || {})) if (SONG.laneOf(p) === spec.lane && p.kind !== 'audio') {
+      const { takes, current, prev, switchAt, votes, recording, events, ...rest } = p; return { ...rest, muted: false, votes: {} };
+    }
+    return null;
+  }
+  const e = S.rack.find((x) => x.r === spec.r); if (!e) return null;
+  const def = engine.defs.get(e.cfg.inst), name = describe(e.cfg, true);
+  return { id: `${S.me}-${e.r}`, name, lane: `${S.name} · ${name}`, role: SONG.guessRole({ name, inst: e.cfg.inst, patch: e.cfg.patch, drums: def?.drums }),
+    inst: e.cfg.inst, patch: e.cfg.patch, params: { ...e.cfg.params }, drums: !!def?.drums, by: S.me, byName: S.name, hw: e.cfg.hw || null, muted: false, votes: {} };
+}
+// hear a note as you place it, on the lane's own instrument
+const PREVIEW = { k: null, sig: '', timer: 0 };
+function previewNote(p, note, vel = 96) {
+  if (!engine.ctx || !p?.inst) return;
+  const sig = JSON.stringify([p.inst, p.patch, p.params]);
+  if (PREVIEW.sig !== sig || !engine.ch.get(PREVIEW.k)) { if (PREVIEW.k) engine.removeChannel(PREVIEW.k); PREVIEW.k = 'preview:' + Date.now(); PREVIEW.sig = sig; engine.setCfg(PREVIEW.k, partCfg(p), -Infinity); }
+  const t0 = clock.now() + 25;
+  engine.event(PREVIEW.k, { type: 'on', note, vel, at: t0 }); engine.event(PREVIEW.k, { type: 'off', note, at: t0 + (p.drums ? 120 : 420) });
+  clearTimeout(PREVIEW.timer); PREVIEW.timer = setTimeout(() => { if (PREVIEW.k) engine.removeChannel(PREVIEW.k); PREVIEW.k = null; PREVIEW.sig = ''; }, 20000);
 }
 // a new take in a lane: it becomes the one that sounds by the room's rule, switching at the next pass
 function commitTake(sid, pid, base, take, takes, old, pos, opts = {}) {

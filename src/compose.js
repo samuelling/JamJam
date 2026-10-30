@@ -61,72 +61,129 @@ export function makeCompose(x) {
     const sid = has(sel) ? sel : song.order.find(has); if (!sid) return;
     sel = sid; cell = { sid, pid: has(sid).id, lane }; render();
   }
-  // the picked lane's notes in this section, in detail: a roll under the chord chart, with names, bars and velocities
+  // the picked lane's notes in this section, in detail: a roll under the chord chart, with names, bars and velocities.
+  // It is also where parts get written: on an empty roll (a lane with no take here yet, or a new lane for one of your
+  // instruments) a click places a note and a drag makes it longer. A written part lives in the song like a jammed
+  // take, so every browser has all of it before it plays and schedules it exactly, with no lookahead to wait for.
+  const KIT_ROWS = [49, 51, 46, 42, 50, 47, 45, 39, 38, 37, 36], PAD_ROWS = Array.from({ length: 16 }, (_, i) => 51 - i);
+  const shift = new Map();   // lane -> semitones the empty roll has been scrolled
+  let lastAdd = { t: 0, n: -1, a: -1 };   // the note just placed, and when
   function laneView(s, p, color) {
     const meter = x.store.song.meter || 4, beats = s.bars * meter, take = currentTake(p), notes = [], on = new Map();
     for (const e of [...(take?.events || [])].sort((a, b) => a.b - b.b)) { if (e.type === 'on') on.set(e.note, e); else if (e.type === 'off' && on.has(e.note)) { const o = on.get(e.note); notes.push({ n: e.note, a: o.b, z: e.b, v: o.vel ?? 100 }); on.delete(e.note); } }
     for (const [n, o] of on) notes.push({ n, a: o.b, z: beats, v: o.vel ?? 100 });
     const close = h('button', { class: 'gearx', style: 'position:static', 'aria-label': 'Hide the notes', onclick: () => { cell = null; render(); } }, '×');
     const head = (...k) => h('div', { class: 'row lvhead' }, h('b', { style: `color:${color}` }, laneOf(p)), ...k, h('span', { style: 'flex:1' }), close);
-    if (!notes.length) return h('div', { class: 'laneview' }, head(h('span', { class: 'help' }, 'no notes in this take')));
+    const canEdit = !!x.editTake && !take?.audio;
+    if (!notes.length && !canEdit) return h('div', { class: 'laneview' }, head(h('span', { class: 'help' }, 'no notes in this take')));
     const name = (n) => (p.drums ? drumName(n) : NOTE_NAMES[n % 12] + (Math.floor(n / 12) - 1));
     const pos = (b) => `bar ${Math.floor(b / meter) + 1} beat ${+((b % meter) + 1).toFixed(2)}`;
-    const rows = p.drums ? [...new Set(notes.map((n) => n.n))].sort((a, b) => b - a) : null;
+    const rows = p.drums ? [...new Set([...notes.map((n) => n.n), ...(canEdit ? (p.inst === 'pads' ? PAD_ROWS : KIT_ROWS) : [])])].sort((a, b) => b - a) : null;
+    const sh = shift.get(laneOf(p)) || 0, bass = p.role === 'bass' || /bass/i.test(p.name || '');
     let lo = 127, hi = 0; for (const n of notes) { lo = Math.min(lo, n.n); hi = Math.max(hi, n.n); }
-    if (!p.drums) { lo -= 1; hi += 1; }
-    const nRows = p.drums ? rows.length : hi - lo + 1, rh = Math.max(4, Math.min(p.drums ? 14 : 9, Math.floor(150 / nRows))), H = nRows * rh, W = beats * 24;
+    if (!p.drums) {
+      // to read: the notes' range and a row either side. To write: a steady two-octave window (scrolled by ▲▼) that
+      // grows to take in any note outside it, so the rows don't shift under the pointer as notes go in.
+      if (canEdit) { const d0 = (bass ? 33 : 53) + sh; lo = Math.max(0, Math.min(lo, d0)); hi = Math.min(127, Math.max(hi, d0 + 24)); }
+      else { lo -= 1; hi += 1; }
+    }
+    const nRows = p.drums ? rows.length : hi - lo + 1, rh = canEdit ? Math.max(8, Math.min(p.drums ? 14 : 10, Math.floor(240 / nRows))) : Math.max(4, Math.min(p.drums ? 14 : 9, Math.floor(150 / nRows))), H = nRows * rh, W = beats * 24;
     const rowOf = (n) => (p.drums ? rows.indexOf(n) : hi - n);
-    const vels = notes.map((n) => n.v), pcs = [...new Set(notes.map((n) => n.n % 12))].sort((a, b) => a - b);
+    const vels = notes.map((n) => n.v), pcs = [...new Set(notes.map((n) => n.n % 12))].sort((a, b) => a - b), vNew = vels.length ? Math.round(vels.reduce((u, w) => u + w, 0) / vels.length) : 96;
     const lanes = [];
-    for (let r = 0; r < nRows; r++) { const n = p.drums ? rows[r] : hi - r; if (!p.drums && [1, 3, 6, 8, 10].includes(n % 12)) lanes.push(`<rect x="0" y="${r * rh}" width="${W}" height="${rh}" fill="#ffffff06"/>`); }
-    const grid = Array.from({ length: beats + 1 }, (_, b) => `<line x1="${b * 24}" x2="${b * 24}" y1="0" y2="${H}" stroke="${b % meter ? '#ffffff0d' : '#ffffff30'}" stroke-width="${b % meter ? 1 : 1.5}" vector-effect="non-scaling-stroke"/>`).join('');
+    for (let r = 0; r < nRows; r++) { const n = p.drums ? rows[r] : hi - r; if (!p.drums && [1, 3, 6, 8, 10].includes(n % 12)) lanes.push(`<rect x="0" y="${r * rh}" width="${W}" height="${rh}" fill="#ffffff06"/>`); if (!p.drums && n % 12 === 0) lanes.push(`<line x1="0" x2="${W}" y1="${(r + 1) * rh}" y2="${(r + 1) * rh}" stroke="#ffffff14" vector-effect="non-scaling-stroke"/>`); }
+    const g = SNAP[snapI].g;
+    const sub = canEdit && g < 1 ? Array.from({ length: Math.round(beats / g) }, (_, k) => k * g).filter((b) => Math.abs(b - Math.round(b)) > 1e-6).map((b) => `<line x1="${b * 24}" x2="${b * 24}" y1="0" y2="${H}" stroke="#ffffff07" vector-effect="non-scaling-stroke"/>`).join('') : '';
+    const grid = sub + Array.from({ length: beats + 1 }, (_, b) => `<line x1="${b * 24}" x2="${b * 24}" y1="0" y2="${H}" stroke="${b % meter ? '#ffffff0d' : '#ffffff30'}" stroke-width="${b % meter ? 1 : 1.5}" vector-effect="non-scaling-stroke"/>`).join('');
     const rects = notes.map((n, i) => `<rect data-i="${i}" class="lvnote" x="${(n.a * 24).toFixed(1)}" y="${rowOf(n.n) * rh + 0.5}" width="${Math.max(3, (n.z - n.a) * 24 - 1).toFixed(1)}" height="${rh - 1}" rx="1.5" fill="${color}" fill-opacity="${(0.35 + 0.65 * Math.min(1, n.v / 127)).toFixed(2)}"><title>${name(n.n)} · ${pos(n.a)} · ${+(n.z - n.a).toFixed(2)} beats · velocity ${n.v}</title></rect>`).join('');
     const svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none">${lanes.join('')}${grid}${rects}</svg>`;
     const labels = h('div', { class: 'lvkeys', style: `height:${H}px` }, ...Array.from({ length: nRows }, (_, r) => { const n = p.drums ? rows[r] : hi - r; return p.drums || nRows <= 18 || n % 12 === 0 || r === 1 || r === nRows - 2 ? h('span', { style: `top:${r * rh}px;height:${rh}px;line-height:${rh}px` }, name(n)) : null; }).filter(Boolean));
-    const roll = h('div', { class: 'lvroll' + (x.editTake && !take?.audio ? ' editable' : '') }); roll.innerHTML = svg; roll.append(h('div', { class: 'lvhead-play hide', 'data-lvplay': s.id }));
-    // correcting notes: drag a note to move it (snapping to the grid; hold Alt for none), drag its right end to
-    // lengthen or shorten it, double-click a note to delete it or an empty spot to add one. Each change is saved
-    // as an edited copy of the take (the original stays in the take list).
-    const g = SNAP[snapI].g;
+    const roll = h('div', { class: 'lvroll' + (canEdit ? ' editable' : '') + (canEdit && !notes.length ? ' blank' : '') }); roll.innerHTML = svg; roll.append(h('div', { class: 'lvhead-play hide', 'data-lvplay': s.id }));
+    // drag a note to move it (snapping to the grid; hold Alt for none), drag its right end to lengthen or shorten it,
+    // click an empty spot to place a note (drag to make it longer), double-click a note (or right-click it) to delete
+    // it. Changing someone's take saves an edited copy (the original stays in the take list).
     const toBeat = (cx) => { const r = roll.getBoundingClientRect(); return Math.max(0, Math.min(beats, ((cx - r.left) / r.width) * beats)); };
     const toRow = (cy) => { const r = roll.getBoundingClientRect(); return Math.max(0, Math.min(nRows - 1, Math.floor((cy - r.top) / rh))); };
     const noteOfRow = (r) => (p.drums ? rows[r] : hi - r);
     const snap = (b, alt) => (alt ? b : Math.round(b / g) * g);
-    const save = (list, what) => { const ev = []; for (const n of list) { const a = Math.max(0, Math.min(beats - 0.01, n.a)), z = Math.max(a + 0.02, Math.min(beats - 0.001, n.z)); ev.push({ b: a, type: 'on', note: n.n, vel: n.v }, { b: z, type: 'off', note: n.n }); } ev.sort((u, w) => u.b - w.b || (u.type === 'off' ? -1 : 1)); x.editTake(s.id, p.id, ev, what); };
-    if (x.editTake && !take?.audio) {
+    const save = (list, what) => { const ev = []; for (const n of list) { const a = Math.max(0, Math.min(beats - 0.01, n.a)), z = Math.max(a + 0.02, Math.min(beats - 0.001, n.z)); ev.push({ b: a, type: 'on', note: n.n, vel: n.v }, { b: z, type: 'off', note: n.n }); } ev.sort((u, w) => u.b - w.b || (u.type === 'off' ? -1 : 1)); x.editTake(s.id, p.id, ev, what, p); };
+    const hear = (n, v) => x.previewNote?.(p, n, v);
+    if (canEdit) {
       roll.addEventListener('pointerdown', (ev) => {
-        const el = ev.target.closest?.('.lvnote'); if (!el || ev.button) return;
+        if (ev.button) return;
+        const el = ev.target.closest?.('.lvnote');
         ev.preventDefault(); roll.setPointerCapture(ev.pointerId); dragging = true;
+        if (!el) {
+          // a new note: from the grid line under the press, as long as the drag (at least one grid step)
+          const a = Math.min(beats - g, Math.floor(toBeat(ev.clientX) / g) * g), r0 = toRow(ev.clientY), n = noteOfRow(r0), len0 = p.drums ? Math.min(g, 0.25) : Math.max(g, 0.5);
+          let z = a + len0;
+          const ghost = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          Object.entries({ class: 'lvnote ghost', x: (a * 24).toFixed(1), y: r0 * rh + 0.5, width: Math.max(3, len0 * 24 - 1), height: rh - 1, rx: 1.5, fill: color }).forEach(([k, v]) => ghost.setAttribute(k, v));
+          roll.querySelector('svg').append(ghost); hear(n, vNew);
+          const mv = (e) => { const b = toBeat(e.clientX); if (b > a + g * 0.5) { z = Math.max(a + g, snap(b, e.altKey)); ghost.setAttribute('width', Math.max(3, (z - a) * 24 - 1).toFixed(1)); } };
+          const up = () => {
+            roll.removeEventListener('pointermove', mv); dragging = false;
+            // the second click of a double-click lands before the roll redraws: don't place the same note twice
+            if (performance.now() - lastAdd.t < 450 && lastAdd.n === n && Math.abs(lastAdd.a - a) < 1e-6) { ghost.remove(); return; }
+            lastAdd = { t: performance.now(), n, a }; save([...notes, { n, a, z, v: vNew }], 'add');
+          };
+          roll.addEventListener('pointermove', mv); roll.addEventListener('pointerup', up, { once: true }); roll.addEventListener('pointercancel', () => { roll.removeEventListener('pointermove', mv); dragging = false; ghost.remove(); }, { once: true });
+          return;
+        }
         const i = +el.dataset.i, n0 = notes[i], r = el.getBoundingClientRect(), edge = ev.clientX > r.right - 6 && r.width > 8;
-        const b0 = toBeat(ev.clientX), r0 = rowOf(n0.n); let cur = { ...n0 }, moved = false;
+        const b0 = toBeat(ev.clientX), r0 = rowOf(n0.n); let cur = { ...n0 }, moved = false, heard = n0.n;
         const mv = (e) => {
           const db = toBeat(e.clientX) - b0, dr = toRow(e.clientY) - r0;
           if (Math.abs(db) * (roll.getBoundingClientRect().width / beats) > 3 || dr) moved = true; if (!moved) return;
           if (edge) cur = { ...n0, z: Math.max(n0.a + Math.max(g, 0.05), snap(n0.z + db, e.altKey)) };
           else { const a = snap(n0.a + db, e.altKey), len = n0.z - n0.a; cur = { ...n0, a, z: a + len, n: noteOfRow(Math.max(0, Math.min(nRows - 1, r0 + dr))) }; }
+          if (cur.n !== heard) { heard = cur.n; hear(cur.n, cur.v); }
           el.setAttribute('x', (cur.a * 24).toFixed(1)); el.setAttribute('width', Math.max(3, (cur.z - cur.a) * 24 - 1).toFixed(1)); el.setAttribute('y', rowOf(cur.n) * rh + 0.5);
         };
         const up = () => { roll.removeEventListener('pointermove', mv); dragging = false; if (moved) { const list = notes.map((q, k) => (k === i ? cur : q)); save(list, edge ? 'length' : 'move'); } };
         roll.addEventListener('pointermove', mv); roll.addEventListener('pointerup', up, { once: true }); roll.addEventListener('pointercancel', up, { once: true });
       });
-      roll.addEventListener('dblclick', (ev) => {
-        const el = document.elementFromPoint(ev.clientX, ev.clientY)?.closest?.('.lvnote');   // the press captured the pointer, so not ev.target
-        if (el) { save(notes.filter((_, k) => k !== +el.dataset.i), 'delete'); return; }
-        const a = Math.floor(toBeat(ev.clientX) / g) * g, n = noteOfRow(toRow(ev.clientY));
-        save([...notes, { n, a, z: a + Math.max(g, p.drums ? 0.1 : 0.5), v: Math.round(vels.reduce((u, w) => u + w, 0) / vels.length) }], 'add');
-      });
+      const del = (ev) => {
+        const el = document.elementFromPoint(ev.clientX, ev.clientY)?.closest?.('.lvnote:not(.ghost)');   // the press captured the pointer, so not ev.target
+        if (!el) return false;
+        const q = notes[+el.dataset.i]; if (!q) return false;
+        if (performance.now() - lastAdd.t < 450 && q.n === lastAdd.n && Math.abs(q.a - lastAdd.a) < 1e-6) return false;   // the second click of the double-click that placed it
+        save(notes.filter((_, k) => k !== +el.dataset.i), 'delete'); return true;
+      };
+      roll.addEventListener('dblclick', del);
+      roll.addEventListener('contextmenu', (ev) => { if (document.elementFromPoint(ev.clientX, ev.clientY)?.closest?.('.lvnote')) { ev.preventDefault(); del(ev); } });
     }
     const barsRow = h('div', { class: 'lvbars' }, ...Array.from({ length: s.bars }, (_, b) => h('span', {}, h('i', {}, String(b + 1)), s.chords[b] ? h('b', {}, s.chords[b]) : null)));
-    const stats = [`${notes.length} note${notes.length === 1 ? '' : 's'}`, p.drums ? `${rows.length} voice${rows.length === 1 ? '' : 's'}` : `${name(lo + 1)}–${name(hi - 1)}`, `velocity ${Math.min(...vels)}–${Math.max(...vels)} (avg ${Math.round(vels.reduce((a, b) => a + b, 0) / vels.length)})`, `${+(notes.length / s.bars).toFixed(1)} per bar`,
-      p.drums ? null : `uses ${pcs.map((c) => NOTE_NAMES[c]).join(' ')}`, take?.byName ? `${take.byName}'s take` : null].filter(Boolean);
+    const stats = !notes.length ? [take ? 'no notes in this take' : 'an empty roll: nothing written here yet'] : [`${notes.length} note${notes.length === 1 ? '' : 's'}`, p.drums ? `${new Set(notes.map((n) => n.n)).size} voice${new Set(notes.map((n) => n.n)).size === 1 ? '' : 's'}` : `${name(Math.min(...notes.map((n) => n.n)))}–${name(Math.max(...notes.map((n) => n.n)))}`, `velocity ${Math.min(...vels)}–${Math.max(...vels)} (avg ${vNew})`, `${+(notes.length / s.bars).toFixed(1)} per bar`,
+      p.drums ? null : `uses ${pcs.map((c) => NOTE_NAMES[c]).join(' ')}`, take?.byName ? `${take.byName}'s ${take.written ? 'part' : 'take'}` : null].filter(Boolean);
+    const octave = (d) => { shift.set(laneOf(p), sh + d); render(); };
     // quantize after the fact: pull each note's start toward the grid, by a strength
-    const tools = !x.editTake || take?.audio ? null : h('div', { class: 'row lvtools' },
+    const tools = !canEdit ? null : h('div', { class: 'row lvtools' },
       h('span', { class: 'help' }, 'Grid'), h('select', { class: 'lcdsel', 'aria-label': 'Grid', onchange: (e) => { snapI = +e.target.value; render(); } }, ...SNAP.map((q, k) => h('option', { value: k, selected: k === snapI }, q.name))),
-      h('select', { class: 'lcdsel', 'aria-label': 'Strength', onchange: (e) => { qStrength = +e.target.value; } }, ...[[1, '100%'], [0.75, '75%'], [0.5, '50%'], [0.25, '25%']].map(([v, t]) => h('option', { value: v, selected: v === qStrength }, `${t} pull`))),
-      h('button', { class: 'btn small', title: 'Pull every note start toward the grid', onclick: () => save(notes.map((n) => { const a = n.a + (Math.round(n.a / g) * g - n.a) * qStrength; return { ...n, a, z: n.z + (a - n.a) }; }), 'quantize') }, 'Quantize'),
-      h('span', { class: 'help' }, 'drag a note to move it, its end to resize · double-click to add or delete'),
+      h('select', { class: 'lcdsel', 'aria-label': 'Strength', disabled: !notes.length, onchange: (e) => { qStrength = +e.target.value; } }, ...[[1, '100%'], [0.75, '75%'], [0.5, '50%'], [0.25, '25%']].map(([v, t]) => h('option', { value: v, selected: v === qStrength }, `${t} pull`))),
+      h('button', { class: 'btn small', disabled: !notes.length, title: 'Pull every note start toward the grid', onclick: () => save(notes.map((n) => { const a = n.a + (Math.round(n.a / g) * g - n.a) * qStrength; return { ...n, a, z: n.z + (a - n.a) }; }), 'quantize') }, 'Quantize'),
+      p.drums ? null : h('span', { class: 'octs' }, h('button', { class: 'btn small ghost', 'aria-label': 'Show lower notes', title: 'Scroll the roll down an octave', onclick: () => octave(-12) }, '▼'), h('button', { class: 'btn small ghost', 'aria-label': 'Show higher notes', title: 'Scroll the roll up an octave', onclick: () => octave(12) }, '▲')),
+      h('span', { class: 'help', title: 'Drag a note to move it, its right end to resize it; hold Alt to place off the grid' }, 'click to add a note (drag for longer) · drag to move · double-click to delete'),
       take?.edit && take.of && SONG_TAKE(p, take.of) ? h('button', { class: 'btn small ghost', onclick: () => x.choose(s.id, p.id, take.of) }, 'Back to the original') : null);
     return h('div', { class: 'laneview' }, head(h('span', { class: 'help' }, stats.join(' · '))), tools, h('div', { class: 'lvbody' }, h('div', { class: 'lvgut' }), barsRow, labels, roll));
+  }
+  // open an empty roll in a section for a lane (spec.lane) or one of your instruments (spec.r)
+  function writeFor(sid, spec) {
+    sel = sid;
+    const d = x.draftPart?.(spec); if (!d) { cell = null; render(); return; }
+    const here = x.store.song.sections[sid]?.parts?.[d.id];
+    cell = { sid, pid: d.id, lane: laneOf(d), draft: here ? null : d }; render();
+  }
+  // under the chart when no lane is open: write a part, for a lane already in the song or an instrument on your desk
+  function writeRow(s, c) {
+    if (!x.editTake || !x.draftPart) return null;
+    const L = lanes().filter((l) => l.sample.kind !== 'audio'), known = new Set(L.map((l) => l.lane)), desk = (x.desk?.() || []).filter((d) => !known.has(d.lane));
+    if (!L.length && !desk.length) return h('div', { class: 'row writerow' }, h('span', { class: 'help' }, 'Put an instrument on your desk to write a part for it here.'));
+    const pick = h('select', { class: 'lcdsel', 'aria-label': 'Write a part for', onchange: (e) => { const v = e.target.value; if (!v) return; writeFor(s.id, v.startsWith('r:') ? { r: +v.slice(2) } : { lane: v }); } },
+      h('option', { value: '' }, '✎ Write a part for…'),
+      L.length ? h('optgroup', { label: 'Lanes in the song' }, ...L.map((l) => h('option', { value: l.lane }, l.lane + (s.parts && Object.values(s.parts).some((q) => laneOf(q) === l.lane) ? ' (has a take here)' : '')))) : null,
+      desk.length ? h('optgroup', { label: 'A new lane, from your desk' }, ...desk.map((d) => h('option', { value: 'r:' + d.r }, d.name))) : null);
+    return h('div', { class: 'row writerow' }, pick, h('span', { class: 'help' }, 'or click an empty block in a lane: notes you write here go to everyone with the song, whole, before they play'));
   }
   function SONG_TAKE(p, id) { return takesOf(p).find((t) => t.id === id); }
   function drumName(n) {
@@ -203,7 +260,7 @@ export function makeCompose(x) {
         const p = Object.values(c.s.parts || {}).find((q) => laneOf(q) === ln.lane);
         const wk = c.id === loopId ? busy.get(ln.lane) : null;
         if (!p) return wk ? h('div', { class: 'cell working', style: `width:${c.w}px;--lc:${wk.color}`, title: `${wk.who} is playing this now; nothing locked yet` }, h('span', {}, '● being played · not locked'))
-          : h('div', { class: 'cell empty', style: `width:${c.w}px`, title: 'Nothing here yet: jam it and lock a take in', onclick: () => { sel = c.id; cell = null; render(); } }, h('span', {}, '+ jam it'));
+          : h('div', { class: 'cell empty', style: `width:${c.w}px`, title: `Nothing here yet: write ${ln.lane}'s notes on an empty roll, or jam it and lock a take in`, onclick: () => writeFor(c.id, { lane: ln.lane }) }, h('span', {}, '+ write or jam'));
         const take = currentTake(p), n = takesOf(p).length, beats = c.s.bars * meter;
         const blk = h('div', { class: 'cell take' + (p.muted ? ' muted' : '') + (wk ? ' retake' : '') + (cell && cell.sid === c.id && cell.pid === p.id ? ' sel' : ''), style: `width:${c.w}px;--lc:${laneColor(li)}`, title: `${ln.lane} in ${c.s.name}: ${n} take${n > 1 ? 's' : ''}, playing ${take?.byName || '?'}'s${p.muted ? ' (muted)' : ''}`, onclick: () => { sel = c.id; cell = { sid: c.id, pid: p.id, lane: ln.lane }; render(); } });
         blk.innerHTML = miniRoll(take, beats, c.w - 4, 30, '#18181b', p.drums);
@@ -280,6 +337,8 @@ export function makeCompose(x) {
     }));
     const prog = h('select', { class: 'lcdsel', 'aria-label': 'Fill the chart', onchange: (e) => { const p = PROGS.find((q) => q[0] === e.target.value); if (p) save({ chords: fillChart(song.key, s.bars, p[1]) }); e.target.value = ''; } },
       h('option', { value: '' }, `Fill in ${x.keyName()}…`), ...PROGS.map(([n]) => h('option', { value: n }, n)));
+    // the lane open under the chart: a part that's here, or a part about to be written (its first note makes it)
+    const lp = c && (s.parts?.[c.pid] || (c.draft && c.sid === s.id ? c.draft : null));
     const secPane = h('div', { class: 'pane', style: `--sc:${colorOfSection(s.name)}` },
       h('div', { class: 'row' }, nameSel,
         h('span', { class: 'bars' }, h('button', { class: 'btn small ghost', 'aria-label': 'Fewer bars', onclick: () => { const b = Math.max(1, s.bars - (s.bars > 4 ? 4 : 1)); save({ bars: b, chords: s.chords.slice(0, b) }); } }, '−'), h('b', {}, `${s.bars} bars`), h('button', { class: 'btn small ghost', 'aria-label': 'More bars', onclick: () => { const b = Math.min(64, s.bars + (s.bars >= 4 ? 4 : 1)); save({ bars: b, chords: [...s.chords, ...Array(Math.max(0, b - s.chords.length)).fill('')] }); } }, '+')),
@@ -289,7 +348,7 @@ export function makeCompose(x) {
         h('button', { class: 'btn hot', onclick: () => x.jamThis(s.id) }, 'Jam this section'),
         h('button', { class: 'btn small ghost danger', title: `Remove ${s.name} from the song`, onclick: () => removeAt(i) }, 'Remove')),
       chart,
-      c && s.parts?.[c.pid] ? laneView(s, s.parts[c.pid], laneColor(Math.max(0, lanes().findIndex((l) => l.lane === laneOf(s.parts[c.pid]))))) : null,
+      lp ? laneView(s, lp, laneColor(Math.max(0, lanes().findIndex((l) => l.lane === laneOf(lp))))) : writeRow(s, c),
       h('button', { class: 'linkbtn', 'aria-expanded': String(secMore), onclick: () => { secMore = !secMore; remember('secMore', secMore); render(); } }, secMore ? '▾ Less' : '▸ More: fill chords from the key, notes, road map, arrange'),
       secMore ? h('div', { class: 'secmore' },
         h('div', { class: 'row' }, prog, label),
@@ -312,6 +371,9 @@ export function makeCompose(x) {
             on ? h('b', { class: 'curtag' }, 'sounding') : h('button', { class: 'btn small', onclick: () => (rule === 'vote' ? x.vote(s.id, p.id, t.id) : x.choose(s.id, p.id, t.id)) }, rule === 'vote' ? 'Vote for it' : 'Use this take'));
         }));
     }
+    else if (lp) takePane = h('div', { class: 'pane takes' },   // a part about to be written: the same layout it will have
+      h('div', { class: 'row' }, h('b', {}, `${laneOf(lp)} in ${s.name}`), h('button', { class: 'gearx', style: 'position:static', 'aria-label': 'Close', onclick: () => { cell = null; render(); } }, '×')),
+      h('p', { class: 'help' }, 'Nothing here yet. Your first note makes this part; it plays from the song for everyone, the whole part sent ahead of time.'));
     return h('div', { class: 'details' + (takePane ? ' lane' : ' one') }, secPane, takePane);
   }
   // move the section at position i to position j (the road-map labels move with it)
