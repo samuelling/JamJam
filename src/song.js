@@ -19,14 +19,14 @@ export const sectionBeats = (song, s) => s.bars * (song.meter || 4);
 // ---------- the shared store: key -> value, with (at, by) stamps ----------
 export class SongStore {
   constructor() { this.song = emptySong(); this.stamps = {}; this.listeners = new Set(); }
-  // keys: 'title' | 'bpm' | 'key' | 'meter' | 'order' | 'transport' ({on, mode: 'loop' | 'song', sid, start (room beat)}) | 'sec:<id>' (name, bars, chords, notes; null = gone)
+  // keys: 'master' ({vol: dB}: the song's master fader) | 'share' ({url}: the band's shared folder) | 'title' | 'bpm' | 'key' | 'meter' | 'order' | 'transport' ({on, mode: 'loop' | 'song', sid, start (room beat)}) | 'sec:<id>' (name, bars, chords, notes; null = gone)
   //       | 'lane:<id>' (a track: name, owner, instrument and its settings, muted) | 'part:<sid>:<pid>' (a track's block in a section; pid = the track id)
   apply(k, v, at, by) {
     const st = this.stamps[k];
     if (st && (st[0] > at || (st[0] === at && String(st[1]) >= String(by)))) return false;
     this.stamps[k] = [at, by];
     const s = this.song;
-    if (['title', 'bpm', 'key', 'meter', 'order', 'labels', 'rule', 'transport'].includes(k)) s[k] = v;
+    if (['title', 'bpm', 'key', 'meter', 'order', 'labels', 'rule', 'transport', 'master', 'share'].includes(k)) s[k] = v;
     else if (k.startsWith('vp:')) { s.players = s.players || {}; if (v == null) delete s.players[k.slice(3)]; else s.players[k.slice(3)] = { ...v, id: k.slice(3) }; }
     else if (k.startsWith('lane:')) { s.lanes = s.lanes || {}; if (v == null) delete s.lanes[k.slice(5)]; else s.lanes[k.slice(5)] = { ...v, id: k.slice(5) }; }
     else if (k.startsWith('var:')) { s.variations = s.variations || {}; if (v == null) delete s.variations[k.slice(4)]; else s.variations[k.slice(4)] = v; }

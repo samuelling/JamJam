@@ -15,6 +15,7 @@ import { makeBand } from './band.js';
 import { Blobs, isBlobChunk, toPcm16 } from './blobs.js';
 import { makePadsUI, PAD_KEYS, PAD_BASE } from './padsui.js';
 import { makeGear } from './gear.js';
+import * as STEMS from './stems.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
 const store = { get: (k) => localStorage.getItem('megajam.' + k) ?? localStorage.getItem('jamjam.' + k), set: (k, v) => localStorage.setItem('megajam.' + k, v) };
 
@@ -899,6 +900,7 @@ const compose = makeCompose({
   play: (mode, sid) => startTransport(mode, sid), stop: () => stopTransport(), loopRange: (a, b) => loopRange(a, b), jamThis: (sid) => { startTransport('loop', sid); goRoom('jam'); },
   importFile: (f) => importSketch(f), exportMidi: () => download(new Blob([SONG.songToMidi(songForExport())], { type: 'audio/midi' }), slugName() + '.mid'), exportJson: () => download(new Blob([JSON.stringify(songForExport(), null, 1)], { type: 'application/json' }), slugName() + '.megajam.json'),
   removePart: (sid, pid) => setSong(`part:${sid}:${pid}`, null), choose, vote, saveVariation, restoreVariation, editTake,
+  now: () => clock.now(),   exportStems: (o, prog) => exportStemsTo(o, prog), canFolder: () => typeof window.showDirectoryPicker === 'function',
   draftPart, previewNote, mixPreview: (id, patch) => mixPreview(id, patch), addLane: (o) => addLane(o), setLane: (id, patch) => setLane(id, patch), removeLane: (id) => removeLane(id), jamLane: (id) => jamLane(id),
   solo: (key) => { S.solo = S.solo || new Set(); if (S.solo.has(key)) S.solo.delete(key); else S.solo.add(key); compose.render(); }, soloed: () => S.solo || new Set(),
   instruments: () => [...engine.defs.values()].filter((d) => !d.internal && d.id !== 'none').map((d) => ({ id: d.id, name: d.name + (d.lib ? ` (${engine.libs.get(d.lib)?.name || d.lib})` : ''), patches: engine.patchTypes({ inst: d.id }).map((t) => [t, patchName(d, t)]) })),
@@ -915,6 +917,31 @@ const compose = makeCompose({
 const band = makeBand({ h, $, engine, tempo, clock, songStore, setSong, S, segmentsIn, positionAt, setStatus: (t, k) => setStatus(t, k), iconEl, setText, setCls, closeDrawers: () => closeDrawers(), renderLibrary: () => renderLibrary() });
 const slugName = () => (songStore.song.title || 'song').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'song';
 const songForExport = () => { const s = JSON.parse(JSON.stringify(songStore.song)); delete s.transport; delete s.players; s.bpm = Math.round(tempo.bpm(clock.now() + 1000)); s.key = S.key.mode ? { root: S.key.root, mode: S.key.mode } : s.key; return s; };
+// Export stems: every track rendered from bar 1 to the end, lined up, into a folder (a synced copy of the band's Google
+// Drive or Dropbox folder lands them with everyone else's) or a zip. o: { mine, to: 'folder' | 'zip' | 'memory' }
+async function exportStemsTo(o = {}, onProgress) {
+  const song = songForExport(), sr = engine.ctx?.sampleRate || 48000;
+  const only = o.mine ? Object.values(song.lanes || {}).filter((t) => t.ownerName === S.name).map((t) => t.id) : null;
+  if (only && !only.length) throw new Error("You don't have a track in this song yet.");
+  for (const t of Object.values(song.lanes || {})) if (!engine.defs.has(t.inst) && engine.catalog?.has(t.inst)) await engine.ensureDef(t.inst).catch(() => {});
+  const folder = `${STEMS.safeName(song.title)} stems`, files = [];
+  let write;
+  if (o.to === 'folder') {
+    const root = await window.showDirectoryPicker({ id: 'megajam-stems', mode: 'readwrite' });
+    const dir = await root.getDirectoryHandle(folder, { create: true });
+    write = async (name, data) => {
+      const segs = name.split('/'); let d = dir;
+      for (const seg of segs.slice(0, -1)) d = await d.getDirectoryHandle(seg, { create: true });
+      const w = await (await d.getFileHandle(segs[segs.length - 1], { create: true })).createWritable(); await w.write(data); await w.close();
+      files.push({ name, size: data.length });
+    };
+  } else write = async (name, data) => { files.push({ name: `${folder}/${name}`, data: typeof data === 'string' ? new TextEncoder().encode(data) : data }); };
+  const r = await STEMS.exportStems({ song, bpm: song.bpm, sr, defs: engine.defs, resolve: (c) => engine.resolve(c), clip: (id) => blobs.pcm(id), only, master: song.master?.vol ?? 0, by: S.name, onProgress, write });
+  if (o.to === 'zip') download(SR.zip(files), folder + '.zip');
+  if (o.to === 'memory') window.JJ.lastStems = files;
+  setSong('share', { ...(songStore.song.share || {}), last: { by: S.name, at: clock.now(), files: r.files, mine: !!o.mine, to: o.to } });
+  return { ...r, files: files.map((f) => ({ name: f.name, size: f.size ?? f.data.length })) };
+}
 function download(blob, name) { const a = h('a', { href: URL.createObjectURL(blob), download: name }); document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
 // bring in a sketch: a MIDI file or a SynthLand Tracker song (or a saved MEGAjam song)
 async function importSketch(file) {
@@ -1004,7 +1031,9 @@ async function bouncePart(p, beats, bpm) {
   const ctx = new OfflineAudioContext(2, Math.ceil(sr * (LEAD + L + TAIL)), sr);
   const params = partCfg(p).params;
   if (def.init) await def.init(ctx, params);   // an instrument with files to load (Pads) waits for the ones it will play
-  const inst = def.create(ctx, ctx.destination, params);
+  // a clock for instruments that follow the beat: the top of the section is a downbeat, LEAD seconds in
+  const env = { audioTime: (ms) => LEAD + ms / 1000, roomTime: (t) => (t - LEAD) * 1000, bpm: () => bpm, beatAt: (ms) => (ms / 1000) * (bpm / 60), timeOf: (b) => (b * 60000) / bpm };
+  const inst = def.create(ctx, ctx.destination, params, env);
   for (const e of p.takeEvents || []) { const t = LEAD + (e.b * 60) / bpm; if (e.type === 'on') inst.noteOn(e.note, e.vel ?? 100, t); else if (e.type === 'off') inst.noteOff(e.note, t); }
   const hold = ctx.suspend(256 / sr).then(async () => { await new Promise((r) => setTimeout(r, 40)); ctx.resume(); });
   const full = await ctx.startRendering(); await hold; try { inst.dispose(); } catch (_) {}
@@ -1220,12 +1249,20 @@ function audioLane() {
 // ---------- the track mixer: each track's fader (dB) and pan, set in the song, so everyone hears the same balance ----------
 const MIX = new Map();   // track id -> {in: gain, pan: stereo panner, vol, panV}
 const dbToGain = (db) => (db <= -60 ? 0 : Math.pow(10, db / 20));
+// the song's master fader: every track's bus goes through it (the live desk doesn't)
+const MASTER = { ctx: null, g: null, vol: null };
+function songMaster() {
+  if (MASTER.ctx !== engine.ctx) { MASTER.ctx = engine.ctx; MASTER.g = engine.ctx.createGain(); MASTER.g.connect(engine.master); MASTER.vol = null; for (const m of MIX.values()) m.ctx = null; }
+  setMaster(songStore.song.master?.vol ?? 0);
+  return MASTER.g;
+}
+function setMaster(vol) { if (!MASTER.g || MASTER.vol === vol) return; MASTER.g.gain.setTargetAtTime(dbToGain(vol), engine.ctx.currentTime, 0.02); MASTER.vol = vol; }
 function trackBus(p) {
   const id = p?.laneId || (p?.id || '').split('.')[0] || 'none', t = songStore.song.lanes?.[id];
   let m = MIX.get(id);
   if (!m || m.ctx !== engine.ctx) {
     const ctx = engine.ctx, g = ctx.createGain(), pn = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
-    if (pn) { g.connect(pn); pn.connect(engine.master); } else g.connect(engine.master);
+    const out = songMaster(); if (pn) { g.connect(pn); pn.connect(out); } else g.connect(out);
     m = { ctx, in: g, pan: pn, vol: null, panV: null }; MIX.set(id, m);
   }
   setMix(m, t?.vol ?? 0, t?.pan ?? 0);
@@ -1238,11 +1275,14 @@ function setMix(m, vol, pan) {
 }
 // while a fader or pan is dragged: hear it at once, here; the song gets it when you let go
 function mixPreview(id, patch) {
+  if (id === 'master') { if (engine.ctx) { songMaster(); setMaster(patch.vol ?? 0); } return; }
   const m = MIX.get(id), t = songStore.song.lanes?.[id]; if (!m || !engine.ctx) return;
   setMix(m, patch.vol ?? t?.vol ?? 0, patch.pan ?? t?.pan ?? 0);
 }
+window.JJ.exportStems = (o) => exportStemsTo(o); window.JJ.readWav24 = STEMS.readWav24;
+window.JJ.master = () => (engine.ctx ? (songMaster(), MASTER.g.gain.value) : null);
 window.JJ.mix = (id) => { const m = MIX.get(id) || (engine.ctx && (trackBus({ laneId: id }), MIX.get(id))); return m ? { gain: m.in.gain.value, pan: m.pan ? m.pan.pan.value : 0 } : null; };
-songStore.listeners.add((k, v) => { if (k.startsWith('lane:') && engine.ctx) { const m = MIX.get(k.slice(5)); if (m) setMix(m, v?.vol ?? 0, v?.pan ?? 0); } });
+songStore.listeners.add((k, v) => { if (k === 'master' && MASTER.g) setMaster(v?.vol ?? 0); if (k.startsWith('lane:') && engine.ctx) { const m = MIX.get(k.slice(5)); if (m) setMix(m, v?.vol ?? 0, v?.pan ?? 0); } });
 // a track you can hear: not muted for the band, and (if you've soloed tracks, which only changes what you hear) soloed
 function laneAudible(p) {
   const t = p.laneId && songStore.song.lanes?.[p.laneId];

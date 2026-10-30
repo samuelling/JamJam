@@ -28,6 +28,7 @@ export function makeCompose(x) {
   const mem = (k, d) => { try { const v = localStorage.getItem('megajam.' + k); return v == null ? d : v === '1'; } catch (_) { return d; } };
   const remember = (k, v) => { try { localStorage.setItem('megajam.' + k, v ? '1' : '0'); } catch (_) {} };
   let songMore = mem('songMore', false), secMore = mem('secMore', false);
+  let stemsOpen = false, stemsBusy = false, stemsSay = '', stemsMine = false;   // the Export stems panel
   const SNAP = [{ name: '1/4', g: 1 }, { name: '1/8', g: 0.5 }, { name: '1/16', g: 0.25 }, { name: '1/8 triplet', g: 1 / 3 }, { name: '1/16 triplet', g: 1 / 6 }, { name: '1/32', g: 0.125 }];
   let snapI = 2, qStrength = 1;
   let open = false; try { open = localStorage.getItem('megajam.lanes') === '1'; } catch (_) {}   // lanes folded into one row by default   // px per bar; the selected section and lane
@@ -41,6 +42,7 @@ export function makeCompose(x) {
     return out;
   }
   let adding = false;   // the Add track form is open
+  let fresh = null, freshT = 0, freshShown = false;   // the track just added: its row lights up and comes into view
   // a tiny picture of a take: notes as bars across the cell (pitch up), drums as ticks
   function miniRoll(take, beats, w, ht, color, drums) {
     if (take?.audio) {
@@ -204,6 +206,40 @@ export function makeCompose(x) {
     return h('label', { class: 'tmix' }, h('small', {}, 'Pan'), h('input', { type: 'range', class: 'tpan', min: -1, max: 1, step: 0.02, value: v, 'aria-label': `${t.name} pan`, title: 'Double-click for centre',
       oninput: (e) => { readout.textContent = fmtPan(+e.target.value); x.mixPreview?.(t.id, { pan: +e.target.value }); }, onchange: (e) => x.setLane(t.id, { pan: +e.target.value }), ondblclick: () => x.setLane(t.id, { pan: 0 }) }), readout);
   }
+  // Export stems: every track from bar 1 to the end of the song, lined up, as WAVs; with the mix, MIDI and the song.
+  // The band's shared folder (a Google Drive or Dropbox link everyone can see) is where they're meant to go: save into
+  // your computer's synced copy of it and everyone's land together.
+  function stemsPanel(song) {
+    const share = song.share || {}, last = share.last, say = h('span', { class: 'help stemsay', 'aria-live': 'polite' }, stemsSay);
+    const ago = (t) => { const m = Math.round((x.now?.() ?? Date.now()) - t) / 60000; return m < 1 ? 'just now' : m < 60 ? `${Math.round(m)} min ago` : `${Math.round(m / 60)} h ago`; };
+    const go = async (to) => {
+      if (stemsBusy) return; stemsBusy = true; stemsSay = 'Starting…'; render();
+      const prog = (t) => { stemsSay = t; const el = document.querySelector('.stemsay'); if (el) el.textContent = t; };
+      try {
+        const r = await x.exportStems({ mine: stemsMine, to }, prog);
+        stemsSay = `Done: ${r.files.length} files${to === 'folder' ? ' in the folder you picked' : ' in the zip'}.` + (r.clipped.length ? ` Too loud (clipped): ${r.clipped.join(', ')}.` : '') + (r.skipped.length ? ` Couldn't render: ${r.skipped.join('; ')}.` : '');
+      } catch (e) { stemsSay = e?.name === 'AbortError' ? 'No folder picked.' : `Couldn't export: ${e?.message || e}`; }
+      stemsBusy = false; render();
+    };
+    const link = h('input', { class: 'rmlabel sharelink', placeholder: 'paste the band folder link (Google Drive or Dropbox)', value: share.url || '', 'aria-label': 'Band folder link', onkeydown: (e) => e.stopPropagation(),
+      onchange: (e) => { const v = e.target.value.trim(); x.setSong('share', { ...share, url: /^https:\/\//.test(v) ? v : '' }); } });
+    return h('div', { class: 'stemspanel' },
+      h('div', { class: 'stemrow' }, h('b', {}, 'Export stems'), h('span', { class: 'help' }, `Every track as its own WAV, all starting at bar 1 and the same length, so they line up in Ableton or any DAW (${song.bpm || ''} bpm). With them: the mix, the song as MIDI, and the song file.`)),
+      h('div', { class: 'stemrow' }, h('small', {}, 'Band folder'), link, share.url ? h('a', { class: 'btn small ghost', href: share.url, target: '_blank', rel: 'noopener' }, 'Open ↗') : null,
+        h('span', { class: 'help' }, 'Everyone sees this link. Saving into your computer\'s synced copy of the folder (the Google Drive or Dropbox app) puts your stems next to everyone else\'s.')),
+      h('div', { class: 'stemrow' },
+        h('select', { class: 'lcdsel', 'aria-label': 'Whose tracks', onchange: (e) => { stemsMine = e.target.value === 'mine'; } }, h('option', { value: 'all', selected: !stemsMine }, "Everyone's tracks + the mix"), h('option', { value: 'mine', selected: stemsMine }, 'Just my tracks')),
+        x.canFolder?.() ? h('button', { class: 'btn small hot', disabled: stemsBusy, onclick: () => go('folder') }, 'Save into a folder…') : null,
+        h('button', { class: 'btn small' + (x.canFolder?.() ? '' : ' hot'), disabled: stemsBusy, onclick: () => go('zip') }, 'Download a .zip'), say),
+      last ? h('div', { class: 'stemrow' }, h('small', { class: 'help' }, `Last export: ${last.by}, ${last.files} stem${last.files === 1 ? '' : 's'}${last.mine ? ' (their tracks)' : ''}, ${ago(last.at)}.`)) : null);
+  }
+  // the song's master fader: everyone's song playback (and the stems' mix) goes through it
+  function masterFader(song) {
+    const vol = song.master?.vol ?? 0, readout = h('small', { class: 'mono help' }, fmtDb(vol));
+    return h('label', { class: 'tmix master', title: 'The whole song, for everyone (double-click for 0 dB)' }, h('small', {}, 'Master'),
+      h('input', { type: 'range', class: 'mfader', min: -60, max: 6, step: 0.5, value: vol, 'aria-label': 'Master volume',
+        oninput: (e) => { readout.textContent = fmtDb(+e.target.value); x.mixPreview?.('master', { vol: +e.target.value }); }, onchange: (e) => x.setSong('master', { vol: +e.target.value }), ondblclick: () => x.setSong('master', { vol: 0 }) }), readout);
+  }
   // a track's own settings, above its takes: its name, its instrument and patch, put it on your desk, remove it
   function trackBar(id) {
     const t = id && x.store.song.lanes?.[id]; if (!t || !x.setLane) return null;
@@ -229,11 +265,12 @@ export function makeCompose(x) {
     fill();
     const add = () => {
       const id = x.addLane({ inst: inst.value, patch: patch.value, name: name.value.trim() }); adding = false; if (!id) { render(); return; }
+      fresh = id; freshT = Date.now(); freshShown = false;
       open = true; try { localStorage.setItem('megajam.lanes', '1'); } catch (_) {}
       const at = sel || x.store.song.order[0];
       if (at) writeFor(at, { lane: id }); else render();
     };
-    return h('div', { class: 'addtrack open' }, h('b', {}, 'New track'), inst, patch, name,
+    return h('div', { class: 'addtrack open' }, h('b', {}, '+ New track'), inst, patch, name,
       h('button', { class: 'btn small hot', onclick: add }, 'Add'), h('button', { class: 'btn small ghost', onclick: () => { adding = false; render(); } }, 'Cancel'),
       hasSections ? null : h('span', { class: 'help' }, 'Add a section to the song, then write in it.'));
   }
@@ -256,6 +293,7 @@ export function makeCompose(x) {
       order.length ? h('button', { class: 'btn playsong' + (playing ? ' on' : ' hot'), onclick: () => (playing ? x.stop() : x.play('song')) }, playing ? '■ Stop' : '▶ Play the song') : null,
       empty ? importBtn('btn') : null,
       h('span', { class: 'help mono songstats' }, `${order.length} sections · ${totalBars} bars · ${Math.floor(mins)}:${String(Math.round((mins % 1) * 60)).padStart(2, '0')}`),
+      order.length ? masterFader(song) : null,
       h('span', { style: 'flex:1' }),
       h('span', { class: 'presence' }, ...x.playersOf().map((p) => h('span', { class: 'who' + (p.where === 'compose' ? ' here' : ''), title: `${p.name}: ${p.where === 'compose' ? 'in the Compose Room' : 'in the Jam Room'}` }, p.name.slice(0, 1).toUpperCase()))),
       h('button', { class: 'btn small ghost moretoggle', 'aria-expanded': String(songMore), onclick: () => { songMore = !songMore; remember('songMore', songMore); render(); } }, songMore ? '▾ Song options' : '▸ Song options'), file);
@@ -265,6 +303,7 @@ export function makeCompose(x) {
       h('select', { class: 'lcdsel', 'aria-label': 'Versions', onchange: (e) => { const v = e.target.value; e.target.value = ''; if (v === '__save') { const n = prompt('Name this version of the song', `Version ${vars.length + 1}`); if (n) x.saveVariation(n.slice(0, 40)); } else if (v) x.restoreVariation(v); } },
         h('option', { value: '' }, vars.length ? `Versions (${vars.length})` : 'Versions'), h('option', { value: '__save' }, 'Save this version…'), ...vars.map((v) => h('option', { value: v.name }, `Go to “${v.name}”`))),
       empty ? null : importBtn('btn small'), h('button', { class: 'btn small', onclick: () => x.exportMidi() }, 'Save MIDI'), h('button', { class: 'btn small', onclick: () => x.exportJson() }, 'Save song'),
+      x.exportStems && !empty ? h('button', { class: 'btn small' + (stemsOpen ? ' on' : ''), 'aria-expanded': String(stemsOpen), onclick: () => { stemsOpen = !stemsOpen; render(); } }, 'Export stems…') : null,
       h('span', { class: 'help mono' }, `${x.bpm()} bpm · ${x.keyName()}`),
       h('span', { class: 'zoom' }, h('small', { class: 'help' }, 'zoom'), h('button', { class: 'btn small ghost', 'aria-label': 'Zoom out', onclick: () => { PX = Math.max(8, PX - 4); render(); } }, '−'), h('button', { class: 'btn small ghost', 'aria-label': 'Zoom in', onclick: () => { PX = Math.min(48, PX + 4); render(); } }, '+')));
     // the arrangement: sections left to right along the top, one row per lane, a block per take that sounds there
@@ -311,7 +350,8 @@ export function makeCompose(x) {
       }));
     const solos = x.soloed?.() || new Set();
     const setRoleOf = (ln, role) => { if (ln.rec) x.setLane(ln.lane, { role }); const s0 = x.store.sections().find((s) => Object.values(s.parts || {}).some((p) => laneOf(p) === ln.lane)); const p = s0 && Object.values(s0.parts).find((q) => laneOf(q) === ln.lane); if (p) x.setRole(s0.id, p.id, role); };
-    const rows = !open ? [] : L.map((ln, li) => h('div', { class: 'arow' + (ln.rec?.muted ? ' tmuted' : '') + (solos.size && !solos.has(ln.lane) ? ' unsolo' : '') },
+    const isFresh = (lane) => lane === fresh && Date.now() - freshT < 4000;
+    const rows = !open ? [] : L.map((ln, li) => h('div', { class: 'arow' + (isFresh(ln.lane) ? ' fresh' : '') + (ln.rec?.muted ? ' tmuted' : '') + (solos.size && !solos.has(ln.lane) ? ' unsolo' : '') },
       h('div', { class: 'lhead pick' + (cell && cell.lane === ln.lane ? ' sel' : ''), style: `--lc:${laneColor(li)}`, title: `${ln.name}: show its notes below`, onclick: (e) => { if (e.target.closest('select, button')) return; pickLane(ln.lane); } }, x.iconEl(ln.sample),
         h('span', {}, h('b', {}, ln.name), h('select', { class: 'role', 'aria-label': `${ln.name}'s role`, onchange: (e) => setRoleOf(ln, e.target.value) }, ...ROLES.map((r) => h('option', { value: r, selected: (ln.role || '') === r }, r)))),
         h('span', { class: 'ms' },
@@ -322,6 +362,7 @@ export function makeCompose(x) {
         const p = Object.values(c.s.parts || {}).find((q) => laneOf(q) === ln.lane);
         const wk = c.id === loopId ? busy.get(ln.lane) : null;
         if (!p) return wk ? h('div', { class: 'cell working', style: `width:${c.w}px;--lc:${wk.color}`, title: `${wk.who} is playing this now; nothing locked yet` }, h('span', {}, '● being played · not locked'))
+          : cell && cell.draft && cell.sid === c.id && cell.lane === ln.lane ? h('div', { class: 'cell empty sel writing', style: `width:${c.w}px`, title: `Writing ${ln.name}'s notes in ${c.s.name}: the roll is below` }, h('span', {}, '✎ writing here ↓'))
           : h('div', { class: 'cell empty', style: `width:${c.w}px`, title: `Nothing here yet: write ${ln.name}'s notes on an empty roll, or jam it and lock a take in`, onclick: () => writeFor(c.id, { lane: ln.lane }) }, h('span', {}, '+ write or jam'));
         const take = currentTake(p), n = takesOf(p).length, beats = c.s.bars * meter;
         const blk = h('div', { class: 'cell take' + (p.muted ? ' muted' : '') + (wk ? ' retake' : '') + (cell && cell.sid === c.id && cell.pid === p.id ? ' sel' : ''), style: `width:${c.w}px;--lc:${laneColor(li)}`, title: `${ln.name} in ${c.s.name}: ${n} take${n > 1 ? 's' : ''}, playing ${take?.byName || '?'}'s${p.muted ? ' (muted)' : ''}`, onclick: () => { sel = c.id; cell = { sid: c.id, pid: p.id, lane: ln.lane }; render(); } });
@@ -378,9 +419,12 @@ export function makeCompose(x) {
     const looprow = h('div', { class: 'arow looprow' }, h('div', { class: 'lhead' },
       loopNow ? h('button', { class: 'btn small on loopbtn', onclick: () => x.stop() }, '■ Stop loop') : region ? h('button', { class: 'btn small hot loopbtn', onclick: () => x.loopRange(region[0], region[1]) }, '↻ Loop') : h('small', {}, 'Drag across to loop ⟶')), track);
     const grid = h('div', { class: 'arranger' + (open ? '' : ' folded') }, looprow, ruler, ...summary, ...rows, ...(open ? ghosts : []), h('div', { class: 'playhead hide', 'data-playhead': '' }),
+      adding ? h('div', { class: 'arow addform' }, addTrackRow(order.length)) : null,
       h('div', { class: 'arow' }, h('div', { class: 'lhead addl' }, adding ? null : addTrackRow(order.length), L.length ? null : h('small', {}, 'Or jam a section and lock it in.')),
         h('div', { class: 'addsec' }, h('select', { class: 'lcdsel addsel', 'aria-label': 'Add a section', onchange: (e) => { if (e.target.value) addSection(e.target.value); e.target.value = ''; } }, h('option', { value: '' }, '+ Add a section'), ...SECTION_NAMES.map((nm) => h('option', { value: nm }, nm))))));
-    box.replaceChildren(...[head, opts, grid, adding ? addTrackRow(order.length) : null, details(sel, cell)].filter(Boolean));
+    box.replaceChildren(...[head, opts, songMore && stemsOpen && !empty ? stemsPanel(song) : null, grid, details(sel, cell)].filter(Boolean));
+    if (fresh && !freshShown) { freshShown = true; const r = box.querySelector('.arow.fresh'); if (r) { r.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); setTimeout(() => render(), 4100); } }
+    if (adding) box.querySelector('.addform select')?.focus();
     if (editing) $(`[data-cell="${editing}"]`)?.focus();
   }
   function details(sid, c) {

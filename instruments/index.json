@@ -52,6 +52,10 @@
     {
       "id": "analog",
       "file": "analog.js"
+    },
+    {
+      "id": "wobbler",
+      "file": "wobbler.js"
     }
   ]
 }
