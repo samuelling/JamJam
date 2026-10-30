@@ -29,9 +29,9 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     await B.click('#joinBtn'); await B.waitForSelector('#studio:not(.hide)');
     for (let i = 0; i < 60; i++) { const ok = await Promise.all([A, B].map((p) => p.evaluate(() => JJ.clock.locked && JJ.S.players.size === 1 && [...JJ.room.peers.values()].every((x) => x.path === 'direct')))); if (ok.every(Boolean)) break; await sleep(300); }
     await sleep(600);
-    // the offer sits in an empty corner
-    check(await A.$('.corner.empty .addvp') !== null, 'an empty corner offers a jazz drummer');
-    await A.click('.corner.empty .addvp');
+    // no button in the corners any more; the drummer is still added through the API
+    check(await A.$('.corner.empty .addvp') === null, 'empty corners no longer offer a jazz drummer');
+    await A.evaluate(() => JJ.addVirtual('jazz-drums'));
     await sleep(800);
     const vid = await A.evaluate(() => Object.keys(JJ.players())[0]);
     check(!!vid && (await B.evaluate((id) => !!JJ.players()[id], vid)), 'the drummer reaches Matt');

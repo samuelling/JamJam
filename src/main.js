@@ -700,8 +700,7 @@ function renderCorners() {
     box.dataset.sig = sig;
     const vps = vplayers();
     box.replaceChildren(...ids.map((id) => cornerCard(id, rackOf(id))), ...vps.map((vp) => vpCard(vp)));
-    for (let i = ids.length + vps.length; i < MAX; i++) box.append(h('div', { class: 'corner empty' }, h('div', { class: 'legend' }, 'Empty corner'), h('div', { class: 'help' }, 'Copy the invite to bring someone in'),
-      !S.listener && i === ids.length + vps.length ? h('button', { class: 'btn small ghost addvp', title: 'A bandmate the room plays: it follows the tempo and the song, and everyone hears the same thing', onclick: () => addVirtual('jazz-drums') }, '+ Add a jazz drummer') : null));
+    for (let i = ids.length + vps.length; i < MAX; i++) box.append(h('div', { class: 'corner empty' }, h('div', { class: 'legend' }, 'Empty corner'), h('div', { class: 'help' }, 'Copy the invite to bring someone in')));
   }
   updateCorners();
 }
