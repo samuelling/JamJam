@@ -796,6 +796,11 @@
   .msb.on { background: #ffb24d; color: #111; border-color: #ffb24d; }
   .msb.solo.on { background: #7DB0FF; border-color: #7DB0FF; }
   .arow.tmuted .cell.take, .arow.unsolo .cell.take { opacity: .35; }
+  .stemspanel { margin: 6px 0 10px; padding: 10px 12px; border-radius: 8px; background: #ffffff08; display: grid; gap: 8px; }
+  .stemrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .stemrow > small:first-child { font: 700 10px var(--type); text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
+  .sharelink { min-width: 320px; }
+  .tmix.master { margin-left: 8px; }
   .tfader.mini { width: 58px; height: 12px; margin-left: 4px; accent-color: #ECEBE5; }
   .tmix { display: inline-flex; align-items: center; gap: 6px; }
   .tmix input { width: 110px; accent-color: #ffcf26; }
@@ -805,6 +810,14 @@
   .trackbar .tname { font-weight: 700; min-width: 160px; }
   .addtrack { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .addtrack.open { margin: 8px 0; padding: 10px 12px; border-radius: 8px; background: #ffffff08; }
+  .arow.addform { display: block; }
+  .arow.addform .addtrack.open { margin: 4px 0; background: #ffcf2614; outline: 2px solid #ffcf26; outline-offset: -2px; animation: freshin .25s ease-out; }
+  .arow.fresh .lhead, .arow.fresh .cell { animation: freshpulse 3.8s ease-out; }
+  .arow.fresh .lhead { box-shadow: inset 4px 0 0 #ffcf26; }
+  .cell.empty.writing { outline: 2px solid #ffcf26; outline-offset: -2px; background: #ffcf2618; }
+  .cell.empty.writing span { color: #ffcf26; opacity: 1; }
+  @keyframes freshpulse { 0%, 30% { background-color: #ffcf2640; } 100% { background-color: transparent; } }
+  @keyframes freshin { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
   .lvroll.editable .lvnote { cursor: grab; }
   .lvroll.editable .lvnote:hover { stroke: #fff; stroke-width: 1; }
   .lvroll.editable { cursor: crosshair; touch-action: none; }
