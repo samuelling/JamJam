@@ -2,6 +2,13 @@
 // Two detuned saws, a square and a sub, an optional FM growl, then drive into a resonant low-pass (or a vowel
 // filter, for the "yoi" talk) that the LFO sweeps, a soft clip at the end. Mono: legato or retriggered.
 //
+// Formant: a bank of four formant resonators fed from the driven oscillators, in parallel with the filter (so the
+// low-pass doesn't starve it), crossfaded in by its mix; the wobble morphs it from vowel A to vowel B and back, so
+// the wub talks ("wow-wow", "yoi-yoi"). Growl: the FM gets a ratio and its own share of the wobble; a wavefolder and
+// a comb (a short delay with feedback, its time swept by the wobble) colour the oscillators before the filter; after
+// it, a driven resonant band-pass "throat" and a sample-rate crush. Every new knob at its default leaves the sound
+// exactly as it was.
+//
 // Clock sync: the LFO's phase is the room beat times cycles-per-beat, so every jammer's copy wobbles on the same
 // beat, on the same edge. The page sends the worklet beat anchors (an audio frame, the room beat there, beats per
 // second) with every note and a few times a second; between anchors the worklet counts frames. With no room clock
@@ -15,6 +22,20 @@ const NAME = 'jj-wobbler-1';
 // divisions, slowest to fastest, in LFO cycles per beat (a beat is a quarter note)
 const DIVS = [['1/1', 0.25], ['1/2', 0.5], ['1/4.', 2 / 3], ['1/2T', 0.75], ['1/4', 1], ['1/8.', 4 / 3], ['1/4T', 1.5], ['1/8', 2], ['1/8T', 3], ['1/16', 4], ['1/16T', 6], ['1/32', 8]];
 const OCT_DIVS = [1, 4, 7, 9, 11];   // Octave mode: 1/2, 1/4, 1/8, 1/16, 1/32
+// formant vowels: four formants each (Hz) and their levels
+const VOWELS = ['Ah', 'Eh', 'Ee', 'Oh', 'Oo', 'Aw', 'Uh', 'Er'];
+const FORMANTS = [
+  [[730, 1090, 2440, 3400], [1, 0.5, 0.28, 0.12]],
+  [[530, 1840, 2480, 3500], [1, 0.45, 0.3, 0.12]],
+  [[270, 2290, 3010, 3500], [1, 0.3, 0.25, 0.12]],
+  [[450, 800, 2830, 3500], [1, 0.6, 0.15, 0.08]],
+  [[300, 870, 2240, 3300], [1, 0.35, 0.1, 0.05]],
+  [[570, 840, 2410, 3300], [1, 0.7, 0.2, 0.1]],
+  [[640, 1190, 2390, 3400], [1, 0.55, 0.22, 0.1]],
+  [[490, 1350, 1690, 3300], [1, 0.6, 0.5, 0.12]],
+];
+// the FM growl's modulator, as a ratio of the note
+const RATIOS = [['1×', 1], ['½×', 0.5], ['1.5×', 1.5], ['2×', 2], ['3×', 3], ['4×', 4], ['5×', 5], ['7×', 7]];
 const PARAMS = [
   { id: 'map', name: 'Key picks rate', options: ['Octave', 'Keys', 'Fixed'], min: 0, max: 2, def: 0, step: 1, group: 'Wobble' },
   { id: 'mapFrom', name: 'Map starts at', options: ['C0', 'C1', 'C2', 'C3'], min: 0, max: 3, def: 1, step: 1, group: 'Wobble' },
@@ -28,11 +49,32 @@ const PARAMS = [
   { id: 'detune', name: 'Saw detune', min: 0, max: 50, def: 12, unit: 'ct', group: 'Oscillators' },
   { id: 'square', name: 'Square', min: 0, max: 1, def: 0.35, group: 'Oscillators' },
   { id: 'sub', name: 'Sub', min: 0, max: 1, def: 0.6, group: 'Oscillators' },
+  { id: 'oct', name: 'Octave', options: ['−2', '−1', '0', '+1'], min: 0, max: 3, def: 2, step: 1, group: 'Oscillators' },
+  { id: 'subOct', name: 'Sub octave', options: ['−1', '−2'], min: 0, max: 1, def: 0, step: 1, group: 'Oscillators' },
+  { id: 'subWave', name: 'Sub wave', options: ['Sine', 'Triangle', 'Square'], min: 0, max: 2, def: 0, step: 1, group: 'Oscillators' },
+  { id: 'beef', name: 'Beef', min: 0, max: 1, def: 0, group: 'Oscillators' },
   { id: 'growl', name: 'FM growl', min: 0, max: 1, def: 0, group: 'Oscillators' },
   { id: 'mode', name: 'Filter', options: ['Low-pass', 'Vowel (yoi)'], min: 0, max: 1, def: 0, step: 1, group: 'Filter' },
   { id: 'cutoff', name: 'Cutoff', min: 40, max: 8000, def: 110, curve: 'exp', unit: 'Hz', cc: 74, group: 'Filter' },
   { id: 'reso', name: 'Resonance', min: 0, max: 1, def: 0.45, cc: 71, group: 'Filter' },
   { id: 'drive', name: 'Drive', min: 0, max: 1, def: 0.5, group: 'Filter' },
+  { id: 'fmix', name: 'Formant mix', min: 0, max: 1, def: 0, group: 'Formant' },
+  { id: 'vowelA', name: 'Vowel A', options: VOWELS, min: 0, max: VOWELS.length - 1, def: 4, step: 1, group: 'Formant' },
+  { id: 'vowelB', name: 'Vowel B', options: VOWELS, min: 0, max: VOWELS.length - 1, def: 0, step: 1, group: 'Formant' },
+  { id: 'fmorph', name: 'Vowel wobble', min: 0, max: 1, def: 1, group: 'Formant' },
+  { id: 'fshift', name: 'Formant shift', min: -12, max: 12, def: 0, unit: 'st', group: 'Formant' },
+  { id: 'fq', name: 'Formant sharpness', min: 0, max: 1, def: 0.5, group: 'Formant' },
+  { id: 'fkey', name: 'Formants follow key', min: 0, max: 1, def: 0, group: 'Formant' },
+  { id: 'gratio', name: 'FM ratio', options: RATIOS.map((r) => r[0]), min: 0, max: RATIOS.length - 1, def: 0, step: 1, group: 'Growl' },
+  { id: 'glfo', name: 'FM wobble', min: 0, max: 1, def: 0.6, group: 'Growl' },
+  { id: 'fold', name: 'Fold', min: 0, max: 1, def: 0, group: 'Growl' },
+  { id: 'comb', name: 'Comb', min: 0, max: 1, def: 0, group: 'Growl' },
+  { id: 'ctime', name: 'Comb time', min: 1, max: 10, def: 3, unit: 'ms', group: 'Growl' },
+  { id: 'cfb', name: 'Comb feedback', min: -0.95, max: 0.95, def: 0.6, group: 'Growl' },
+  { id: 'csweep', name: 'Comb wobble', min: 0, max: 1, def: 0.5, group: 'Growl' },
+  { id: 'throat', name: 'Throat', min: 0, max: 1, def: 0, group: 'Growl' },
+  { id: 'throatF', name: 'Throat freq', min: 200, max: 3000, def: 800, curve: 'exp', unit: 'Hz', group: 'Growl' },
+  { id: 'crush', name: 'Crush', min: 0, max: 1, def: 0, group: 'Growl' },
   { id: 'attack', name: 'Attack', min: 0.001, max: 1, def: 0.004, curve: 'exp', unit: 's', cc: 73, group: 'Performance' },
   { id: 'release', name: 'Release', min: 0.005, max: 2, def: 0.09, curve: 'exp', unit: 's', cc: 72, group: 'Performance' },
   { id: 'glide', name: 'Glide', min: 0, max: 0.5, def: 0.03, unit: 's', cc: 5, group: 'Performance' },
@@ -45,11 +87,20 @@ const PRESETS = {
   reese: { map: 2, rate: 4, depth: 0.45, detune: 38, saw: 1, square: 0, sub: 0.7, cutoff: 260, reso: 0.25, drive: 0.35, glide: 0.08, ampWub: 0 },
   drop: { map: 2, rate: 1, depth: 0.95, cutoff: 70, reso: 0.55, drive: 0.75, growl: 0.2, sub: 0.75, ampWub: 0.05 },
   triplet: { map: 1, shape: 4, depth: 0.7, ampWub: 0.55, cutoff: 160, reso: 0.35, drive: 0.55, voice: 1, release: 0.05 },
+  beef: { saw: 1, square: 0.45, sub: 0.95, subWave: 2, beef: 0.75, detune: 18, drive: 0.75, cutoff: 130, reso: 0.4, depth: 0.8, growl: 0.15 },
+  quake: { oct: 1, sub: 1, subOct: 1, subWave: 1, beef: 0.6, saw: 0.9, square: 0.3, drive: 0.6, cutoff: 150, reso: 0.35, map: 2, rate: 4 },
+  talk: { fmix: 0.85, vowelA: 6, vowelB: 2, fq: 0.6, depth: 0.7, growl: 0.2, saw: 1, square: 0.25, sub: 0.55, drive: 0.6, cutoff: 140 },
+  yoiyoi: { fmix: 1, vowelA: 2, vowelB: 5, fq: 0.7, shape: 1, growl: 0.3, saw: 0.9, sub: 0.5, drive: 0.65, fkey: 0.3 },
+  wow: { fmix: 0.9, vowelA: 4, vowelB: 0, fq: 0.55, depth: 0.8, saw: 1, square: 0.15, sub: 0.6, drive: 0.55, fshift: -2 },
+  robot: { growl: 0.6, gratio: 3, glfo: 0.85, comb: 0.7, ctime: 4, cfb: 0.75, csweep: 0.6, reso: 0.5, drive: 0.6, sub: 0.55, cutoff: 150 },
+  gnarl: { fold: 0.6, throat: 0.7, throatF: 700, growl: 0.35, gratio: 2, drive: 0.8, crush: 0.15, reso: 0.4, sub: 0.6, cutoff: 120 },
 };
 
 const PROC = `
 const SR = sampleRate, TAU = Math.PI * 2;
 const DIVS = ${JSON.stringify(DIVS.map((d) => d[1]))}, OCT_DIVS = ${JSON.stringify(OCT_DIVS)};
+const OCT = [0.25, 0.5, 1, 2];
+const FORMANTS = ${JSON.stringify(FORMANTS)}, RATIOS = ${JSON.stringify(RATIOS.map((r) => r[1]))};
 // vowels for the yoi filter, three formants each (Hz): oo, oh, ah, eh, ee
 const VOW = [[300, 870, 2240], [430, 820, 2600], [730, 1090, 2440], [530, 1840, 2480], [270, 2290, 3010]];
 const tc = (s) => 1 - Math.exp(-1 / (Math.max(0.0005, s) * SR));
@@ -65,6 +116,15 @@ class Svf {   // trapezoidal state-variable filter
     const v1 = a1 * this.a + g * a1 * (x - this.b), v2 = this.b + g * v1;
     this.a = 2 * v1 - this.a; this.b = 2 * v2 - this.b;
     return v1;   // band-pass
+  }
+}
+class Bp {   // the same filter with its coefficients set now and then (the formants move slowly next to the audio)
+  constructor() { this.a = 0; this.b = 0; this.g = 0; this.k = 1; this.a1 = 1; }
+  set(f, q) { this.g = Math.tan(Math.PI * Math.min(f, SR * 0.45) / SR); this.k = 1 / q; this.a1 = 1 / (1 + this.g * (this.g + this.k)); }
+  run(x) {
+    const v1 = this.a1 * this.a + this.g * this.a1 * (x - this.b), v2 = this.b + this.g * v1;
+    this.a = 2 * v1 - this.a; this.b = 2 * v2 - this.b;
+    return v1;
   }
 }
 class Wobbler extends AudioWorkletProcessor {
@@ -84,6 +144,8 @@ class Wobbler extends AudioWorkletProcessor {
     this.ph = [0, 0, 0, 0, 0]; this.bend = 0;
     this.y1 = 0; this.y2 = 0; this.y3 = 0; this.y4 = 0; this.ox = 0; this.o1 = 0; this.o2 = 0; this.o3 = 0;
     this.f = [new Svf(), new Svf(), new Svf()]; this.dc = 0; this.dcx = 0;
+    this.fb = [new Bp(), new Bp(), new Bp(), new Bp()]; this.fa = [0, 0, 0, 0]; this.th = new Bp();
+    this.cbuf = new Float32Array(2048); this.cw = 0; this.held = 0; this.hold = 0;
   }
   rateFor(n) {
     const p = this.p, map = p.map | 0;
@@ -141,11 +203,13 @@ class Wobbler extends AudioWorkletProcessor {
       // the wobble: the room beat times cycles per beat (or counted from the note, when it restarts)
       const beat = this.beatAt(f0 + i), into = (p.retrig | 0) === 1 ? beat - this.noteBeat : beat;
       const lph = (into * this.cpb) % 1, w = this.lfo(lph < 0 ? lph + 1 : lph);
-      const fb = this.freq * Math.pow(2, this.bend / 12);
-      // oscillators: two detuned saws (phase-modulated by the growl), a square, a sine sub an octave down
-      const g = p.growl * (0.4 + 0.6 * w) * 2.2;
+      let fb = this.freq * Math.pow(2, this.bend / 12);
+      // oscillators: two detuned saws (phase-modulated by the growl) and a square, shifted by the octave switch; a sub
+      // under the note you play (one or two octaves down, whatever the switch), clean of the filter, with Beef
+      const fb0 = fb; fb = fb0 * OCT[p.oct | 0];
+      const g = p.growl * ((1 - p.glfo) + p.glfo * w) * 2.2, ratio = RATIOS[p.gratio | 0] || 1;
       const fm = g > 0 ? Math.sin(TAU * this.ph[4]) * g : 0;
-      this.ph[4] += fb / SR; if (this.ph[4] >= 1) this.ph[4] -= 1;
+      this.ph[4] += (fb * ratio) / SR; if (this.ph[4] >= 1) this.ph[4] -= Math.floor(this.ph[4]);
       let mix = 0;
       const d1 = Math.min(0.45, (fb * det) / SR), d2 = Math.min(0.45, fb / det / SR), d3 = Math.min(0.45, fb / SR);
       if (p.saw > 0) {
@@ -156,8 +220,20 @@ class Wobbler extends AudioWorkletProcessor {
       this.ph[0] += d1; if (this.ph[0] >= 1) this.ph[0] -= 1;
       this.ph[1] += d2; if (this.ph[1] >= 1) this.ph[1] -= 1;
       this.ph[2] += d3; if (this.ph[2] >= 1) this.ph[2] -= 1;
-      const sub = Math.sin(TAU * this.ph[3]) * p.sub; this.ph[3] += d3 * 0.5; if (this.ph[3] >= 1) this.ph[3] -= 1;
-      const x = Math.tanh(mix * 0.5 * drive) / Math.tanh(drive * 0.5);
+      const ds = Math.min(0.45, fb0 / SR) * ((p.subOct | 0) === 1 ? 0.25 : 0.5), sp = this.ph[3], sw = p.subWave | 0;
+      let sub = sw === 0 ? Math.sin(TAU * sp) : sw === 1 ? 4 * Math.abs(sp - 0.5) - 1 : (sp < 0.5 ? 1 : -1) + blep(sp, ds) - blep((sp + 0.5) % 1, ds);
+      if (p.beef > 0) { const k = 1 + 4 * p.beef; sub = (Math.tanh(sub * k) / Math.tanh(k)) * (1 + 0.5 * p.beef); }
+      sub *= p.sub; this.ph[3] += ds; if (this.ph[3] >= 1) this.ph[3] -= 1;
+      let x = Math.tanh(mix * 0.5 * drive) / Math.tanh(drive * 0.5);
+      // growl before the filter: a wavefolder, then a comb whose delay the wobble sweeps
+      if (p.fold > 0) { const fx = Math.sin(x * (1 + 5 * p.fold) * 1.5707963); x += (fx - x) * Math.min(1, p.fold * 2); }
+      if (p.comb > 0) {
+        const buf = this.cbuf, dl = Math.max(2, (p.ctime / 1000) * SR * (1 - p.csweep * 0.7 * w)), rp = this.cw - dl + 2048, i0 = Math.floor(rp), fr = rp - i0;
+        const d = buf[i0 & 2047] * (1 - fr) + buf[(i0 + 1) & 2047] * fr;
+        buf[this.cw] = Math.tanh(x + d * p.cfb); this.cw = (this.cw + 1) & 2047;
+        x += (0.5 * (x + d) - x) * p.comb;
+      }
+      const xf = x;
       let y;
       if (vowel) {
         // the yoi: three formants swept through oo-oh-ah-eh-ee by the wobble
@@ -182,6 +258,24 @@ class Wobbler extends AudioWorkletProcessor {
         }
         y = this.y4 * (1 + res * 0.6);
       }
+      // the formants: vowel A to vowel B and back with the wobble, in parallel with the filter, crossfaded in
+      if (p.fmix > 0) {
+        if ((i & 7) === 0) {
+          const A = FORMANTS[p.vowelA | 0] || FORMANTS[4], B = FORMANTS[p.vowelB | 0] || FORMANTS[0], m = Math.min(1, w * p.fmorph);
+          const sh = Math.pow(2, p.fshift / 12 + p.fkey * 0.5 * Math.log2(Math.max(20, fb0) / 65.4)), q = 4 + p.fq * 16;
+          for (let j = 0; j < 4; j++) { this.fb[j].set(A[0][j] * Math.pow(B[0][j] / A[0][j], m) * sh, q * (1 + j * 0.25)); this.fa[j] = A[1][j] + (B[1][j] - A[1][j]) * m; }
+        }
+        let yf = 0; for (let j = 0; j < 4; j++) yf += this.fb[j].run(xf) * this.fa[j];
+        y += (yf * (2.2 + p.fq * 1.2) - y) * p.fmix;
+      }
+      // the throat: a driven band-pass that rides the wobble
+      if (p.throat > 0) {
+        if ((i & 7) === 0) this.th.set(p.throatF * Math.pow(2, w * 1.2 - 0.4), 5 + p.throat * 6);
+        const bp = this.th.run(Math.tanh(y * (1 + p.throat * 6)));
+        y += (bp * 2.4 - y * 0.6) * p.throat;
+      }
+      // crush: hold every nth sample
+      if (p.crush > 0) { if (this.hold <= 0) { this.held = y; this.hold = 1 + Math.round(p.crush * p.crush * 30); } this.hold--; y = this.held; }
       const amp = this.env * (0.75 + 0.25 * this.vel) * (1 - p.ampWub * (1 - w));
       let v = Math.tanh((y * 1.4 + sub * 0.9) * amp) * level * 0.85;
       // block DC (the growl and the clip can leave some)
@@ -196,12 +290,13 @@ registerProcessor('${NAME}', Wobbler);
 
 export default {
   id: 'wobbler',
-  name: 'Wobbler',
+  name: 'Wobl Wobl',
+  by: 'Sam',   // Sam's own design: credited on its tile
   family: 'Wobble bass (clock-synced)',
-  blurb: 'A wub-wub bass: saws, square and sub into a resonant filter (or a talking vowel filter) that wobbles on the room\'s beat. The key you play picks the speed: an octave up wobbles twice as fast, or each key its own rhythm.',
+  blurb: 'A wub-wub bass: saws and square (with an octave switch) into a resonant filter (or a talking vowel filter) that wobbles on the room\'s beat, a sub one or two octaves under the note with Beef to fatten it, a formant bank that morphs between two vowels and a growl section (FM ratios, fold, comb, throat, crush). The key you play picks the speed: an octave up wobbles twice as fast, or each key its own rhythm.',
   params: PARAMS,
   presets: PRESETS,
-  presetNames: { classic: 'Classic wub', yoi: 'Yoi growl', reese: 'Reese wobble', drop: 'Slow drop', triplet: 'Triplet chop' },
+  presetNames: { classic: 'Classic wub', yoi: 'Yoi growl', reese: 'Reese wobble', drop: 'Slow drop', triplet: 'Triplet chop', beef: 'Beef', quake: 'Sub quake', talk: 'Talking wub', yoiyoi: 'Yoi yoi', wow: 'Wow wow', robot: 'Robot growl', gnarl: 'Gnarl' },
   divisions: DIVS.map((d) => d[0]),
   async init(ctx) {
     ctx.__jjWorklets = ctx.__jjWorklets || new Set();
