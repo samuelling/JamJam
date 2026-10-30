@@ -82,7 +82,9 @@
   .plaque b { color: var(--c); }
 
   /* ================= the studio ================= */
-  #studio { height: 100vh; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 10px; padding: 10px 14px 12px; }
+  #studio { height: 100vh; display: flex; flex-direction: column; gap: 10px; padding: 10px 14px 12px; }
+  #studio > .console, #studio > .audience, #studio > #corners, #studio > #secbar, #studio > .keybed { flex: none; }
+  #studio > .deskrow, #studio > #compose { flex: 1 1 auto; min-height: 0; }
   /* wall-mounted display */
   .console { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 12px; background: linear-gradient(180deg, #16171a, #0f1012); border: 1px solid #000; border-radius: 12px; box-shadow: inset 0 1px 0 #ffffff0d, 0 10px 30px #0008; }
   .neon .mega { color: #fff3a8; text-shadow: 0 0 6px #ffb300, 0 0 22px #ff7a00, 0 0 48px #ff5a1f; }
@@ -496,7 +498,57 @@
   @keyframes floatUp { 0% { transform: translateY(20px) scale(.6); opacity: 0; } 12% { opacity: 1; transform: translateY(0) scale(1.1); } 100% { transform: translateY(-110px) scale(1); opacity: 0; } }
   /* a listener's studio: the band's corners, the reactions and the chat; nothing to play */
   body.listener .deskrow, body.listener .keybed, body.listener #tapeBtn ~ #syncBtn, body.listener .readout:has(#keySel), body.listener #talkBtn { display: none !important; }
-  body.listener #studio { grid-template-rows: auto auto auto 1fr; }
+
+  /* the two rooms */
+  .roomseg button { font: 600 12px var(--sans); padding: 4px 10px; }
+  body.where-compose .deskrow, body.where-compose .keybed, body.where-compose #secbar { display: none !important; }
+  body.where-compose #compose { display: flex !important; }
+  .hall { position: fixed; inset: 0; z-index: 35; display: grid; place-items: center; background: radial-gradient(800px 400px at 50% 30%, #2a2018, #0b0b0d 70%); }
+  .hallin { display: grid; gap: 18px; justify-items: center; text-align: center; padding: 20px; }
+  .hallin h2 { margin: 0; font: 400 40px/1 var(--display); color: var(--mz-toner); }
+  .doors { display: flex; gap: 34px; flex-wrap: wrap; justify-content: center; }
+  .door2 { position: relative; width: 210px; height: 320px; border: 0; border-radius: 6px 6px 0 0; padding: 70px 16px 16px; display: grid; align-content: end; justify-items: center; gap: 6px; color: #18181b;
+    background: repeating-linear-gradient(90deg, #00000010 0 2px, #0000 2px 9px), linear-gradient(180deg, var(--dc), color-mix(in srgb, var(--dc) 70%, #000)); box-shadow: inset 0 0 0 8px #0003, 0 0 0 6px #1b1712, 0 20px 40px #000a; transition: transform .2s; }
+  .door2:hover { transform: perspective(600px) rotateY(-7deg); }
+  .door2.jam { --dc: #FF68BA; } .door2.comp { --dc: #7DB0FF; }
+  .door2 .sign { position: absolute; top: 22px; left: 50%; transform: translateX(-50%) rotate(-2deg); background: var(--mz-toner); padding: 5px 10px; font: 400 15px/1 var(--display); letter-spacing: .04em; box-shadow: 0 3px 6px #0006; white-space: nowrap; }
+  .door2 .knob { position: absolute; right: 18px; top: 52%; width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff6c0, #b08a2a); box-shadow: 0 2px 3px #0008; }
+  .door2 b { font: 700 18px/1 var(--sans); }
+  .door2 small { font: 400 12px var(--type); }
+  .secbar { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 10px; background: #141518; border: 1px solid #000; box-shadow: inset 4px 0 0 var(--sc, #888); }
+  .secchip { font: 400 18px/1 var(--display); color: var(--sc); }
+  .barno { font: 400 12px var(--type); color: var(--mz-muted); min-width: 70px; }
+  .chordnow { font: 700 26px/1 var(--sans); color: var(--mz-toner); min-width: 70px; }
+  .chordnext { font: 400 13px var(--type); color: var(--mz-muted); min-width: 70px; }
+  .compose { flex-direction: column; gap: 10px; min-height: 0; }
+  .songhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .songtitle { font: 400 26px/1 var(--display); background: transparent; border: 0; border-bottom: 1px dashed #333; color: var(--mz-toner); min-width: 200px; max-width: 420px; }
+  .presence { display: inline-flex; gap: 4px; }
+  .presence .who { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 700 11px var(--sans); background: #2a2c31; color: var(--mz-muted); }
+  .presence .who.here { background: var(--mz-blue); color: #0a1a30; }
+  .board { flex: 1 1 auto; min-height: 0; display: flex; gap: 14px; overflow-x: auto; padding: 6px 2px 12px; align-items: flex-start; }
+  .seccard { flex: 0 0 286px; display: grid; gap: 8px; padding: 12px; border-radius: 6px; background: var(--mz-sheet); border: 1px solid #262a33; box-shadow: inset 0 4px 0 var(--sc), 0 8px 20px #0007; max-height: 100%; overflow-y: auto; }
+  .seccard.live { box-shadow: inset 0 4px 0 var(--sc), 0 0 0 2px var(--sc), 0 8px 24px #000a; }
+  .seccard.add { flex-basis: 170px; align-content: start; background: transparent; border-style: dashed; box-shadow: none; }
+  .seccard.add b { font: 400 18px/1 var(--display); color: var(--mz-muted); }
+  .sechead { display: flex; align-items: center; gap: 8px; }
+  .secno { font: 400 12px var(--type); color: var(--mz-muted); }
+  .secname { font: 400 18px/1 var(--display); background: transparent; color: var(--sc); border: 0; max-width: 170px; }
+  .secmove { margin-left: auto; display: inline-flex; }
+  .bars { display: flex; align-items: center; gap: 6px; font: 400 12px var(--type); }
+  .chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+  .chord { width: 100%; min-width: 0; padding: 6px 4px; text-align: center; font: 700 14px var(--sans); background: #0e0f12; color: var(--mz-toner); border: 1px solid #23262d; border-radius: 3px; }
+  .chord.downbar { border-left: 2px solid #3a3e47; }
+  .chord.bad { color: #ff8a8a; }
+  .chord.now { background: var(--sc); color: #18181b; }
+  .secnotes { width: 100%; resize: vertical; background: #0e0f12; color: var(--mz-toner); border: 1px solid #23262d; border-radius: 3px; font: 400 12px var(--type); padding: 6px; }
+  .secparts { display: grid; gap: 4px; }
+  .secparts .part { display: grid; grid-template-columns: 42px 1fr auto auto; gap: 6px; align-items: center; padding: 4px; border-radius: 4px; background: #0e0f12; }
+  .secparts .part.muted { opacity: .45; }
+  .secparts .part .ico { width: 42px; height: 28px; }
+  .secparts .part b { display: block; font: 600 12px var(--sans); }
+  .secparts .part small { font: 400 10px var(--type); color: var(--mz-muted); }
+  .secacts { display: flex; flex-wrap: wrap; gap: 6px; }
 </style>
 <script src="mp-config.js"></script>
 </head>
@@ -545,6 +597,7 @@
       <button id="lookAutoBtn" class="btn small" title="Back to the measured lookahead">AUTO</button><input id="lookSlider" type="range" min="0" max="600" value="40" aria-label="Lookahead (manual)" style="width:70px"></div>
     <button id="selfBtn" class="btn small tech" title="Hear your own parts the moment you play them; the band still hears everything in sync">Hear myself</button>
     <span id="status" role="status"></span>
+    <div class="seg roomseg" id="roomSeg" role="group" aria-label="Room"><button data-room="jam" class="on">Jam Room</button><button data-room="compose">Compose Room</button></div>
     <button id="techBtn" class="btn small hood" title="Show or hide the technical controls: timing, quantize, lookahead, MIDI routing, the network" aria-pressed="false"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg> Under the hood</button>
     <button id="leaveBtn" class="btn small ghost" style="margin-left:auto">Leave</button>
     <span id="lookHelp" class="help tech"></span>
@@ -552,6 +605,8 @@
 
   <div class="audience"><span id="listeners" class="help hide"></span><span class="reacts"><button class="react" data-react="clap" aria-label="Applause" title="Applause">👏</button><button class="react" data-react="fire" aria-label="Fire" title="Fire">🔥</button><button class="react" data-react="heart" aria-label="Love it" title="Love it">❤️</button><button class="react" data-react="laugh" aria-label="Ha" title="Ha">😂</button><button class="react" data-react="wow" aria-label="Wow" title="Wow">🤯</button></span></div>
   <div id="corners"></div>
+  <div id="secbar" class="secbar hide" aria-live="polite"></div>
+  <div id="compose" class="compose hide" aria-label="Compose Room"></div>
   <div id="reactLayer" aria-live="polite"></div>
 
   <div class="deskrow">
@@ -620,6 +675,16 @@
 </div>
 <div id="syncDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="Sync take">
   <div class="sheet tapes"><header><h2>Sync take</h2><button class="btn small" data-close style="margin-left:auto">Close</button></header><div id="syncBody" style="display:grid;gap:10px"></div></div>
+</div>
+<div id="hall" class="hall hide" role="dialog" aria-label="Choose a room">
+  <div class="hallin">
+    <h2>Which room?</h2>
+    <div class="doors" id="hallDoors">
+      <button class="door2 jam" data-go="jam"><span class="sign">JAM ROOM</span><span class="knob"></span><b>Play together</b><small data-door="jam">empty</small></button>
+      <button class="door2 comp" data-go="compose"><span class="sign">COMPOSE ROOM</span><span class="knob"></span><b>Build a song</b><small data-door="compose">empty</small></button>
+    </div>
+    <p class="help">Same studio, same band: walk between the rooms any time from the top bar. Talk and chat follow you.</p>
+  </div>
 </div>
 <div id="libDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="The shared studio">
   <div class="sheet wall">
