@@ -38,7 +38,7 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
     // export everything, in memory
     const r = await A.evaluate(async () => { const r = await JJ.exportStems({ to: 'memory' }); return r; });
     const names = r.files.map((f) => f.name);
-    check(names.includes('Stem Test stems/Stems/01 Bass.wav') && names.includes('Stem Test stems/Stems/02 Keys Pad.wav') && names.includes('Stem Test stems/Stem Test (mix).wav') && names.includes('Stem Test stems/Stem Test.mid') && names.includes('Stem Test stems/Stem Test.megajam.json') && names.some((n) => /About stems\.txt$/.test(n)),
+    check(names.includes('Stem Test stems/Stems/01 Bass.wav') && names.includes('Stem Test stems/Stems/02 Keys Pad.wav') && names.includes('Stem Test stems/Stem Test (mix).wav') && names.includes('Stem Test stems/Stem Test.mid') && names.includes('Stem Test stems/Stem Test.megajam.json') && names.some((n) => /About stems\.txt$/.test(n)) && names.includes('Stem Test stems/Stem Test.als'),
       `the export has numbered stems, the mix, MIDI, the song and a note (${names.join(', ')})`);
     const an = await A.evaluate(() => {
       const f = (n) => JJ.lastStems.find((x) => x.name.endsWith(n)).data, out = {};
@@ -56,6 +56,24 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
     check(Math.abs(an.keys.first) < 0.02 && Math.abs(an.mix.first) < 0.02, `the Keys stem starts at 0 s, lined up with the mix (${an.keys.first}, ${an.mix.first})`);
     check(an.keys.eR < an.keys.eL * 0.01, `the Keys stem is panned hard left, as its track is (${an.keys.eL.toFixed(1)} vs ${an.keys.eR.toFixed(3)})`);
     check(!an.bass.bad && !an.keys.bad && an.bass.eL > 1 && /120 bpm/.test(an.about) && /bar 1/.test(an.about), 'no NaN, real sound, and the note gives the tempo and says they line up at bar 1');
+
+    // the Live set: the song's tempo, an audio track per stem pointing at it, a MIDI track per instrument track with its notes
+    const als = await A.evaluate(async () => {
+      const f = JJ.lastStems.find((x) => x.name.endsWith('.als')); if (!f) return null;
+      const xml = await new Response(new Blob([f.data]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+      const d = new DOMParser().parseFromString(xml, 'application/xml'), q = (s) => [...d.getElementsByTagName(s)];
+      const ids = [...d.getElementsByTagName('*')].filter((e) => (e.tagName.endsWith('Target') || e.tagName === 'Pointee') && e.hasAttribute('Id')).map((e) => +e.getAttribute('Id'));
+      const name = (t) => t.getElementsByTagName('EffectiveName')[0].getAttribute('Value');
+      return { xml, bad: !!d.querySelector('parsererror'), tempo: d.querySelector('MasterTrack Tempo Manual').getAttribute('Value'),
+        audio: q('AudioTrack').map((t) => ({ name: name(t), file: t.querySelector('SampleRef RelativePath')?.getAttribute('Value'), end: +t.querySelector('AudioClip CurrentEnd').getAttribute('Value'), frames: t.querySelector('SampleRef DefaultDuration').getAttribute('Value') })),
+        midi: q('MidiTrack').map((t) => ({ name: name(t), clips: [...t.getElementsByTagName('MidiClip')].map((c) => ({ t: +c.getAttribute('Time'), n: c.getElementsByTagName('MidiNoteEvent').length, keys: [...c.getElementsByTagName('MidiKey')].map((k) => +k.getAttribute('Value')) })) })),
+        dupIds: ids.length - new Set(ids).size, maxId: Math.max(...ids), next: +d.querySelector('NextPointeeId').getAttribute('Value'), personal: /\/Users\//.test(xml), gz: [f.data[0], f.data[1]] };
+    });
+    if (als) require('fs').writeFileSync('/tmp/stemtest.als.xml', als.xml);
+    check(als && !als.bad && als.gz[0] === 0x1f && als.gz[1] === 0x8b && als.tempo === '120', `a gzipped Live set comes with the stems, at 120 bpm (${als && als.tempo})`);
+    check(als && als.audio.length === 2 && als.audio[0].name === 'Bass' && als.audio[0].file === 'Stems/01 Bass.wav' && als.audio[1].file === 'Stems/02 Keys Pad.wav' && Math.abs(als.audio[0].end - 16) < 0.01 && +als.audio[0].frames === an.bass.len, `an audio track per stem, each clip the stem, 8 s = 16 beats long (${JSON.stringify(als && als.audio)})`);
+    check(als && als.midi.length === 2 && JSON.stringify(als.midi[1].clips) === JSON.stringify([{ t: 0, n: 1, keys: [64] }, { t: 4, n: 1, keys: [67] }]) && JSON.stringify(als.midi[0].clips) === JSON.stringify([{ t: 4, n: 1, keys: [36] }]), `a MIDI track per instrument track, a clip of its notes in each section where it plays (${JSON.stringify(als && als.midi)})`);
+    check(als && als.dupIds === 0 && als.maxId < als.next && !als.personal, `every automation target has its own id below NextPointeeId, and no personal paths (${als && [als.dupIds, als.maxId, als.next]})`);
 
     // fader: the Bass stem at -6 dB vs 0 dB
     await A.evaluate(() => JJ.setSong('lane:tb', { ...JJ.song().lanes.tb, vol: 0 })); await sleep(200);

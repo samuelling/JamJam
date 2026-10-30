@@ -2,6 +2,7 @@
 // the same length, so they drop into a DAW lined up at bar 1. Rendered offline (faster than real time), after the
 // track's fader and pan and before the master, so the stems added together are the song's mix.
 import * as SONG from './song.js';
+import { buildAls, notesOf } from './ableton.js';
 
 const TAIL = 4, LEAD = 0.05;
 export const safeName = (s) => String(s || 'Untitled').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'Untitled';
@@ -97,6 +98,7 @@ export async function exportStems(o) {
   const all = trackList(o.song).filter((t) => !t.muted && (!o.only || o.only.includes(t.id)));
   if (!all.length) throw new Error('No tracks to export');
   const title = safeName(o.song.title), mixL = [], mixR = [], done = [], clipped = [], skipped = [];
+  let alsOk = false, alsErr = null;
   for (let i = 0; i < all.length; i++) {
     const t = all[i]; o.onProgress?.(`Rendering ${t.name} (${i + 1} of ${all.length})…`);
     const r = await renderTrack({ ...o, track: t });
@@ -114,16 +116,28 @@ export async function exportStems(o) {
     await o.write(`${title} (mix).wav`, wav24({ L, R }, o.sr));
     await o.write(`${title}.mid`, SONG.songToMidi(o.song));
     await o.write(`${title}.megajam.json`, JSON.stringify(o.song, null, 1));
+    // a Live set with the stems lined up at the song's tempo, and each instrument track's notes as MIDI clips
+    o.onProgress?.('Writing the Ableton Live set…');
+    try {
+      const tl = timeline(o.song), midi = done.filter((t) => t.kind !== 'audio').map((t) => ({ name: t.name, clips: tl.flatMap((s) => {
+        const p = Object.values(o.song.sections[s.id]?.parts || {}).find((q) => trackOf(q) === t.id && !q.muted), take = p && SONG.currentTake(p);
+        const notes = take && !take.audio ? notesOf(take.events, s.beats) : [];
+        return notes.length ? [{ name: o.song.sections[s.id].name, start: s.start, beats: s.beats, notes }] : [];
+      }) }));
+      await o.write(`${title}.als`, await buildAls({ song: o.song, bpm: o.bpm, meter: o.song.meter || 4, sr: o.sr, frames: L.length, stems: done.map((t) => ({ name: t.name, file: `Stems/${t.file}` })), midi }));
+      alsOk = true;
+    } catch (e) { alsErr = e?.message || String(e); }
   }
   const key = o.song.key ? `${SONG.NOTE_NAMES[o.song.key.root]} ${o.song.key.mode}` : '';
   await o.write(`About ${o.only ? `${safeName(o.by)}'s ` : ''}stems.txt`, [
     `${o.song.title}: stems from MEGAjam${o.by ? `, exported by ${o.by}` : ''} on ${new Date().toLocaleString()}`, '',
     `Tempo ${o.bpm} bpm, ${o.song.meter || 4}/4${key ? `, ${key}` : ''}. ${o.sr} Hz, 24-bit stereo WAV.`,
     'Every stem starts at bar 1 and they are all the same length: drop them in at the start of a project at this tempo and they line up.',
-    'Each stem is after its track\'s fader and pan (so together they make the mix), before the master fader.', '',
+    'Each stem is after its track\'s fader and pan (so together they make the mix), before the master fader.',
+    ...(alsOk ? [`${title}.als opens in Ableton Live 11 or later: the stems on audio tracks from bar 1 (warped to the tempo), each instrument's notes on a MIDI track below them (pick an instrument for it). Keep the .als in this folder, next to Stems.`] : alsErr ? [`(No Live set this time: ${alsErr}.)`] : []), '',
     ...done.map((t) => `${t.file}  ${t.inst}${t.patch ? ' · ' + t.patch : ''}${t.ownerName ? ' · ' + t.ownerName : ''}${t.hw ? ' (played on hardware; rendered here on its software twin)' : ''}`),
     ...(clipped.length ? ['', `Louder than full scale (clipped in the file): ${clipped.join(', ')}. Pull those tracks' faders down and export again.`] : []),
     ...(skipped.length ? ['', `Couldn't render offline (silent in the stems): ${skipped.join('; ')}.`] : []),
   ].join('\n') + '\n');
-  return { files: done.length, clipped, skipped };
+  return { files: done.length, clipped, skipped, als: alsOk };
 }
