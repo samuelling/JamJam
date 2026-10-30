@@ -89,6 +89,14 @@ const OB6 = 'sequential-ob-6';
     const panel = await A.evaluate(() => document.querySelector('#gearMine')?.textContent || '');
     check(/OB-6/.test(panel) && /Matt on theirs/.test(panel) && /Send my sound/.test(panel), `My gear lists the linked OB-6 and that Matt plays it on his (${panel.slice(0, 120)})`);
 
+    // its setup steps, and the check that MEGAjam can reach it (identity, then its sound)
+    await A.evaluate(() => [...document.querySelectorAll('#gearMine .gearrow.linked')].find((r) => /OB-6/.test(r.textContent)).querySelector('button[aria-expanded]').click()); await sleep(200);
+    const steps = await A.$$eval('#gearMine .gearsetup li', (li) => li.map((x) => x.textContent.trim()));
+    check(steps.length >= 4 && steps.some((t) => /SysEx/i.test(t)), `Set up shows the OB-6's steps (${steps.length}: ${steps[0]?.slice(0, 50)}…)`);
+    await A.evaluate(() => [...document.querySelectorAll('#gearMine .gearsetup button')].find((b) => /Check it works/.test(b.textContent)).click()); await sleep(1500);
+    const res = await A.evaluate(() => document.querySelector('#gearMine .gearsetup .ok, #gearMine .gearsetup .warn')?.textContent || '');
+    check(/✓/.test(res) && /firmware 01\.05/.test(res) && /sharing will work/.test(res), `Check it works asks the synth who it is and for its sound (${res.slice(0, 90)})`);
+
     // a recognised port that isn't linked yet: the prompt
     const prompted = await B.evaluate(() => { JJ.input.outputs.push({ id: 'mock-c', name: 'Prophet-6', send() {} }); JJ.gear.check(); return document.querySelector('.gearprompt')?.textContent || ''; });
     check(/Prophet-6/.test(prompted), `plugging in a synth MEGAjam knows by name asks whether it's yours (${prompted.slice(0, 60)})`);

@@ -7,7 +7,7 @@ sources, notes). Only dumps read in a manual or a reliable secondary source, tha
 (loads == 'edit-buffer', never into a stored slot), become automatic requests. Everything else keeps at most its
 front-panel how-to, so MEGAjam can tell the player how to send one by hand.
 
-  python3 -I tools/merge_patch_specs.py facts1.json facts2.json ...
+  python3 -I tools/merge_patch_specs.py facts1.json facts2.json setup1.json setup2.json ...
 """
 from __future__ import annotations
 
@@ -26,13 +26,22 @@ def clean(s: str) -> str:
 
 def main(paths: list[str]) -> None:
     facts: dict = {}
+    setup: dict = {}   # files of {unitId: {steps, confidence, sources}}: how to set each synth up for sharing
     for p in paths:
-        facts.update(json.loads(Path(p).read_text()))
+        for k, v in json.loads(Path(p).read_text()).items():
+            (setup if isinstance(v, dict) and 'steps' in v else facts)[k] = v
     data = json.loads(HW.read_text())
     auto = manual = 0
+    steps = 0
     for u in data['hardware']:
         f = facts.get(u['id'])
-        u.pop('dump', None); u.pop('midi', None)
+        u.pop('dump', None); u.pop('midi', None); u.pop('setup', None); u.pop('setupSource', None)
+        st = setup.get(u['id'])
+        if st and isinstance(st.get('steps'), list) and st['steps']:
+            u['setup'] = [str(x)[:220] for x in st['steps'][:7]]
+            if st.get('confidence') in ('manual', 'secondary') and st.get('sources'):
+                u['setupSource'] = st['sources'][0]
+            steps += 1
         if not f:
             continue
         if f.get('midi') is False:
@@ -67,7 +76,7 @@ def main(paths: list[str]) -> None:
         " how many messages it has, or failing that how to send a dump from the front panel; gathered from makers' MIDI"
         " documentation and open-source editors, merged by tools/merge_patch_specs.py.")
     HW.write_text(json.dumps(data, indent=1, ensure_ascii=False) + '\n')
-    print(f'{auto} units fetch their sound automatically, {manual} more by a front-panel dump')
+    print(f'{auto} units fetch their sound automatically, {manual} more by a front-panel dump; {steps} have their own set-up steps')
 
 
 if __name__ == '__main__':

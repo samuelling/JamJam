@@ -185,6 +185,7 @@ export function makeGear(x) {
   }
   function link(id, port, ch) {
     x.setOwned(id, { port, ch: ch || 1 });
+    setupOpen = id;   // show its set-up steps straight away
     if (input.sysex) identify(port).then((v) => v && ver.set(id, v));
     x.status(`Your ${model(id)} is linked. Put it on your desk to play it; a bandmate's ${model(id)} part plays on it.`);
   }
@@ -195,6 +196,48 @@ export function makeGear(x) {
     if (own?.ch) e.midiCh = own.ch;
     x.closeDrawers(); x.renderRack();
     x.status(`Your ${u.model} is on your desk. Play it: bandmates with a ${u.model} linked hear it on theirs, the rest hear ${engine.defs.get(twin)?.name || 'its twin'}.`);
+  }
+  // ---- setting a synth up: its own steps (hardware.json "setup", from its manual) or general ones, ticked off as
+  // you go, then a check that MEGAjam can really reach it: who are you (identity), and can you send your sound
+  let setupOpen = null;
+  const tested = new Map();   // unit id -> {ok, text}
+  const doneKey = (id) => 'megajam.setup.' + id;
+  const doneOf = (id) => { try { return new Set(JSON.parse(localStorage.getItem(doneKey(id)) || '[]')); } catch (_) { return new Set(); } };
+  function stepsFor(u) {
+    if (Array.isArray(u.setup) && u.setup.length) return u.setup;
+    const knobs = u.dump?.params === 'cc' ? 'CC' : u.dump?.params === 'sysex' ? 'SysEx' : 'NRPN (or CC, if that is all it offers)';
+    return [
+      `Connect it: USB from the ${u.model} to this computer, or its MIDI OUT and MIDI IN to your MIDI interface (both directions).`,
+      `Set its MIDI channel in its MIDI or global settings, and pick the same channel here.`,
+      u.dump || u.midi !== false ? 'Turn on SysEx in its MIDI settings, both sending and receiving if it asks (it may be called "SysEx receive" and "SysEx transmit").' : null,
+      `Set it to send and receive its knob moves as ${knobs}.`,
+      u.dump?.manualDump ? `To share its sound, send a dump from the front panel: ${u.dump.manualDump}` : null,
+    ].filter(Boolean);
+  }
+  async function test(id) {
+    const o = S.owned.get(id), u = engine.unit(id); if (!o || !u) return;
+    tested.set(id, { busy: true, text: 'Asking your ' + u.model + '…' }); render();
+    if (!(await sysexOn())) { tested.set(id, { ok: false, text: 'SysEx wasn\'t allowed, so MEGAjam can\'t ask it anything. Notes and knob moves still work.' }); render(); return; }
+    const v = await identify(o.port); if (v) ver.set(id, v);
+    let text = v ? `It answered: firmware ${v}.` : "It didn't say who it is (many synths don't; that's fine).", ok = !!v;
+    if (u.dump?.request) {
+      const req = split(hex(u.dump.request)).flatMap((m) => withChannel(m, u.dump, o.ch || 1));
+      const got = await ask(o.port, req, prefix(u.dump), u.dump.replies || 1, 2500);
+      ok = !!got;
+      text += got ? ` And it sent its current sound (${got.reduce((a, m) => a + m.length, 0)} bytes): sharing will work.` : ` But it didn't send its sound when asked: check SysEx is on, the channel matches${u.dump.deviceIdByte != null ? ' (and its device ID is the default)' : ''}, and both MIDI cables (or USB) are connected.`;
+    } else if (u.dump?.manualDump || u.dump?.reply) text += ' This model has no request for its sound: send a dump from its front panel when you want to share it.';
+    else text += ' MEGAjam has no sound request for this model yet, so bandmates get your knob moves but not your whole sound.';
+    tested.set(id, { ok, text }); render();
+  }
+  function setupPanel(id) {
+    const u = engine.unit(id), steps = stepsFor(u), done = doneOf(id), t = tested.get(id);
+    const tick = (i) => { const d = doneOf(id); if (d.has(i)) d.delete(i); else d.add(i); try { localStorage.setItem(doneKey(id), JSON.stringify([...d])); } catch (_) {} render(); };
+    return h('div', { class: 'gearsetup' },
+      h('b', {}, `Set up your ${u.model}`), h('small', { class: 'help' }, u.setupSource ? 'From its manual. Menu names can differ a little between firmware versions.' : 'General steps: your manual has the exact menu names.'),
+      h('ol', {}, ...steps.map((st, i) => h('li', { class: done.has(i) ? 'done' : '' }, h('label', {}, h('input', { type: 'checkbox', checked: done.has(i), onchange: () => tick(i) }), ' ', st))),
+        h('li', { class: input.sysex ? 'done' : '' }, h('label', {}, h('input', { type: 'checkbox', checked: input.sysex, disabled: true }), ' ', input.sysex ? 'SysEx is allowed in this browser.' : 'Allow SysEx in this browser (the button below).'))),
+      h('div', { class: 'row' }, h('button', { class: 'btn small hot', disabled: !!t?.busy || !input.outputs.some((p) => p.id === S.owned.get(id)?.port), onclick: () => test(id) }, t?.busy ? 'Checking…' : 'Check it works'),
+        t && !t.busy ? h('span', { class: 'help ' + (t.ok ? 'ok' : 'warn') }, (t.ok ? '✓ ' : '') + t.text) : null));
   }
   // the top of the My gear drawer
   function render(box = document.querySelector('#gearMine')) {
@@ -219,7 +262,9 @@ export function makeGear(x) {
         theirs.length && input.sysex ? h('button', { class: 'btn small ghost', title: 'Ask for their current sound again', onclick: () => { for (const pid of theirs) for (const y of S.players.get(pid)?.rack || []) if (y.cfg?.hw === id) room.send({ k: 'preq', r: y.r }, pid); } }, 'Get their sound') : null,
         mine.length ? h('button', { class: 'btn small ghost', title: 'Copy your current sound to theirs again', onclick: () => { for (const e of x.rack()) if (e.cfg.hw === id) sharePatch(e, live(e.r), 'again'); } }, 'Send my sound') : null,
         onDesk ? h('span', { class: 'help' }, 'on your desk') : h('button', { class: 'btn small hot', disabled: !here, onclick: () => play(id) }, 'Play it'),
-        h('button', { class: 'btn small ghost', onclick: () => x.setOwned(id, null) }, 'Unlink'));
+        h('button', { class: 'btn small ghost', 'aria-expanded': String(setupOpen === id), onclick: () => { setupOpen = setupOpen === id ? null : id; render(); } }, setupOpen === id ? 'Hide setup' : 'Set up'),
+        h('button', { class: 'btn small ghost', onclick: () => x.setOwned(id, null) }, 'Unlink'),
+        setupOpen === id ? setupPanel(id) : null);
     }).filter(Boolean);
     const free = input.outputs.filter((p) => ![...S.owned.values()].some((v) => v.port === p.id));
     const found = free.map((p) => {
@@ -241,5 +286,5 @@ export function makeGear(x) {
       sysex);
   }
 
-  return { guessUnit, relayRaw, onSysex, receiveRaw, receiveSx, onReal, sharePatch, realMsg, check, render, link, play, allowSysex, hostsOf: live, onPreq: (p, m) => sharePatch(x.entry(m.r), [p.id], 'again'), identify, ver };
+  return { test, stepsFor, guessUnit, relayRaw, onSysex, receiveRaw, receiveSx, onReal, sharePatch, realMsg, check, render, link, play, allowSysex, hostsOf: live, onPreq: (p, m) => sharePatch(x.entry(m.r), [p.id], 'again'), identify, ver };
 }

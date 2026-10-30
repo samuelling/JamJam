@@ -581,6 +581,14 @@
     "chorus": 0.2,
     "drive": 0.2
    },
+   "setup": [
+    "Press GLOBALS once (red LED, top row), press program button 2 (MIDI Channel) and pick 1-16 with the BANK/decrement and TENS/increment buttons.",
+    "Still on the top row, press 8 (MIDI SysEx) and choose the port you're plugged into: MID for the 5-pin MIDI sockets, USB for USB. There's no separate on/off.",
+    "Press 5 (Param Xmit) and set it to NR, then press 6 (Param Rcv) and set it to NR, so knob moves travel as NRPN.",
+    "Press 9 (MIDI Out) and pick the same port (MID or USB) so notes and knob moves leave where the app listens.",
+    "Don't use Pgm Dump (GLOBALS bottom row, 8) to share sounds: dumped programs load back into a stored program slot. The app asks for the current sound instead."
+   ],
+   "setupSource": "https://analoguehaven.com/sequential/prophet-6/manual.pdf",
    "dump": {
     "request": "F0 01 2D 06 F7",
     "reply": "F0 01 2D 03",
@@ -611,6 +619,14 @@
     "drive": 0.2
    },
    "note": "SEM-style filter, wide and brassy.",
+   "setup": [
+    "Press GLOBALS once (red LED, top row), press program button 2 (MIDI Channel) and pick 1-16 with the BANK/decrement and TENS/increment buttons.",
+    "Still on the top row, press 8 (MIDI SysEx) and choose the port you're plugged into: MID for the 5-pin MIDI sockets, USB for USB. There's no separate on/off.",
+    "Press 5 (Param Xmit) and set it to NR, then press 6 (Param Rcv) and set it to NR, so knob moves travel as NRPN.",
+    "Press 9 (MIDI Out) and pick the same port (MID or USB) so notes and knob moves leave where the app listens.",
+    "Don't use Pgm Dump (GLOBALS bottom row, 8) to share sounds: dumped programs load back into a stored program slot. The app asks for the current sound instead."
+   ],
+   "setupSource": "https://www.davesmithinstruments.com/wp-content/uploads/2016/03/OB-6-Operation-Manual.pdf",
    "dump": {
     "request": "F0 01 2E 06 F7",
     "reply": "F0 01 2E 03",
@@ -640,6 +656,13 @@
     "chorus": 0.15
    },
    "note": "DCOs and a Curtis-type filter.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Turn on MIDI SysEx in its global settings and pick the port you're using (USB or MIDI).",
+    "In its global settings, set parameter send and receive to NRPN.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Update to current firmware: firmware 1.1 sent the current sound 3 bytes short."
+   ],
    "dump": {
     "request": "F0 01 2F 06 F7",
     "reply": "F0 01 2F 03",
@@ -667,6 +690,13 @@
     "detune": 6,
     "drive": 0.2
    },
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+    "In its global settings, set parameter send and receive to NRPN.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Both players should be on the same OS version (OS 2 changed the banks)."
+   ],
    "dump": {
     "request": "F0 01 35 06 F7",
     "reply": "F0 01 35 03",
@@ -694,6 +724,13 @@
     "detune": 4
    },
    "note": "Samples plus digital oscillators into analog filters.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+    "In its global settings, set parameter send and receive to NRPN.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Load the same sample library on both instruments; a sound only names its samples."
+   ],
    "dump": {
     "request": "F0 01 30 06 F7",
     "reply": "F0 01 30 03",
@@ -792,6 +829,13 @@
     "drive": 0.25
    },
    "note": "Combines OB-X, OB-Xa and OB-8 voice modes.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+    "In its global settings, set parameter send and receive to NRPN.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Both players should be on the same OB-X8 firmware."
+   ],
    "dump": {
     "request": "F0 10 58 06 F7",
     "reply": "F0 10 58 03",
@@ -861,7 +905,13 @@
     "detune": 6,
     "chorus": 0.15
    },
-   "note": "Rack, a thousand presets."
+   "note": "Rack, a thousand presets.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Use the 5-pin MIDI In and Out sockets (it has no USB).",
+    "Turn on SysEx receive in its MIDI settings if your firmware has that option.",
+    "Nothing to set for knob moves: it has no panel knobs, edits arrive as SysEx."
+   ]
   },
   {
    "id": "oberheim-two-voice",
@@ -971,7 +1021,13 @@
     "chorus": 0.15,
     "drive": 0.3
    },
-   "note": "Three VCOs per voice, ladder plus state-variable filters; 8- or 16-voice."
+   "note": "Three VCOs per voice, ladder plus state-variable filters; 8- or 16-voice.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "moog-muse",
@@ -992,7 +1048,13 @@
     "detune": 8,
     "drive": 0.3
    },
-   "note": "Two VCOs per voice, ladder filter."
+   "note": "Two VCOs per voice, ladder filter.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "korg-polysix",
@@ -1299,6 +1361,14 @@
     "chorus": 2
    },
    "twin": "juniper",
+   "setup": [
+    "Press GLOBAL until the GLOBAL menu shows, open CONNECTIVITY, then MIDI SETTINGS, and set RX-CHANNEL and TX-CHANNEL.",
+    "On the CONNECTIVITY page, leave DEVICE ID at 1 (or match what the app expects).",
+    "On the settings page for the connection you're using (MIDI, USB or WiFi), set MIDI CTRL to NRPN.",
+    "Use the same connection (USB, 5-pin MIDI or WiFi) for the app; each has its own settings.",
+    "If sharing doesn't respond, check SysEx is allowed on that connection in the CONNECTIVITY menu."
+   ],
+   "setupSource": "https://manualowl.com/m/Behringer/DEEPMIND-12/Manual/613573?page=79",
    "dump": {
     "request": "F0 00 20 32 20 00 03 F7",
     "reply": "F0 00 20 32 20 00 04",
@@ -1326,6 +1396,14 @@
    "character": {
     "chorus": 2
    },
+   "setup": [
+    "Press GLOBAL until the GLOBAL menu shows, open CONNECTIVITY, then MIDI SETTINGS, and set RX-CHANNEL and TX-CHANNEL.",
+    "On the CONNECTIVITY page, leave DEVICE ID at 1 (or match what the app expects).",
+    "On the settings page for the connection you're using (MIDI, USB or WiFi), set MIDI CTRL to NRPN.",
+    "Use the same connection (USB, 5-pin MIDI or WiFi) for the app; each has its own settings.",
+    "If sharing doesn't respond, check SysEx is allowed on that connection in the CONNECTIVITY menu."
+   ],
+   "setupSource": "https://manualowl.com/m/Behringer/DEEPMIND-12/Manual/613573?page=79",
    "dump": {
     "request": "F0 00 20 32 20 00 03 F7",
     "reply": "F0 00 20 32 20 00 04",
@@ -1356,7 +1434,14 @@
     "chorus": 0,
     "drive": 0.2
    },
-   "note": "Based on the Prophet-600."
+   "note": "Based on the Prophet-600.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no 'send current sound' command: save your sound first, then the app copies that stored slot into a spare slot on your bandmate's Pro-800.",
+    "Both players should be on similar firmware; the preset layout changed between versions."
+   ]
   },
   {
    "id": "behringer-ub-xa",
@@ -1378,7 +1463,13 @@
     "chorus": 0.15,
     "drive": 0.25
    },
-   "note": "Based on the OB-Xa."
+   "note": "Based on the OB-Xa.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In Global MIDI settings, turn on Rx PC (receive program change).",
+    "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+    "Sound sharing isn't supported for this model yet; only live knob moves are relayed."
+   ]
   },
   {
    "id": "behringer-poly-d",
@@ -1420,7 +1511,13 @@
     "detune": 8,
     "drive": 0.35
    },
-   "note": "Ladder and Steiner-Parker filters, morphing."
+   "note": "Ladder and Steiner-Parker filters, morphing.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "novation-peak",
@@ -1442,7 +1539,13 @@
     "detune": 6,
     "drive": 0.3
    },
-   "note": "Digital oscillators, analog filters and distortion."
+   "note": "Digital oscillators, analog filters and distortion.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "novation-summit",
@@ -1465,6 +1568,13 @@
     "drive": 0.3
    },
    "note": "Two Peaks in one.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Turn on SysEx send and receive in its global MIDI settings.",
+    "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Use a single patch: in Multi mode only one part is shared."
+   ],
    "dump": {
     "request": "F0 00 20 29 01 11 01 33 40 00 00 00 00 00 F7",
     "reply": "F0 00 20 29 01 11 01 33 00",
@@ -1491,6 +1601,13 @@
    "character": {
     "detune": 6
    },
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+    "In its global settings, set parameter send and receive to NRPN.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Use single-program mode, not Combo mode: only one part's sound is shared."
+   ],
    "dump": {
     "request": "F0 01 26 06 F7",
     "reply": "F0 01 26 03",
@@ -1518,6 +1635,12 @@
     "drive": 0.3
    },
    "note": "Four analog voices with a sequencer.",
+   "setup": [
+    "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+    "In its MIDI settings, turn on CC/NRPN send and receive.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "To share a sound, send it from the SysEx dump menu while the app is listening, and set your bandmate's unit to receive."
+   ],
    "dump": {
     "manualDump": "SysEx dump menu (Settings > SysEx dump > SysEx send) can send the current kit or sounds; receiving side uses SysEx receive in the same menu.",
     "params": "nrpn+cc",
@@ -1542,6 +1665,12 @@
    "character": {
     "drive": 0.3
    },
+   "setup": [
+    "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+    "In its MIDI settings, turn on CC/NRPN send and receive.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "To share a sound, send it from the SysEx dump menu while the app is listening, and set your bandmate's unit to receive."
+   ],
    "dump": {
     "manualDump": "Same SysEx dump menu as Analog Four (SysEx send of kit/sound).",
     "params": "nrpn+cc"
@@ -1660,7 +1789,13 @@
    ],
    "character": {
     "drive": 0.4
-   }
+   },
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Knob moves are relayed live; it has no sound memory to share."
+   ]
   },
   {
    "id": "moog-subsequent-37",
@@ -1680,7 +1815,13 @@
    "character": {
     "drive": 0.55
    },
-   "twin": "monolith"
+   "twin": "monolith",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "moog-subsequent-25",
@@ -1697,7 +1838,13 @@
    ],
    "character": {
     "drive": 0.45
-   }
+   },
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "moog-mother-32",
@@ -2032,6 +2179,13 @@
     "drive": 0.4
    },
    "note": "Three oscillators, three filter types.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+    "In its global settings, set parameter send and receive to NRPN.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "If transfers stall, leave a short pause between messages (about 50 ms)."
+   ],
    "dump": {
     "request": "F0 01 31 06 F7",
     "reply": "F0 01 31 03",
@@ -2314,7 +2468,13 @@
    ],
    "character": {
     "drive": 0.4
-   }
+   },
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "Use the 5-pin MIDI sockets.",
+    "Knob moves are relayed live; sound sharing isn't supported."
+   ]
   },
   {
    "id": "novation-bass-station-ii",
@@ -2335,6 +2495,12 @@
     "drive": 0.5
    },
    "twin": "monolith",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+    "Connect by USB or 5-pin MIDI.",
+    "Both players should run firmware 2.5 or later so sounds match."
+   ],
    "dump": {
     "request": "F0 00 20 29 00 33 00 40 F7",
     "reply": "F0 00 20 29 00 33 00 00",
@@ -2418,7 +2584,13 @@
    "character": {
     "drive": 0.5
    },
-   "note": "Three VCOs, ladder and Steiner filters."
+   "note": "Three VCOs, ladder and Steiner filters.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "behringer-model-d",
@@ -2618,6 +2790,13 @@
    "character": {
     "drive": 0.3
    },
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+    "In its global settings, set parameter send and receive to NRPN.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Mopho desktop, Keyboard, SE and x4 can share sounds with each other."
+   ],
    "dump": {
     "request": "F0 01 25 06 F7",
     "reply": "F0 01 25 03",
@@ -2644,6 +2823,13 @@
     "drive": 0.4
    },
    "note": "Analog and digital oscillators, feedback delay.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+    "In its global settings, set parameter send and receive to NRPN.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "If the sound uses user waveshapes, both units need the same waveshapes; patch names aren't sent."
+   ],
    "dump": {
     "request": "F0 01 20 01 06 F7",
     "reply": "F0 01 20 01 03",
@@ -2669,6 +2855,13 @@
    "character": {
     "drive": 0.4
    },
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Turn on SysEx send and receive in its global MIDI settings.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "Leave its Device ID at the default (0).",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets."
+   ],
    "dump": {
     "request": "F0 3E 16 00 00 7F 00 F7",
     "reply": "F0 3E 16 00 10 7F 00",
@@ -3104,6 +3297,12 @@
     "chorus": 0.2
    },
    "note": "PPG wavetables with analog filters.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Leave its Device ID at the default (0).",
+    "Use the 5-pin MIDI In and Out sockets.",
+    "Edits are sent as SysEx; no CC setting is needed."
+   ],
    "dump": {
     "request": "F0 3E 00 00 02 00 F7",
     "reply": "F0 3E 00 00 42",
@@ -3132,6 +3331,13 @@
    "character": {
     "detune": 6
    },
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global settings, set controller send to CC and turn controller receive on.",
+    "Leave its Device ID at the default.",
+    "Use Sound mode: in Multi mode each part has its own sound.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets."
+   ],
    "dump": {
     "request": "F0 3E 13 00 00 7F 00 F7",
     "reply": "F0 3E 13 00 10 7F 00",
@@ -3159,7 +3365,13 @@
    "character": {
     "detune": 6
    },
-   "note": "Wavetable, granular, resonator and sampler engines."
+   "note": "Wavetable, granular, resonator and sampler engines.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "waldorf-quantum",
@@ -3179,7 +3391,13 @@
    "character": {
     "detune": 6
    },
-   "note": "Digital engines into analog filters."
+   "note": "Digital engines into analog filters.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "ppg-wave-2-2",
@@ -3241,7 +3459,13 @@
     "detune": 12,
     "drive": 0.3
    },
-   "note": "Trance and EDM virtual analog."
+   "note": "Trance and EDM virtual analog.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "access-virus-c",
@@ -3261,6 +3485,13 @@
     "detune": 12,
     "drive": 0.3
    },
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Leave its Device ID at Omni (the default) so it answers sound requests.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "Use Single mode: in Multi mode each part has its own sound.",
+    "Use the 5-pin MIDI sockets."
+   ],
    "dump": {
     "request": "F0 00 20 33 01 10 30 00 40 F7",
     "reply": "F0 00 20 33 01 10 10 00",
@@ -3288,6 +3519,12 @@
    "character": {
     "detune": 8
    },
+   "setup": [
+    "Set the Global MIDI channel; sound sharing uses this same channel.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "Use the 5-pin MIDI sockets.",
+    "Use a normal synth sound in slot A, not a drum kit."
+   ],
    "dump": {
     "request": "F0 33 00 04 0A 00 F7",
     "reply": "F0 33 00 04 00 00",
@@ -3313,7 +3550,13 @@
    ],
    "character": {
     "detune": 8
-   }
+   },
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "clavia-nord-lead-a1",
@@ -3331,7 +3574,13 @@
    ],
    "character": {
     "detune": 8
-   }
+   },
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "novation-ultranova",
@@ -3350,6 +3599,12 @@
    "character": {
     "detune": 8
    },
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Turn on SysEx send and receive in its global MIDI settings.",
+    "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets."
+   ],
    "dump": {
     "request": "F0 00 20 29 03 01 7F 40 21 00 00 00 00 F7",
     "reply": "F0 00 20 29 03 01 7F 00",
@@ -3377,7 +3632,13 @@
    "character": {
     "detune": 6
    },
-   "note": "Wavetables with polyphonic aftertouch."
+   "note": "Wavetables with polyphonic aftertouch.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Sound sharing isn't supported for this model yet; only live knob moves are relayed."
+   ]
   },
   {
    "id": "modal-argon8",
@@ -3396,7 +3657,13 @@
    ],
    "character": {
     "detune": 6
-   }
+   },
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "arturia-minifreak",
@@ -3417,7 +3684,13 @@
    "character": {
     "detune": 6
    },
-   "note": "Digital oscillator engines into analog filters."
+   "note": "Digital oscillator engines into analog filters.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "arturia-microfreak",
@@ -3437,7 +3710,13 @@
    "character": {
     "detune": 4
    },
-   "note": "Paraphonic; many digital engines, analog filter."
+   "note": "Paraphonic; many digital engines, analog filter.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "ensoniq-esq-1",
@@ -3458,6 +3737,13 @@
     "chorus": 0.2
    },
    "note": "Digital waves, analog filters.",
+   "setup": [
+    "Set its base MIDI channel on the MIDI page.",
+    "On the MIDI page, open MIDI ENABLE and set SX to on.",
+    "Use the 5-pin MIDI In and Out sockets.",
+    "Knob moves aren't sent live; share the sound after editing."
+   ],
+   "setupSource": "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Ensoniqesq1.py",
    "dump": {
     "request": "F0 0F 02 00 09 F7",
     "reply": "F0 0F 02 00 01",
@@ -3581,7 +3867,13 @@
    "character": {
     "detune": 0
    },
-   "note": "Phase distortion."
+   "note": "Phase distortion.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Connect both MIDI In and MIDI Out: sharing a sound needs two-way talk.",
+    "Use the 5-pin MIDI sockets.",
+    "Knob moves aren't sent live; share the sound after editing."
+   ]
   },
   {
    "id": "casio-cz-1000",
@@ -3601,7 +3893,13 @@
    "character": {
     "detune": 0
    },
-   "note": "Phase distortion."
+   "note": "Phase distortion.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Connect both MIDI In and MIDI Out: sharing a sound needs two-way talk.",
+    "Use the 5-pin MIDI sockets.",
+    "Knob moves aren't sent live; share the sound after editing."
+   ]
   },
   {
    "id": "kawai-k5",
@@ -3699,7 +3997,13 @@
    "character": {
     "detune": 4
    },
-   "note": "Portable multi-engine synth and sampler."
+   "note": "Portable multi-engine synth and sampler.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "Connect by USB.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "elektron-monomachine",
@@ -3719,6 +4023,12 @@
    "character": {
     "drive": 0.3
    },
+   "setup": [
+    "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+    "In its MIDI settings, turn on CC/NRPN send and receive.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "To share a sound, send it from the SysEx dump menu while the app is listening, and set your bandmate's unit to receive."
+   ],
    "dump": {
     "manualDump": "Global > SysEx dump send (kits/patterns); menu path not verified.",
     "params": "cc"
@@ -4033,6 +4343,12 @@
    "character": {
     "drive": 0.15
    },
+   "setup": [
+    "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+    "In its MIDI settings, turn on CC/NRPN send and receive.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "To share a sound, send it from the SysEx dump menu while the app is listening, and set your bandmate's unit to receive."
+   ],
    "dump": {
     "manualDump": "SysEx dump menu can send the current sound or kit; menu path not verified.",
     "params": "nrpn+cc",
@@ -4793,7 +5109,13 @@
     "acoustic",
     "808"
    ],
-   "character": {}
+   "character": {},
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "Assign the Q-Link knobs to send CC.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "oberheim-dmx",
@@ -5219,6 +5541,12 @@
    "character": {},
    "note": "Its own synthesis machines; Machina has four families of them.",
    "twin": "machina",
+   "setup": [
+    "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+    "In its MIDI settings, turn on CC/NRPN send and receive.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "To share a sound, send it from the SysEx dump menu while the app is listening, and set your bandmate's unit to receive."
+   ],
    "dump": {
     "manualDump": "Kit SysEx send from the Global/SysEx menu; menu path not verified.",
     "params": "cc"
@@ -5241,6 +5569,13 @@
     "drive": 0.25
    },
    "note": "Analog voices plus samples.",
+   "setup": [
+    "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+    "In its MIDI settings, turn on CC/NRPN send and receive.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Load the same samples into the same slots on both units: kits only name their samples.",
+    "Leave its device ID at the default."
+   ],
    "dump": {
     "request": "F0 00 20 3C 07 00 68 01 01 00 00 00 00 05 F7",
     "reply": "F0 00 20 3C 07 00 58",
@@ -5264,7 +5599,13 @@
     "909"
    ],
    "character": {},
-   "note": "A sampler; the twin plays synthesized drums."
+   "note": "A sampler; the twin plays synthesized drums.",
+   "setup": [
+    "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+    "In its MIDI settings, turn on CC/NRPN send and receive.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Knob moves are relayed live; sound sharing isn't supported (use Elektron Transfer for sounds)."
+   ]
   },
   {
    "id": "elektron-syntakt",
@@ -5280,7 +5621,13 @@
     "909"
    ],
    "character": {},
-   "note": "Analog and digital machines."
+   "note": "Analog and digital machines.",
+   "setup": [
+    "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+    "In its MIDI settings, turn on CC/NRPN send and receive.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Knob moves are relayed live; sound sharing isn't supported (use Elektron Transfer for sounds)."
+   ]
   },
   {
    "id": "elektron-model-cycles",
@@ -5295,7 +5642,13 @@
     "hybrid"
    ],
    "character": {},
-   "note": "FM percussion machines."
+   "note": "FM percussion machines.",
+   "setup": [
+    "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+    "In its MIDI settings, turn on CC/NRPN send and receive.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Knob moves are relayed live; sound sharing isn't supported (use Elektron Transfer for sounds)."
+   ]
   },
   {
    "id": "elektron-model-samples",
@@ -5310,7 +5663,13 @@
     "lofi",
     "acoustic"
    ],
-   "character": {}
+   "character": {},
+   "setup": [
+    "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+    "In its MIDI settings, turn on CC/NRPN send and receive.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Knob moves are relayed live; sound sharing isn't supported (use Elektron Transfer for sounds)."
+   ]
   },
   {
    "id": "elektron-octatrack",
@@ -5325,7 +5684,13 @@
     "lofi"
    ],
    "character": {},
-   "note": "Sampler and performance sequencer."
+   "note": "Sampler and performance sequencer.",
+   "setup": [
+    "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+    "In its MIDI settings, turn on CC/NRPN send and receive.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Knob moves are relayed live; sound sharing isn't supported (use Elektron Transfer for sounds)."
+   ]
   },
   {
    "id": "arturia-drumbrute",
@@ -5370,7 +5735,13 @@
    "types": [
     "808"
    ],
-   "character": {}
+   "character": {},
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Knob moves are relayed live; there's no sound memory to share."
+   ]
   },
   {
    "id": "behringer-rd-9",
@@ -5384,7 +5755,13 @@
     "909"
    ],
    "character": {},
-   "note": "Based on the TR-909."
+   "note": "Based on the TR-909.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Knob moves are relayed live; there's no sound memory to share."
+   ]
   },
   {
    "id": "behringer-rd-6",
@@ -5434,7 +5811,13 @@
     "909",
     "808"
    ],
-   "character": {}
+   "character": {},
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Knob moves are relayed live; there's no sound memory to share."
+   ]
   },
   {
    "id": "vermona-drm1",
@@ -5448,7 +5831,13 @@
     "808",
     "hybrid"
    ],
-   "character": {}
+   "character": {},
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "Knob moves are relayed live; there's no sound memory to share."
+   ]
   },
   {
    "id": "novation-circuit-tracks",
@@ -5464,6 +5853,12 @@
     "909"
    ],
    "character": {},
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+    "Connect with a USB cable: it only answers sound requests over USB, not the 5-pin sockets.",
+    "Synth 1 and Synth 2 are shared separately; drum tracks aren't included."
+   ],
    "dump": {
     "request": "F0 00 20 29 01 64 40 00 F7",
     "reply": "F0 00 20 29 01 64 00 00",
@@ -5487,7 +5882,13 @@
    "character": {
     "bits": 12
    },
-   "note": "Sampler with a tracker sequencer."
+   "note": "Sampler with a tracker sequencer.",
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   },
   {
    "id": "teenage-engineering-op-z",
@@ -5502,7 +5903,13 @@
     "808",
     "lofi"
    ],
-   "character": {}
+   "character": {},
+   "setup": [
+    "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+    "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+    "Connect by USB.",
+    "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+   ]
   }
  ],
  "traits": {
