@@ -1,4 +1,4 @@
-// A tiny library instrument (same contract as JamJam's instruments/): a vibrato sine.
+// A tiny library instrument (same contract as MEGAjam's instruments/): a vibrato sine.
 const PARAMS = [{ id: 'rate', name: 'Wobble', min: 0, max: 12, def: 5, unit: 'Hz' }, { id: 'level', name: 'Level', min: 0, max: 1, def: 0.5 }];
 export default {
   id: 'wobble', name: 'Wobble', family: 'Test poly', params: PARAMS, presets: { soft: { rate: 3 }, fast: { rate: 10 } },

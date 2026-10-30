@@ -1,5 +1,5 @@
 // Room logic: an exact copy of the relay that runs on Cloudflare as crush-commando-mp (samuelling/crush-commando/server).
-// JamJam uses that deployed relay only for the WebRTC handshake. This copy powers the local dev server (dev.js).
+// MEGAjam uses that deployed relay only for the WebRTC handshake. This copy powers the local dev server (dev.js).
 //
 // A room is everyone connected with the same room code. The server is a relay: it remembers each
 // player's name, colour, join order and latest state (so late joiners see everyone at once) and

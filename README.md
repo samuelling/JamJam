@@ -1,8 +1,8 @@
-# JamJam
+# MEGAjam
 
 A virtual studio for jamming live over the internet, in lockstep, with up to four people.
 
-Each jammer walks into their own **corner**, racks up instruments from a shared library, and says what hardware they have. Every jammer's browser runs **everyone's** instruments, so instead of streaming audio JamJam sends what your hands do (notes, knob moves, instrument changes), each stamped with the moment it should sound on a clock the whole room shares. Every browser plays every event at that moment, so the whole band hears the same music. The idea comes from strategy-game networking, where every machine runs the same simulation and only the commands travel ("deterministic lockstep").
+Each jammer walks into their own **corner**, racks up instruments from a shared library, and says what hardware they have. Every jammer's browser runs **everyone's** instruments, so instead of streaming audio MEGAjam sends what your hands do (notes, knob moves, instrument changes), each stamped with the moment it should sound on a clock the whole room shares. Every browser plays every event at that moment, so the whole band hears the same music. The idea comes from strategy-game networking, where every machine runs the same simulation and only the commands travel ("deterministic lockstep").
 
 **Play it:** https://samuelling.github.io/JamJam/ (open a studio, then send the invite).
 
@@ -20,9 +20,9 @@ Each jammer walks into their own **corner**, racks up instruments from a shared 
   | **Tine** | Two-operator FM keys: electric pianos, bells, FM bass, plucks. |
 
   Juniper, Monolith and Machina render sample by sample in an AudioWorklet, with every event landing on an exact sample frame, so they render bit-identically in every browser.
-- **Your hardware.** Pick your unit and JamJam ranks software twins from the library (best match first, with a match score), with an audition button for each. The twin you choose ships to the band, loaded with the preset for your patch type and that unit's character. You play the real thing; everyone else hears the twin. Shape the twin's knobs until it sounds like your patch; your synth's CC knobs drive the twin where the mapping is known. Choose a MIDI output (Local Control off) and JamJam plays your synth in lockstep too, using Web MIDI timestamps. About 35 units are catalogued in `instruments/hardware.json`; adding one is one entry.
+- **Your hardware.** Pick your unit and MEGAjam ranks software twins from the library (best match first, with a match score), with an audition button for each. The twin you choose ships to the band, loaded with the preset for your patch type and that unit's character. You play the real thing; everyone else hears the twin. Shape the twin's knobs until it sounds like your patch; your synth's CC knobs drive the twin where the mapping is known. Choose a MIDI output (Local Control off) and MEGAjam plays your synth in lockstep too, using Web MIDI timestamps. About 35 units are catalogued in `instruments/hardware.json`; adding one is one entry.
 - **Machina's sequencer.** Machina has a machine-drum panel with a 16–64 step sequencer (pages, length, play and stop on the bar) and per-trig **parameter locks**: hold a trig (or shift-click it, or use LOCK) and turn a knob, and that one step plays with that setting. The sequencer runs in lockstep in every browser from the shared pattern and clock, so sequenced parts send no notes at all, only edits. Each edit is stamped far enough ahead (lookahead plus the scheduling horizon) that every browser applies it before the step it touches, so every browser plays exactly the same trigs. `tests/seq.test.cjs` checks this across two lagged browsers.
-- **Libraries: instruments from other repos.** The gear wall can open libraries beyond the built-ins: any folder with a `jamjam.json`, from a public GitHub repo (`github:owner/repo`, served through jsDelivr), a GitHub Pages site, or a build served from your own machine (`tools/serve-library.py` adds the cross-origin headers). When you play a public library's instrument, your bandmates' browsers load it automatically. A library marked private is never shared: each jammer adds their own copy, and anyone without it hears the closest built-in stand-in (and is told so) until they do. See "Writing a library" below.
+- **Libraries: instruments from other repos.** The gear wall can open libraries beyond the built-ins: any folder with a `megajam.json` (or `jamjam.json`, the name from before the rename), from a public GitHub repo (`github:owner/repo`, served through jsDelivr), a GitHub Pages site, or a build served from your own machine (`tools/serve-library.py` adds the cross-origin headers). When you play a public library's instrument, your bandmates' browsers load it automatically. A library marked private is never shared: each jammer adds their own copy, and anyone without it hears the closest built-in stand-in (and is told so) until they do. See "Writing a library" below.
 - **Band chat**, an **audio lane**, and a **wiring** panel showing every link, in panels that slide out from the side of the desk.
 
 - **External MIDI.** "+ External MIDI" on your shelf puts any synth, drum machine or DAW track reachable over MIDI (a hub, a USB synth, or a virtual port such as IAC on a Mac or loopMIDI on Windows) in your corner. Give it a name, an output port and channel, and optionally a twin from the gear wall for the band to hear. Your notes, sustain, pitch bend and controller knobs go out to it timestamped to the moment the band hears your part (or at once, with self-monitoring on). Twin: none means bandmates hear nothing unless they route your part to their own gear.
@@ -94,11 +94,11 @@ Every call carries an AudioContext time `t`, usually in the future. The one rule
 
 ## Writing a library
 
-A library is a folder with a `jamjam.json` and instrument modules:
+A library is a folder with a `megajam.json` and instrument modules:
 
 ```json
 {
-  "jamjam": 1, "id": "mylab", "name": "My Lab", "by": "me", "private": false,
+  "megajam": 1, "id": "mylab", "name": "My Lab", "by": "me", "private": false,
   "instruments": [
     { "id": "wobble", "file": "wobble.js", "name": "Wobble", "family": "Poly", "blurb": "One line" },
     { "id": "big-a", "file": "bridge.js", "arg": "big-a", "name": "Big A" }
@@ -134,7 +134,7 @@ NODE_PATH=$(npm root -g) node tests/bench.cjs http://localhost:8787/ "tm=8&mem=1
 - `src/lane.js` – audio lane capture and chunk format
 - `src/seq.js` – the lockstep step sequencer
 - `src/skins.js` – instrument icons and faceplate styles
-- `tools/serve-library.py` – serve a library folder from your machine with the cross-origin headers JamJam needs
+- `tools/serve-library.py` – serve a library folder from your machine with the cross-origin headers MEGAjam needs
 - `src/input.js` – computer keyboard, Web MIDI in (all channels) and out, sustain
 - `instruments/` – the library and `hardware.json`
 - `server/` – local dev server and a copy of the relay's room logic

@@ -1,4 +1,4 @@
-// A factory module: one file, several instruments, chosen by the "arg" in jamjam.json.
+// A factory module: one file, several instruments, chosen by the "arg" in megajam.json.
 export default async function (arg) {
   const f0 = +arg || 440;
   return {

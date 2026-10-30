@@ -1,8 +1,8 @@
 {
-  "jamjam": 1,
+  "megajam": 1,
   "id": "testlab",
   "name": "Test Lab",
-  "by": "the JamJam tests",
+  "by": "the MEGAjam tests",
   "private": false,
   "instruments": [
     { "id": "wobble", "file": "wobble.js", "name": "Wobble", "family": "Test poly", "blurb": "A sine with a wobble, served from another origin." },

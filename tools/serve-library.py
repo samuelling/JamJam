@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Serve a folder (a JamJam library, or any static build) to JamJam on this machine.
+"""Serve a folder (a MEGAjam library, or any static build) to MEGAjam on this machine.
 
     python3 tools/serve-library.py path/to/folder [--port 8780]
 
-Adds the headers a page on another origin (JamJam on GitHub Pages) needs to read it: CORS, and Chrome's
+Adds the headers a page on another origin (MEGAjam on GitHub Pages) needs to read it: CORS, and Chrome's
 private/local network access opt-in for pages reaching http://localhost. Only listens on this machine.
 """
 import argparse
@@ -33,7 +33,7 @@ def main() -> None:
     Handler.extensions_map[".wasm"] = "application/wasm"
     Handler.extensions_map[".js"] = "text/javascript"
     server = http.server.ThreadingHTTPServer(("127.0.0.1", a.port), functools.partial(Handler, directory=a.folder))
-    print(f"Serving {a.folder} to JamJam at http://localhost:{a.port}/  (Control-C to stop)")
+    print(f"Serving {a.folder} to MEGAjam at http://localhost:{a.port}/  (Control-C to stop)")
     server.serve_forever()
 
 

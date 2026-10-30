@@ -94,4 +94,4 @@ function frame(op, payload) {
   return Buffer.concat([head, payload]);
 }
 
-server.listen(PORT, () => console.log(`JamJam dev server: http://localhost:${PORT}/`));
+server.listen(PORT, () => console.log(`MEGAjam dev server: http://localhost:${PORT}/`));

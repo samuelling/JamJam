@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>JamJam — the lockstep studio</title>
+<title>MEGAjam — the lockstep studio</title>
 <meta name="description" content="Walk into a shared virtual studio with up to three friends. Every browser runs everyone's instruments, so only the notes travel.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -81,6 +81,8 @@
   #studio { height: 100vh; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 10px; padding: 10px 14px 12px; }
   /* wall-mounted display */
   .console { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 12px; background: linear-gradient(180deg, #16171a, #0f1012); border: 1px solid #000; border-radius: 12px; box-shadow: inset 0 1px 0 #ffffff0d, 0 10px 30px #0008; }
+  .neon .mega { color: #fff3a8; text-shadow: 0 0 6px #ffb300, 0 0 22px #ff7a00, 0 0 48px #ff5a1f; }
+  .badge-logo .mega { font-weight: 900; letter-spacing: .02em; color: var(--te-orange); }
   .badge-logo { display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: -.02em; }
   .readout { display: flex; align-items: center; gap: 6px; }
   .readout .lcd { font-size: 15px; min-width: 56px; text-align: center; padding: 3px 9px; letter-spacing: .08em; }
@@ -343,7 +345,7 @@
 <body>
 <section id="lobby">
   <div class="entrance">
-    <div class="neon" aria-label="JamJam">JamJam<small>LOCKSTEP STUDIO</small></div>
+    <div class="neon" aria-label="MEGAjam"><span class="mega">MEGA</span>jam<small>LOCKSTEP STUDIO</small></div>
     <p class="tagline">Up to four of you, each in your own corner of one studio. Every browser runs everyone's instruments, so only the notes travel, stamped with the moment they should sound. Everyone hears the same thing at the same instant.</p>
     <div class="door">
       <div class="cheek"></div>
@@ -370,7 +372,7 @@
 
 <section id="studio" class="hide">
   <div class="console">
-    <div class="badge-logo"><svg width="22" height="22" viewBox="0 0 30 30" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="#2f80ff"/><circle cx="21" cy="9" r="6.5" fill="#1fc46e"/><circle cx="9" cy="21" r="6.5" fill="#e9e9e4"/><circle cx="21" cy="21" r="6.5" fill="#ff5a1f"/></svg>JamJam</div>
+    <div class="badge-logo"><svg width="22" height="22" viewBox="0 0 30 30" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="#2f80ff"/><circle cx="21" cy="9" r="6.5" fill="#1fc46e"/><circle cx="9" cy="21" r="6.5" fill="#e9e9e4"/><circle cx="21" cy="21" r="6.5" fill="#ff5a1f"/></svg><span><b class="mega">MEGA</b>jam</span></div>
     <span id="onAir" class="onair" title="Lit when the band is connected">ON AIR</span>
     <div class="readout"><span id="roomCode" class="lcd" title="Room code"></span><button id="copyBtn" class="btn small">Invite</button></div>
     <div class="readout"><span class="legend">BPM</span><button id="bpmDown" class="btn small" aria-label="Slower">−</button><span id="bpmLcd" class="lcd" tabindex="0" role="spinbutton" aria-label="Tempo" title="Drag, scroll or use the arrow keys">96</span><button id="bpmUp" class="btn small" aria-label="Faster">+</button>
@@ -450,7 +452,7 @@
 </div>
 <div id="hwDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="Add your hardware">
   <div class="sheet">
-    <header><h2>What did you bring?</h2><span class="help">Pick your unit and JamJam ranks the software twins the band can hear it as.</span><button class="btn small" data-close style="margin-left:auto">Close</button></header>
+    <header><h2>What did you bring?</h2><span class="help">Pick your unit and MEGAjam ranks the software twins the band can hear it as.</span><button class="btn small" data-close style="margin-left:auto">Close</button></header>
     <div class="row" style="gap:8px;align-items:center"><input id="hwSearch" type="text" placeholder="Search 260 units: moog one, 808, wavetable, ladder, 70s…" autocomplete="off" style="flex:1"><span id="hwCount" class="help"></span></div>
     <div class="pages" id="hwFilters"></div>
     <div class="hwlist" id="hwList"></div>

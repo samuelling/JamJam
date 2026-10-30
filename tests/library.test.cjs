@@ -15,7 +15,8 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
   const fx = path.join(__dirname, 'fixtures', 'ext-lib');
   const priv = fs.mkdtempSync(path.join(os.tmpdir(), 'jjpriv-'));
   for (const f of fs.readdirSync(fx)) fs.copyFileSync(path.join(fx, f), path.join(priv, f));
-  const man = JSON.parse(fs.readFileSync(path.join(priv, 'jamjam.json'), 'utf8')); man.id = 'secretlab'; man.name = 'Secret Lab'; man.private = true;
+  const man = JSON.parse(fs.readFileSync(path.join(priv, 'megajam.json'), 'utf8')); fs.unlinkSync(path.join(priv, 'megajam.json'));  // the private copy uses the pre-rename name: tests the fallback
+  man.id = 'secretlab'; man.name = 'Secret Lab'; man.private = true;
   fs.writeFileSync(path.join(priv, 'jamjam.json'), JSON.stringify(man));
   const servers = [spawn('python3', ['-I', path.join(__dirname, '..', 'tools', 'serve-library.py'), fx, '--port', '8792']), spawn('python3', ['-I', path.join(__dirname, '..', 'tools', 'serve-library.py'), priv, '--port', '8793'])];
   await sleep(800);
@@ -67,7 +68,7 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     await sleep(9000);
     const fp = await Promise.all([A, B].map((p) => p.evaluate(() => [...JJ.S.sync.values()].map((s) => s.ok))));
     check(fp.every((x) => x.length && x.every(Boolean)), `fingerprints agree once the real instrument is in (${JSON.stringify(fp)})`);
-    const remembered = await B.evaluate(() => JSON.parse(localStorage.getItem('jamjam.libs') || '[]'));
+    const remembered = await B.evaluate(() => JSON.parse(localStorage.getItem('megajam.libs') || '[]'));
     check(remembered.length === 2, 'libraries are remembered in the browser');
   } finally {
     check(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.slice(0, 5).join(' | ') : ''));

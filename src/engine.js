@@ -75,8 +75,8 @@ export class Engine {
   }
 
   // ---------- libraries: instruments from other places (another GitHub repo, a friend's build on their machine) ----------
-  // A library is a folder with a jamjam.json:
-  //   { "jamjam": 1, "id": "namespace", "name": "Shown name", "by": "who", "private": false,
+  // A library is a folder with a megajam.json (or the older name, jamjam.json):
+  //   { "megajam": 1, "id": "namespace", "name": "Shown name", "by": "who", "private": false,
   //     "instruments": [ { "id": "x", "file": "x.js", "name", "family", "blurb", "icon" (svg text), "drums", "arg" }, ... ] }
   // Each file is an ES module whose default export is an instrument (the same contract as instruments/), or a function
   // (arg, {base, ctx, sha}) returning one, so one bridge module can serve many instruments. Modules load only when
@@ -87,18 +87,19 @@ export class Engine {
     let m = s.match(/^(?:github:|gh:)([\w.-]+)\/([\w.-]+)(?:@([\w./-]+?))?(\/.*)?$/);
     if (!m) { const g = s.match(/^https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)(?:\/tree\/([\w.-]+))?(\/.*)?$/); if (g) m = [g[0], g[1], g[2], g[3], g[4]]; }
     if (m) s = `https://cdn.jsdelivr.net/gh/${m[1]}/${m[2]}${m[3] ? '@' + m[3] : ''}${m[4] || ''}`;
-    s = s.replace(/jamjam\.json$/, '');
+    s = s.replace(/(mega|jam)jam\.json$/, '');
     if (!/^https?:\/\//.test(s)) throw new Error('A library address starts with https://, http://localhost or github:owner/repo');
     return s.endsWith('/') ? s : s + '/';
   }
   async addLibrary(input) {
     const url = Engine.resolveLibraryUrl(input);
     for (const lib of this.libs.values()) if (lib.url === url) return lib;
-    const r = await fetch(url + 'jamjam.json', { cache: 'no-cache' });
-    if (!r.ok) throw new Error(`No jamjam.json at ${url} (${r.status})`);
+    let r = await fetch(url + 'megajam.json', { cache: 'no-cache' });
+    if (!r.ok) r = await fetch(url + 'jamjam.json', { cache: 'no-cache' });   // libraries made before the rename
+    if (!r.ok) throw new Error(`No megajam.json at ${url} (${r.status})`);
     const man = await r.json();
     const id = String(man.id || '').replace(/[^\w.-]/g, '').slice(0, 40);
-    if (!id || !Array.isArray(man.instruments)) throw new Error('That jamjam.json needs an "id" and an "instruments" list');
+    if (!id || !Array.isArray(man.instruments)) throw new Error('That megajam.json needs an "id" and an "instruments" list');
     const lib = { id, url, name: man.name || id, by: man.by || '', private: !!man.private, entries: [] };
     for (const it of man.instruments) {
       if (!it || !it.id || !it.file) continue;

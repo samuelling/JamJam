@@ -1,7 +1,7 @@
 // Poly: analog-style subtractive polysynth (two oscillators + sub, resonant low-pass, envelopes, chorus, drive).
 // Has a mono/glide mode so it can also stand in for monosynths and bass machines.
 //
-// JamJam instrument contract (see README "Writing an instrument"):
+// MEGAjam instrument contract (see README "Writing an instrument"):
 //   export default { id, name, family, params:[{id,name,min,max,def,curve?,unit?,step?,cc?}], presets:{patchType:{...}},
 //                    create(ctx, out, initialParams) -> { noteOn(note,vel,t), noteOff(note,t), set(id,v,t), allOff(t), dispose() } }
 // Everything is driven by timestamped calls, and nothing is random, so every jammer's copy makes the same sound.

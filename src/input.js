@@ -115,7 +115,7 @@ export function sendToHardware(port, bytes, localPerfMs) {
   if (!port) return;
   try { port.send(bytes, Math.max(performance.now(), localPerfMs)); } catch (_) {}
 }
-// JamJam's pitch bend (semitones, ±2 full scale) as a 14-bit MIDI bend message
+// MEGAjam's pitch bend (semitones, ±2 full scale) as a 14-bit MIDI bend message
 export function bendBytes(ch, semis) {
   const v = Math.max(0, Math.min(16383, Math.round(8192 + (semis / 2) * 8191)));
   return [0xe0 | ((ch - 1) & 15), v & 127, v >> 7];

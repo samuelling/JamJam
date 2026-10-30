@@ -5,6 +5,8 @@ import { Input, sendToHardware, bendBytes } from './input.js';
 import { AudioLane, decodeChunk } from './lane.js';
 import { StepSeq } from './seq.js';
 import { iconEl, skinOf } from './skins.js';
+// this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
+const store = { get: (k) => localStorage.getItem('megajam.' + k) ?? localStorage.getItem('jamjam.' + k), set: (k, v) => localStorage.setItem('megajam.' + k, v) };
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -47,7 +49,7 @@ const S = {
   chat: [], unread: 0, knobGroup: null,
   mdTrack: 0, mdPage: 0, mdLock: false, held: null, hits: new Map(), md: null,
   libTab: 'builtin', standins: new Map(),
-  owned: new Map((() => { try { return JSON.parse(localStorage.getItem('jamjam.gear') || '[]'); } catch (_) { return []; } })()),  // hardware you own: id -> {port, ch}
+  owned: new Map((() => { try { return JSON.parse(store.get('gear') || '[]'); } catch (_) { return []; } })()),  // hardware you own: id -> {port, ch}
   hwFilter: 'all',
   routes: new Map(),                       // a bandmate's part (channel key) -> {port, ch, lat, mute}: played on your MIDI gear
   mclock: { port: '', on: false, lat: 0, next: null },  // MIDI clock out: the room's tempo to your drum machines  // channel key -> {wanted cfg} while a stand-in plays someone's library instrument
@@ -199,10 +201,10 @@ async function loadWanted(k) {
   renderCorners();
 }
 function retryStandins() { for (const k of S.standins.keys()) loadWanted(k); }
-function saveLibs() { try { localStorage.setItem('jamjam.libs', JSON.stringify([...engine.libs.values()].map((l) => l.url))); } catch (_) {} }
+function saveLibs() { try { store.set('libs', JSON.stringify([...engine.libs.values()].map((l) => l.url))); } catch (_) {} }
 async function restoreLibs() {
   let urls = [];
-  try { urls = JSON.parse(localStorage.getItem('jamjam.libs') || '[]'); } catch (_) {}
+  try { urls = JSON.parse(store.get('libs') || '[]'); } catch (_) {}
   for (const u of urls) { try { await engine.addLibrary(u); } catch (e) { setStatus(`Couldn't reach a library you added (${u}).`, 'error'); } }
 }
 
@@ -677,7 +679,7 @@ function renderDevice() {
   if (skin.custom === 'machina' && def.seq && seqs.get(key(S.me, e.r))) { renderMachina(e, def, unit); return; }
   S.md = null;
   const wide = unit
-    ? `The band hears ${def.name} as your ${unit.model}${unit.note ? ' (' + unit.note.replace(/\.$/, '') + ')' : ''}. Shape the knobs until it sounds like your patch. Pick a MIDI output (with Local Control off) and JamJam plays your synth in lockstep too.`
+    ? `The band hears ${def.name} as your ${unit.model}${unit.note ? ' (' + unit.note.replace(/\.$/, '') + ')' : ''}. Shape the knobs until it sounds like your patch. Pick a MIDI output (with Local Control off) and MEGAjam plays your synth in lockstep too.`
     : def.blurb || '';
   const shown = def.params.filter((P) => !P.hidden);
   const groups = [...new Set(shown.map((P) => P.group || 'Sound'))];
@@ -930,7 +932,7 @@ function renderLibrary() {
     cards.replaceChildren(...[...engine.defs.values()].filter((d) => !d.lib && !d.internal).map((d) => libCard({ id: d.id, name: d.name, family: d.family, blurb: d.blurb }, d)));
   } else if (S.libTab === 'add') {
     cards.replaceChildren();
-    const inp = h('input', { type: 'text', placeholder: 'github:owner/repo   or   http://localhost:8780/jamjam/', style: 'flex:1;min-width:260px', onkeydown: (e) => { e.stopPropagation(); if (e.key === 'Enter') add(); } });
+    const inp = h('input', { type: 'text', placeholder: 'github:owner/repo   or   http://localhost:8780/megajam/', style: 'flex:1;min-width:260px', onkeydown: (e) => { e.stopPropagation(); if (e.key === 'Enter') add(); } });
     const msg = h('p', { class: 'help', style: 'margin:0' });
     const add = async () => {
       msg.textContent = 'Looking…';
@@ -939,7 +941,7 @@ function renderLibrary() {
     };
     extra.replaceChildren(
       h('div', { class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap' }, inp, h('button', { class: 'btn hot', onclick: add }, 'Add library')), msg,
-      h('p', { class: 'help', style: 'margin:0' }, 'A library is any folder with a jamjam.json listing instruments. Use github:owner/repo (or owner/repo@branch/path) for a public GitHub repo, or the address of a library served from your own machine, such as a private build a friend shared with you. Libraries you add are remembered in this browser.'),
+      h('p', { class: 'help', style: 'margin:0' }, 'A library is any folder with a megajam.json listing instruments. Use github:owner/repo (or owner/repo@branch/path) for a public GitHub repo, or the address of a library served from your own machine, such as a private build a friend shared with you. Libraries you add are remembered in this browser.'),
       h('p', { class: 'help', style: 'margin:0' }, 'Public libraries load automatically for your bandmates when you play from them. A private library\'s address is never shared: each jammer adds their own copy, and anyone without it hears the closest built-in stand-in.'));
   } else {
     const lib = engine.libs.get(S.libTab);
@@ -995,7 +997,7 @@ function renderHardware() {
 }
 
 // --- "I have one too": your own unit plays a bandmate's part on that model instead of a twin
-function saveOwned() { try { localStorage.setItem('jamjam.gear', JSON.stringify([...S.owned])); } catch (_) {} }
+function saveOwned() { try { store.set('gear', JSON.stringify([...S.owned])); } catch (_) {} }
 function setOwned(id, v) {
   if (v) S.owned.set(id, v); else S.owned.delete(id);
   saveOwned();
@@ -1225,7 +1227,7 @@ async function enter(code) {
   code = String(code || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
   if (code.length !== 4) { setStatus('Room codes are four letters.', 'error'); return; }
   S.name = name;
-  try { localStorage.setItem('jamjam.name', name); } catch (_) {}
+  try { store.set('name', name); } catch (_) {}
   setStatus('Loading the library…');
   try { await engine.start(); if (!engine.defs.size) { await engine.loadInstruments('.'); await restoreLibs(); } }
   catch (e) { setStatus("Couldn't start audio or load the instruments: " + e.message, 'error'); return; }
@@ -1258,7 +1260,7 @@ function broadcastLook(force = false) {
 }
 
 function wire() {
-  try { $('#nameIn').value = localStorage.getItem('jamjam.name') || ''; } catch (_) {}
+  try { $('#nameIn').value = store.get('name') || ''; } catch (_) {}
   const pre = (qs.get('room') || '').toUpperCase();
   if (pre) { $('#codeIn').value = pre; $('#joinBtn').classList.add('hot'); $('#startBtn').classList.remove('hot'); }
   $('#startBtn').onclick = () => enter(randomCode());
