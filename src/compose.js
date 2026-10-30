@@ -189,6 +189,21 @@ export function makeCompose(x) {
       desk.length ? h('optgroup', { label: 'A new track, from your desk' }, ...desk.map((d) => h('option', { value: 'r:' + d.r }, d.name))) : null);
     return h('div', { class: 'row writerow' }, pick, h('span', { class: 'help' }, 'or click an empty block in a track: notes you write here go to everyone with the song, whole, before they play'));
   }
+  // a track's fader (dB) and pan: heard at once while dragged, written to the song (for everyone) when let go;
+  // double-click puts it back to the middle
+  const fmtDb = (db) => (db <= -60 ? '−∞' : `${db > 0 ? '+' : db < 0 ? '−' : ''}${Math.abs(db).toFixed(1)} dB`);
+  const fmtPan = (v) => (Math.abs(v) < 0.02 ? 'C' : `${v < 0 ? 'L' : 'R'}${Math.round(Math.abs(v) * 100)}`);
+  function fader(t, kind) {
+    const vol = t.vol ?? 0, readout = h('small', { class: 'mono help' }, fmtDb(vol));
+    const r = h('input', { type: 'range', class: 'tfader' + (kind === 'mini' ? ' mini' : ''), min: -60, max: 6, step: 0.5, value: vol, 'aria-label': `${t.name} volume`, title: `${t.name}: ${fmtDb(vol)} (double-click for 0 dB)`,
+      onpointerdown: (e) => e.stopPropagation(), oninput: (e) => { readout.textContent = fmtDb(+e.target.value); x.mixPreview?.(t.id, { vol: +e.target.value }); }, onchange: (e) => x.setLane(t.id, { vol: +e.target.value }), ondblclick: () => x.setLane(t.id, { vol: 0 }) });
+    return kind === 'mini' ? r : h('label', { class: 'tmix' }, h('small', {}, 'Volume'), r, readout);
+  }
+  function panner(t) {
+    const v = t.pan ?? 0, readout = h('small', { class: 'mono help' }, fmtPan(v));
+    return h('label', { class: 'tmix' }, h('small', {}, 'Pan'), h('input', { type: 'range', class: 'tpan', min: -1, max: 1, step: 0.02, value: v, 'aria-label': `${t.name} pan`, title: 'Double-click for centre',
+      oninput: (e) => { readout.textContent = fmtPan(+e.target.value); x.mixPreview?.(t.id, { pan: +e.target.value }); }, onchange: (e) => x.setLane(t.id, { pan: +e.target.value }), ondblclick: () => x.setLane(t.id, { pan: 0 }) }), readout);
+  }
   // a track's own settings, above its takes: its name, its instrument and patch, put it on your desk, remove it
   function trackBar(id) {
     const t = id && x.store.song.lanes?.[id]; if (!t || !x.setLane) return null;
@@ -198,6 +213,7 @@ export function makeCompose(x) {
       t.kind === 'audio' ? h('span', { class: 'help' }, 'live audio') : h('select', { class: 'lcdsel', 'aria-label': 'Instrument', title: "The track's instrument: every take on the track plays on it", onchange: (e) => x.setLane(t.id, { inst: e.target.value }) }, ...insts.map((i) => h('option', { value: i.id, selected: i.id === t.inst }, i.name))),
       t.kind === 'audio' || !cur || cur.patches.length < 2 ? null : h('select', { class: 'lcdsel', 'aria-label': 'Patch', onchange: (e) => x.setLane(t.id, { patch: e.target.value }) }, ...cur.patches.map(([v, n]) => h('option', { value: v, selected: v === t.patch }, n))),
       t.kind === 'audio' ? null : h('button', { class: 'btn small', title: "Put this track's instrument on your desk: the takes you lock with it go into this track", onclick: () => x.jamLane(t.id) }, 'Jam it'),
+      fader(t), panner(t),
       h('span', { style: 'flex:1' }),
       h('button', { class: 'btn small ghost danger', onclick: () => { if (confirm(`Remove the track "${t.name}" and all its takes?`)) { x.removeLane(t.id); cell = null; render(); } } }, 'Remove track'));
   }
@@ -300,7 +316,8 @@ export function makeCompose(x) {
         h('span', {}, h('b', {}, ln.name), h('select', { class: 'role', 'aria-label': `${ln.name}'s role`, onchange: (e) => setRoleOf(ln, e.target.value) }, ...ROLES.map((r) => h('option', { value: r, selected: (ln.role || '') === r }, r)))),
         h('span', { class: 'ms' },
           ln.rec ? h('button', { class: 'msb' + (ln.rec.muted ? ' on' : ''), 'aria-pressed': String(!!ln.rec.muted), title: ln.rec.muted ? 'Unmute this track (for everyone)' : 'Mute this track for everyone', onclick: () => x.setLane(ln.lane, { muted: !ln.rec.muted }) }, 'M') : null,
-          h('button', { class: 'msb solo' + (solos.has(ln.lane) ? ' on' : ''), 'aria-pressed': String(solos.has(ln.lane)), title: 'Solo: hear only the soloed tracks (only you; the band hears everything)', onclick: () => x.solo(ln.lane) }, 'S'))),
+          h('button', { class: 'msb solo' + (solos.has(ln.lane) ? ' on' : ''), 'aria-pressed': String(solos.has(ln.lane)), title: 'Solo: hear only the soloed tracks (only you; the band hears everything)', onclick: () => x.solo(ln.lane) }, 'S')),
+        ln.rec ? fader(ln.rec, 'mini') : null),
       ...cols.map((c) => {
         const p = Object.values(c.s.parts || {}).find((q) => laneOf(q) === ln.lane);
         const wk = c.id === loopId ? busy.get(ln.lane) : null;

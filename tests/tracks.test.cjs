@@ -94,6 +94,17 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     const bSolo = await B.evaluate(() => [...(JJ.S.solo || [])]);
     check(solo.includes(bass.id) && bSolo.length === 0, 'S solos it for Sam only');
 
+    // the track's fader and pan: set in the track's settings, they reach Matt and his mix follows
+    await A.evaluate(() => { for (const [sel, v] of [['.trackbar .tfader', '-12'], ['.trackbar .tpan', '-0.5']]) { const r = document.querySelector(sel); r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); r.dispatchEvent(new Event('change', { bubbles: true })); } }); await sleep(700);
+    const bm = await B.evaluate((lid) => ({ t: JJ.song().lanes[lid], m: JJ.mix(lid) }), bass.id); await sleep(300);
+    const bm2 = await B.evaluate((lid) => JJ.mix(lid), bass.id);
+    check(bm.t.vol === -12 && bm.t.pan === -0.5, `volume and pan are saved on the track for everyone (${JSON.stringify({ vol: bm.t.vol, pan: bm.t.pan })})`);
+    check(bm2 && Math.abs(bm2.gain - Math.pow(10, -12 / 20)) < 0.02 && Math.abs(bm2.pan + 0.5) < 0.02, `Matt's track bus is at -12 dB, panned left (${JSON.stringify(bm2)})`);
+    const mini = await A.evaluate((lid) => { const row = [...document.querySelectorAll('.arow')].find((r) => r.querySelector('.lhead b')?.textContent === 'Low end'); return row?.querySelector('.tfader.mini')?.value; }, bass.id);
+    check(mini === '-12', `the track's row fader shows -12 too (${mini})`);
+    await A.evaluate(() => document.querySelector('.trackbar .tfader').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))); await sleep(500);
+    check((await B.evaluate((lid) => JJ.song().lanes[lid].vol, bass.id)) === 0, 'double-clicking the fader puts it back to 0 dB');
+
     // remove the track: it and its blocks go
     A.on('dialog', (d) => d.accept());
     await A.evaluate(() => [...document.querySelectorAll('.trackbar button')].find((x) => x.textContent === 'Remove track').click()); await sleep(600);

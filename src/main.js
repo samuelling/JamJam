@@ -899,7 +899,7 @@ const compose = makeCompose({
   play: (mode, sid) => startTransport(mode, sid), stop: () => stopTransport(), loopRange: (a, b) => loopRange(a, b), jamThis: (sid) => { startTransport('loop', sid); goRoom('jam'); },
   importFile: (f) => importSketch(f), exportMidi: () => download(new Blob([SONG.songToMidi(songForExport())], { type: 'audio/midi' }), slugName() + '.mid'), exportJson: () => download(new Blob([JSON.stringify(songForExport(), null, 1)], { type: 'application/json' }), slugName() + '.megajam.json'),
   removePart: (sid, pid) => setSong(`part:${sid}:${pid}`, null), choose, vote, saveVariation, restoreVariation, editTake,
-  draftPart, previewNote, addLane: (o) => addLane(o), setLane: (id, patch) => setLane(id, patch), removeLane: (id) => removeLane(id), jamLane: (id) => jamLane(id),
+  draftPart, previewNote, mixPreview: (id, patch) => mixPreview(id, patch), addLane: (o) => addLane(o), setLane: (id, patch) => setLane(id, patch), removeLane: (id) => removeLane(id), jamLane: (id) => jamLane(id),
   solo: (key) => { S.solo = S.solo || new Set(); if (S.solo.has(key)) S.solo.delete(key); else S.solo.add(key); compose.render(); }, soloed: () => S.solo || new Set(),
   instruments: () => [...engine.defs.values()].filter((d) => !d.internal && d.id !== 'none').map((d) => ({ id: d.id, name: d.name + (d.lib ? ` (${engine.libs.get(d.lib)?.name || d.lib})` : ''), patches: engine.patchTypes({ inst: d.id }).map((t) => [t, patchName(d, t)]) })),
   desk: () => (S.listener ? [] : S.rack.filter((e) => e.cfg.inst !== 'audio').map((e) => ({ r: e.r, name: describe(e.cfg, true), lane: laneFor(e, false).draft ? null : laneFor(e, false).id }))),
@@ -1041,7 +1041,7 @@ function songTick() {
         const lo = seg.lo ?? seg.start, hi = seg.hi ?? seg.start + seg.beats;
         if (songPlay.done.has(tag + ':a') || lo < b0 - 0.05) { if (!songPlay.done.has(tag + ':a')) liveSchedule(p, seg, b0, b1, end); continue; }
         songPlay.done.add(tag + ':a');
-        const src = engine.ctx.createBufferSource(), g = engine.ctx.createGain(); src.buffer = bc.buf; g.gain.value = 0.9; src.connect(g).connect(engine.master);
+        const src = engine.ctx.createBufferSource(), g = engine.ctx.createGain(); src.buffer = bc.buf; g.gain.value = 0.9; src.connect(g).connect(trackBus(p0));
         const t = engine.audioTime(tempo.timeOf(lo)), into = (lo - seg.start) * 60 / bpm;
         src.start(Math.max(engine.ctx.currentTime, t), into + Math.max(0, engine.ctx.currentTime - t));
         // a loop that crops the section stops the audio where the loop ends (a short fade, not a click)
@@ -1060,6 +1060,7 @@ function songTick() {
 function liveSchedule(p, seg, b0, b1, end) {
   const k = `song:${p.id.split('.')[0]}`, def = engine.defs.get(p.inst); if (!def) return;
   if (!engine.ch.get(k)?.insts.length || engine.ch.get(k).partKey !== p.id + p.inst + JSON.stringify(p.params || {}) + p.patch) { engine.setCfg(k, partCfg(p), -Infinity); engine.ch.get(k).partKey = p.id + p.inst + JSON.stringify(p.params || {}) + p.patch; }
+  const c = engine.ch.get(k), bus = trackBus(p); if (c && c.bus !== bus) { c.out.disconnect(); c.out.connect(bus); c.bus = bus; }   // through the track's fader and pan
   const lo = seg.lo ?? seg.start, hi = seg.hi ?? seg.start + seg.beats;
   (p.takeEvents || []).forEach((e, i) => {
     let b = seg.start + e.b;
@@ -1216,6 +1217,32 @@ function audioLane() {
   const t = { id: 't' + Math.random().toString(36).slice(2, 8), name: `${S.name} · Live audio`, ownerName: S.name, by: S.me, inst: 'audio', patch: '', params: null, drums: false, hw: null, kind: 'audio', role: 'texture', at: clock.now() };
   setSong('lane:' + t.id, t); return songStore.song.lanes[t.id];
 }
+// ---------- the track mixer: each track's fader (dB) and pan, set in the song, so everyone hears the same balance ----------
+const MIX = new Map();   // track id -> {in: gain, pan: stereo panner, vol, panV}
+const dbToGain = (db) => (db <= -60 ? 0 : Math.pow(10, db / 20));
+function trackBus(p) {
+  const id = p?.laneId || (p?.id || '').split('.')[0] || 'none', t = songStore.song.lanes?.[id];
+  let m = MIX.get(id);
+  if (!m || m.ctx !== engine.ctx) {
+    const ctx = engine.ctx, g = ctx.createGain(), pn = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    if (pn) { g.connect(pn); pn.connect(engine.master); } else g.connect(engine.master);
+    m = { ctx, in: g, pan: pn, vol: null, panV: null }; MIX.set(id, m);
+  }
+  setMix(m, t?.vol ?? 0, t?.pan ?? 0);
+  return m.in;
+}
+function setMix(m, vol, pan) {
+  const now = engine.ctx.currentTime;
+  if (m.vol !== vol) { m.in.gain.setTargetAtTime(dbToGain(vol), now, 0.02); m.vol = vol; }
+  if (m.pan && m.panV !== pan) { m.pan.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), now, 0.02); m.panV = pan; }
+}
+// while a fader or pan is dragged: hear it at once, here; the song gets it when you let go
+function mixPreview(id, patch) {
+  const m = MIX.get(id), t = songStore.song.lanes?.[id]; if (!m || !engine.ctx) return;
+  setMix(m, patch.vol ?? t?.vol ?? 0, patch.pan ?? t?.pan ?? 0);
+}
+window.JJ.mix = (id) => { const m = MIX.get(id) || (engine.ctx && (trackBus({ laneId: id }), MIX.get(id))); return m ? { gain: m.in.gain.value, pan: m.pan ? m.pan.pan.value : 0 } : null; };
+songStore.listeners.add((k, v) => { if (k.startsWith('lane:') && engine.ctx) { const m = MIX.get(k.slice(5)); if (m) setMix(m, v?.vol ?? 0, v?.pan ?? 0); } });
 // a track you can hear: not muted for the band, and (if you've soloed tracks, which only changes what you hear) soloed
 function laneAudible(p) {
   const t = p.laneId && songStore.song.lanes?.[p.laneId];
@@ -1430,7 +1457,7 @@ function playAudioTake(p, take, seg, b0, b1, end) {
   if (hi <= lo || lo >= b1 || hi <= b0) return;
   const tag = `${p.id}.${take.id}@${seg.start.toFixed(3)}`; if (AUD.played.has(tag)) return; AUD.played.add(tag);
   if (AUD.played.size > 2000) AUD.played = new Set([...AUD.played].slice(-500));
-  const ctx = engine.ctx, src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = buf; src.connect(g).connect(engine.master);
+  const ctx = engine.ctx, src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = buf; src.connect(g).connect(trackBus(p));
   const t = engine.audioTime(tempo.timeOf(lo)), now = ctx.currentTime, into = ((lo - a0) * 60) / A.bpm + Math.max(0, now - t);
   if (into >= buf.duration) return;
   src.start(Math.max(now, t), into);
