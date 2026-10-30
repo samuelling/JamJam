@@ -138,11 +138,6 @@
   .caveat b { color: #ffcf26; }
   .tile .badge { position: absolute; top: 8px; right: 8px; z-index: 2; font: 700 9px/1 var(--sans); letter-spacing: .05em; text-transform: uppercase; padding: 3px 5px; border-radius: 3px; background: #ffcf26; color: #18181b; transform: rotate(3deg); }
   .gearitem .mic { width: 54px; height: 36px; display: grid; place-items: center; border-radius: 5px; background: #2a2412; color: #ffcf26; }
-  .cart.emptyslot { border: 1px dashed #3a3e47; background: transparent; color: var(--mz-muted); display: flex; align-items: center; gap: 8px; min-height: 44px; }
-  .cart.emptyslot .plus { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; border: 1px dashed #4a4f5b; font: 700 15px/1 var(--sans); }
-  .cart.emptyslot:hover { color: var(--mz-toner); border-color: #6a707d; }
-  .cart.emptyslot.first { border: 1px solid var(--mz-pink, #FF68BA); color: var(--mz-toner); box-shadow: 0 0 0 3px #ff68ba22; }
-  .cart.emptyslot.first .plus { background: var(--mz-pink, #FF68BA); color: #18181b; border: 0; }
   .deskempty { display: grid; gap: 10px; justify-items: start; padding: 18px 6px; }
   .deskempty b { font: 400 26px/1 var(--display); color: var(--mz-toner); }
   .deskpicks { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -182,8 +177,19 @@
   .cartwrap:hover .cartx, .cartx:focus-visible { opacity: 1; }
   .cartx:hover { color: #1a0010; background: var(--mz-pink); border-color: var(--mz-pink); }
   @media (hover: none) { .cartx { opacity: 1; } }
-  .shelf .add { display: grid; gap: 6px; margin-top: auto; }
-  .shelf .add .btn { font-size: 11px; padding: 6px 4px; }
+  .shelf { overflow-x: hidden; box-sizing: border-box; }
+  .shelf *, .shelf *::before { box-sizing: border-box; }
+  .shelf .add { display: grid; gap: 4px; margin-top: auto; padding-top: 6px; border-top: 1px dashed #25272c; }
+  .shelf .add .btn { font-size: 11px; padding: 5px 4px; width: 100%; }
+  .shelf { scrollbar-width: thin; scrollbar-color: #2c2e33 transparent; }
+  .cart.emptyslot { padding: 8px 4px 6px; }
+  /* the one empty slot: add an instrument (how many more fit, underneath) */
+  .cart.emptyslot { display: grid; justify-items: center; gap: 3px; padding: 10px 4px 8px; border: 1px dashed #3a3e47; background: transparent; color: var(--mz-muted); }
+  .cart.emptyslot .plus { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; border: 1px dashed #4a4f5b; font: 700 17px/1 var(--sans); }
+  .cart.emptyslot b { font-size: 12px; }
+  .cart.emptyslot:hover { color: var(--mz-toner); border-color: #6a707d; }
+  .cart.emptyslot.first { border: 1px solid var(--mz-pink, #FF68BA); color: var(--mz-toner); box-shadow: 0 0 0 3px #ff68ba22; }
+  .cart.emptyslot.first .plus { background: var(--mz-pink, #FF68BA); color: #18181b; border: 0; }
   .deskwrap { min-height: 0; overflow: auto; border-radius: 14px; padding: 2px; }
   .sidetabs { display: flex; flex-direction: column; gap: 8px; }
   .sidetab { position: relative; width: 44px; height: 44px; border-radius: 12px; background: #141518; border: 1px solid #000; display: grid; place-items: center; color: var(--dim); }
@@ -759,7 +765,7 @@
     <div class="shelf">
       <h3 class="legend">Your gear</h3>
       <div id="rackList" style="display:grid;gap:6px"></div>
-      <div class="add"><button id="addInstBtn" class="btn small hot">+ Instrument</button><button id="addHwBtn" class="btn small">+ My hardware</button><button id="addLiveBtn" class="btn small" title="A mic, a guitar, anything with a cable: the band hears it a few bars later">+ Live audio</button><button id="addExtBtn" class="btn small tech" title="A synth, drum machine or DAW track on a MIDI port">+ External MIDI</button></div>
+      <div class="add"><button id="addInstBtn" class="hide" aria-hidden="true" tabindex="-1"></button><button id="addHwBtn" class="btn small ghost" title="Tell us your synth or drum machine; the band hears its twin">My synth</button><button id="addLiveBtn" class="btn small ghost" title="A mic, a guitar, anything with a cable: the band hears it a few bars later">Live audio</button><button id="addExtBtn" class="btn small tech" title="A synth, drum machine or DAW track on a MIDI port">+ External MIDI</button></div>
     </div>
     <div class="deskwrap">
       <div id="device" class="device">

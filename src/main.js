@@ -1770,7 +1770,8 @@ function renderRack() {
       h('b', {}, e.cfg.ext ? e.cfg.ext.name : unit ? unit.model : def.name), h('small', {}, e.cfg.ext ? `MIDI out ${e.midiOut ? 'ch' + (e.outCh || 1) : '—'}` : `${unit ? def.name + ' · ' : ''}${e.cfg.patch} · ${e.midiCh ? 'ch' + e.midiCh : 'any'}`),
       h('span', { class: 'led', 'data-led': key(S.me, e.r), style: `--c:${RACK_COLORS[i % 4]}` })),
       h('button', { class: 'cartx', title: `Remove ${name}`, 'aria-label': `Remove ${name}`, onclick: () => removeEntry(e) }, '×'));
-  }), ...(S.listener ? [] : Array.from({ length: MAX_RACK - S.rack.length }, (_, i) => h('button', { class: 'cart emptyslot' + (i === 0 && !S.rack.length ? ' first' : ''), title: 'Put an instrument here', onclick: () => { renderLibrary(); openDrawer('#libDrawer'); } }, h('span', { class: 'plus' }, '+'), i === 0 ? h('b', {}, S.rack.length ? 'Add one' : 'Pick one') : null))));
+  }), S.listener || S.rack.length >= MAX_RACK ? null : h('button', { id: 'addSlot', class: 'cart emptyslot' + (!S.rack.length ? ' first' : ''), title: 'Put an instrument on your desk', onclick: () => { renderLibrary(); openDrawer('#libDrawer'); } },
+    h('span', { class: 'plus' }, '+'), h('b', {}, S.rack.length ? 'Add' : 'Pick one'), h('small', {}, `${MAX_RACK - S.rack.length} of ${MAX_RACK} free`)));
 }
 
 // --- the instrument on your desk

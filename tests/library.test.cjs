@@ -35,7 +35,7 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     // 1. public library from another origin
     const libId = await A.evaluate(() => JJ.addLibrary('http://localhost:8792/'));
     check(libId === 'testlab', 'a library loads from another origin (CORS server)');
-    await A.click('#addInstBtn'); await sleep(300);
+    await A.click('#addSlot'); await sleep(300);
     const cards = await A.$$eval('#libCards .tile .ptag b', (n) => n.map((x) => x.textContent));
     check(['Wobble', 'Beep A', 'Beep B'].every((n) => cards.includes(n)) && cards.includes('Juniper'), `the shared studio wall hangs the library's instruments with the built-ins (${cards.join(', ')})`);
     await A.keyboard.press('Escape');
