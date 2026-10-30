@@ -672,6 +672,7 @@
   .lhead b { display: block; font: 600 12px/1.2 var(--sans); color: var(--mz-toner); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 118px; }
   .lhead small { font: 400 10px var(--type); color: var(--mz-muted); }
   .lhead .role { font: 400 10px var(--type); background: transparent; color: var(--mz-muted); border: 0; padding: 0; }
+  .lhead .role.sound { display: block; max-width: 118px; color: var(--mz-toner); }
   .lhead.addl { align-items: flex-start; }
   .ruler .lhead { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; }
   .shead { flex: none; display: grid; align-content: start; gap: 2px; padding: 6px 7px 4px; text-align: left; border: 0; border-radius: 4px 4px 0 0; color: #18181b; cursor: pointer;
@@ -782,13 +783,25 @@
   .lvroll.editable { cursor: crosshair; touch-action: none; }
   .lvroll.editable.blank { outline: 1px dashed #ffffff26; outline-offset: -1px; }
   .lvnote.ghost { opacity: 0.7; pointer-events: none; }
+  .lvcursor { position: absolute; top: 0; bottom: 0; background: #ffffff1c; border-left: 2px solid var(--mz-toner); pointer-events: none; }
+  .stepbar { margin-top: 4px; }
   .lvtools .octs { display: inline-flex; gap: 2px; }
   .writerow { margin-top: 8px; gap: 10px; align-items: center; flex-wrap: wrap; }
   .writerow .lcdsel { font-weight: 600; }
   .lvtools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .lvroll rect title { pointer-events: none; }
   .lvhead-play { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--mz-toner); box-shadow: 0 0 6px var(--mz-toner); pointer-events: none; }
-  .details.lane { max-height: 62%; }
+  .details.lane { max-height: 62%; grid-template-columns: minmax(0, var(--fl, 1.1fr)) 8px minmax(0, var(--fr, 1fr)); gap: 0; }
+  .arranger { min-height: 100px; }
+  .details .pane { min-width: 0; overflow-x: hidden; grid-template-columns: minmax(0, 1fr); }
+  .details .pane > * { min-width: 0; }
+  .hsplit { flex: 0 0 10px; margin: -5px 0; cursor: row-resize; position: relative; touch-action: none; }
+  .vsplit { cursor: col-resize; touch-action: none; position: relative; }
+  .hsplit::after, .vsplit::after { content: ''; position: absolute; border-radius: 2px; background: #3a3f4a; }
+  .hsplit::after { left: 50%; top: 4px; width: 44px; height: 3px; margin-left: -22px; }
+  .vsplit::after { top: 50%; left: 3px; width: 3px; height: 44px; margin-top: -22px; }
+  .hsplit:hover::after, .vsplit:hover::after, .hsplit:focus-visible::after, .vsplit:focus-visible::after { background: var(--mz-toner); }
+  @media (max-width: 760px) { .details.lane { grid-template-columns: minmax(0, 1fr); gap: 10px; } .vsplit { display: none; } }
   .chord.bad { color: #ff8a8a; }
   .chord.now { background: var(--sc); color: #18181b; }
 </style>

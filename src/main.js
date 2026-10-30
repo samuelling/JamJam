@@ -7,6 +7,7 @@ import * as SR from './syncrec.js';
 import * as MATCH from './match.js';
 import * as SONG from './song.js';
 import { makeCompose, colorOfSection } from './compose.js';
+import { GENRES, presetSong } from './presets.js';
 import { Input, sendToHardware, bendBytes, srcOf } from './input.js';
 import { AudioLane, decodeChunk } from './lane.js';
 import { StepSeq } from './seq.js';
@@ -652,7 +653,7 @@ setInterval(sendFingerprint, 2000);
 // ---------- input ----------
 const input = new Input({
   plugged: (name, on) => { setStatus(on ? `${name} connected: play it and you'll hear your selected instrument.` : `${name} unplugged.`); renderInputStatus(); },
-  note: (on, note, vel, ch, port) => playNote(on, note, vel, ch, port),
+  note: (on, note, vel, ch, port) => { if (!compose.takeNote(on, note, vel, ch, port)) playNote(on, note, vel, ch, port); },
   heard: (port, ch, note) => gear.heard(port, ch, note),   // what a sequencer is playing, while you add it
   cc: (cc, val, ch, port) => {
     for (const e of targetsFor(ch, port)) {
@@ -887,7 +888,7 @@ function setSong(k, v) {
 }
 function songChanged(k, from) {
   if (k === 'transport' || k === '*') { const tr = songStore.song.transport; if (tr && tr.on && from && from !== S.me && k === 'transport') { const sec = songStore.song.sections[tr.sid]; addChat({ sys: true, text: `${S.players.get(from)?.name || 'A bandmate'} ${tr.mode === 'song' ? 'is playing the song' : `is looping ${sec ? sec.name : 'a section'}`}`, t: Date.now() }); } }
-  if (k.startsWith?.('part:')) { const [, sid, pid] = k.split(':'); dropBounce(pid); const p = songStore.song.sections[sid]?.parts?.[pid]; if (p && from && from !== S.me) addChat({ sys: true, text: `${S.players.get(from)?.name || 'A bandmate'} locked ${p.name} into ${songStore.song.sections[sid]?.name || 'a section'}`, t: Date.now() }); }
+  if (k.startsWith?.('part:')) { const [, sid, pid] = k.split(':'), p = songStore.song.sections[sid]?.parts?.[pid]; dropBounce(sid, pid, p); if (p && from && from !== S.me) addChat({ sys: true, text: `${S.players.get(from)?.name || 'A bandmate'} locked ${p.name} into ${songStore.song.sections[sid]?.name || 'a section'}`, t: Date.now() }); }
   if (k.startsWith?.('vp:') || k === 'transport' || k === '*') renderCorners();
   if (k.startsWith?.('part:') || k === '*') setTimeout(wantAudio, 400);
   compose.render(); renderSecbar(true);
@@ -901,7 +902,7 @@ const compose = makeCompose({
   removePart: (sid, pid) => setSong(`part:${sid}:${pid}`, null), choose, vote, saveVariation, restoreVariation, editTake,
   draftPart, previewNote, desk: () => (S.listener ? [] : S.rack.filter((e) => e.cfg.inst !== 'audio').map((e) => ({ r: e.r, name: describe(e.cfg, true), lane: `${S.name} · ${describe(e.cfg, true)}` }))),
   setRole: (sid, pid, role) => { for (const s of songStore.sections()) for (const p of Object.values(s.parts || {})) if (SONG.laneOf(p) === SONG.laneOf(songStore.song.sections[sid].parts[pid])) setSong(`part:${s.id}:${p.id}`, { ...p, role }); },
-  me: () => S.me, myName: () => S.name,
+  presets: () => GENRES.map((g) => ({ name: g.name, songs: g.songs.map((q) => q[0]) })), loadPreset, laneSounds, setLaneSound, midiOn: () => !!input.midi, enableMidi: () => input.enableMIDI(), me: () => S.me, myName: () => S.name,
   working: () => { const tr = songStore.song.transport, pos = positionAt(tr, tempo.beatAt(clock.now())); if (!pos) return [];
     const out = [{ who: S.name, color: colorOf(S.me), where: S.where, parts: S.rack.map((e) => describe(e.cfg, true)), sid: pos.sid, me: true }];
     for (const [pid, pl] of S.players) if (pl.role !== 'listener') { const active = (pl.rack || []).some((x) => { const c = engine.ch.get(key(pid, x.r)); return c && performance.now() - c.flashT < 4000; }); out.push({ who: pl.name, color: colorOf(pid), where: pl.where, parts: (pl.rack || []).map((x) => describe(x.cfg, true)), sid: pos.sid, active }); }
@@ -925,12 +926,16 @@ async function importSketch(file) {
     addChat({ sys: true, text: `${S.name} brought in "${song.title}": ${song.order.length} sections`, t: Date.now() }); room.send({ k: 'chat', text: `brought in "${song.title}" (${song.order.length} sections)` });
   } catch (err) { setStatus("Couldn't read that sketch: " + err.message, 'error'); }
 }
+function loadPreset(g, i) {
+  const song = presetSong(g, i); loadSong(song);
+  addChat({ sys: true, text: `${S.name} started from the preset "${song.title}" (${GENRES[g].name})`, t: Date.now() }); room.send({ k: 'chat', text: `started from the preset "${song.title}" (${GENRES[g].name})` });
+}
 function loadSong(song) {
   stopTransport();
   for (const k of Object.keys(songStore.stamps)) if (k.startsWith('sec:') || k.startsWith('part:')) { const id = k.split(':')[1]; if (!song.sections[id]) setSong(k, null); }
   setSong('title', song.title);
   for (const id of song.order) { const sec = song.sections[id]; if (!sec) continue; setSong('sec:' + id, { name: sec.name, bars: sec.bars, chords: sec.chords || [], notes: sec.notes || '' }); for (const p of Object.values(sec.parts || {})) setSong(`part:${id}:${p.id}`, p); }
-  setSong('order', song.order.filter((id) => song.sections[id]));
+  setSong('order', song.order.filter((id) => song.sections[id])); setSong('labels', song.labels || []);
   if (song.bpm) setTempo(song.bpm);
   if (song.key && MODES[song.key.mode]) setKey(song.key.root, song.key.mode);
 }
@@ -985,9 +990,13 @@ function positionAt(tr, b) {
 // locked parts play from the song in every browser. A built-in instrument's part is rendered to audio once (a loop
 // two passes long, keeping the second so the ring-out of the end carries into the top) and then just played back:
 // no live synth and no notes on the wire. Others, and parts still rendering, play live through their own channel.
-const songPlay = { done: new Set(), bounce: new Map(), queue: [], busy: false, nodes: new Set() };
+const songPlay = { done: new Set(), bounce: new Map(), queue: [], busy: false, nodes: new Set(), ending: [] };
 const partCfg = (p) => { const cfg = engine.resolve({ inst: p.inst, patch: p.patch }); if (p.params) Object.assign(cfg.params, p.params); return cfg; };
-function dropBounce(pid) { songPlay.bounce.delete(pid); }
+// a render is kept under part.take.section: let go of the ones for takes this part no longer has
+function dropBounce(sid, pid, part) {
+  const keep = new Set(SONG.takesOf(part || {}).map((t) => t.id)), a = pid + '.', z = '.' + sid;
+  for (const k of songPlay.bounce.keys()) if (k.startsWith(a) && k.endsWith(z) && !keep.has(k.slice(a.length, -z.length))) songPlay.bounce.delete(k);
+}
 async function bouncePart(p, beats, bpm) {
   const def = engine.defs.get(p.inst); if (!def || def.lib || def.internal) return null;
   const sr = engine.ctx.sampleRate, L = (beats * 60) / bpm, TAIL = 3, LEAD = 0.05;
@@ -1016,7 +1025,7 @@ function songTick() {
   const tr = songStore.song.transport;
   if (!tr || !engine.ctx || !S.me) return;
   const now = clock.now(), b0 = tempo.beatAt(now), b1 = tempo.beatAt(now + 450), end = tr.on ? Infinity : tr.stopAt ?? b0;
-  if (!tr.on && b0 > end + 8) return;
+  if (!tr.on && b0 > end + 8) { endLiveNotes(b1, end); return; }
   for (const seg of segmentsIn(tr, b0, Math.min(b1, end))) {
     const sec = songStore.song.sections[seg.sid]; if (!sec) continue;
     const bpm = tempo.bpm(tempo.timeOf(seg.start));
@@ -1025,8 +1034,8 @@ function songTick() {
       const take = SONG.currentTake(p0, seg.start); if (!take) continue;
       if (take.audio) { playAudioTake(p0, take, seg, b0, b1, end); continue; }
       if (!take.events?.length) continue;
-      const p = { ...p0, id: `${p0.id}.${take.id}`, takeEvents: take.events };   // a cache per take
-      const bkey = `${seg.beats}@${bpm.toFixed(2)}`, bc = songPlay.bounce.get(p.id);
+      const p = { ...p0, id: `${p0.id}.${take.id}.${seg.sid}`, takeEvents: take.events };   // a cache per take, per section: imports reuse part and take ids across sections
+      const bkey = `${seg.beats}@${bpm.toFixed(2)}|${JSON.stringify([p.inst, p.patch, p.params || null])}`, bc = songPlay.bounce.get(p.id);   // a new sound renders again
       const tag = `${p.id}@${seg.start}`;
       if (bc && bc.key === bkey && bc.buf) {
         const lo = seg.lo ?? seg.start, hi = seg.hi ?? seg.start + seg.beats;
@@ -1041,24 +1050,35 @@ function songTick() {
         songPlay.nodes.add(src); src.onended = () => { songPlay.nodes.delete(src); g.disconnect(); };
       } else {
         if ((!bc || bc.key !== bkey) && !songPlay.queue.some((q) => q.p.id === p.id) && engine.defs.get(p.inst) && !engine.defs.get(p.inst).lib) { songPlay.queue.push({ p, beats: seg.beats, bpm, key: bkey }); bounceNext(); }
-        liveSchedule(p, seg, b0, b1, end);
+        if (!songPlay.done.has(tag + ':a')) liveSchedule(p, seg, b0, b1, end);   // a new sound waits for the top of the next pass, as a new take does
       }
     }
   }
+  endLiveNotes(b1, end);
   for (const t of songPlay.done) { const at = +t.split('@')[1].split(':')[0]; if (at < b0 - 256) songPlay.done.delete(t); }
   if (!tr.on) for (const n of songPlay.nodes) { try { n.stop(engine.audioTime(tempo.timeOf(end)) + 0.05); } catch (_) {} }
 }
 function liveSchedule(p, seg, b0, b1, end) {
   const k = `song:${p.id.split('.')[0]}`, def = engine.defs.get(p.inst); if (!def) return;
-  if (!engine.ch.get(k)?.insts.length || engine.ch.get(k).partKey !== p.id + JSON.stringify(p.params || {}) + p.patch) { engine.setCfg(k, partCfg(p), -Infinity); engine.ch.get(k).partKey = p.id + JSON.stringify(p.params || {}) + p.patch; }
+  const partKey = p.id + p.inst + JSON.stringify(p.params || {}) + p.patch;
+  if (!engine.ch.get(k)?.insts.length || engine.ch.get(k).partKey !== partKey) { engine.setCfg(k, partCfg(p), -Infinity); engine.ch.get(k).partKey = partKey; }
   const lo = seg.lo ?? seg.start, hi = seg.hi ?? seg.start + seg.beats;
   (p.takeEvents || []).forEach((e, i) => {
-    let b = seg.start + e.b;
-    if (e.type === 'on' ? b < lo - 1e-6 || b >= hi : b < lo) return;
-    if (e.type === 'off' && b > hi) b = hi;
-    if (b < b0 - 0.02 || b >= b1 || b > end + 0.01 && e.type === 'on') return;
+    if (e.type !== 'on') return;
+    const b = seg.start + e.b;
+    if (b < lo - 1e-6 || b >= hi || b < b0 - 0.02 || b >= b1 || b > end + 0.01) return;
     const tag = `${p.id}@${seg.start}:${i}`; if (songPlay.done.has(tag)) return; songPlay.done.add(tag);
-    engine.event(k, { type: e.type, note: e.note, vel: e.vel ?? 100, at: tempo.timeOf(b) });
+    engine.event(k, { type: 'on', note: e.note, vel: e.vel ?? 100, at: tempo.timeOf(b) });
+    // a note that starts is owed its end, even if this part goes over to its render or the ticks come late
+    const off = p.takeEvents.slice(i + 1).find((q) => q.type === 'off' && q.note === e.note);
+    songPlay.ending.push({ k, note: e.note, b: off ? Math.min(seg.start + off.b, hi) : hi });
+  });
+}
+function endLiveNotes(b1, end) {
+  songPlay.ending = songPlay.ending.filter((q) => {
+    if (q.b >= b1 && q.b < end) return true;
+    engine.event(q.k, { type: 'off', note: q.note, at: tempo.timeOf(Math.min(q.b, end)) });
+    return false;
   });
 }
 setInterval(songTick, 40);
@@ -1210,6 +1230,20 @@ function draftPart(spec) {
   const def = engine.defs.get(e.cfg.inst), name = describe(e.cfg, true);
   return { id: `${S.me}-${e.r}`, name, lane: `${S.name} · ${name}`, role: SONG.guessRole({ name, inst: e.cfg.inst, patch: e.cfg.patch, drums: def?.drums }),
     inst: e.cfg.inst, patch: e.cfg.patch, params: { ...e.cfg.params }, drums: !!def?.drums, by: S.me, byName: S.name, hw: e.cfg.hw || null, muted: false, votes: {} };
+}
+// the built-in sounds a lane can move to: every browser has these, and a lane stays drums or stays notes, because a
+// drum part's note numbers are kit voices
+function laneSounds(drums) { return [...engine.defs.values()].filter((d) => !d.internal && !d.lib && !!d.drums === !!drums).map((d) => ({ id: d.id, name: d.name, patches: Object.keys(d.presets || {}).map((t) => [t, patchName(d, t)]) })); }
+// give a lane another instrument, in every section: the notes and takes stay, the sound and the lane's name change.
+// The parts' settings go too, since they belonged to the old instrument. Returns the lane's new name.
+function setLaneSound(lane, inst, patch) {
+  const parts = []; for (const s of songStore.sections()) for (const p of Object.values(s.parts || {})) if (SONG.laneOf(p) === lane && p.kind !== 'audio') parts.push([s.id, p]);
+  if (!parts.length) return lane;
+  const name = describe({ inst, patch }, true), first = parts[0][1], who = first.byName && lane.startsWith(first.byName + ' · ') ? first.byName + ' · ' : '';
+  const taken = new Set(); for (const s of songStore.sections()) for (const p of Object.values(s.parts || {})) if (SONG.laneOf(p) !== lane) taken.add(SONG.laneOf(p));
+  let next = who + name; for (let n = 2; taken.has(next); n++) next = `${who}${name} ${n}`;
+  for (const [sid, p] of parts) setSong(`part:${sid}:${p.id}`, { ...p, inst, patch, params: null, hw: null, name: next.slice(who.length), lane: next });
+  return next;
 }
 // hear a note as you place it, on the lane's own instrument
 const PREVIEW = { k: null, sig: '', timer: 0 };
@@ -2559,7 +2593,7 @@ Object.assign(window.JJ, {
   own: (id, v) => setOwned(id, v),
   loopRange: (a, b) => loopRange(a, b), editTake: (sid, pid, ev, w) => editTake(sid, pid, ev, w), lockAudio: () => lockAudio(), recAll: (on) => setRecAll(on), audio: () => ({ have: [...blobs.bytes.keys()], started: AUD.started }), lane: () => lane,
   addVirtual: (kind, style) => band.add(kind, style), setVirtual: (id, p) => band.set(id, p), removeVirtual: (id) => band.remove(id), lockVirtual: (id, sid) => band.lock(id, sid), vplan: (id) => band.plan.get(id), players: () => songStore.song.players || {},
-  setKey: (root, mode) => setKey(root, mode), choose: (sid, pid, t) => choose(sid, pid, t), vote: (sid, pid, t) => vote(sid, pid, t), saveVar: (n) => saveVariation(n), restoreVar: (n) => restoreVariation(n), song: () => songStore.song, setSong: (k, v) => setSong(k, v), loadSong: (sg) => loadSong(sg), songFromTracker: (j) => SONG.songFromTracker(j), songFromMidi: (b) => SONG.songFromMidi(b), songMidi: () => Array.from(SONG.songToMidi(songForExport())), play: (mode, sid) => startTransport(mode, sid), stopSong: () => stopTransport(), lockIn: (r) => lockIn(entry(r)), goRoom: (w) => goRoom(w), bounced: () => [...songPlay.bounce].filter(([, v]) => v.buf).map(([k]) => k), match: (r, on) => { const e = entry(r); if (e) return on ? startMatch(e) : stopMatch(e); }, matchScore: async (r, params) => { const m = entry(r)?.match; return m && m.fitter.scoreAll(params); }, matchObs: (r) => entry(r)?.match?.fitter.obs.map((o) => ({ note: o.note, held: o.held, att: o.att, noise: +o.noise.toFixed(2), hSus: o.hSus && o.hSus.map(Math.round).join(' '), curve: o.curve.slice(0, 40).map(Math.round).join(' ') })),
+  setKey: (root, mode) => setKey(root, mode), choose: (sid, pid, t) => choose(sid, pid, t), vote: (sid, pid, t) => vote(sid, pid, t), saveVar: (n) => saveVariation(n), restoreVar: (n) => restoreVariation(n), song: () => songStore.song, setSong: (k, v) => setSong(k, v), loadSong: (sg) => loadSong(sg), songFromTracker: (j) => SONG.songFromTracker(j), songFromMidi: (b) => SONG.songFromMidi(b), songMidi: () => Array.from(SONG.songToMidi(songForExport())), play: (mode, sid) => startTransport(mode, sid), stopSong: () => stopTransport(), lockIn: (r) => lockIn(entry(r)), goRoom: (w) => goRoom(w), bounced: () => [...songPlay.bounce].filter(([, v]) => v.buf).map(([k]) => k), bounceKeys: () => [...songPlay.bounce].map(([k, v]) => [k, v.key]), match: (r, on) => { const e = entry(r); if (e) return on ? startMatch(e) : stopMatch(e); }, matchScore: async (r, params) => { const m = entry(r)?.match; return m && m.fitter.scoreAll(params); }, matchObs: (r) => entry(r)?.match?.fitter.obs.map((o) => ({ note: o.note, held: o.held, att: o.att, noise: +o.noise.toFixed(2), hSus: o.hSus && o.hSus.map(Math.round).join(' '), curve: o.curve.slice(0, 40).map(Math.round).join(' ') })),
   matchState: (r) => { const m = entry(r)?.match; return m && { why: m.why, on: m.on, obs: m.fitter.obs.length, renders: m.fitter.renders, ms: m.fitter.ms, lag: m.lag, sim: m.sim, applied: m.applied, d: m.fitter.bestD, params: entry(r).cfg.params }; }, react: (r) => react(r), listen: (code) => enter(code, true), assist: (v) => { S.assist = v; },
   tape: () => toggleTape(), sync: () => startSync(), syncState: () => { const r = S.srec; return r && { id: r.id, done: r.done, files: r.files.map((f) => f.name + ':' + f.data.length), got: [...r.got.keys()], zip: r.zip && r.zip.url, T0: r.T0, T1: r.T1 }; }, talk: (on) => talk.setOpen(on), voices: () => [...talk.voices.entries()].map(([id, v]) => ({ id, level: v.level, pan: v.pan.pan.value })), ducked: () => talk.ducked, tapes: () => tape.takes.map((t) => ({ seconds: t.seconds, size: t.blob.size, url: t.url })),
   pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 't' + i); else padUp('t' + i); },
