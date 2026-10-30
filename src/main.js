@@ -51,6 +51,8 @@ const S = {
   libTab: 'builtin', standins: new Map(),
   owned: new Map((() => { try { return JSON.parse(store.get('gear') || '[]'); } catch (_) { return []; } })()),  // hardware you own: id -> {port, ch}
   hwFilter: 'all',
+  key: { root: 9, mode: '', at: 0, by: '' },   // the room's key: mode '' = free
+  lockKey: false, snapped: new Map(),
   routes: new Map(),                       // a bandmate's part (channel key) -> {port, ch, lat, mute}: played on your MIDI gear
   mclock: { port: '', on: false, lat: 0, next: null },  // MIDI clock out: the room's tempo to your drum machines  // channel key -> {wanted cfg} while a stand-in plays someone's library instrument
 };
@@ -146,7 +148,7 @@ function onEntered() {
 
 const publicRack = (withSeq = false) => S.rack.map((e) => ({ r: e.r, cfg: e.cfg, budget: budgetOf(e), seq: withSeq ? seqs.get(key(S.me, e.r))?.snapshot() : undefined }));
 function sayHello(id) {
-  room.send({ k: 'hello', v: VERSION, name: S.name, rack: publicRack(true), hashes: engine.hashes, lane: { on: lane.on, bars: lane.bars }, L: lookahead() }, id);
+  room.send({ k: 'hello', v: VERSION, name: S.name, rack: publicRack(true), hashes: engine.hashes, lane: { on: lane.on, bars: lane.bars }, L: lookahead(), key: S.key }, id);
   if (clock.isLeader) {
     room.send({ k: 'tempo', segs: tempo.toJSON() }, id);
     const items = S.chat.filter((c) => !c.sys).slice(-50).map(({ name, text, t, from }) => ({ name, text, t, from }));
@@ -229,10 +231,12 @@ function onMessage(p, m) {
       const first = !S.players.has(p.id);
       S.players.set(p.id, { ...(S.players.get(p.id) || {}), name: m.name, rack: [], hashes: m.hashes, lane: m.lane, peerL: m.L, v: m.v });
       for (const x of m.rack || []) remoteCfg(p.id, x.r, x.cfg, -Infinity, x.budget, x.seq);
+      if (m.key) takeKey(m.key, false);
       if (first) { addChat({ sys: true, text: `${m.name} walked in`, t: Date.now() }); engine.chime(false); }
       if ($('#status').dataset.kind !== 'error') setStatus('');
       renderCorners(); renderMidiPanel(); break;
     }
+    case 'key': takeKey(m.key, true, p.id); break;
     case 'cfg': remoteCfg(p.id, m.r, m.cfg, clock.locked ? m.at : -Infinity, m.budget); renderCorners(); break;
     case 'unrack': {
       const pl = S.players.get(p.id); if (pl) pl.rack = pl.rack.filter((x) => x.r !== m.r);
@@ -373,8 +377,83 @@ function targetsFor(ch) {
   const t = S.rack.filter((e) => e.midiCh === ch || e.midiCh === 0);
   return t.length ? t : [selEntry()].filter(Boolean);
 }
+// ---------- the room's key, the key lock, chord pads ----------
+const NOTE_NAMES = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
+const MODES = {
+  major: { name: 'major', steps: [0, 2, 4, 5, 7, 9, 11] }, minor: { name: 'minor', steps: [0, 2, 3, 5, 7, 8, 10] },
+  dorian: { name: 'dorian', steps: [0, 2, 3, 5, 7, 9, 10] }, mixolydian: { name: 'mixolydian', steps: [0, 2, 4, 5, 7, 9, 10] },
+  pentmaj: { name: 'major pentatonic', steps: [0, 2, 4, 7, 9], chords: 'major' }, pentmin: { name: 'minor pentatonic', steps: [0, 3, 5, 7, 10], chords: 'minor' },
+  blues: { name: 'blues', steps: [0, 3, 5, 6, 7, 10], chords: 'minor' },
+};
+const keyName = (k = S.key) => (k.mode ? `${NOTE_NAMES[k.root]} ${MODES[k.mode].name}` : 'Free');
+const inKey = (n, k = S.key) => !k.mode || MODES[k.mode].steps.includes(((n - k.root) % 12 + 12) % 12);
+function snapNote(n, ch) {
+  if (!S.lockKey || !S.key.mode) return n;
+  const e = targetsFor(ch)[0]; if (e && engine.defs.get(e.cfg.inst)?.drums) return n;
+  for (const d of [0, 1, -1, 2, -2]) if (inKey(n + d)) return n + d;
+  return n;
+}
+// the latest change wins everywhere (room time, then jammer id), so two people changing it at once still agree
+function takeKey(k, tell, from) {
+  if (!k || typeof k.root !== 'number' || !(k.mode === '' || MODES[k.mode])) return;
+  if (k.at < S.key.at || (k.at === S.key.at && String(k.by) <= String(S.key.by))) return;
+  S.key = { root: ((k.root % 12) + 12) % 12, mode: k.mode, at: k.at, by: k.by };
+  if (tell && from) addChat({ sys: true, text: `${S.players.get(from)?.name || 'A bandmate'} set the key: ${keyName()}`, t: Date.now() });
+  renderKey();
+}
+function setKey(root, mode) {
+  const k = { root, mode, at: clock.now(), by: S.me || '' };
+  takeKey(k, false); room.send({ k: 'key', key: S.key });
+}
+// diatonic triads on each degree (pentatonic and blues borrow the major or minor chords)
+function padChords() {
+  if (!S.key.mode) return [];
+  const M = MODES[S.key.mode], st = MODES[M.chords || S.key.mode].steps;
+  const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+  const out = [];
+  for (let d = 0; d < 7; d++) {
+    const t = [0, 2, 4].map((j) => st[(d + j) % 7] + 12 * Math.floor((d + j) / 7));
+    const third = t[1] - t[0], fifth = t[2] - t[0], qual = third === 4 && fifth === 7 ? '' : third === 3 && fifth === 7 ? 'm' : third === 3 && fifth === 6 ? '°' : '+';
+    const root = (S.key.root + t[0]) % 12;
+    const flat = st[d] < [0, 2, 4, 5, 7, 9, 11][d] ? '♭' : '';   // named against the major scale, as players say it (♭VII in mixolydian)
+    out.push({ d, roman: flat + (qual === 'm' || qual === '°' ? ROMAN[d].toLowerCase() : ROMAN[d]) + (qual === '°' ? '°' : ''), name: NOTE_NAMES[root] + qual, tones: t });
+  }
+  // the useful six, in the order players reach for them
+  const base = M.chords || S.key.mode;
+  const want = { major: [0, 3, 4, 5, 1, 2], minor: [0, 3, 4, 5, 6, 2], dorian: [0, 3, 6, 2, 4, 1], mixolydian: [0, 3, 6, 4, 1, 5] }[base];
+  return want.map((i) => out[i]);
+}
+const padHeld = new Map();
+function padDown(c, id) {
+  const e = selEntry(); if (!e) return;
+  // a comfortable voicing: root in octave 3, close triad above it, plus the root on top
+  const base = 48 + S.key.root, notes = [base + c.tones[0] - 12, base + c.tones[0], base + c.tones[1], base + c.tones[2], base + c.tones[0] + 12].map((n) => (n < 40 ? n + 12 : n));
+  padHeld.set(id, notes);
+  for (const n of notes) input.press(n, 96, 0);
+}
+function padUp(id) { const notes = padHeld.get(id); padHeld.delete(id); if (notes) for (const n of notes) input.release(n, 0); }
+function renderKey() {
+  const sel = $('#keySel'); if (sel) sel.value = S.key.mode ? `${S.key.root}:${S.key.mode}` : '';
+  setCls($('#lockBtn'), 'on', S.lockKey); $('#lockBtn')?.setAttribute('aria-pressed', String(S.lockKey));
+  $('#lockBtn')?.classList.toggle('hide', !S.key.mode);
+  for (const [n, el] of keyEls) { el.classList.toggle('inkey', !!S.key.mode && inKey(n)); el.classList.toggle('root', !!S.key.mode && (n - S.key.root) % 12 === 0); el.classList.toggle('outkey', !!S.key.mode && S.lockKey && !inKey(n)); }
+  const pads = $('#pads'); if (!pads) return;
+  const e = selEntry(), drums = !!(e && engine.defs.get(e.cfg.inst)?.drums);
+  const list = drums ? [] : padChords();
+  pads.classList.toggle('hide', !list.length);
+  pads.replaceChildren(...list.map((c, i) => {
+    const b = h('button', { class: 'pad', title: `${c.name} · key ${i + 1}`, 'data-pad': i }, h('b', {}, c.name), h('small', {}, c.roman));
+    b.addEventListener('pointerdown', (ev) => { ev.preventDefault(); b.setPointerCapture(ev.pointerId); b.classList.add('down'); padDown(c, 'p' + i); });
+    const up = () => { b.classList.remove('down'); padUp('p' + i); };
+    b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
+    return b;
+  }));
+}
+
 function playNote(on, note, vel, ch = 0) {
   if (!S.me) return;
+  { const raw = ch * 128 + note;   // the key lock: every key you press lands on a note of the room's key
+    if (on) { const sn = snapNote(note, ch); S.snapped.set(raw, sn); note = sn; } else { note = S.snapped.get(raw) ?? note; S.snapped.delete(raw); } }
   const rk = ch * 128 + note;
   const targets = on ? targetsFor(ch) : (S.route.get(rk) || []).map(entry).filter(Boolean);
   if (on) S.route.set(rk, targets.map((e) => e.r)); else S.route.delete(rk);
@@ -1179,7 +1258,7 @@ function renderKeyboard() {
   if (drums && input.octave > 2) input.octave = 2;
   if (!drums && input.octave < 3) input.octave = 4;
   const sig = input.octave + '|' + drums;
-  if (sig === kbSig && keyEls.size) return;
+  if (sig === kbSig && keyEls.size) { renderKey(); return; }
   kbSig = sig;
   const base = 12 * (input.octave + 1);
   keyEls = new Map();
@@ -1191,9 +1270,17 @@ function renderKeyboard() {
     keyEls.set(n, el); keys.push(el);
   }
   kb.replaceChildren(...keys);
+  renderKey();
 }
 const pointers = new Map();
 function keyFromPoint(x, y) { const el = document.elementFromPoint(x, y)?.closest('[data-note]'); return el ? +el.dataset.note : null; }
+window.addEventListener('keydown', (ev) => {
+  if (ev.repeat || ev.metaKey || ev.ctrlKey || ev.altKey || /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) return;
+  const i = '123456'.indexOf(ev.key); if (i < 0 || !S.me) return;
+  const c = padChords()[i]; if (!c || padHeld.has('k' + i)) return;
+  $(`[data-pad="${i}"]`)?.classList.add('down'); padDown(c, 'k' + i);
+});
+window.addEventListener('keyup', (ev) => { const i = '123456'.indexOf(ev.key); if (i < 0) return; $(`[data-pad="${i}"]`)?.classList.remove('down'); padUp('k' + i); });
 function wireKeyboard() {
   const kb = $('#keyboard');
   kb.addEventListener('pointerdown', (e) => {
@@ -1419,6 +1506,9 @@ function wire() {
   setTech((() => { try { return store.get('tech') === '1'; } catch (_) { return false; } })());
   $('#techBtn').onclick = () => { setTech(document.body.classList.contains('simple')); renderDevice(); };
   document.fonts?.ready.then(hangLights); setTimeout(hangLights, 300);
+  { const ks = $('#keySel'); ks.replaceChildren(h('option', { value: '' }, 'Free'), ...Object.keys(MODES).flatMap((m) => NOTE_NAMES.map((nm, r) => h('option', { value: `${r}:${m}` }, `${nm} ${MODES[m].name}`))));
+    ks.onchange = () => { const [r, m] = ks.value ? ks.value.split(':') : [S.key.root, '']; setKey(+r, m); };
+    $('#lockBtn').onclick = () => { S.lockKey = !S.lockKey; renderKey(); }; renderKey(); }
   $('#addHwBtn').onclick = () => { renderHardware(); openDrawer('#hwDrawer'); setTimeout(() => $('#hwSearch').focus(), 50); };
   $('#addExtBtn').onclick = async () => { if (!input.midi) await input.enableMIDI(); addEntry({ ext: { name: 'My synth', port: input.outputs[0]?.id || '', ch: 1 } }); };
   $('#hwSearch').addEventListener('input', renderHardware);
@@ -1474,6 +1564,8 @@ Object.assign(window.JJ, {
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
   own: (id, v) => setOwned(id, v),
+  setKey: (root, mode) => setKey(root, mode),
+  pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 't' + i); else padUp('t' + i); },
   addExternal: async (name, port, ch, twin) => { if (!input.midi) await input.enableMIDI(); return addEntry({ ext: { name, port, ch }, inst: twin })?.r; },
   enableMIDI: () => input.enableMIDI(),
   route: (k, patch) => setRoute(k, patch),

@@ -282,9 +282,9 @@
   .keyhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .keyhead .help { color: #b4a594; }
   #keyboard { display: flex; height: clamp(84px, 14vh, 140px); margin-top: 8px; user-select: none; touch-action: none; position: relative; }
-  .key { flex: 1; position: relative; background-image: var(--dots, none), linear-gradient(180deg, #e9e8e3, #d5d3cb); border-radius: 0 0 6px 6px; margin-right: 2px; box-shadow: inset 0 -4px 0 #b9b6ac, 0 2px 0 #000; }
+  .key { flex: 1; position: relative; background-image: var(--dots, none), var(--kdots, none), linear-gradient(180deg, #e9e8e3, #d5d3cb); border-radius: 0 0 6px 6px; margin-right: 2px; box-shadow: inset 0 -4px 0 #b9b6ac, 0 2px 0 #000; }
   .key.black { flex: 0 0 0; margin: 0; z-index: 2; pointer-events: none; box-shadow: none; background: none; }
-  .key.black::before { content: ''; position: absolute; left: -13px; width: 24px; top: 0; height: 60%; border-radius: 0 0 5px 5px; pointer-events: auto; background-image: var(--dots, none), linear-gradient(180deg, #2b2d33, #121316); box-shadow: inset 0 -3px 0 #000, 0 2px 0 #000; }
+  .key.black::before { content: ''; position: absolute; left: -13px; width: 24px; top: 0; height: 60%; border-radius: 0 0 5px 5px; pointer-events: auto; background-image: var(--dots, none), var(--kdots, none), linear-gradient(180deg, #2b2d33, #121316); box-shadow: inset 0 -3px 0 #000, 0 2px 0 #000; }
   .key.down { background-image: var(--dots, none), linear-gradient(180deg, #ffb48f, var(--te-orange)); box-shadow: inset 0 -2px 0 #c53d0a; }
   .key.black.down::before { background-image: var(--dots, none), linear-gradient(180deg, #ff8d5e, #c43e0b); }
   .klabel { position: absolute; bottom: 7px; left: 0; right: 0; text-align: center; font: 600 9px var(--mono); color: #7b776c; pointer-events: none; letter-spacing: .05em; }
@@ -442,6 +442,20 @@
   .quick span { font: 700 14px/1.1 var(--sans); }
   .quick small { font: 400 11px var(--type); color: #444; }
   .quickpicks .btn.ghost { color: #18181b; border-color: #18181b55; margin-left: auto; }
+
+  .key.inkey { --kdots: radial-gradient(circle at 50% 88%, #0055B355 0 4px, #0000 5px); }
+  .key.root { --kdots: radial-gradient(circle at 50% 88%, #F2369B 0 5px, #0000 6px); }
+  .key.black.inkey::before { --kdots: radial-gradient(circle at 50% 84%, #7DB0FFaa 0 3px, #0000 4px); }
+  .key.black.root::before { --kdots: radial-gradient(circle at 50% 84%, #FF68BA 0 4px, #0000 5px); }
+  .key.outkey { opacity: .45; }
+  .key.black.outkey::before { opacity: .5; }
+  .pads { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; padding: 0 12px 10px; }
+  .pad { display: grid; gap: 2px; justify-items: start; padding: 9px 12px; border-radius: 6px; background: linear-gradient(180deg, #2a2c31, #1b1c20); border: 1px solid #000; box-shadow: inset 0 1px 0 #ffffff12, 0 3px 0 #000; color: var(--mz-toner); touch-action: none; }
+  .pad b { font: 700 20px/1 var(--sans); letter-spacing: -.02em; }
+  .pad small { font: 400 11px var(--type); color: var(--mz-muted); }
+  .pad:nth-child(1) { box-shadow: inset 3px 0 0 var(--mz-pink), inset 0 1px 0 #ffffff12, 0 3px 0 #000; }
+  .pad.down { transform: translateY(2px); background: linear-gradient(180deg, var(--mz-pink), #c2307b); color: #1a0010; box-shadow: 0 1px 0 #000; }
+  .pad.down small { color: #3a0a22; }
 </style>
 <script src="mp-config.js"></script>
 </head>
@@ -481,6 +495,7 @@
     <div class="readout"><span id="roomCode" class="lcd" title="Room code"></span><button id="copyBtn" class="btn small">Invite</button></div>
     <div class="readout"><span class="legend">BPM</span><button id="bpmDown" class="btn small" aria-label="Slower">−</button><span id="bpmLcd" class="lcd" tabindex="0" role="spinbutton" aria-label="Tempo" title="Drag, scroll or use the arrow keys">96</span><button id="bpmUp" class="btn small" aria-label="Faster">+</button>
       <button id="metroBtn" class="round" title="Metronome" aria-label="Metronome"><svg width="15" height="15" viewBox="0 0 16 16"><path d="M5 15h6L9.5 2h-3z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 11l4-6" stroke="currentColor" stroke-width="1.5"/></svg></button><span id="tempoNote" class="help"></span></div>
+    <div class="readout"><span class="legend">Key</span><select id="keySel" class="lcdsel" aria-label="The room's key" title="Everyone shares the key. The keys of the scale light up, and chord pads appear."></select></div>
     <div class="readout tech"><span class="legend">Quant</span><div class="seg" id="quantSeg"><button data-q="0" class="on">OFF</button><button data-q="0.25">1/16</button><button data-q="0.5">1/8</button><button data-q="1">1/4</button></div></div>
     <div class="lookbar tech"><span class="legend">Look</span><div class="meter" title="How far ahead your notes are scheduled"><i id="lookMeter"></i></div><span id="lookVal" class="lcd" style="min-width:72px;text-align:center;font-size:13px;padding:3px 6px">0 ms</span>
       <button id="lookAutoBtn" class="btn small" title="Back to the measured lookahead">AUTO</button><input id="lookSlider" type="range" min="0" max="600" value="40" aria-label="Lookahead (manual)" style="width:70px"></div>
@@ -517,7 +532,9 @@
   <div class="keybed">
     <div class="keyhead"><span class="legend" style="color:#b4a594">Keys</span><span id="inputStatus" class="help mono"></span>
       <span class="help">A W S E D F T G Y H U J K · Z X octave · C V velocity · Space sustain</span><span style="margin-left:auto"></span>
+      <button id="lockBtn" class="btn small hide" aria-pressed="false" title="Every key you press lands on a note of the room's key">Lock to key</button>
       <button id="midiBtn" class="btn small">Enable MIDI</button><button id="panicBtn" class="btn small" title="Stop every note">Panic</button></div>
+    <div id="pads" class="pads hide" aria-label="Chord pads (keys 1 to 6)"></div>
     <div id="keyboard" aria-label="On-screen keyboard"></div>
   </div>
 
