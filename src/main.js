@@ -2,6 +2,7 @@ import { SharedClock, Tempo } from './clock.js';
 import { Room } from './net.js';
 import { Engine } from './engine.js';
 import { Tape } from './tape.js';
+import { Talk } from './talk.js';
 import { Input, sendToHardware, bendBytes } from './input.js';
 import { AudioLane, decodeChunk } from './lane.js';
 import { StepSeq } from './seq.js';
@@ -110,8 +111,10 @@ const room = new Room({
   handlers: {
     status(kind, text) { setStatus(text, kind); if (kind === 'in') onEntered(); },
     roster() { updateLeader(); renderCorners(); },
+    track(p, track, stream) { talk.onTrack(p, track, stream); },
     peerOpen(p) { sayHello(p.id); },
     peerLeft(p) {
+      talk.drop(p.id);
       addChat({ sys: true, text: `${S.players.get(p.id)?.name || p.name} left`, t: Date.now() });
       for (const k of [...engine.ch.keys()]) if (pidOf(k) === p.id) { engine.removeChannel(k); seqs.delete(k); }
       S.players.delete(p.id); S.sync.delete(p.id); S.needs.delete(p.id); S.slackRep.delete(p.id);
@@ -124,6 +127,7 @@ const room = new Room({
 window.JJ.room = room;
 const lane = new AudioLane(engine, (buf) => room.sendBinary(buf));
 const tape = new Tape(engine);
+const talk = new Talk(engine, room);
 engine.tempo = tempo;   // instruments with their own patterns follow the room's tempo
 
 function leaderId() {
@@ -668,7 +672,7 @@ function cornerCard(id, rack) {
   const vol = h('input', { type: 'range', min: 0, max: 1.5, step: 0.01, value: v.vol, 'aria-label': 'Volume in your mix', oninput: (e) => { S.vol.set(id, { ...(S.vol.get(id) || { mute: false }), vol: +e.target.value }); applyPlayerVolume(id); } });
   const mute = h('button', { class: 'btn small' + (v.mute ? ' on' : ''), title: 'Mute in your mix', onclick: (e) => { const x = S.vol.get(id) || { vol: 1, mute: false }; x.mute = !x.mute; S.vol.set(id, x); applyPlayerVolume(id); e.target.classList.toggle('on', x.mute); } }, 'M');
   return h('div', { class: 'corner' + (mine ? ' me' : ''), style: `--c:${c}` },
-    h('div', { class: 'chead' }, h('div', { class: 'cname' }, (mine ? S.name : pl.name || peer?.name || 'Jammer') + (mine ? ' · you' : '')), h('span', { class: 'feel', 'data-feel': id }, h('i'), h('span')), h('span', { class: 'tag tech', 'data-path': id })),
+    h('div', { class: 'chead' }, h('div', { class: 'cname' }, (mine ? S.name : pl.name || peer?.name || 'Jammer') + (mine ? ' · you' : '')), h('span', { class: 'talkmark', 'data-talk': id, title: 'Talking' }, h('i'), h('i'), h('i')), h('span', { class: 'feel', 'data-feel': id }, h('i'), h('span')), h('span', { class: 'tag tech', 'data-path': id })),
     h('div', { class: 'gearrow' }, ...rack.map((x) => {
       const def = engine.defs.get(x.cfg?.inst), unit = x.cfg?.hw && engine.unit(x.cfg.hw);
       return h('div', { class: 'gearitem', title: describe(x.cfg) }, iconEl(x.cfg?.ext ? { id: 'midi' } : def), h('span', { class: 'led', 'data-led': key(id, x.r), style: `--c:${c}` }), h('small', { 'data-budget': key(id, x.r) }, x.cfg?.ext ? x.cfg.ext.name : unit ? unit.model : def?.name || '…'));
@@ -1559,6 +1563,12 @@ function wire() {
     ks.onchange = () => { const [r, m] = ks.value ? ks.value.split(':') : [S.key.root, '']; setKey(+r, m); };
     $('#lockBtn').onclick = () => { S.lockKey = !S.lockKey; renderKey(); }; renderKey(); }
   $('#tapeBtn').onclick = toggleTape;
+  // Talk: click to leave your mic open, or hold to talk and let go to stop
+  { const b = $('#talkBtn'); let downAt = 0, wasOpen = false;
+    const show = () => { setCls(b, 'on', talk.open); b.setAttribute('aria-pressed', String(talk.open)); b.querySelector('span').textContent = talk.open ? 'Talking' : 'Talk'; };
+    b.addEventListener('pointerdown', async (e) => { e.preventDefault(); downAt = performance.now(); wasOpen = talk.open; if (!wasOpen) { if (!(await talk.setOpen(true))) { setStatus("Couldn't open your mic. Check the browser's permission for this page.", 'error'); return; } show(); } });
+    b.addEventListener('pointerup', async () => { const held = performance.now() - downAt > 350; if (wasOpen || held) await talk.setOpen(false); show(); });
+    b.addEventListener('keydown', async (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); await talk.setOpen(!talk.open); show(); } }); }
   $('#tapesBtn').onclick = () => { renderTapes(); openDrawer('#tapeDrawer'); };
   $('#addHwBtn').onclick = () => { renderHardware(); openDrawer('#hwDrawer'); setTimeout(() => $('#hwSearch').focus(), 50); };
   $('#addExtBtn').onclick = async () => { if (!input.midi) await input.enableMIDI(); addEntry({ ext: { name: 'My synth', port: input.outputs[0]?.id || '', ch: 1 } }); };
@@ -1599,6 +1609,12 @@ setInterval(() => {
   if (!S.me) return;
   computeAutoL();
   updateCorners(); renderLook(); paintRemoteKeys(); renderTempo(); renderMachinaDyn();
+  if (engine.ctx) {
+    talk.tick();
+    talk.place([S.me, ...room.peers.keys()]);
+    for (const el of $$('[data-talk]')) setCls(el, 'on', talk.talking(el.dataset.talk === S.me ? 'me' : el.dataset.talk));
+    setCls($('#talkBtn'), 'live', talk.talking('me'));
+  }
   setCls($('#onAir'), 'live', [...room.peers.values()].some((p) => p.path !== 'connecting'));
   const now = performance.now();
   for (const e of S.rack) { const c = engine.ch.get(key(S.me, e.r)); for (const led of $$(`#rackList [data-led="${key(S.me, e.r)}"]`)) if (c) setCls(led, 'lit', now - c.flashT < 120 || c.held.size > 0); }
@@ -1616,7 +1632,7 @@ Object.assign(window.JJ, {
   setTempo: (b) => setTempo(b),
   own: (id, v) => setOwned(id, v),
   setKey: (root, mode) => setKey(root, mode),
-  tape: () => toggleTape(), tapes: () => tape.takes.map((t) => ({ seconds: t.seconds, size: t.blob.size, url: t.url })),
+  tape: () => toggleTape(), talk: (on) => talk.setOpen(on), voices: () => [...talk.voices.entries()].map(([id, v]) => ({ id, level: v.level, pan: v.pan.pan.value })), ducked: () => talk.ducked, tapes: () => tape.takes.map((t) => ({ seconds: t.seconds, size: t.blob.size, url: t.url })),
   pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 't' + i); else padUp('t' + i); },
   addExternal: async (name, port, ch, twin) => { if (!input.midi) await input.enableMIDI(); return addEntry({ ext: { name, port, ch }, inst: twin })?.r; },
   enableMIDI: () => input.enableMIDI(),

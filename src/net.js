@@ -170,23 +170,45 @@ export class Room {
   makePC(p) {
     const pc = new RTCPeerConnection({ iceServers: ICE });
     p.pc = pc;
-    pc.onicecandidate = (ev) => { if (ev.candidate) this.relayEvent(p.id, { k: 'sig', ice: ev.candidate.toJSON() }); };
+    pc.onicecandidate = (ev) => { if (ev.candidate) this.signal(p, { k: 'sig', ice: ev.candidate.toJSON() }); };
     pc.ondatachannel = (ev) => this.wireDC(p, ev.channel);
+    // adding a voice track later renegotiates; over the direct link once it's open (perfect negotiation: the jammer
+    // with the larger id is the polite one and gives way when both offer at once)
+    p.negotiate = async () => {
+      if (!p.dc || p.dc.readyState !== 'open') { p.needNeg = true; return; }   // the first handshake is driven by addPeer
+      p.needNeg = false;
+      try { p.makingOffer = true; await pc.setLocalDescription(); this.signal(p, { k: 'sig', sdp: pc.localDescription.toJSON() }); }
+      catch (_) {} finally { p.makingOffer = false; }
+    };
+    pc.onnegotiationneeded = () => p.negotiate();
+    pc.ontrack = (ev) => this.h.track?.(p, ev.track, ev.streams[0]);
+    for (const t of this.tracks || []) { try { pc.addTrack(t.track, t.stream); } catch (_) {} }
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === 'failed' && p.path !== 'relay') this.setPath(p, 'relay');
     };
   }
 
+  signal(p, e) {
+    if (p.dc && p.dc.readyState === 'open') { try { p.dc.send(JSON.stringify({ __sig: e })); return true; } catch (_) {} }
+    return this.relayEvent(p.id, e);
+  }
+  // a local track (talkback) for every link, now and later
+  addTrack(track, stream) {
+    this.tracks = this.tracks || []; this.tracks.push({ track, stream });
+    for (const p of this.peers.values()) if (p.pc) { try { p.pc.addTrack(track, stream); } catch (_) {} }
+  }
   async onSignal(p, e) {
     if (!this.p2p) return;
     if (!p.pc) this.makePC(p);
     const pc = p.pc;
     try {
       if (e.sdp) {
+        const collision = e.sdp.type === 'offer' && (p.makingOffer || pc.signalingState !== 'stable');
+        if (collision && String(this.jid) < String(p.id)) return;   // impolite: ignore their offer, ours wins
         await pc.setRemoteDescription(e.sdp);
         if (e.sdp.type === 'offer') {
           await pc.setLocalDescription(await pc.createAnswer());
-          this.relayEvent(p.id, { k: 'sig', sdp: pc.localDescription.toJSON() });
+          this.signal(p, { k: 'sig', sdp: pc.localDescription.toJSON() });
         }
         for (const c of p.pendingIce.splice(0)) await pc.addIceCandidate(c).catch(() => {});
       } else if (e.ice) {
@@ -209,10 +231,10 @@ export class Room {
       return;
     }
     p.dc = dc;
-    dc.onopen = () => { clearTimeout(p.fallbackT); this.setPath(p, 'direct'); };
+    dc.onopen = () => { clearTimeout(p.fallbackT); this.setPath(p, 'direct'); if (p.needNeg) p.negotiate?.(); };
     dc.onclose = () => { if (this.peers.get(p.id) === p && p.path === 'direct') this.setPath(p, 'relay'); };
     dc.onmessage = (ev) => {
-      if (typeof ev.data === 'string') { let m; try { m = JSON.parse(ev.data); } catch (_) { return; } this.deliver(p, m, false); }
+      if (typeof ev.data === 'string') { let m; try { m = JSON.parse(ev.data); } catch (_) { return; } if (m && m.__sig) { this.onSignal(p, m.__sig); return; } this.deliver(p, m, false); }
       else {
         p.bytesIn += ev.data.byteLength;
         if (this.lag) setTimeout(() => this.h.binary(p, ev.data), this.lagDelay(p));

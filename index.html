@@ -473,6 +473,15 @@
   .cassette::after { content: ''; position: absolute; right: 10px; top: 50%; width: 34px; height: 14px; margin-top: -7px; border-radius: 7px; background: radial-gradient(circle at 25% 50%, #18181b 0 4px, #0000 5px), radial-gradient(circle at 75% 50%, #18181b 0 4px, #0000 5px), #8d887a; }
   .cassette b { display: block; font: 400 16px/1 var(--display); }
   .cassette small { font: 400 11px var(--type); color: #444; }
+
+  .talkbtn { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border-radius: 99px; background: #1e1f22; border: 1px solid #2c2e33; color: var(--mz-toner); font: 600 12px var(--sans); touch-action: none; }
+  .talkbtn.on { border-color: var(--mz-blue); color: var(--mz-blue); }
+  .talkbtn.live { background: var(--mz-blue); color: #0a1a30; }
+  .talkmark { display: none; align-items: flex-end; gap: 2px; height: 12px; }
+  .talkmark.on { display: inline-flex; }
+  .talkmark i { width: 3px; background: var(--mz-blue); border-radius: 1px; animation: talkbar .5s ease-in-out infinite alternate; }
+  .talkmark i:nth-child(1) { height: 5px; } .talkmark i:nth-child(2) { height: 11px; animation-delay: .15s; } .talkmark i:nth-child(3) { height: 7px; animation-delay: .3s; }
+  @keyframes talkbar { to { transform: scaleY(.4); } }
 </style>
 <script src="mp-config.js"></script>
 </head>
@@ -512,6 +521,7 @@
     <div class="readout"><span id="roomCode" class="lcd" title="Room code"></span><button id="copyBtn" class="btn small">Invite</button></div>
     <div class="readout"><span class="legend">BPM</span><button id="bpmDown" class="btn small" aria-label="Slower">−</button><span id="bpmLcd" class="lcd" tabindex="0" role="spinbutton" aria-label="Tempo" title="Drag, scroll or use the arrow keys">96</span><button id="bpmUp" class="btn small" aria-label="Faster">+</button>
       <button id="metroBtn" class="round" title="Metronome" aria-label="Metronome"><svg width="15" height="15" viewBox="0 0 16 16"><path d="M5 15h6L9.5 2h-3z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 11l4-6" stroke="currentColor" stroke-width="1.5"/></svg></button><span id="tempoNote" class="help"></span></div>
+    <button id="talkBtn" class="talkbtn" aria-pressed="false" title="Talk to the band: click to leave your mic on, or hold while you talk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Talk</span></button>
     <button id="tapeBtn" class="tapebtn" title="Record the jam (everyone hears that you are)" aria-label="Record the jam"><i></i><span id="tapeTime"></span></button><button id="tapesBtn" class="btn small hide" title="Play back or save your takes">Tapes</button>
     <div class="readout"><span class="legend">Key</span><select id="keySel" class="lcdsel" aria-label="The room's key" title="Everyone shares the key. The keys of the scale light up, and chord pads appear."></select></div>
     <div class="readout tech"><span class="legend">Quant</span><div class="seg" id="quantSeg"><button data-q="0" class="on">OFF</button><button data-q="0.25">1/16</button><button data-q="0.5">1/8</button><button data-q="1">1/4</button></div></div>
