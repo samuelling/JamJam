@@ -94,9 +94,11 @@ export function makePadsUI(x) {
       pad ? h('div', { class: 'pwavebig' }) : null,
       pad ? h('div', { class: 'row' }, num('Start', 'start', 0, 0.95, 0.01, '', pad.start || 0), num('End', 'end', 0.05, 1, 0.01, '', pad.end ?? 1), num('Tune', 'tune', -24, 24, 1, ' st', pad.tune || 0), num('Gain', 'gain', -24, 12, 1, ' dB', pad.gain || 0),
         h('label', { class: 'pedit' }, h('small', {}, 'Choke'), h('select', { class: 'lcdsel', 'aria-label': 'Choke group', onchange: (ev) => set({ choke: +ev.target.value }) }, ...['none', 'A', 'B', 'C', 'D'].map((t, k) => h('option', { value: k, selected: (pad.choke || 0) === k }, t))))) : null);
-    const wb = editor.querySelector('.pwavebig'); if (wb) wb.innerHTML = wave(pad.id, 600, 44, pad.start || 0, pad.end ?? 1) || `<span class="help">${pad.src ? 'from the Studio Kit' : 'on its way: a sketch plays until it arrives'}</span>`;
+    const wb = editor.querySelector('.pwavebig'); if (wb) wb.innerHTML = wave(pad.id, 600, 44, pad.start || 0, pad.end ?? 1) || `<span class="help">${pad.src ? 'one of the kit\'s own sounds' : 'on its way: a sketch plays until it arrives'}</span>`;
     plate.replaceChildren(
-      h('div', { class: 'devtop' }, h('div', { class: 'brand' }, h('div', { class: 'name' }, 'Pads'), h('div', { class: 'fam' }, 'Sample pads · drop sounds on them')),
+      h('div', { class: 'devtop' }, h('div', { class: 'brand' }, h('div', { class: 'name' }, 'Pads'),
+        x.kits ? h('select', { class: 'lcdsel kitsel', 'aria-label': 'Kit', title: 'Load a kit onto the pads (your own sounds on them are replaced)', onchange: (ev) => x.pickKit(e, ev.target.value) },
+          ...x.kits(e).map(([id, name]) => h('option', { value: id, selected: id === e.cfg.patch }, name))) : null, h('div', { class: 'fam' }, 'Sample pads · drop sounds on them'), x.kitSource?.(e) ? h('div', { class: 'fam credit' }, 'sounds: ' + x.kitSource(e)) : null),
         h('div', { class: 'screen lcd' }, h('div', { class: 'wide' }, 'Play them with the mouse, a MIDI pad controller (notes 36 to 51) or the keys 1234 · QWER · ASDF · ZXCV. Record a few passes with Record every pass, then fix and quantize the hits in the Compose Room.'))),
       h('div', { class: 'padwrap' }, grid, editor), foot);
   }

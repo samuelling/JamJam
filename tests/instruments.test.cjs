@@ -25,7 +25,7 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
         Object.assign(params, mod.presets[patch]);
         const render = async () => {
           const ctx = new OfflineAudioContext(2, SR * DUR, SR);
-          if (mod.init) await mod.init(ctx);
+          if (mod.init) await mod.init(ctx, params);
           const inst = mod.create(ctx, ctx.destination, params);
           const notes = mod.drums ? [36, 38, 42, 39, 46, 45, 49, 37, 56, 64, 42, 36] : [48, 55, 60, 64, 67, 72];
           notes.forEach((n, i) => {

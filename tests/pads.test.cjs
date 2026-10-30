@@ -56,6 +56,12 @@ function wav(sr = 44100, secs = 0.8) {
     for (let i = 0; i < 40 && !late; i++) { await sleep(500); late = await C.evaluate((id) => JJ.audio().have.includes(id), pad.id); }
     check(late, 'a bandmate who joins later gets the sample too');
     await A.screenshot({ path: '/tmp/pads.png' });
+    // another kit from the picker: Matt's copy of Sam's pads switches with it
+    await A.selectOption('.kitsel', 'hands'); await sleep(1200);
+    const kitB = await B.evaluate(() => { for (const p of JJ.S.players.values()) for (const x of p.rack || []) if (x.cfg.inst === 'pads') return { patch: x.cfg.patch, first: x.cfg.params.kit[0]?.name, src: x.cfg.params.kit[0]?.src }; return null; });
+    check(kitB && kitB.patch === 'hands' && kitB.first === 'Tumba' && /instruments\/pads\/hands\//.test(kitB.src), `the kit picker loads another kit, and the bandmate's copy follows (${JSON.stringify(kitB)})`);
+    const ok = await A.evaluate(async () => (await fetch('instruments/pads/hands/01.mp3')).ok);
+    check(ok, "the kit's sounds are files on the site, so nothing has to be sent between browsers");
     check(errors.length === 0, `no page errors${errors.length ? ': ' + errors.join(' | ') : ''}`);
   } catch (e) { console.error(e); failures++; }
   await browser.close();

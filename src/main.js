@@ -971,8 +971,9 @@ async function bouncePart(p, beats, bpm) {
   if (L > 45) return null;   // long sections play live: their bounce would cost more than it saves
   // one pass plus its ring-out; the ring-out is folded back onto the top, which is what a repeating loop sounds like
   const ctx = new OfflineAudioContext(2, Math.ceil(sr * (LEAD + L + TAIL)), sr);
-  if (def.init) await def.init(ctx);
-  const inst = def.create(ctx, ctx.destination, partCfg(p).params);
+  const params = partCfg(p).params;
+  if (def.init) await def.init(ctx, params);   // an instrument with files to load (Pads) waits for the ones it will play
+  const inst = def.create(ctx, ctx.destination, params);
   for (const e of p.takeEvents || []) { const t = LEAD + (e.b * 60) / bpm; if (e.type === 'on') inst.noteOn(e.note, e.vel ?? 100, t); else if (e.type === 'off') inst.noteOff(e.note, t); }
   const hold = ctx.suspend(256 / sr).then(async () => { await new Promise((r) => setTimeout(r, 40)); ctx.resume(); });
   const full = await ctx.startRendering(); await hold; try { inst.dispose(); } catch (_) {}
@@ -1222,6 +1223,8 @@ const blobs = new Blobs(room, (id) => { AUD.bufs.delete(id); compose.render(); i
 globalThis.MEGAJAM_SAMPLES = { pcm: (id) => blobs.pcm(id) };   // what the Pads instrument plays from
 const padsUI = makePadsUI({
   h, blobs, status: (t, k) => setStatus(t, k), liveOn: () => lane.on,
+  kits: (e) => engine.patchTypes(e.cfg).map((t) => [t, patchName(engine.defs.get('pads'), t)]), pickKit: (e, id) => changeEntry(e, { patch: id }),
+  kitSource: (e) => engine.defs.get('pads')?.kitSources?.[e.cfg.patch] || (e.cfg.patch === 'chops' ? 'the Studio Kit (Virtuosity Drums, CC0)' : ''),
   setKit: (e, kit) => { e.cfg.params = { ...e.cfg.params, kit }; publishEntry(e); renderDevice(); wantAudio(); },
   press: (n, v) => input.press(n, v, 0), release: (n) => input.release(n, 0),
   sampleLive: () => { const m = songStore.song.meter || 4, t1 = clock.now() - 60, t0 = tempo.timeOf(tempo.beatAt(t1) - m); return lane.slice(t0, t1, 44100); },
