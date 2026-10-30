@@ -73,6 +73,7 @@ function osc(ph, dt, w) {
     }
   }
 }
+const ahead = (env, attack, late) => (late > 0 && attack > 1.5 * late ? Math.max(env, Math.min(1, 1.25 * (1 - Math.exp(-late / (attack / 2.2))))) : env);
 class Monolith extends AudioWorkletProcessor {
   constructor(o) {
     super();
@@ -92,12 +93,13 @@ class Monolith extends AudioWorkletProcessor {
   rnd() { let t = (this.seed = (this.seed + 0x6D2B79F5) | 0); t = Math.imul(t ^ (t >>> 15), 1 | t); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296 * 2 - 1; }
   pick() { const s = this.stack; if (!s.length) return -1; return this.p.priority >= 0.5 ? s[s.length - 1] : Math.min(...s); }
   event(m) {
-    const [type, , a, b] = m;
+    const [type, , a, b, late] = m;
     if (type === 1) {
       this.stack = this.stack.filter((n) => n !== a); this.stack.push(a);
       const n = this.pick(), f = 440 * Math.pow(2, (n - 69) / 12);
       if (!this.gate) {
         this.gate = true; this.fst = 1; this.ast = 1; this.vel = b / 127; this.seed = 1000 + a * 7 + b;
+        this.aenv = ahead(this.aenv, this.p.attack, late || 0); this.fenv = ahead(this.fenv, this.p.fAttack, late || 0);
         if (this.freq === 0 || this.p.glide <= 0) this.freq = f;
       }
       this.target = f;
@@ -188,7 +190,7 @@ export default {
     node.connect(out);
     const at = (t) => Math.round(t * ctx.sampleRate);
     return {
-      noteOn: (note, vel, t) => node.port.postMessage([1, at(t), note, vel]),
+      noteOn: (note, vel, t, _at, late = 0) => node.port.postMessage([1, at(t), note, vel, late]),
       noteOff: (note, t) => node.port.postMessage([0, at(t), note, 0]),
       set: (id, v, t) => node.port.postMessage([2, at(t), id, v]),
       allOff: (t) => node.port.postMessage([3, at(t)]),

@@ -55,7 +55,7 @@ const S = {
   owned: new Map((() => { try { return JSON.parse(store.get('gear') || '[]'); } catch (_) { return []; } })()),  // hardware you own: id -> {port, ch}
   hwFilter: 'all',
   key: { root: 9, mode: '', at: 0, by: '' },   // the room's key: mode '' = free
-  lockKey: false, snapped: new Map(),
+  lockKey: false, snapped: new Map(), assist: 0,
   routes: new Map(),                       // a bandmate's part (channel key) -> {port, ch, lat, mute}: played on your MIDI gear
   mclock: { port: '', on: false, lat: 0, next: null },  // MIDI clock out: the room's tempo to your drum machines  // channel key -> {wanted cfg} while a stand-in plays someone's library instrument
 };
@@ -477,6 +477,12 @@ function playNote(on, note, vel, ch = 0) {
     e.shifts = e.shifts || new Map(); e.onAt = e.onAt || new Map();
     if (on) {
       if (S.quant && room.peers.size) { const qa = tempo.nextGrid(at, S.quant); shift = qa - at; at = qa; }
+      else if (S.assist) {
+        // rhythm help, like aim assist: a note a little ahead of the 16th grid is pulled part of the way onto it.
+        // Only ever later (a note can't sound sooner than it was sent), and never across more than half a step.
+        const g = tempo.nextGrid(at, 0.25), d = g - at, step = 15000 / tempo.bpm(at);
+        if (d > 0 && d < step / 2) { shift = d * S.assist; at += shift; }
+      }
       e.shifts.set(note, shift); e.onAt.set(note, at);
     } else {
       shift = e.shifts.get(note) || 0; at += shift; e.shifts.delete(note);
@@ -1563,6 +1569,9 @@ function wire() {
     ks.onchange = () => { const [r, m] = ks.value ? ks.value.split(':') : [S.key.root, '']; setKey(+r, m); };
     $('#lockBtn').onclick = () => { S.lockKey = !S.lockKey; renderKey(); }; renderKey(); }
   $('#tapeBtn').onclick = toggleTape;
+  { const b = $('#assistBtn'), LV = [[0, 'Rhythm help: off'], [0.45, 'Rhythm help: light'], [0.8, 'Rhythm help: strong']];
+    const show = () => { const i = LV.findIndex(([v]) => v === S.assist); b.textContent = LV[i][1]; setCls(b, 'on', S.assist > 0); };
+    b.onclick = () => { const i = LV.findIndex(([v]) => v === S.assist); S.assist = LV[(i + 1) % LV.length][0]; show(); }; show(); }
   // Talk: click to leave your mic open, or hold to talk and let go to stop
   { const b = $('#talkBtn'); let downAt = 0, wasOpen = false;
     const show = () => { setCls(b, 'on', talk.open); b.setAttribute('aria-pressed', String(talk.open)); b.querySelector('span').textContent = talk.open ? 'Talking' : 'Talk'; };
@@ -1631,7 +1640,7 @@ Object.assign(window.JJ, {
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
   own: (id, v) => setOwned(id, v),
-  setKey: (root, mode) => setKey(root, mode),
+  setKey: (root, mode) => setKey(root, mode), assist: (v) => { S.assist = v; },
   tape: () => toggleTape(), talk: (on) => talk.setOpen(on), voices: () => [...talk.voices.entries()].map(([id, v]) => ({ id, level: v.level, pan: v.pan.pan.value })), ducked: () => talk.ducked, tapes: () => tape.takes.map((t) => ({ seconds: t.seconds, size: t.blob.size, url: t.url })),
   pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 't' + i); else padUp('t' + i); },
   addExternal: async (name, port, ch, twin) => { if (!input.midi) await input.enableMIDI(); return addEntry({ ext: { name, port, ch }, inst: twin })?.r; },

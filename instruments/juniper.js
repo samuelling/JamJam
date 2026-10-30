@@ -55,6 +55,7 @@ function blep(t, dt) {
   return 0;
 }
 const NV = 6;
+const ahead = (env, attack, late) => (late > 0 && attack > 1.5 * late ? Math.max(env, Math.min(1, 1.25 * (1 - Math.exp(-late / (attack / 2.2))))) : env);
 class Juniper extends AudioWorkletProcessor {
   constructor(o) {
     super();
@@ -74,7 +75,7 @@ class Juniper extends AudioWorkletProcessor {
   }
   rnd(v) { let t = (v.seed = (v.seed + 0x6D2B79F5) | 0); t = Math.imul(t ^ (t >>> 15), 1 | t); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296 * 2 - 1; }
   event(m) {
-    const [type, , a, b] = m;
+    const [type, , a, b, late] = m;
     if (type === 1) {
       // reuse this note's voice, else the longest-released free voice, else steal the oldest
       let v = this.v.find((x) => x.note === a);
@@ -82,6 +83,7 @@ class Juniper extends AudioWorkletProcessor {
       if (this.held === 0) this.lfoAmp = 0; // the LFO delay starts over when a phrase starts
       this.held++;
       v.note = a; v.f = 440 * Math.pow(2, (a - 69) / 12); v.vel = b / 127; v.gate = true; v.st = 1; v.age = ++this.clock;
+      v.env = ahead(v.env, this.p.attack, late || 0);
       v.seed = 4242 + a * 31 + b;
     } else if (type === 0) {
       const v = this.v.find((x) => x.note === a && x.gate);
@@ -182,7 +184,8 @@ export default {
     node.connect(out);
     const at = (t) => Math.round(t * ctx.sampleRate);
     return {
-      noteOn: (note, vel, t) => node.port.postMessage([1, at(t), note, vel]),
+      // late: how late this browser got the note (s); a slow attack then starts where it would be by now
+      noteOn: (note, vel, t, _at, late = 0) => node.port.postMessage([1, at(t), note, vel, late]),
       noteOff: (note, t) => node.port.postMessage([0, at(t), note, 0]),
       set: (id, v, t) => node.port.postMessage([2, at(t), id, v]),
       allOff: (t) => node.port.postMessage([3, at(t)]),

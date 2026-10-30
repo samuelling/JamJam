@@ -298,7 +298,7 @@ export class Engine {
     if (ev.type === 'on') {
       c.notes.push(ev.at); c.flashT = performance.now(); c.held.add(ev.note);
       if (c.notes.length > 6000) { const cut = c.notes.length - 3000; c.noteBase += cut; c.notes.splice(0, cut); }
-      I.inst.noteOn(ev.note, ev.vel, t, ev.at);
+      I.inst.noteOn(ev.note, ev.vel, t, ev.at, lateMs / 1000);   // late: a slow attack can start where it would be by now
     } else if (ev.type === 'off') { c.held.delete(ev.note); I.inst.noteOff(ev.note, t, ev.at); }
     else if (ev.type === 'p') {
       I.inst.set(ev.id, ev.v, t, ev.at);
