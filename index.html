@@ -344,6 +344,12 @@
   .md-lcd b { color: #fff; }
   .md-lcd .row2 { color: #78a9cf; }
   .md-master { display: flex; gap: 8px; }
+  .md-encs.depth { margin-top: 6px; }
+  .md-lfos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+  .md-lfo { display: grid; grid-template-columns: auto minmax(0, 1.6fr) repeat(4, minmax(0, 1fr)); gap: 8px; align-items: center; background: #1e1f22; border-radius: 8px; padding: 8px; box-shadow: inset 0 1px 3px #000a; }
+  .md-lfo > b { font: 700 10px var(--type); letter-spacing: .08em; color: #d9dbe0; writing-mode: vertical-rl; transform: rotate(180deg); }
+  .md-destw { display: grid; gap: 3px; } .md-destw small { font: 600 9px var(--type); opacity: .6; text-transform: uppercase; }
+  .md-dest { width: 100%; }
   .md-tracks { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; }
   .md-key { position: relative; height: 34px; border-radius: 4px; border: 1px solid #0c0d0f; background: linear-gradient(180deg, #4a4d53, #3a3d42); color: #e3e5ea; font: 700 10px var(--mono); letter-spacing: .08em; box-shadow: inset 0 1px 0 #ffffff1f, 0 2px 0 #0c0d0f; }
   .md-key i { position: absolute; top: 4px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: #3b1a14; }
@@ -453,6 +459,7 @@
     .devtop, .md-top { grid-template-columns: 1fr; }
     .md-trigs { grid-template-columns: repeat(8, minmax(0, 1fr)); }
     .md-encs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .md-lfos { grid-template-columns: 1fr; }
   }
 
   /* ===== the MEGAjam look: a slightly sad shared studio, inked like megaZINE ===== */
@@ -796,12 +803,29 @@
   .msb.on { background: #ffb24d; color: #111; border-color: #ffb24d; }
   .msb.solo.on { background: #7DB0FF; border-color: #7DB0FF; }
   .arow.tmuted .cell.take, .arow.unsolo .cell.take { opacity: .35; }
+  .autolane { position: relative; height: 56px; background: #ffffff05; border-top: 1px solid #ffffff10; cursor: crosshair; touch-action: none; }
+  .autolane.compact { height: 34px; padding: 0; }
+  .autolane svg { display: block; position: absolute; inset: 0; }
+  .autolane .adot { position: absolute; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: #ffcf26; box-shadow: 0 0 0 1.5px #111; pointer-events: none; }
+  .autolane .adot.rec { width: 4px; height: 4px; margin: -2px 0 0 -2px; background: #ECEBE5; box-shadow: none; }
+  .autolane .aname { position: absolute; right: 6px; top: 3px; font: 400 9px var(--type); opacity: .6; pointer-events: none; }
+  .lvkeys.autokey { display: flex; align-items: center; justify-content: flex-end; border-top: 1px solid #ffffff10; }
+  .lvkeys.autokey span { position: static; white-space: normal; text-align: right; line-height: 1.1; }
+  .arow.autorow .lhead.autohead { min-height: 34px; padding-left: 26px; display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+  .arow.autorow .lhead.autohead small { font: 600 10px var(--type); opacity: .85; }
+  .cell.autocell { height: 34px; }
+  .msb.autob { font-size: 10px; }
+  .cell.take .automark { position: absolute; left: 4px; bottom: 2px; font-size: 9px; opacity: .7; pointer-events: none; }
   .stemspanel { margin: 6px 0 10px; padding: 10px 12px; border-radius: 8px; background: #ffffff08; display: grid; gap: 8px; }
   .stemrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .stemrow > small:first-child { font: 700 10px var(--type); text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
   .sharelink { min-width: 320px; }
   .tmix.master { margin-left: 8px; }
-  .tfader.mini { width: 58px; height: 12px; margin-left: 4px; accent-color: #ECEBE5; }
+  .lhead { min-width: 0; }
+  .lhead.pick { flex-wrap: wrap; row-gap: 2px; }
+  .lhead.pick > span:nth-child(2) { min-width: 0; flex: 1 1 60px; overflow: hidden; }
+  .lhead.pick .ms { flex: 1 0 calc(100% - 30px); margin-left: 30px; align-items: center; }
+  .tfader.mini { flex: 1 1 40px; min-width: 30px; width: auto; height: 10px; margin: 0 0 0 4px; accent-color: #ECEBE5; }
   .tmix { display: inline-flex; align-items: center; gap: 6px; }
   .tmix input { width: 110px; accent-color: #ffcf26; }
   .tmix small:first-child { font: 700 10px var(--type); text-transform: uppercase; letter-spacing: .06em; opacity: .7; }

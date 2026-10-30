@@ -44,12 +44,14 @@ export async function renderTrack(o) {
       if (take.audio) { audioInto(ctx, g, o.clip(take.audio.id), take.audio, t, spb); continue; }
       if (!take.events?.length) continue;
       const inst = await instFor({ ...p, ...SONG.laneCfg(song, p) }); if (!inst) continue;
-      const at = (b) => LEAD + (t.start + b) * spb;
-      for (const e of take.events) {
+      const at = (b) => LEAD + (t.start + b) * spb, base = { ...o.resolve({ inst: (SONG.laneCfg(song, p).inst || p.inst), patch: (SONG.laneCfg(song, p).patch || p.patch) }).params, ...(SONG.laneCfg(song, p).params || p.params || {}) };
+      const moved = SONG.movesOf(take.events);
+      for (const e of SONG.expandMoves(take.events, bpm)) {
         if (e.type === 'on') { if (e.b >= t.beats) continue; inst.noteOn(e.note, e.vel ?? 100, at(e.b)); notes++; }
         else if (e.type === 'off') inst.noteOff(e.note, at(Math.min(e.b, t.beats)));
         else if (e.type === 'p' && inst.set && e.b <= t.beats) inst.set(e.id, e.v, at(e.b));
       }
+      if (moved && inst.set) for (const id of moved) if (base[id] != null) inst.set(id, base[id], at(t.beats));
     }
   }
   // instruments with files to load get a moment before the first block (as the song's own bounces do)

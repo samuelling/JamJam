@@ -189,12 +189,32 @@ export function songFromMidi(bytes, title = 'Imported') {
   return song;
 }
 // the events in [a, z) beats, re-based to a; notes held over the end are cut at it
+// ---------- automation: knob moves in a take ----------
+// A take's events can hold knob moves, { b, type: 'p', id, v }, recorded as you play (always), or drawn: a drawn point
+// with r: 1 ramps from the point before it. Each block starts from the track's settings plus the take's moves, and
+// the moved knobs go back to the track's settings when the block ends.
+export function movesOf(events) { let ids = null; for (const e of events || []) if (e.type === 'p') (ids = ids || new Set()).add(e.id); return ids; }
+// the moves of one knob, in time order
+export function lineOf(events, id) { return (events || []).filter((e) => e.type === 'p' && e.id === id).sort((a, b) => a.b - b.b); }
+// a ramp between drawn points becomes small steps (every 1/32 note, at least 25 ms apart), so any instrument plays it
+export function expandMoves(events, bpm = 120) {
+  if (!(events || []).some((e) => e.type === 'p' && e.r)) return events || [];
+  const out = [], step = Math.max(0.125, (0.025 * bpm) / 60), prev = new Map();
+  for (const e of [...events].sort((a, b) => a.b - b.b)) {
+    if (e.type !== 'p') { out.push(e); continue; }
+    const p = prev.get(e.id);
+    if (e.r && p && e.b - p.b > step) { for (let b = p.b + step; b < e.b - 1e-6; b += step) out.push({ b, type: 'p', id: e.id, v: p.v + ((e.v - p.v) * (b - p.b)) / (e.b - p.b) }); }
+    const { r: _r, ...q } = e; out.push(q); prev.set(e.id, e);
+  }
+  return out.sort((a, b) => a.b - b.b);
+}
 export function sliceEvents(events, a, z) {
   const out = [], on = new Set();
   for (const e of [...events].sort((x, y) => x.b - y.b || (x.type === 'off' ? -1 : 1))) {
-    if (e.b < a) { if (e.type === 'on') on.add(e.note); else on.delete(e.note); continue; }
+    if (e.b < a) { if (e.type === 'on') on.add(e.note); else if (e.type === 'off') on.delete(e.note); continue; }
     if (e.b >= z) break;
-    if (e.type === 'on') { out.push({ ...e, b: e.b - a }); on.add(e.note); } else if (e.type === 'off') { if (out.some((x) => x.type === 'on' && x.note === e.note)) out.push({ ...e, b: e.b - a }); on.delete(e.note); }
+    if (e.type === 'p') out.push({ ...e, b: e.b - a });
+    else if (e.type === 'on') { out.push({ ...e, b: e.b - a }); on.add(e.note); } else if (e.type === 'off') { if (out.some((x) => x.type === 'on' && x.note === e.note)) out.push({ ...e, b: e.b - a }); on.delete(e.note); }
   }
   const open = new Map(); for (const e of out) { if (e.type === 'on') open.set(e.note, (open.get(e.note) || 0) + 1); else open.set(e.note, (open.get(e.note) || 0) - 1); }
   for (const [n, c] of open) for (let i = 0; i < c; i++) out.push({ b: z - a - 0.01, type: 'off', note: n });

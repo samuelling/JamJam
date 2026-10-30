@@ -4,7 +4,14 @@
 //   EFM  FM percussion (phase-modulated sine pairs with decaying index)
 //   PI   modal "physical" models (inharmonic partials of membranes, plates, bars and bells)
 //   GND  raw ground sources (sine, noise, impulse)
-// and every slot has pitch, decay, tone, snap, crush (sample-rate reduction), level and pan.
+// and every slot has pitch, decay, tone, snap, crush (sample-rate reduction), level and pan, plus deeper shaping: body
+// (the tuned part) and noise (the hiss) levels, noise colour and decay, drive and velocity response; kick, snare and
+// toms add a pitch sweep (amount and time), the kick a sub tail, the clap its burst count and spacing. Master glue
+// (a gentle compressor) sits before the drive.
+// Two LFOs, each assignable to any knob (DEST), with five shapes and a rate either free (Hz) or locked to the room's
+// beat (1/32 to 4 bars, triplets): every browser's LFO is at the same phase on the same beat. A slot knob is read at
+// each hit (drum-style: the LFO is sampled when the drum is struck); the master knobs follow it continuously.
+// Every new knob's default is the old sound, so songs and kits made before them play the same.
 // Slots: kick 35/36 · snare 38/40 · clap 39 · rim 37 · closed hat 42/44 · open hat 46 (choked by closed) ·
 // toms 41-50 · cymbals 49/51/57/59 · perc 56, plus every note from 60 up played chromatically on the perc slot.
 //
@@ -35,6 +42,42 @@ PARAMS.push(
   { id: 'bits', name: 'Bit depth', min: 4, max: 16, def: 16, step: 1, unit: 'bit', group: 'Master' },
   { id: 'level', name: 'Level', min: 0, max: 1, def: 0.85, cc: 7, group: 'Master' },
 );
+// deeper shaping (added later: each default is the original sound)
+const SWEPT = ['kick', 'snare', 'tom'];
+for (const [id, label] of SLOTS) {
+  PARAMS.push(
+    { id: `${id}.body`, name: 'Body', min: 0, max: 2, def: 1, unit: '×', group: label },
+    { id: `${id}.noise`, name: 'Noise', min: 0, max: 2, def: 1, unit: '×', group: label },
+    { id: `${id}.color`, name: 'Noise colour', min: -2, max: 2, def: 0, unit: 'oct', group: label },
+    { id: `${id}.ndecay`, name: 'Noise decay', min: 0.25, max: 4, def: 1, curve: 'exp', unit: '×', group: label },
+    { id: `${id}.drive`, name: 'Drive', min: 0, max: 1, def: 0, group: label },
+    { id: `${id}.velo`, name: 'Velocity', min: 0, max: 1, def: 1, group: label },
+  );
+  if (SWEPT.includes(id)) PARAMS.push(
+    { id: `${id}.sweep`, name: 'Sweep', min: 0, max: 3, def: 1, unit: '×', group: label },
+    { id: `${id}.stime`, name: 'Sweep time', min: 0.25, max: 4, def: 1, curve: 'exp', unit: '×', group: label },
+  );
+}
+PARAMS.push(
+  { id: 'kick.sub', name: 'Sub tail', min: 0, max: 1, def: 0, group: 'Kick' },
+  { id: 'clap.bursts', name: 'Bursts', min: 1, max: 6, def: 3, step: 1, group: 'Clap' },
+  { id: 'clap.spread', name: 'Spread', min: 4, max: 25, def: 10, unit: 'ms', group: 'Clap' },
+  { id: 'glue', name: 'Glue', min: 0, max: 1, def: 0, group: 'Master' },
+);
+// LFOs: DEST lists every knob that isn't a machine choice or an LFO's own (append-only: presets store the index)
+const DEST = PARAMS.filter((P) => !P.options).map((P) => P.id);
+const DEST_NAMES = DEST.map((id) => { const P = PARAMS.find((q) => q.id === id); return `${P.group} · ${P.name}`; });
+const DIVS = [['Free', 0], ['1/32', 8], ['1/16T', 6], ['1/16', 4], ['1/8T', 3], ['1/8', 2], ['1/4T', 1.5], ['1/4', 1], ['1/2', 0.5], ['1 bar', 0.25], ['2 bars', 0.125], ['4 bars', 0.0625]];
+const SHAPES = ['Sine', 'Triangle', 'Saw', 'Square', 'S&H'];
+for (const n of [1, 2]) PARAMS.push(
+  { id: `lfo${n}.dest`, name: 'Dest', options: ['Off', ...DEST_NAMES], min: 0, max: DEST.length, def: 0, step: 1, group: `LFO ${n}` },
+  { id: `lfo${n}.shape`, name: 'Shape', options: SHAPES, min: 0, max: SHAPES.length - 1, def: 0, step: 1, group: `LFO ${n}` },
+  { id: `lfo${n}.rate`, name: 'Rate', options: DIVS.map((d) => d[0]), min: 0, max: DIVS.length - 1, def: 9, step: 1, group: `LFO ${n}` },
+  { id: `lfo${n}.hz`, name: 'Free rate', min: 0.05, max: 20, def: 1, curve: 'exp', unit: 'Hz', group: `LFO ${n}` },
+  { id: `lfo${n}.depth`, name: 'Depth', min: -1, max: 1, def: 0, group: `LFO ${n}` },
+);
+const RANGES = Object.fromEntries(PARAMS.map((P) => [P.id, [P.min, P.max, P.curve === 'exp' ? 1 : 0, P.step === 1 ? 1 : 0]]));
+const dest = (name) => DEST.indexOf(name) + 1;
 
 // kits (patch types): per-slot machine choices and settings
 function kit(machines, over = {}) {
@@ -58,6 +101,19 @@ const PRESETS = {
     'chh.tone': 0.4, 'chh.level': 0.45, 'tom.pitch': 3, 'tom.decay': 1.1, 'tom.snap': 0.1, 'tom.level': 0.6, 'cym.tone': 0.28, 'cym.decay': 2.2, 'cym.level': 0.55, drive: 0.02,
     'chh.pan': -0.35, 'tom.pan': 0.2, 'cym.pan': 0.3 }),
   lofi: kit([0, 3, 0, 3, 3, 3, 0, 3, 1], { 'kick.crush': 0.45, 'snare.crush': 0.55, 'chh.crush': 0.6, 'ohh.crush': 0.6, 'clap.crush': 0.4, 'perc.crush': 0.35, bits: 9, drive: 0.5 }),
+  // the deeper knobs and the LFOs at work
+  // hats that open and close over each bar, with a little colour drift every two
+  rolling: kit([0, 0, 0, 0, 0, 0, 0, 0, 0], { 'kick.decay': 0.9, 'kick.snap': 0.6, 'snare.snap': 0.7, 'snare.tone': 0.6, 'chh.tone': 0.65, 'chh.snap': 0.5, 'chh.ndecay': 1.3, glue: 0.35, drive: 0.25,
+    'lfo1.dest': dest('chh.decay'), 'lfo1.shape': 1, 'lfo1.rate': 9, 'lfo1.depth': 0.35, 'lfo2.dest': dest('chh.color'), 'lfo2.shape': 0, 'lfo2.rate': 10, 'lfo2.depth': 0.3, 'chh.pan': -0.2 }),
+  // toms whose tuning wanders on a stepped random: every fill comes out different (but the same in every browser)
+  wonky: kit([2, 1, 0, 2, 1, 1, 0, 2, 1], { 'tom.sweep': 1.8, 'tom.stime': 1.6, 'tom.decay': 1.3, 'tom.drive': 0.3, 'kick.sub': 0.3, 'snare.body': 1.4, 'snare.noise': 0.7, glue: 0.25, drive: 0.3, 'tom.pan': 0.25,
+    'lfo1.dest': dest('tom.pitch'), 'lfo1.shape': 4, 'lfo1.rate': 5, 'lfo1.depth': 0.14, 'lfo2.dest': dest('perc.pitch'), 'lfo2.shape': 4, 'lfo2.rate': 3, 'lfo2.depth': 0.1 }),
+  // a long, subby kick whose tail swells and shrinks over two bars; a fat, slow clap
+  breathing: kit([0, 0, 0, 0, 0, 0, 0, 0, 0], { 'kick.decay': 1.6, 'kick.sub': 0.55, 'kick.sweep': 1.4, 'kick.drive': 0.25, 'kick.tone': 0.3, 'clap.bursts': 4, 'clap.spread': 14, 'clap.tone': 0.35, 'snare.noise': 1.3, 'snare.ndecay': 1.5, glue: 0.5, drive: 0.15,
+    'lfo1.dest': dest('kick.decay'), 'lfo1.shape': 0, 'lfo1.rate': 10, 'lfo1.depth': 0.3, 'lfo2.dest': dest('glue'), 'lfo2.shape': 1, 'lfo2.rate': 9, 'lfo2.depth': 0.25 }),
+  // hard, driven and punchy: short sweeps, gritty voices, the glue pumping on the quarter
+  industrial: kit([1, 0, 0, 3, 0, 1, 1, 0, 1], { 'kick.sweep': 2.2, 'kick.stime': 0.6, 'kick.drive': 0.6, 'kick.snap': 0.8, 'snare.drive': 0.5, 'snare.color': 0.7, 'snare.ndecay': 0.7, 'clap.bursts': 5, 'clap.spread': 6, 'chh.drive': 0.4, 'chh.color': 0.5, 'tom.drive': 0.5, glue: 0.7, drive: 0.45,
+    'lfo1.dest': dest('snare.color'), 'lfo1.shape': 2, 'lfo1.rate': 8, 'lfo1.depth': 0.25, 'lfo2.dest': dest('chh.pitch'), 'lfo2.shape': 3, 'lfo2.rate': 5, 'lfo2.depth': 0.08 }),
 };
 
 const PROC = `
@@ -66,6 +122,28 @@ const TAU = Math.PI * 2;
 const mtof = (n) => 440 * Math.pow(2, (n - 69) / 12);
 const SLOT_OF = { 35: 0, 36: 0, 38: 1, 40: 1, 39: 2, 37: 3, 42: 4, 44: 4, 46: 5, 41: 6, 43: 6, 45: 6, 47: 6, 48: 6, 50: 6, 49: 7, 51: 7, 57: 7, 59: 7, 52: 7, 55: 7, 53: 7, 56: 8, 54: 8, 58: 8 };
 const SLOT_IDS = ${JSON.stringify(SLOTS.map((s) => s[0]))};
+const DEST = ${JSON.stringify(DEST)};
+const CPB = ${JSON.stringify(DIVS.map((d) => d[1]))};
+const RANGES = ${JSON.stringify(RANGES)};
+const MASTER = ['drive', 'bits', 'level', 'glue'];
+// an LFO's value (-1..1) at a beat (or, free running, at a room time in seconds); S&H is a hash of the cycle number
+function lfoAt(P, n, beat, sec) {
+  const cpb = CPB[P['lfo' + n + '.rate'] | 0] || 0, cyc = cpb ? beat * cpb : sec * P['lfo' + n + '.hz'];
+  const ph = cyc - Math.floor(cyc), sh = P['lfo' + n + '.shape'] | 0;
+  if (sh === 0) return Math.sin(TAU * ph);
+  if (sh === 1) return ph < 0.25 ? ph * 4 : ph < 0.75 ? 2 - ph * 4 : ph * 4 - 4;
+  if (sh === 2) return ph * 2 - 1;
+  if (sh === 3) return ph < 0.5 ? 1 : -1;
+  let t = (Math.floor(cyc) * 0x9E3779B1 + n * 0x85EBCA77) | 0; t = Math.imul(t ^ (t >>> 16), 0x7feb352d); t = Math.imul(t ^ (t >>> 15), 0x846ca68b); t ^= t >>> 16;
+  return (t >>> 0) / 4294967296 * 2 - 1;
+}
+// a knob moved by an LFO: by depth × the knob's range (an exponential knob moves by the same share of its octaves)
+function modded(id, base, amt) {
+  const r = RANGES[id]; if (!r) return base;
+  let v = r[2] ? base * Math.pow(r[1] / r[0], amt) : base + amt * (r[1] - r[0]);
+  v = Math.max(r[0], Math.min(r[1], v));
+  return r[3] ? Math.round(v) : v;
+}
 const TOM = { 41: 82, 43: 98, 45: 110, 47: 131, 48: 147, 50: 165 };
 const METAL = [205.3, 304.4, 369.6, 522.7, 540, 800];
 const kd = (sec) => Math.exp(-1 / (Math.max(0.002, sec) * SR)); // per-sample decay factor
@@ -128,6 +206,13 @@ function recipe(slot, m, P, note, vel) {
     else if (m === 2) { const ratios = tone < 0.5 ? [1, 3.93, 9.54] : [1, 2.76, 5.4, 8.93]; modal(f0, ratios, [0.7, 0.3, 0.15, 0.08], ratios.map((_, i) => (0.5 / (1 + i * 1.5)) * dec)); r.click = snap * 0.2; }
     else { r.sines.push({ f: f0, a: 0.7, d: 0.2 * dec }); r.click = snap * 0.2; }
   }
+  // the deeper knobs (each at its default leaves the recipe exactly as it was)
+  if (slot === 0 && g('sub') > 0) r.sines.push({ f: 52 * pm, a: g('sub') * 0.8, d: 1.1 * dec, sub: true });
+  if (slot === 2 && r.bursts) { r.bursts = Math.max(1, Math.round(g('bursts'))); r.spread = g('spread'); }
+  if (g('sweep') !== undefined) { r.pitch = 1 + (r.pitch - 1) * g('sweep'); r.ptime *= g('stime'); }
+  const body = g('body');
+  if (body !== 1) { for (const o of r.sines) if (!o.sub) o.a *= body; if (r.fm) r.fm.a *= body; if (r.sq) r.sq.a *= body; }
+  if (r.noise) { r.noise.a *= g('noise'); r.noise.d *= g('ndecay'); if (g('color')) r.noise.ff = Math.min(SR * 0.45, r.noise.ff * Math.pow(2, g('color'))); }
   return r;
 }
 
@@ -143,17 +228,34 @@ class Machina extends AudioWorkletProcessor {
       this.q.splice(i, 0, m);
     };
     this.voices = new Array(9).fill(null);
+    this.anchor = { frame: 0, beat: 0, sec: 0, bps: 2 };   // the room's beat at a frame (from the last note), to run the LFOs between hits
+    this.glueEnv = 0; this.M = {};
     this.fade = []; // voices being cut off, faded over 2 ms to avoid clicks
   }
-  trigger(note, vel) {
+  // the knobs as the LFOs have them at a beat: only those of this slot (or all, with slot -1)
+  lfoParams(slot, beat, sec) {
+    const P = this.p; let out = P;
+    for (let n = 1; n <= 2; n++) {
+      const d = P['lfo' + n + '.dest'] | 0, depth = P['lfo' + n + '.depth']; if (!d || !depth) continue;
+      const id = DEST[d - 1]; if (!id) continue;
+      if (slot < 0 ? !MASTER.includes(id) : !id.startsWith(SLOT_IDS[slot] + '.')) continue;
+      if (out === P) out = Object.assign({}, P);
+      out[id] = modded(id, out[id], depth * lfoAt(P, n, beat, sec));
+    }
+    return out;
+  }
+  trigger(note, vel, frame, beat, sec) {
     let slot = SLOT_OF[note];
     if (slot === undefined) slot = note >= 60 ? 8 : note < 35 ? 0 : 3;
     if (slot === 4 && this.voices[5]) { this.fade.push(this.voices[5]); this.voices[5] = null; } // closed hat chokes open hat
     if (this.voices[slot]) this.fade.push(this.voices[slot]);
-    const id = SLOT_IDS[slot], P = this.p, m = P[id + '.m'] | 0;
+    if (beat !== undefined) this.anchor = { frame, beat, sec, bps: this.anchor.bps };
+    const id = SLOT_IDS[slot], P = this.lfoParams(slot, beat ?? this.beatAt(frame), sec ?? this.secAt(frame)), m = P[id + '.m'] | 0;
     const r = recipe(slot, m, P, note, vel);
-    const k = Math.pow(vel / 127, 1.3);
-    const v = { r, t: 0, k, seed: 9001 + slot * 131 + note * 7 + vel, level: P[id + '.level'], pan: P[id + '.pan'], crush: P[id + '.crush'], hold: 0, held: 0, holdN: 0 };
+    const velo = P[id + '.velo'], k = velo === 1 ? Math.pow(vel / 127, 1.3) : 1 - velo + velo * Math.pow(vel / 127, 1.3);
+    const dr = P[id + '.drive'];
+    const v = { r, t: 0, k, seed: 9001 + slot * 131 + note * 7 + vel, level: P[id + '.level'], pan: P[id + '.pan'], crush: P[id + '.crush'], hold: 0, held: 0, holdN: 0, dg: dr > 0 ? 1 + dr * 8 : 0 };
+    if (v.dg) v.dn = 1 / Math.tanh(v.dg);
     v.sines = r.sines.map((s) => ({ ph: 0, f: s.f, a: s.a, e: 1, k: kd(s.d) }));
     if (r.fm) v.fm = { cph: 0, mph: 0, e: 1, k: kd(r.fm.d), ie: 1, ik: kd(r.fm.idec), hp: r.fm.hp ? svfCoef(r.fm.hp, 0.7) : null, st: { i1: 0, i2: 0 } };
     if (r.sq) v.sq = { ph: r.sq.fs.map(() => 0), e: 1, k: kd(r.sq.d), c: r.sq.bp ? svfCoef(r.sq.bp, 2) : svfCoef(r.sq.hp, 0.7), bp: !!r.sq.bp, st: { i1: 0, i2: 0 } };
@@ -161,6 +263,8 @@ class Machina extends AudioWorkletProcessor {
     v.holdN = v.crush > 0 ? 1 + Math.round(v.crush * v.crush * 30) : 0;
     this.voices[slot] = v;
   }
+  beatAt(f) { const a = this.anchor; return a.beat + ((f - a.frame) / SR) * a.bps; }
+  secAt(f) { const a = this.anchor; return a.sec + (f - a.frame) / SR; }
   rnd(v) { let t = (v.seed = (v.seed + 0x6D2B79F5) | 0); t = Math.imul(t ^ (t >>> 15), 1 | t); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296 * 2 - 1; }
   render(v) {
     const r = v.r, tt = v.t / SR;
@@ -185,11 +289,12 @@ class Machina extends AudioWorkletProcessor {
     if (v.nz) {
       const n = v.nz, N = r.noise, y = svf(n.st, n.c, this.rnd(v));
       let e = n.e;
-      if (r.bursts) { const ms = tt * 1000; e = ms < 30 ? Math.exp(-((ms % 10) / 2.2)) * 0.9 : n.e; }
+      if (r.bursts) { const ms = tt * 1000, sp = r.spread ?? 10; e = ms < r.bursts * sp ? Math.exp(-((ms % sp) / (sp * 0.22))) * 0.9 : n.e; }
       s += (N.type === 0 ? y.lp : N.type === 1 ? y.bp * 2 : y.hp) * N.a * e; n.e *= n.k; if (n.e > 1e-4 || tt < 0.04) alive = true;
     }
     if (r.click && v.t < 48) s += r.click * (1 - v.t / 48) * (v.t % 2 ? -1 : 1) * 0.8;
     const att = v.t < 48 ? v.t / 48 : 1; // 1 ms de-click ramp (the click above stays sharp)
+    if (v.dg) s = Math.tanh(s * v.dg) * v.dn;
     s *= att * v.k * v.level;
     if (v.holdN) { if (v.hold++ % v.holdN === 0) v.held = s; s = v.held; }
     v.t++;
@@ -198,13 +303,24 @@ class Machina extends AudioWorkletProcessor {
   }
   process(_, outputs) {
     if (!this.alive) return false;
-    const out = outputs[0], L = out[0], R = out[1] || out[0], n = L.length, P = this.p, f0 = currentFrame;
-    const drive = 1 + P.drive * 5, norm = Math.tanh(drive * 0.7), lv = P.level, bits = P.bits | 0, qz = bits < 16 ? Math.pow(2, bits - 1) : 0;
+    const out = outputs[0], L = out[0], R = out[1] || out[0], n = L.length, f0 = currentFrame;
+    let P = this.p, drive, norm, lv, qz, glue, gk;
+    const master = () => {
+      P = this.lfoParams(-1, this.beatAt(f0), this.secAt(f0));   // the master knobs follow the LFOs block by block
+      drive = 1 + P.drive * 5; norm = Math.tanh(drive * 0.7); lv = P.level; const bits = P.bits | 0; qz = bits < 16 ? Math.pow(2, bits - 1) : 0;
+      glue = P.glue;
+      // glue: a gentle bus compressor (threshold -6 to -18 dB, ratio up to 4:1, 5 ms attack, 120 ms release) with makeup
+      // that keeps a -6 dB hit about where it was, so turning it up squeezes the peaks rather than the level
+      if (glue > 0) { const thrDb = -6 - glue * 12, ratio = 1 + glue * 3, gr = Math.max(0, -6 - thrDb) * (1 - 1 / ratio);
+        gk = { thr: Math.pow(10, thrDb / 20), ratio, makeup: Math.pow(10, gr * 0.9 / 20), att: Math.exp(-1 / (0.005 * SR)), rel: Math.exp(-1 / (0.12 * SR)) }; } else gk = null;
+    };
+    master();
     for (let i = 0; i < n; i++) {
       while (this.q.length && this.q[0][1] <= f0 + i) {
-        const [type, , a, b] = this.q.shift();
-        if (type === 1) this.trigger(a, b);
-        else if (type === 2) this.p[a] = b;
+        const m = this.q.shift(), type = m[0];
+        if (type === 1) this.trigger(m[2], m[3], m[1], m[4], m[5]);
+        else if (type === 2) { this.p[m[2]] = m[3]; master(); }
+        else if (type === 3) this.anchor.bps = m[2];
       }
       let l = 0, r = 0;
       for (let s = 0; s < 9; s++) {
@@ -218,6 +334,10 @@ class Machina extends AudioWorkletProcessor {
         const x = this.render(v) * (v.ff / 96), pan = v.pan;
         l += x * Math.min(1, 1 - pan); r += x * Math.min(1, 1 + pan);
         if (v.ff <= 0 || v.done) this.fade.splice(j, 1);
+      }
+      if (gk) {
+        const x = Math.max(Math.abs(l), Math.abs(r)); this.glueEnv = x > this.glueEnv ? gk.att * this.glueEnv + (1 - gk.att) * x : gk.rel * this.glueEnv + (1 - gk.rel) * x;
+        const gr = this.glueEnv > gk.thr ? Math.pow(this.glueEnv / gk.thr, 1 / gk.ratio - 1) : 1; l *= gr * gk.makeup; r *= gr * gk.makeup;
       }
       l = Math.tanh(l * drive) / norm * lv * 0.8; r = Math.tanh(r * drive) / norm * lv * 0.8;
       if (qz) { l = Math.round(l * qz) / qz; r = Math.round(r * qz) / qz; }
@@ -233,7 +353,7 @@ export default {
   id: 'machina',
   name: 'Machina',
   family: 'Synthesis drum machine',
-  blurb: "Nine drum slots on the GM map, each running one of four synthesis machines: analog TRX, FM, modal physics or raw ground. Crush, pan and drive per slot.",
+  blurb: "Nine drum slots on the GM map, each running one of four synthesis machines: analog TRX, FM, modal physics or raw ground. Body, noise, sweep, drive and crush per slot, bus glue, and two LFOs you can point at any knob, locked to the beat.",
   drums: true,
   // sequencer tracks (one per slot): the note each plays and a short label for the track keys
   seq: { tracks: [
@@ -251,14 +371,21 @@ export default {
     URL.revokeObjectURL(url);
     ctx.__jjWorklets.add(NAME);
   },
-  create(ctx, out, init = {}) {
+  create(ctx, out, init = {}, env) {
     const params = {};
     for (const d of PARAMS) params[d.id] = init[d.id] ?? d.def;
     const node = new AudioWorkletNode(ctx, NAME, { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2], processorOptions: { params } });
     node.connect(out);
     const at = (t) => Math.round(t * ctx.sampleRate);
+    let lastBps = 2;
     return {
-      noteOn: (note, vel, t) => node.port.postMessage([1, at(t), note, vel]),
+      // each hit carries the room's beat and time it lands on (the event's own room time when the engine gives it, so
+      // every browser's LFOs agree); without a clock (some offline renders) the render's start is beat 0 at 120 bpm
+      noteOn: (note, vel, t, roomMs) => {
+        const ms = roomMs ?? (env ? env.roomTime(t) : t * 1000), beat = env ? env.beatAt(ms) : ms / 500, bps = env ? env.bpm(ms) / 60 : 2;
+        if (bps !== lastBps) { lastBps = bps; node.port.postMessage([3, at(t), bps]); }
+        node.port.postMessage([1, at(t), note, vel, beat, ms / 1000]);
+      },
       noteOff: () => {},
       set: (id, v, t) => node.port.postMessage([2, at(t), id, v]),
       allOff: () => {},
