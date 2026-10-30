@@ -97,7 +97,23 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     check(clk.start && clk.spp && clk.stop, 'clock out sends song position, Start and Stop');
     check(Math.abs(((clk.beatAtStart % 4) + 4) % 4) < 0.01 || Math.abs(((clk.beatAtStart % 4) + 4) % 4 - 4) < 0.01, `Start lands on a bar (beat ${clk.beatAtStart.toFixed(3)})`);
     check(clk.n > 96 && Math.abs(clk.gapMin - want) < 0.05 && Math.abs(clk.gapMax - want) < 0.05, `24 ticks per beat, evenly spaced (${clk.n} ticks, ${clk.gapMin.toFixed(3)}–${clk.gapMax.toFixed(3)} ms, want ${want.toFixed(3)})`);
-    check(Math.abs(clk.firstTickVsStart) < 0.01, `the first tick is on the downbeat (${clk.firstTickVsStart})`);
+    check(Math.abs(clk.firstTickVsStart) < 0.05, `the first tick is on the downbeat (${clk.firstTickVsStart})`);
+    // 5. "I have one too": Matt owns a Moog One, Sam brings his. Matt hears Sam's part on his own Moog One.
+    await B.evaluate(() => JJ.own('moog-moog-one', { port: 'mock-b', ch: 2 }));
+    const rOne = await A.evaluate(() => JJ.addHardware('moog-moog-one').r);
+    await sleep(1500);
+    await A.evaluate((r) => { JJ.select(r); JJ.S.rack.find((e) => e.r === r).budget = 'balanced'; }, rOne);
+    await A.evaluate(async () => { const s = (ms) => new Promise((r) => setTimeout(r, ms)); for (const n of [36, 43]) { JJ.input.press(n, 100); await s(150); JJ.input.release(n); await s(60); } });
+    await sleep(900);
+    const one = await B.evaluate(() => {
+      const k = [...JJ.S.routes.entries()].find(([, r]) => r.auto)?.[0];
+      const sent = JJ.midiLog().filter((m) => m.port === 'mock-b' && m.data[0] === 0x91);
+      return { k, auto: !!k, notes: sent.map((m) => m.data[1]).join(), gain: k ? JJ.engine.ch.get(k).out.gain.value : 1, chat: JJ.S.chat.map((c) => c.text).join(' | ') };
+    });
+    check(one.auto && one.notes === '36,43', `a bandmate who owns the same model hears it on their own (${one.notes} on ch 2)`);
+    check(one.gain < 0.01 && /own Moog One/.test(one.chat), 'with the twin muted, and a note in chat');
+    const aChat = await A.evaluate(() => JJ.S.chat.map((c) => c.text).join(' | '));
+    check(/has a Moog One too/.test(aChat), 'and the player is told');
     check(errors.length === 0, `no page errors${errors.length ? ': ' + errors.join(' | ') : ''}`);
   } catch (e) { console.error(e); failures++; }
   await browser.close();

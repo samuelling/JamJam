@@ -1,649 +1,5121 @@
 {
-  "about": "Hardware twins. If you play a real synth or drum machine, the other jammers hear a software twin from the same family: the twin instrument (the unit's own 'twin' if it names one, else its family's), loaded with the preset for your patch type, with this unit's character settings on top. Twins are family resemblances, not emulations. 'character' values override the patch-type preset; 'types' lists the patch types that suit the unit (first is the default). Add a unit by adding an entry. Each family lists candidate twins with a rough match score; a unit's own 'twin' is ranked first.",
-  "version": 1,
-  "families": {
-    "analog-poly": {
-      "label": "Analog polysynth",
-      "twin": "poly",
-      "twins": [
-        [
-          "juniper",
-          0.9
-        ],
-        [
-          "poly",
-          0.75
-        ],
-        [
-          "monolith",
-          0.35
-        ]
-      ]
-    },
-    "analog-mono": {
-      "label": "Analog monosynth",
-      "twin": "poly",
-      "twins": [
-        [
-          "monolith",
-          0.92
-        ],
-        [
-          "poly",
-          0.6
-        ],
-        [
-          "juniper",
-          0.4
-        ]
-      ]
-    },
-    "bass-machine": {
-      "label": "Bass machine",
-      "twin": "poly",
-      "twins": [
-        [
-          "poly",
-          0.85
-        ],
-        [
-          "monolith",
-          0.8
-        ],
-        [
-          "juniper",
-          0.45
-        ]
-      ]
-    },
-    "fm": {
-      "label": "FM synth",
-      "twin": "tine",
-      "twins": [
-        [
-          "tine",
-          0.85
-        ],
-        [
-          "poly",
-          0.35
-        ]
-      ]
-    },
-    "electric-piano": {
-      "label": "Electric piano",
-      "twin": "tine",
-      "twins": [
-        [
-          "tine",
-          0.88
-        ],
-        [
-          "juniper",
-          0.4
-        ]
-      ]
-    },
-    "drum-machine": {
-      "label": "Drum machine",
-      "twin": "machina",
-      "twins": [
-        [
-          "machina",
-          0.9
-        ]
-      ]
-    }
+ "about": "Hardware twins. If you play a real synth or drum machine, the other jammers hear a software twin from the same family: the twin instrument (the unit's own 'twin' if it names one, else its family's), loaded with the preset for your patch type, with this unit's character settings on top. Twins are family resemblances, not emulations. 'character' values override the patch-type preset; 'types' lists the patch types that suit the unit (first is the default). Add a unit by adding an entry. 'osc' and 'filter' describe the circuit (vco, dco, va, wavetable, sample, fm; ladder, ota, ssm, cem, sem, diode, ms20, steiner, arp, svf, digital, none) and refine the twin ranking: a twin or library instrument that declares matching traits ranks higher. Each family lists candidate twins with a rough match score; a unit's own 'twin' is ranked first.",
+ "version": 2,
+ "families": {
+  "analog-poly": {
+   "label": "Analog polysynth",
+   "twin": "poly",
+   "twins": [
+    [
+     "juniper",
+     0.9
+    ],
+    [
+     "poly",
+     0.75
+    ],
+    [
+     "monolith",
+     0.35
+    ]
+   ]
   },
-  "hardware": [
-    {
-      "id": "roland-juno-60",
-      "maker": "Roland",
-      "model": "Juno-60",
-      "family": "analog-poly",
-      "types": [
-        "pad",
-        "strings",
-        "keys",
-        "brass",
-        "bass",
-        "lead",
-        "pluck"
-      ],
-      "character": {
-        "chorus": 2,
-        "hpf": 1
-      },
-      "note": "One DCO per voice plus sub, BBD chorus.",
-      "twin": "juniper"
-    },
-    {
-      "id": "roland-juno-106",
-      "maker": "Roland",
-      "model": "Juno-106",
-      "family": "analog-poly",
-      "types": [
-        "pad",
-        "strings",
-        "keys",
-        "bass",
-        "brass",
-        "lead",
-        "pluck"
-      ],
-      "character": {
-        "chorus": 1
-      },
-      "note": "One DCO per voice plus sub, BBD chorus.",
-      "twin": "juniper"
-    },
-    {
-      "id": "roland-jupiter-8",
-      "maker": "Roland",
-      "model": "Jupiter-8",
-      "family": "analog-poly",
-      "types": [
-        "brass",
-        "pad",
-        "strings",
-        "lead",
-        "keys"
-      ],
-      "character": {
-        "detune": 9,
-        "chorus": 0.15,
-        "drive": 0.15
-      },
-      "note": "Two VCOs per voice, big and bright."
-    },
-    {
-      "id": "sequential-prophet-5",
-      "maker": "Sequential",
-      "model": "Prophet-5",
-      "family": "analog-poly",
-      "types": [
-        "brass",
-        "keys",
-        "pad",
-        "lead",
-        "pluck"
-      ],
-      "character": {
-        "detune": 7,
-        "wave": 0.25,
-        "chorus": 0,
-        "drive": 0.15
-      },
-      "note": "Two VCOs per voice, no built-in chorus."
-    },
-    {
-      "id": "sequential-prophet-6",
-      "maker": "Sequential",
-      "model": "Prophet-6",
-      "family": "analog-poly",
-      "types": [
-        "pad",
-        "brass",
-        "keys",
-        "lead"
-      ],
-      "character": {
-        "detune": 7,
-        "chorus": 0.2,
-        "drive": 0.2
-      }
-    },
-    {
-      "id": "sequential-ob-6",
-      "maker": "Sequential / Oberheim",
-      "model": "OB-6",
-      "family": "analog-poly",
-      "types": [
-        "brass",
-        "pad",
-        "strings",
-        "lead"
-      ],
-      "character": {
-        "detune": 11,
-        "reso": 1.5,
-        "chorus": 0.2,
-        "drive": 0.2
-      },
-      "note": "SEM-style filter, wide and brassy."
-    },
-    {
-      "id": "korg-polysix",
-      "maker": "Korg",
-      "model": "Polysix",
-      "family": "analog-poly",
-      "types": [
-        "strings",
-        "pad",
-        "keys",
-        "brass"
-      ],
-      "character": {
-        "chorus": 3,
-        "sub": 0.3
-      },
-      "twin": "juniper"
-    },
-    {
-      "id": "korg-minilogue",
-      "maker": "Korg",
-      "model": "minilogue",
-      "family": "analog-poly",
-      "types": [
-        "keys",
-        "pad",
-        "lead",
-        "bass",
-        "pluck"
-      ],
-      "character": {
-        "detune": 6,
-        "chorus": 0.1
-      },
-      "cc": {
-        "cutoff": 43,
-        "reso": 44
-      }
-    },
-    {
-      "id": "korg-volca-keys",
-      "maker": "Korg",
-      "model": "volca keys",
-      "family": "analog-poly",
-      "types": [
-        "keys",
-        "lead",
-        "bass"
-      ],
-      "character": {
-        "detune": 8,
-        "chorus": 0.2,
-        "drive": 0.25
-      },
-      "note": "Three voices."
-    },
-    {
-      "id": "behringer-deepmind-12",
-      "maker": "Behringer",
-      "model": "DeepMind 12",
-      "family": "analog-poly",
-      "types": [
-        "pad",
-        "strings",
-        "keys",
-        "brass",
-        "lead"
-      ],
-      "character": {
-        "chorus": 2
-      },
-      "twin": "juniper"
-    },
-    {
-      "id": "moog-minimoog-d",
-      "maker": "Moog",
-      "model": "Minimoog Model D",
-      "family": "analog-mono",
-      "types": [
-        "lead",
-        "bass",
-        "brass",
-        "pluck",
-        "soft"
-      ],
-      "character": {},
-      "note": "Three VCOs, ladder filter, low-note priority.",
-      "twin": "monolith"
-    },
-    {
-      "id": "moog-subsequent-37",
-      "maker": "Moog",
-      "model": "Subsequent 37",
-      "family": "analog-mono",
-      "types": [
-        "bass",
-        "lead",
-        "brass",
-        "pluck"
-      ],
-      "character": {
-        "drive": 0.55
-      },
-      "twin": "monolith"
-    },
-    {
-      "id": "moog-grandmother",
-      "maker": "Moog",
-      "model": "Grandmother",
-      "family": "analog-mono",
-      "types": [
-        "lead",
-        "bass",
-        "pluck",
-        "soft"
-      ],
-      "character": {
-        "mix3": 0,
-        "drive": 0.3
-      },
-      "twin": "monolith"
-    },
-    {
-      "id": "roland-sh-101",
-      "maker": "Roland",
-      "model": "SH-101",
-      "family": "analog-mono",
-      "types": [
-        "bass",
-        "lead",
-        "pluck",
-        "acid"
-      ],
-      "character": {
-        "mono": 1,
-        "detune": 0,
-        "sub": 0.55,
-        "wave": 0.4
-      },
-      "note": "One VCO plus sub."
-    },
-    {
-      "id": "korg-ms-20",
-      "maker": "Korg",
-      "model": "MS-20",
-      "family": "analog-mono",
-      "types": [
-        "lead",
-        "bass",
-        "acid"
-      ],
-      "character": {
-        "mono": 1,
-        "detune": 12,
-        "reso": 9,
-        "drive": 0.5
-      },
-      "note": "Aggressive high/low-pass filters."
-    },
-    {
-      "id": "novation-bass-station-ii",
-      "maker": "Novation",
-      "model": "Bass Station II",
-      "family": "analog-mono",
-      "types": [
-        "bass",
-        "lead",
-        "pluck"
-      ],
-      "character": {
-        "mix3": 0.3,
-        "drive": 0.5
-      },
-      "twin": "monolith"
-    },
-    {
-      "id": "arturia-minibrute-2",
-      "maker": "Arturia",
-      "model": "MiniBrute 2",
-      "family": "analog-mono",
-      "types": [
-        "lead",
-        "bass",
-        "pluck"
-      ],
-      "character": {
-        "emphasis": 0.5,
-        "drive": 0.6
-      },
-      "twin": "monolith"
-    },
-    {
-      "id": "roland-tb-303",
-      "maker": "Roland",
-      "model": "TB-303",
-      "family": "bass-machine",
-      "types": [
-        "acid",
-        "bass"
-      ],
-      "character": {
-        "mono": 1,
-        "sub": 0,
-        "detune": 0
-      },
-      "note": "One VCO, the acid squelch."
-    },
-    {
-      "id": "korg-volca-bass",
-      "maker": "Korg",
-      "model": "volca bass",
-      "family": "bass-machine",
-      "types": [
-        "bass",
-        "acid",
-        "lead"
-      ],
-      "character": {
-        "mono": 1,
-        "detune": 9,
-        "drive": 0.35
-      }
-    },
-    {
-      "id": "yamaha-dx7",
-      "maker": "Yamaha",
-      "model": "DX7",
-      "family": "fm",
-      "types": [
-        "keys",
-        "bell",
-        "bass",
-        "pluck"
-      ],
-      "character": {
-        "drive": 0,
-        "trem": 0.15
-      },
-      "note": "Six-operator FM; the twin has two."
-    },
-    {
-      "id": "yamaha-reface-dx",
-      "maker": "Yamaha",
-      "model": "reface DX",
-      "family": "fm",
-      "types": [
-        "keys",
-        "bell",
-        "bass",
-        "pluck"
-      ],
-      "character": {
-        "drive": 0.05
-      }
-    },
-    {
-      "id": "korg-opsix",
-      "maker": "Korg",
-      "model": "opsix",
-      "family": "fm",
-      "types": [
-        "bell",
-        "pluck",
-        "bass",
-        "pad"
-      ],
-      "character": {
-        "bright": 0.6
-      }
-    },
-    {
-      "id": "elektron-digitone",
-      "maker": "Elektron",
-      "model": "Digitone",
-      "family": "fm",
-      "types": [
-        "pluck",
-        "bass",
-        "bell",
-        "pad"
-      ],
-      "character": {
-        "drive": 0.15
-      }
-    },
-    {
-      "id": "fender-rhodes-mk1",
-      "maker": "Fender",
-      "model": "Rhodes Mark I",
-      "family": "electric-piano",
-      "types": [
-        "keys"
-      ],
-      "character": {
-        "bell": 0.4,
-        "trem": 0.3
-      }
-    },
-    {
-      "id": "wurlitzer-200a",
-      "maker": "Wurlitzer",
-      "model": "200A",
-      "family": "electric-piano",
-      "types": [
-        "wurly"
-      ],
-      "character": {}
-    },
-    {
-      "id": "roland-tr-808",
-      "maker": "Roland",
-      "model": "TR-808",
-      "family": "drum-machine",
-      "types": [
-        "808"
-      ],
-      "character": {}
-    },
-    {
-      "id": "roland-tr-909",
-      "maker": "Roland",
-      "model": "TR-909",
-      "family": "drum-machine",
-      "types": [
-        "909"
-      ],
-      "character": {}
-    },
-    {
-      "id": "roland-tr-606",
-      "maker": "Roland",
-      "model": "TR-606",
-      "family": "drum-machine",
-      "types": [
-        "808"
-      ],
-      "character": {
-        "kick.decay": 0.5,
-        "kick.pitch": 4,
-        "snare.snap": 0.85,
-        "snare.pitch": 3,
-        "chh.decay": 0.7
-      }
-    },
-    {
-      "id": "roland-tr-8s",
-      "maker": "Roland",
-      "model": "TR-8S",
-      "family": "drum-machine",
-      "types": [
-        "909",
-        "808",
-        "hybrid"
-      ],
-      "character": {}
-    },
-    {
-      "id": "behringer-rd-8",
-      "maker": "Behringer",
-      "model": "RD-8",
-      "family": "drum-machine",
-      "types": [
-        "808"
-      ],
-      "character": {}
-    },
-    {
-      "id": "korg-volca-beats",
-      "maker": "Korg",
-      "model": "volca beats",
-      "family": "drum-machine",
-      "types": [
-        "808",
-        "lofi"
-      ],
-      "character": {
-        "drive": 0.35
-      }
-    },
-    {
-      "id": "arturia-drumbrute",
-      "maker": "Arturia",
-      "model": "DrumBrute",
-      "family": "drum-machine",
-      "types": [
-        "909",
-        "808"
-      ],
-      "character": {
-        "drive": 0.45
-      }
-    },
-    {
-      "id": "elektron-digitakt",
-      "maker": "Elektron",
-      "model": "Digitakt",
-      "family": "drum-machine",
-      "types": [
-        "hybrid",
-        "lofi",
-        "909"
-      ],
-      "character": {},
-      "note": "A sampler; the twin plays synthesized drums."
-    },
-    {
-      "id": "sp-404",
-      "maker": "Roland",
-      "model": "SP-404",
-      "family": "drum-machine",
-      "types": [
-        "lofi",
-        "hybrid"
-      ],
-      "character": {},
-      "note": "A sampler; the twin plays synthesized drums."
-    },
-    {
-      "id": "elektron-machinedrum",
-      "maker": "Elektron",
-      "model": "Machinedrum",
-      "family": "drum-machine",
-      "twin": "machina",
-      "types": [
-        "hybrid",
-        "efm",
-        "acoustic",
-        "lofi",
-        "909",
-        "808"
-      ],
-      "character": {},
-      "note": "Its own synthesis machines; Machina has four families of them."
-    }
-  ]
+  "analog-mono": {
+   "label": "Analog monosynth",
+   "twin": "poly",
+   "twins": [
+    [
+     "monolith",
+     0.92
+    ],
+    [
+     "poly",
+     0.6
+    ],
+    [
+     "juniper",
+     0.4
+    ]
+   ]
+  },
+  "bass-machine": {
+   "label": "Bass machine",
+   "twin": "poly",
+   "twins": [
+    [
+     "poly",
+     0.85
+    ],
+    [
+     "monolith",
+     0.8
+    ],
+    [
+     "juniper",
+     0.45
+    ]
+   ]
+  },
+  "fm": {
+   "label": "FM synth",
+   "twin": "tine",
+   "twins": [
+    [
+     "tine",
+     0.85
+    ],
+    [
+     "poly",
+     0.35
+    ]
+   ]
+  },
+  "electric-piano": {
+   "label": "Electric piano",
+   "twin": "tine",
+   "twins": [
+    [
+     "tine",
+     0.88
+    ],
+    [
+     "juniper",
+     0.4
+    ]
+   ]
+  },
+  "drum-machine": {
+   "label": "Drum machine",
+   "twin": "machina",
+   "twins": [
+    [
+     "machina",
+     0.9
+    ]
+   ]
+  },
+  "digital-poly": {
+   "label": "Digital polysynth",
+   "twin": "poly",
+   "twins": [
+    [
+     "poly",
+     0.75
+    ],
+    [
+     "juniper",
+     0.6
+    ],
+    [
+     "tine",
+     0.35
+    ]
+   ]
+  },
+  "string-machine": {
+   "label": "String machine",
+   "twin": "juniper",
+   "twins": [
+    [
+     "juniper",
+     0.85
+    ],
+    [
+     "poly",
+     0.6
+    ]
+   ]
+  },
+  "organ": {
+   "label": "Organ",
+   "twin": "poly",
+   "twins": [
+    [
+     "poly",
+     0.5
+    ],
+    [
+     "juniper",
+     0.45
+    ],
+    [
+     "tine",
+     0.3
+    ]
+   ]
+  },
+  "groovebox": {
+   "label": "Groovebox",
+   "twin": "machina",
+   "twins": [
+    [
+     "machina",
+     0.85
+    ]
+   ]
+  }
+ },
+ "hardware": [
+  {
+   "id": "roland-juno-6",
+   "maker": "Roland",
+   "model": "Juno-6",
+   "year": 1982,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "dco",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "brass",
+    "strings",
+    "keys",
+    "lead",
+    "pluck",
+    "bass"
+   ],
+   "character": {
+    "chorus": 2
+   },
+   "note": "DCO per voice plus sub, BBD chorus, no patch memory."
+  },
+  {
+   "id": "roland-juno-60",
+   "maker": "Roland",
+   "model": "Juno-60",
+   "year": 1982,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "dco",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "strings",
+    "keys",
+    "brass",
+    "bass",
+    "lead",
+    "pluck"
+   ],
+   "character": {
+    "chorus": 2,
+    "hpf": 1
+   },
+   "note": "One DCO per voice plus sub, BBD chorus.",
+   "twin": "juniper"
+  },
+  {
+   "id": "roland-juno-106",
+   "maker": "Roland",
+   "model": "Juno-106",
+   "year": 1984,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "dco",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "strings",
+    "keys",
+    "bass",
+    "brass",
+    "lead",
+    "pluck"
+   ],
+   "character": {
+    "chorus": 1
+   },
+   "note": "One DCO per voice plus sub, BBD chorus.",
+   "twin": "juniper"
+  },
+  {
+   "id": "roland-alpha-juno-2",
+   "maker": "Roland",
+   "model": "Alpha Juno 2",
+   "year": 1985,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "dco",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "strings",
+    "bass",
+    "lead",
+    "keys"
+   ],
+   "character": {
+    "chorus": 1
+   },
+   "note": "DCO with pulse/saw variants; the \"hoover\" synth."
+  },
+  {
+   "id": "roland-jx-3p",
+   "maker": "Roland",
+   "model": "JX-3P",
+   "year": 1983,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "dco",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "brass",
+    "strings",
+    "keys",
+    "lead",
+    "pluck",
+    "bass"
+   ],
+   "character": {
+    "chorus": 1,
+    "detune": 5
+   },
+   "note": "Two DCOs per voice, cross-mod and sync."
+  },
+  {
+   "id": "roland-jx-8p",
+   "maker": "Roland",
+   "model": "JX-8P",
+   "year": 1985,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "dco",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "strings",
+    "brass",
+    "keys"
+   ],
+   "character": {
+    "chorus": 1
+   },
+   "note": "Two DCOs per voice, velocity and aftertouch."
+  },
+  {
+   "id": "roland-super-jx-mks-70",
+   "maker": "Roland",
+   "model": "Super JX (MKS-70)",
+   "year": 1986,
+   "family": "analog-poly",
+   "voices": 12,
+   "osc": "dco",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "strings",
+    "brass"
+   ],
+   "character": {
+    "chorus": 1
+   },
+   "note": "Two JX-10 voice boards; layered and wide."
+  },
+  {
+   "id": "roland-jupiter-4",
+   "maker": "Roland",
+   "model": "Jupiter-4",
+   "year": 1978,
+   "family": "analog-poly",
+   "voices": 4,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "strings",
+    "pad",
+    "lead",
+    "brass"
+   ],
+   "character": {
+    "chorus": 1.5
+   },
+   "note": "Roland's first polysynth, with ensemble."
+  },
+  {
+   "id": "roland-jupiter-6",
+   "maker": "Roland",
+   "model": "Jupiter-6",
+   "year": 1983,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "brass",
+    "pad",
+    "strings",
+    "lead",
+    "bass"
+   ],
+   "character": {
+    "detune": 8,
+    "drive": 0.15
+   },
+   "note": "Two VCOs per voice, multimode filter."
+  },
+  {
+   "id": "roland-jupiter-8",
+   "maker": "Roland",
+   "model": "Jupiter-8",
+   "year": 1981,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "brass",
+    "pad",
+    "strings",
+    "lead",
+    "keys"
+   ],
+   "character": {
+    "detune": 9,
+    "chorus": 0.15,
+    "drive": 0.15
+   },
+   "note": "Two VCOs per voice, big and bright."
+  },
+  {
+   "id": "roland-mks-80-super-jupiter",
+   "maker": "Roland",
+   "model": "MKS-80 Super Jupiter",
+   "year": 1984,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "brass",
+    "pad",
+    "strings",
+    "bass"
+   ],
+   "character": {
+    "detune": 9,
+    "drive": 0.2
+   },
+   "note": "Rack Jupiter, two VCOs per voice."
+  },
+  {
+   "id": "roland-ju-06a",
+   "maker": "Roland",
+   "model": "JU-06A",
+   "year": 2019,
+   "family": "digital-poly",
+   "voices": 4,
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "strings",
+    "bass",
+    "keys"
+   ],
+   "character": {
+    "chorus": 1
+   },
+   "note": "Boutique model of Juno-60 and Juno-106."
+  },
+  {
+   "id": "roland-jp-08",
+   "maker": "Roland",
+   "model": "JP-08",
+   "year": 2015,
+   "family": "digital-poly",
+   "voices": 4,
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "brass",
+    "pad",
+    "lead"
+   ],
+   "character": {
+    "detune": 8
+   },
+   "note": "Boutique model of the Jupiter-8."
+  },
+  {
+   "id": "sequential-prophet-5",
+   "maker": "Sequential",
+   "model": "Prophet-5",
+   "year": 1978,
+   "family": "analog-poly",
+   "voices": 5,
+   "osc": "vco",
+   "filter": "ssm",
+   "types": [
+    "brass",
+    "keys",
+    "pad",
+    "lead",
+    "pluck"
+   ],
+   "character": {
+    "detune": 7,
+    "wave": 0.25,
+    "chorus": 0,
+    "drive": 0.15
+   },
+   "note": "Two VCOs per voice, no built-in chorus."
+  },
+  {
+   "id": "sequential-prophet-10",
+   "maker": "Sequential",
+   "model": "Prophet-10",
+   "year": 1980,
+   "family": "analog-poly",
+   "voices": 10,
+   "osc": "vco",
+   "filter": "ssm",
+   "types": [
+    "brass",
+    "pad",
+    "keys",
+    "lead"
+   ],
+   "character": {
+    "detune": 7,
+    "chorus": 0,
+    "drive": 0.15
+   },
+   "note": "Two Prophet-5 voice sets in one case."
+  },
+  {
+   "id": "sequential-prophet-600",
+   "maker": "Sequential",
+   "model": "Prophet-600",
+   "year": 1982,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "vco",
+   "filter": "cem",
+   "types": [
+    "brass",
+    "keys",
+    "pad",
+    "bass",
+    "lead"
+   ],
+   "character": {
+    "detune": 6,
+    "chorus": 0,
+    "drive": 0.2
+   },
+   "note": "The first synth with MIDI."
+  },
+  {
+   "id": "sequential-six-trak",
+   "maker": "Sequential",
+   "model": "Six-Trak",
+   "year": 1984,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "vco",
+   "filter": "cem",
+   "types": [
+    "keys",
+    "bass",
+    "lead",
+    "pad"
+   ],
+   "character": {
+    "detune": 0,
+    "chorus": 0
+   },
+   "note": "One oscillator per voice, six-track sequencer."
+  },
+  {
+   "id": "sequential-prophet-6",
+   "maker": "Sequential",
+   "model": "Prophet-6",
+   "year": 2015,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "vco",
+   "filter": "ssm",
+   "types": [
+    "pad",
+    "brass",
+    "keys",
+    "lead"
+   ],
+   "character": {
+    "detune": 7,
+    "chorus": 0.2,
+    "drive": 0.2
+   }
+  },
+  {
+   "id": "sequential-ob-6",
+   "maker": "Sequential",
+   "model": "OB-6",
+   "year": 2016,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "vco",
+   "filter": "sem",
+   "types": [
+    "brass",
+    "pad",
+    "strings",
+    "lead"
+   ],
+   "character": {
+    "detune": 11,
+    "reso": 1.5,
+    "chorus": 0.2,
+    "drive": 0.2
+   },
+   "note": "SEM-style filter, wide and brassy."
+  },
+  {
+   "id": "sequential-prophet-rev2",
+   "maker": "Sequential",
+   "model": "Prophet Rev2",
+   "year": 2017,
+   "family": "analog-poly",
+   "voices": 16,
+   "osc": "dco",
+   "filter": "cem",
+   "types": [
+    "pad",
+    "keys",
+    "brass",
+    "lead",
+    "bass"
+   ],
+   "character": {
+    "detune": 6,
+    "chorus": 0.15
+   },
+   "note": "DCOs and a Curtis-type filter."
+  },
+  {
+   "id": "sequential-take-5",
+   "maker": "Sequential",
+   "model": "Take 5",
+   "year": 2021,
+   "family": "analog-poly",
+   "voices": 5,
+   "osc": "vco",
+   "filter": "ssm",
+   "types": [
+    "keys",
+    "brass",
+    "pad",
+    "lead"
+   ],
+   "character": {
+    "detune": 6,
+    "drive": 0.2
+   }
+  },
+  {
+   "id": "sequential-prophet-x",
+   "maker": "Sequential",
+   "model": "Prophet-X",
+   "year": 2018,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "sample",
+   "filter": "ssm",
+   "types": [
+    "pad",
+    "keys",
+    "strings",
+    "bell"
+   ],
+   "character": {
+    "detune": 4
+   },
+   "note": "Samples plus digital oscillators into analog filters."
+  },
+  {
+   "id": "oberheim-ob-x",
+   "maker": "Oberheim",
+   "model": "OB-X",
+   "year": 1979,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "vco",
+   "filter": "sem",
+   "types": [
+    "brass",
+    "pad",
+    "strings",
+    "lead"
+   ],
+   "character": {
+    "detune": 11,
+    "reso": 1,
+    "chorus": 0.15,
+    "drive": 0.25
+   },
+   "note": "Two VCOs per voice, two-pole filter."
+  },
+  {
+   "id": "oberheim-ob-xa",
+   "maker": "Oberheim",
+   "model": "OB-Xa",
+   "year": 1980,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "vco",
+   "filter": "cem",
+   "types": [
+    "brass",
+    "pad",
+    "strings",
+    "lead"
+   ],
+   "character": {
+    "detune": 11,
+    "chorus": 0.15,
+    "drive": 0.25
+   },
+   "note": "The \"Jump\" brass."
+  },
+  {
+   "id": "oberheim-ob-8",
+   "maker": "Oberheim",
+   "model": "OB-8",
+   "year": 1983,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "vco",
+   "filter": "cem",
+   "types": [
+    "brass",
+    "pad",
+    "strings",
+    "lead",
+    "bass"
+   ],
+   "character": {
+    "detune": 10,
+    "chorus": 0.15,
+    "drive": 0.2
+   }
+  },
+  {
+   "id": "oberheim-ob-x8",
+   "maker": "Oberheim",
+   "model": "OB-X8",
+   "year": 2022,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "vco",
+   "filter": "sem",
+   "types": [
+    "brass",
+    "pad",
+    "strings",
+    "lead"
+   ],
+   "character": {
+    "detune": 11,
+    "chorus": 0.15,
+    "drive": 0.25
+   },
+   "note": "Combines OB-X, OB-Xa and OB-8 voice modes."
+  },
+  {
+   "id": "oberheim-matrix-12",
+   "maker": "Oberheim",
+   "model": "Matrix-12",
+   "year": 1985,
+   "family": "analog-poly",
+   "voices": 12,
+   "osc": "vco",
+   "filter": "cem",
+   "types": [
+    "pad",
+    "strings",
+    "brass",
+    "keys"
+   ],
+   "character": {
+    "detune": 9,
+    "chorus": 0.2
+   },
+   "note": "Huge modulation matrix, multimode filter."
+  },
+  {
+   "id": "oberheim-xpander",
+   "maker": "Oberheim",
+   "model": "Xpander",
+   "year": 1984,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "vco",
+   "filter": "cem",
+   "types": [
+    "pad",
+    "strings",
+    "brass",
+    "lead"
+   ],
+   "character": {
+    "detune": 9,
+    "chorus": 0.2
+   }
+  },
+  {
+   "id": "oberheim-matrix-1000",
+   "maker": "Oberheim",
+   "model": "Matrix-1000",
+   "year": 1987,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "dco",
+   "filter": "cem",
+   "types": [
+    "pad",
+    "strings",
+    "brass",
+    "keys",
+    "bass"
+   ],
+   "character": {
+    "detune": 6,
+    "chorus": 0.15
+   },
+   "note": "Rack, a thousand presets."
+  },
+  {
+   "id": "oberheim-two-voice",
+   "maker": "Oberheim",
+   "model": "Two Voice",
+   "year": 1975,
+   "family": "analog-poly",
+   "voices": 2,
+   "osc": "vco",
+   "filter": "sem",
+   "types": [
+    "brass",
+    "lead",
+    "bass"
+   ],
+   "character": {
+    "detune": 9,
+    "reso": 1.5,
+    "drive": 0.3
+   },
+   "note": "Two SEM modules side by side."
+  },
+  {
+   "id": "oberheim-four-voice",
+   "maker": "Oberheim",
+   "model": "Four Voice",
+   "year": 1975,
+   "family": "analog-poly",
+   "voices": 4,
+   "osc": "vco",
+   "filter": "sem",
+   "types": [
+    "brass",
+    "pad",
+    "lead"
+   ],
+   "character": {
+    "detune": 9,
+    "reso": 1.5,
+    "drive": 0.3
+   },
+   "note": "Four SEM modules."
+  },
+  {
+   "id": "moog-memorymoog",
+   "maker": "Moog",
+   "model": "Memorymoog",
+   "year": 1982,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "brass",
+    "lead",
+    "pad",
+    "bass"
+   ],
+   "character": {
+    "detune": 10,
+    "drive": 0.35
+   },
+   "note": "Three VCOs per voice into ladder filters."
+  },
+  {
+   "id": "moog-polymoog",
+   "maker": "Moog",
+   "model": "Polymoog",
+   "year": 1975,
+   "family": "analog-poly",
+   "osc": "divide",
+   "filter": "ladder",
+   "types": [
+    "strings",
+    "pad",
+    "keys"
+   ],
+   "character": {
+    "chorus": 0.3,
+    "detune": 3
+   },
+   "note": "Divide-down, fully polyphonic."
+  },
+  {
+   "id": "moog-moog-one",
+   "maker": "Moog",
+   "model": "Moog One",
+   "year": 2018,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "pad",
+    "brass",
+    "lead",
+    "strings",
+    "keys",
+    "bass"
+   ],
+   "character": {
+    "detune": 9,
+    "chorus": 0.15,
+    "drive": 0.3
+   },
+   "note": "Three VCOs per voice, ladder plus state-variable filters; 8- or 16-voice."
+  },
+  {
+   "id": "moog-muse",
+   "maker": "Moog",
+   "model": "Muse",
+   "year": 2024,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "pad",
+    "brass",
+    "lead",
+    "keys"
+   ],
+   "character": {
+    "detune": 8,
+    "drive": 0.3
+   },
+   "note": "Two VCOs per voice, ladder filter."
+  },
+  {
+   "id": "korg-polysix",
+   "maker": "Korg",
+   "model": "Polysix",
+   "year": 1981,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "vco",
+   "filter": "ssm",
+   "types": [
+    "strings",
+    "pad",
+    "keys",
+    "brass"
+   ],
+   "character": {
+    "chorus": 3,
+    "sub": 0.3
+   },
+   "twin": "juniper"
+  },
+  {
+   "id": "korg-mono-poly",
+   "maker": "Korg",
+   "model": "Mono/Poly",
+   "year": 1981,
+   "family": "analog-poly",
+   "voices": 4,
+   "osc": "vco",
+   "filter": "ssm",
+   "types": [
+    "lead",
+    "bass",
+    "brass",
+    "pad"
+   ],
+   "character": {
+    "detune": 12,
+    "drive": 0.3
+   },
+   "note": "Four VCOs, mono or four-voice paraphonic."
+  },
+  {
+   "id": "korg-poly-61",
+   "maker": "Korg",
+   "model": "Poly-61",
+   "year": 1982,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "dco",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "strings",
+    "keys",
+    "brass"
+   ],
+   "character": {
+    "detune": 5,
+    "chorus": 0.3
+   }
+  },
+  {
+   "id": "korg-poly-800",
+   "maker": "Korg",
+   "model": "Poly-800",
+   "year": 1983,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "dco",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "strings",
+    "keys",
+    "bass"
+   ],
+   "character": {
+    "chorus": 0.5
+   },
+   "note": "Digitally controlled, one shared filter."
+  },
+  {
+   "id": "korg-dw-8000",
+   "maker": "Korg",
+   "model": "DW-8000",
+   "year": 1985,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "digital",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "keys",
+    "bell",
+    "strings"
+   ],
+   "character": {
+    "chorus": 0.4
+   },
+   "note": "Digital waveforms, analog filters, delay."
+  },
+  {
+   "id": "korg-ps-3300",
+   "maker": "Korg",
+   "model": "PS-3300",
+   "year": 1977,
+   "family": "analog-poly",
+   "osc": "divide",
+   "filter": "ms20",
+   "types": [
+    "strings",
+    "pad",
+    "brass"
+   ],
+   "character": {
+    "chorus": 0.3
+   },
+   "note": "Fully polyphonic, three synths in one."
+  },
+  {
+   "id": "korg-minilogue",
+   "maker": "Korg",
+   "model": "Minilogue",
+   "year": 2016,
+   "family": "analog-poly",
+   "voices": 4,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "keys",
+    "pad",
+    "lead",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "detune": 6,
+    "chorus": 0.1
+   }
+  },
+  {
+   "id": "korg-minilogue-xd",
+   "maker": "Korg",
+   "model": "Minilogue XD",
+   "year": 2019,
+   "family": "analog-poly",
+   "voices": 4,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "keys",
+    "pad",
+    "lead",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "detune": 6,
+    "chorus": 0.1
+   },
+   "note": "Two VCOs plus a digital multi-engine."
+  },
+  {
+   "id": "korg-prologue",
+   "maker": "Korg",
+   "model": "Prologue",
+   "year": 2018,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "keys",
+    "lead",
+    "brass"
+   ],
+   "character": {
+    "detune": 6,
+    "chorus": 0.15
+   }
+  },
+  {
+   "id": "korg-volca-keys",
+   "maker": "Korg",
+   "model": "Volca Keys",
+   "year": 2013,
+   "family": "analog-poly",
+   "voices": 3,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "keys",
+    "lead",
+    "bass"
+   ],
+   "character": {
+    "detune": 8,
+    "chorus": 0.2,
+    "drive": 0.25
+   },
+   "note": "Three voices."
+  },
+  {
+   "id": "yamaha-cs-80",
+   "maker": "Yamaha",
+   "model": "CS-80",
+   "year": 1977,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "vco",
+   "filter": "svf",
+   "types": [
+    "brass",
+    "pad",
+    "strings",
+    "lead"
+   ],
+   "character": {
+    "detune": 9,
+    "chorus": 0.25,
+    "drive": 0.15
+   },
+   "note": "Two layers per voice, polyphonic aftertouch, ribbon."
+  },
+  {
+   "id": "elka-synthex",
+   "maker": "Elka",
+   "model": "Synthex",
+   "year": 1981,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "vco",
+   "filter": "ssm",
+   "types": [
+    "brass",
+    "pad",
+    "strings",
+    "lead"
+   ],
+   "character": {
+    "detune": 8,
+    "chorus": 0.3
+   }
+  },
+  {
+   "id": "behringer-deepmind-12",
+   "maker": "Behringer",
+   "model": "DeepMind 12",
+   "year": 2017,
+   "family": "analog-poly",
+   "voices": 12,
+   "osc": "dco",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "strings",
+    "keys",
+    "brass",
+    "lead"
+   ],
+   "character": {
+    "chorus": 2
+   },
+   "twin": "juniper"
+  },
+  {
+   "id": "behringer-deepmind-6",
+   "maker": "Behringer",
+   "model": "DeepMind 6",
+   "year": 2017,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "dco",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "strings",
+    "keys",
+    "brass"
+   ],
+   "character": {
+    "chorus": 2
+   }
+  },
+  {
+   "id": "behringer-pro-800",
+   "maker": "Behringer",
+   "model": "Pro-800",
+   "year": 2023,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "vco",
+   "filter": "cem",
+   "types": [
+    "brass",
+    "keys",
+    "pad",
+    "bass",
+    "lead"
+   ],
+   "character": {
+    "detune": 6,
+    "chorus": 0,
+    "drive": 0.2
+   },
+   "note": "Based on the Prophet-600."
+  },
+  {
+   "id": "behringer-ub-xa",
+   "maker": "Behringer",
+   "model": "UB-Xa",
+   "year": 2023,
+   "family": "analog-poly",
+   "voices": 16,
+   "osc": "vco",
+   "filter": "cem",
+   "types": [
+    "brass",
+    "pad",
+    "strings",
+    "lead"
+   ],
+   "character": {
+    "detune": 11,
+    "chorus": 0.15,
+    "drive": 0.25
+   },
+   "note": "Based on the OB-Xa."
+  },
+  {
+   "id": "behringer-poly-d",
+   "maker": "Behringer",
+   "model": "Poly D",
+   "year": 2019,
+   "family": "analog-poly",
+   "voices": 4,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "bass",
+    "lead",
+    "brass"
+   ],
+   "character": {
+    "detune": 8,
+    "drive": 0.4
+   },
+   "note": "Four-voice paraphonic, Minimoog-style."
+  },
+  {
+   "id": "arturia-polybrute",
+   "maker": "Arturia",
+   "model": "PolyBrute",
+   "year": 2020,
+   "family": "analog-poly",
+   "voices": 6,
+   "osc": "vco",
+   "filter": "steiner",
+   "types": [
+    "pad",
+    "brass",
+    "lead",
+    "bass",
+    "strings"
+   ],
+   "character": {
+    "detune": 8,
+    "drive": 0.35
+   },
+   "note": "Ladder and Steiner-Parker filters, morphing."
+  },
+  {
+   "id": "novation-peak",
+   "maker": "Novation",
+   "model": "Peak",
+   "year": 2017,
+   "family": "analog-poly",
+   "voices": 8,
+   "osc": "digital",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "keys",
+    "lead",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "detune": 6,
+    "drive": 0.3
+   },
+   "note": "Digital oscillators, analog filters and distortion."
+  },
+  {
+   "id": "novation-summit",
+   "maker": "Novation",
+   "model": "Summit",
+   "year": 2019,
+   "family": "analog-poly",
+   "voices": 16,
+   "osc": "digital",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "keys",
+    "lead",
+    "bass",
+    "strings"
+   ],
+   "character": {
+    "detune": 6,
+    "drive": 0.3
+   },
+   "note": "Two Peaks in one."
+  },
+  {
+   "id": "dave-smith-instruments-tetra",
+   "maker": "Dave Smith Instruments",
+   "model": "Tetra",
+   "year": 2009,
+   "family": "analog-poly",
+   "voices": 4,
+   "osc": "dco",
+   "filter": "cem",
+   "types": [
+    "pad",
+    "keys",
+    "bass",
+    "lead"
+   ],
+   "character": {
+    "detune": 6
+   }
+  },
+  {
+   "id": "elektron-analog-four",
+   "maker": "Elektron",
+   "model": "Analog Four",
+   "year": 2012,
+   "family": "analog-poly",
+   "voices": 4,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "bass",
+    "lead",
+    "pluck",
+    "pad"
+   ],
+   "character": {
+    "drive": 0.3
+   },
+   "note": "Four analog voices with a sequencer."
+  },
+  {
+   "id": "elektron-analog-keys",
+   "maker": "Elektron",
+   "model": "Analog Keys",
+   "year": 2014,
+   "family": "analog-poly",
+   "voices": 4,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "bass",
+    "lead",
+    "pad",
+    "keys"
+   ],
+   "character": {
+    "drive": 0.3
+   }
+  },
+  {
+   "id": "moog-minimoog-d",
+   "maker": "Moog",
+   "model": "Minimoog Model D",
+   "year": 1970,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "lead",
+    "bass",
+    "brass",
+    "pluck",
+    "soft"
+   ],
+   "character": {},
+   "note": "Three VCOs, ladder filter, low-note priority.",
+   "twin": "monolith"
+  },
+  {
+   "id": "moog-prodigy",
+   "maker": "Moog",
+   "model": "Prodigy",
+   "year": 1979,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "bass",
+    "lead",
+    "pluck"
+   ],
+   "character": {
+    "mix3": 0,
+    "drive": 0.3
+   },
+   "note": "Two VCOs, sync."
+  },
+  {
+   "id": "moog-rogue",
+   "maker": "Moog",
+   "model": "Rogue",
+   "year": 1981,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "bass",
+    "lead"
+   ],
+   "character": {
+    "mix3": 0
+   }
+  },
+  {
+   "id": "moog-source",
+   "maker": "Moog",
+   "model": "Source",
+   "year": 1981,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "bass",
+    "lead",
+    "pluck"
+   ],
+   "character": {
+    "mix3": 0,
+    "drive": 0.3
+   },
+   "note": "Programmable, touch panel."
+  },
+  {
+   "id": "moog-taurus",
+   "maker": "Moog",
+   "model": "Taurus",
+   "year": 1976,
+   "family": "bass-machine",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "bass"
+   ],
+   "character": {
+    "drive": 0.4
+   },
+   "note": "Bass pedals, deep and huge."
+  },
+  {
+   "id": "moog-minitaur",
+   "maker": "Moog",
+   "model": "Minitaur",
+   "year": 2012,
+   "family": "bass-machine",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "bass"
+   ],
+   "character": {
+    "drive": 0.4
+   }
+  },
+  {
+   "id": "moog-subsequent-37",
+   "maker": "Moog",
+   "model": "Subsequent 37",
+   "year": 2017,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "bass",
+    "lead",
+    "brass",
+    "pluck"
+   ],
+   "character": {
+    "drive": 0.55
+   },
+   "twin": "monolith"
+  },
+  {
+   "id": "moog-subsequent-25",
+   "maker": "Moog",
+   "model": "Subsequent 25",
+   "year": 2018,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "bass",
+    "lead"
+   ],
+   "character": {
+    "drive": 0.45
+   }
+  },
+  {
+   "id": "moog-mother-32",
+   "maker": "Moog",
+   "model": "Mother-32",
+   "year": 2015,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "bass",
+    "lead",
+    "pluck",
+    "acid"
+   ],
+   "character": {
+    "mix3": 0,
+    "drive": 0.3
+   },
+   "note": "One VCO, semi-modular."
+  },
+  {
+   "id": "moog-grandmother",
+   "maker": "Moog",
+   "model": "Grandmother",
+   "year": 2018,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "lead",
+    "bass",
+    "pluck",
+    "soft"
+   ],
+   "character": {
+    "mix3": 0,
+    "drive": 0.3
+   },
+   "twin": "monolith"
+  },
+  {
+   "id": "moog-matriarch",
+   "maker": "Moog",
+   "model": "Matriarch",
+   "year": 2019,
+   "family": "analog-mono",
+   "voices": 4,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "lead",
+    "bass",
+    "brass",
+    "pad"
+   ],
+   "character": {
+    "drive": 0.35
+   },
+   "note": "Four-voice paraphonic semi-modular, stereo delay."
+  },
+  {
+   "id": "arp-odyssey",
+   "maker": "ARP",
+   "model": "Odyssey",
+   "year": 1972,
+   "family": "analog-mono",
+   "voices": 2,
+   "osc": "vco",
+   "filter": "arp",
+   "types": [
+    "lead",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 10,
+    "drive": 0.3
+   },
+   "note": "Duophonic, sync and ring mod."
+  },
+  {
+   "id": "arp-2600",
+   "maker": "ARP",
+   "model": "2600",
+   "year": 1971,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "arp",
+   "types": [
+    "lead",
+    "bass",
+    "pluck",
+    "acid"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 8,
+    "drive": 0.3
+   },
+   "note": "Semi-modular with spring reverb."
+  },
+  {
+   "id": "arp-axxe",
+   "maker": "ARP",
+   "model": "Axxe",
+   "year": 1975,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "arp",
+   "types": [
+    "lead",
+    "bass"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 0
+   },
+   "note": "Single VCO."
+  },
+  {
+   "id": "roland-sh-101",
+   "maker": "Roland",
+   "model": "SH-101",
+   "year": 1982,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "bass",
+    "lead",
+    "pluck",
+    "acid"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 0,
+    "sub": 0.55,
+    "wave": 0.4
+   },
+   "note": "One VCO plus sub."
+  },
+  {
+   "id": "roland-sh-09",
+   "maker": "Roland",
+   "model": "SH-09",
+   "year": 1978,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "bass",
+    "lead",
+    "pluck"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 0,
+    "sub": 0.5
+   }
+  },
+  {
+   "id": "roland-sh-2",
+   "maker": "Roland",
+   "model": "SH-2",
+   "year": 1979,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "bass",
+    "lead"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 7,
+    "sub": 0.5
+   },
+   "note": "Two VCOs plus sub."
+  },
+  {
+   "id": "roland-sh-1000",
+   "maker": "Roland",
+   "model": "SH-1000",
+   "year": 1973,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "lead",
+    "bass",
+    "brass"
+   ],
+   "character": {
+    "mono": 1
+   },
+   "note": "Japan's first commercial synth, with presets."
+  },
+  {
+   "id": "roland-system-100",
+   "maker": "Roland",
+   "model": "System-100",
+   "year": 1975,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "lead",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 6
+   },
+   "note": "Semi-modular system."
+  },
+  {
+   "id": "roland-promars-mrs-2",
+   "maker": "Roland",
+   "model": "Promars MRS-2",
+   "year": 1979,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "lead",
+    "bass",
+    "brass"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 7
+   }
+  },
+  {
+   "id": "roland-mc-202",
+   "maker": "Roland",
+   "model": "MC-202",
+   "year": 1983,
+   "family": "bass-machine",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "bass",
+    "acid",
+    "lead"
+   ],
+   "character": {
+    "mono": 1,
+    "sub": 0.5
+   },
+   "note": "SH-101 voice with a sequencer."
+  },
+  {
+   "id": "roland-se-02",
+   "maker": "Roland",
+   "model": "SE-02",
+   "year": 2017,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "bass",
+    "lead"
+   ],
+   "character": {
+    "drive": 0.45
+   },
+   "note": "Three VCOs, Studio Electronics design."
+  },
+  {
+   "id": "sequential-pro-one",
+   "maker": "Sequential",
+   "model": "Pro-One",
+   "year": 1981,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ssm",
+   "types": [
+    "bass",
+    "lead",
+    "pluck"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 7,
+    "drive": 0.3
+   },
+   "note": "Two VCOs, a Prophet-5 voice."
+  },
+  {
+   "id": "sequential-pro-3",
+   "maker": "Sequential",
+   "model": "Pro 3",
+   "year": 2018,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "bass",
+    "lead",
+    "pluck"
+   ],
+   "character": {
+    "drive": 0.4
+   },
+   "note": "Three oscillators, three filter types."
+  },
+  {
+   "id": "oberheim-sem",
+   "maker": "Oberheim",
+   "model": "SEM",
+   "year": 1974,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "sem",
+   "types": [
+    "bass",
+    "lead",
+    "brass"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 9,
+    "reso": 1.5,
+    "drive": 0.3
+   },
+   "note": "Two VCOs into a two-pole multimode filter."
+  },
+  {
+   "id": "korg-ms-20",
+   "maker": "Korg",
+   "model": "MS-20",
+   "year": 1978,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ms20",
+   "types": [
+    "lead",
+    "bass",
+    "acid"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 12,
+    "reso": 9,
+    "drive": 0.5
+   },
+   "note": "Aggressive high/low-pass filters."
+  },
+  {
+   "id": "korg-ms-10",
+   "maker": "Korg",
+   "model": "MS-10",
+   "year": 1978,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ms20",
+   "types": [
+    "lead",
+    "bass",
+    "acid"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 0,
+    "reso": 9,
+    "drive": 0.5
+   },
+   "note": "One VCO version of the MS-20."
+  },
+  {
+   "id": "korg-minikorg-700",
+   "maker": "Korg",
+   "model": "miniKORG 700",
+   "year": 1973,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "lead",
+    "bass"
+   ],
+   "character": {
+    "mono": 1
+   },
+   "note": "Korg's first synth."
+  },
+  {
+   "id": "korg-monologue",
+   "maker": "Korg",
+   "model": "Monologue",
+   "year": 2016,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "bass",
+    "lead",
+    "acid"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 6,
+    "drive": 0.4
+   }
+  },
+  {
+   "id": "korg-volca-bass",
+   "maker": "Korg",
+   "model": "Volca Bass",
+   "year": 2013,
+   "family": "bass-machine",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "bass",
+    "acid",
+    "lead"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 9,
+    "drive": 0.35
+   }
+  },
+  {
+   "id": "korg-volca-modular",
+   "maker": "Korg",
+   "model": "Volca Modular",
+   "year": 2018,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "none",
+   "types": [
+    "pluck",
+    "bell",
+    "lead"
+   ],
+   "character": {
+    "mono": 1
+   },
+   "note": "West Coast micro modular."
+  },
+  {
+   "id": "yamaha-cs-15",
+   "maker": "Yamaha",
+   "model": "CS-15",
+   "year": 1979,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "svf",
+   "types": [
+    "lead",
+    "bass",
+    "brass"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 6
+   }
+  },
+  {
+   "id": "yamaha-cs-01",
+   "maker": "Yamaha",
+   "model": "CS-01",
+   "year": 1982,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "svf",
+   "types": [
+    "lead",
+    "bass"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 0
+   },
+   "note": "Portable, with a breath controller input."
+  },
+  {
+   "id": "ems-vcs3",
+   "maker": "EMS",
+   "model": "VCS3",
+   "year": 1969,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "diode",
+   "types": [
+    "lead",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 12,
+    "drive": 0.5
+   },
+   "note": "Pin-matrix patching."
+  },
+  {
+   "id": "ems-synthi-aks",
+   "maker": "EMS",
+   "model": "Synthi AKS",
+   "year": 1972,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "diode",
+   "types": [
+    "lead",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 12,
+    "drive": 0.5
+   },
+   "note": "A VCS3 in a briefcase."
+  },
+  {
+   "id": "octave-cat",
+   "maker": "Octave",
+   "model": "Cat",
+   "year": 1976,
+   "family": "analog-mono",
+   "voices": 2,
+   "osc": "vco",
+   "filter": "arp",
+   "types": [
+    "lead",
+    "bass"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 8
+   }
+  },
+  {
+   "id": "novation-bass-station",
+   "maker": "Novation",
+   "model": "Bass Station",
+   "year": 1993,
+   "family": "bass-machine",
+   "voices": 1,
+   "osc": "dco",
+   "filter": "ota",
+   "types": [
+    "bass",
+    "acid",
+    "lead"
+   ],
+   "character": {
+    "drive": 0.4
+   }
+  },
+  {
+   "id": "novation-bass-station-ii",
+   "maker": "Novation",
+   "model": "Bass Station II",
+   "year": 2013,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "bass",
+    "lead",
+    "pluck"
+   ],
+   "character": {
+    "mix3": 0.3,
+    "drive": 0.5
+   },
+   "twin": "monolith"
+  },
+  {
+   "id": "arturia-minibrute",
+   "maker": "Arturia",
+   "model": "MiniBrute",
+   "year": 2012,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "steiner",
+   "types": [
+    "lead",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "emphasis": 0.5,
+    "drive": 0.6
+   }
+  },
+  {
+   "id": "arturia-microbrute",
+   "maker": "Arturia",
+   "model": "MicroBrute",
+   "year": 2014,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "steiner",
+   "types": [
+    "bass",
+    "lead",
+    "acid"
+   ],
+   "character": {
+    "emphasis": 0.5,
+    "drive": 0.6
+   }
+  },
+  {
+   "id": "arturia-minibrute-2",
+   "maker": "Arturia",
+   "model": "MiniBrute 2",
+   "year": 2018,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "steiner",
+   "types": [
+    "lead",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "emphasis": 0.5,
+    "drive": 0.6
+   },
+   "twin": "monolith"
+  },
+  {
+   "id": "arturia-matrixbrute",
+   "maker": "Arturia",
+   "model": "MatrixBrute",
+   "year": 2016,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "lead",
+    "bass",
+    "brass"
+   ],
+   "character": {
+    "drive": 0.5
+   },
+   "note": "Three VCOs, ladder and Steiner filters."
+  },
+  {
+   "id": "behringer-model-d",
+   "maker": "Behringer",
+   "model": "Model D",
+   "year": 2017,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "lead",
+    "bass",
+    "brass"
+   ],
+   "character": {},
+   "note": "Based on the Minimoog Model D."
+  },
+  {
+   "id": "behringer-pro-1",
+   "maker": "Behringer",
+   "model": "Pro-1",
+   "year": 2019,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ssm",
+   "types": [
+    "bass",
+    "lead",
+    "pluck"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 7,
+    "drive": 0.3
+   },
+   "note": "Based on the Pro-One."
+  },
+  {
+   "id": "behringer-ms-1",
+   "maker": "Behringer",
+   "model": "MS-1",
+   "year": 2018,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "bass",
+    "lead",
+    "pluck"
+   ],
+   "character": {
+    "mono": 1,
+    "sub": 0.55,
+    "wave": 0.4
+   },
+   "note": "Based on the SH-101."
+  },
+  {
+   "id": "behringer-k-2",
+   "maker": "Behringer",
+   "model": "K-2",
+   "year": 2018,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ms20",
+   "types": [
+    "lead",
+    "bass",
+    "acid"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 12,
+    "reso": 9,
+    "drive": 0.5
+   },
+   "note": "Based on the MS-20."
+  },
+  {
+   "id": "behringer-2600",
+   "maker": "Behringer",
+   "model": "2600",
+   "year": 2020,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "arp",
+   "types": [
+    "lead",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 8,
+    "drive": 0.3
+   },
+   "note": "Based on the ARP 2600."
+  },
+  {
+   "id": "behringer-odyssey",
+   "maker": "Behringer",
+   "model": "Odyssey",
+   "year": 2019,
+   "family": "analog-mono",
+   "voices": 2,
+   "osc": "vco",
+   "filter": "arp",
+   "types": [
+    "lead",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 10,
+    "drive": 0.3
+   },
+   "note": "Based on the ARP Odyssey."
+  },
+  {
+   "id": "behringer-crave",
+   "maker": "Behringer",
+   "model": "Crave",
+   "year": 2019,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ladder",
+   "types": [
+    "bass",
+    "lead",
+    "acid"
+   ],
+   "character": {
+    "drive": 0.4
+   }
+  },
+  {
+   "id": "behringer-neutron",
+   "maker": "Behringer",
+   "model": "Neutron",
+   "year": 2018,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "bass",
+    "lead",
+    "acid"
+   ],
+   "character": {
+    "mono": 1,
+    "detune": 9,
+    "drive": 0.6
+   },
+   "note": "Paraphonic semi-modular."
+  },
+  {
+   "id": "make-noise-0-coast",
+   "maker": "Make Noise",
+   "model": "0-Coast",
+   "year": 2016,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "none",
+   "types": [
+    "pluck",
+    "bell",
+    "lead",
+    "bass"
+   ],
+   "character": {
+    "mono": 1
+   },
+   "note": "West Coast: wavefolding and a low-pass gate."
+  },
+  {
+   "id": "dave-smith-instruments-mopho",
+   "maker": "Dave Smith Instruments",
+   "model": "Mopho",
+   "year": 2008,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "dco",
+   "filter": "cem",
+   "types": [
+    "bass",
+    "lead"
+   ],
+   "character": {
+    "drive": 0.3
+   }
+  },
+  {
+   "id": "dave-smith-instruments-evolver",
+   "maker": "Dave Smith Instruments",
+   "model": "Evolver",
+   "year": 2002,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "digital",
+   "filter": "cem",
+   "types": [
+    "lead",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "drive": 0.4
+   },
+   "note": "Analog and digital oscillators, feedback delay."
+  },
+  {
+   "id": "waldorf-pulse-2",
+   "maker": "Waldorf",
+   "model": "Pulse 2",
+   "year": 2014,
+   "family": "analog-mono",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "ota",
+   "types": [
+    "bass",
+    "lead",
+    "acid"
+   ],
+   "character": {
+    "drive": 0.4
+   }
+  },
+  {
+   "id": "roland-tb-303",
+   "maker": "Roland",
+   "model": "TB-303",
+   "year": 1981,
+   "family": "bass-machine",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "diode",
+   "types": [
+    "acid",
+    "bass"
+   ],
+   "character": {
+    "mono": 1,
+    "sub": 0,
+    "detune": 0
+   },
+   "note": "One VCO, the acid squelch."
+  },
+  {
+   "id": "roland-tb-3",
+   "maker": "Roland",
+   "model": "TB-3",
+   "year": 2014,
+   "family": "bass-machine",
+   "voices": 1,
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "acid",
+    "bass"
+   ],
+   "character": {
+    "mono": 1,
+    "sub": 0,
+    "detune": 0
+   },
+   "note": "Digital model of the TB-303."
+  },
+  {
+   "id": "roland-tb-03",
+   "maker": "Roland",
+   "model": "TB-03",
+   "year": 2016,
+   "family": "bass-machine",
+   "voices": 1,
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "acid",
+    "bass"
+   ],
+   "character": {
+    "mono": 1,
+    "sub": 0,
+    "detune": 0
+   },
+   "note": "Boutique model of the TB-303."
+  },
+  {
+   "id": "behringer-td-3",
+   "maker": "Behringer",
+   "model": "TD-3",
+   "year": 2019,
+   "family": "bass-machine",
+   "voices": 1,
+   "osc": "vco",
+   "filter": "diode",
+   "types": [
+    "acid",
+    "bass"
+   ],
+   "character": {
+    "mono": 1,
+    "sub": 0,
+    "detune": 0
+   },
+   "note": "Based on the TB-303."
+  },
+  {
+   "id": "roland-d-50",
+   "maker": "Roland",
+   "model": "D-50",
+   "year": 1987,
+   "family": "digital-poly",
+   "voices": 16,
+   "osc": "la",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "bell",
+    "strings",
+    "keys",
+    "brass"
+   ],
+   "character": {
+    "chorus": 0.5
+   },
+   "note": "Sample attacks plus synthesized sustain; \"Fantasia\"."
+  },
+  {
+   "id": "roland-jd-800",
+   "maker": "Roland",
+   "model": "JD-800",
+   "year": 1991,
+   "family": "digital-poly",
+   "voices": 24,
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "keys",
+    "strings",
+    "bell",
+    "lead"
+   ],
+   "character": {
+    "chorus": 0.4
+   },
+   "note": "Sliders for everything, bright PCM."
+  },
+  {
+   "id": "roland-jv-1080",
+   "maker": "Roland",
+   "model": "JV-1080",
+   "year": 1994,
+   "family": "digital-poly",
+   "voices": 64,
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "strings",
+    "keys",
+    "brass",
+    "bass"
+   ],
+   "character": {
+    "chorus": 0.4
+   },
+   "note": "The 90s studio rompler."
+  },
+  {
+   "id": "roland-jp-8000",
+   "maker": "Roland",
+   "model": "JP-8000",
+   "year": 1996,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "lead",
+    "strings",
+    "brass"
+   ],
+   "character": {
+    "detune": 14,
+    "chorus": 0.3
+   },
+   "note": "The original supersaw."
+  },
+  {
+   "id": "roland-juno-x",
+   "maker": "Roland",
+   "model": "Juno-X",
+   "year": 2022,
+   "family": "digital-poly",
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "strings",
+    "bass",
+    "keys"
+   ],
+   "character": {
+    "chorus": 1
+   },
+   "note": "Models Juno-60 and Juno-106, plus more."
+  },
+  {
+   "id": "roland-jupiter-x",
+   "maker": "Roland",
+   "model": "Jupiter-X",
+   "year": 2019,
+   "family": "digital-poly",
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "brass",
+    "pad",
+    "lead",
+    "strings"
+   ],
+   "character": {
+    "detune": 9
+   }
+  },
+  {
+   "id": "korg-m1",
+   "maker": "Korg",
+   "model": "M1",
+   "year": 1988,
+   "family": "digital-poly",
+   "voices": 16,
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "keys",
+    "pad",
+    "bell",
+    "bass",
+    "strings"
+   ],
+   "character": {
+    "chorus": 0.3
+   },
+   "note": "The M1 piano and organ house sounds."
+  },
+  {
+   "id": "korg-wavestation",
+   "maker": "Korg",
+   "model": "Wavestation",
+   "year": 1990,
+   "family": "digital-poly",
+   "voices": 32,
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "bell",
+    "strings"
+   ],
+   "character": {
+    "chorus": 0.5
+   },
+   "note": "Vector synthesis and wave sequences."
+  },
+  {
+   "id": "korg-triton",
+   "maker": "Korg",
+   "model": "Triton",
+   "year": 1999,
+   "family": "digital-poly",
+   "voices": 62,
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "keys",
+    "pad",
+    "strings",
+    "brass",
+    "bass",
+    "lead"
+   ],
+   "character": {
+    "chorus": 0.3
+   }
+  },
+  {
+   "id": "korg-ms2000",
+   "maker": "Korg",
+   "model": "MS2000",
+   "year": 2000,
+   "family": "digital-poly",
+   "voices": 4,
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "lead",
+    "bass",
+    "pad",
+    "pluck"
+   ],
+   "character": {
+    "detune": 8,
+    "drive": 0.3
+   },
+   "note": "Virtual analog with vocoder."
+  },
+  {
+   "id": "korg-microkorg",
+   "maker": "Korg",
+   "model": "microKORG",
+   "year": 2002,
+   "family": "digital-poly",
+   "voices": 4,
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "lead",
+    "bass",
+    "pad",
+    "pluck",
+    "strings"
+   ],
+   "character": {
+    "detune": 8,
+    "drive": 0.25
+   },
+   "note": "Virtual analog with vocoder."
+  },
+  {
+   "id": "korg-wavestate",
+   "maker": "Korg",
+   "model": "Wavestate",
+   "year": 2020,
+   "family": "digital-poly",
+   "voices": 64,
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "bell",
+    "pluck",
+    "keys"
+   ],
+   "character": {
+    "chorus": 0.4
+   },
+   "note": "Wave sequencing 2.0."
+  },
+  {
+   "id": "korg-modwave",
+   "maker": "Korg",
+   "model": "modwave",
+   "year": 2021,
+   "family": "digital-poly",
+   "voices": 32,
+   "osc": "wavetable",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "lead",
+    "bass",
+    "pluck",
+    "bell"
+   ],
+   "character": {
+    "detune": 6
+   }
+  },
+  {
+   "id": "waldorf-microwave",
+   "maker": "Waldorf",
+   "model": "Microwave",
+   "year": 1989,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "wavetable",
+   "filter": "cem",
+   "types": [
+    "pad",
+    "bell",
+    "keys",
+    "lead"
+   ],
+   "character": {
+    "chorus": 0.2
+   },
+   "note": "PPG wavetables with analog filters."
+  },
+  {
+   "id": "waldorf-blofeld",
+   "maker": "Waldorf",
+   "model": "Blofeld",
+   "year": 2007,
+   "family": "digital-poly",
+   "voices": 25,
+   "osc": "wavetable",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "lead",
+    "bass",
+    "bell",
+    "keys"
+   ],
+   "character": {
+    "detune": 6
+   }
+  },
+  {
+   "id": "waldorf-iridium",
+   "maker": "Waldorf",
+   "model": "Iridium",
+   "year": 2020,
+   "family": "digital-poly",
+   "voices": 16,
+   "osc": "wavetable",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "bell",
+    "lead",
+    "bass"
+   ],
+   "character": {
+    "detune": 6
+   },
+   "note": "Wavetable, granular, resonator and sampler engines."
+  },
+  {
+   "id": "waldorf-quantum",
+   "maker": "Waldorf",
+   "model": "Quantum",
+   "year": 2018,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "wavetable",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "bell",
+    "lead",
+    "bass"
+   ],
+   "character": {
+    "detune": 6
+   },
+   "note": "Digital engines into analog filters."
+  },
+  {
+   "id": "ppg-wave-2-2",
+   "maker": "PPG",
+   "model": "Wave 2.2",
+   "year": 1981,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "wavetable",
+   "filter": "ssm",
+   "types": [
+    "pad",
+    "bell",
+    "keys",
+    "lead",
+    "strings"
+   ],
+   "character": {
+    "chorus": 0.2
+   },
+   "note": "Wavetables into analog filters."
+  },
+  {
+   "id": "ppg-wave-2-3",
+   "maker": "PPG",
+   "model": "Wave 2.3",
+   "year": 1984,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "wavetable",
+   "filter": "ssm",
+   "types": [
+    "pad",
+    "bell",
+    "keys",
+    "lead",
+    "strings"
+   ],
+   "character": {
+    "chorus": 0.2
+   }
+  },
+  {
+   "id": "access-virus-ti",
+   "maker": "Access",
+   "model": "Virus TI",
+   "year": 2005,
+   "family": "digital-poly",
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "lead",
+    "pad",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "detune": 12,
+    "drive": 0.3
+   },
+   "note": "Trance and EDM virtual analog."
+  },
+  {
+   "id": "access-virus-c",
+   "maker": "Access",
+   "model": "Virus C",
+   "year": 2002,
+   "family": "digital-poly",
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "lead",
+    "pad",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "detune": 12,
+    "drive": 0.3
+   }
+  },
+  {
+   "id": "clavia-nord-lead-2",
+   "maker": "Clavia",
+   "model": "Nord Lead 2",
+   "year": 1997,
+   "family": "digital-poly",
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "lead",
+    "pad",
+    "bass",
+    "pluck",
+    "brass"
+   ],
+   "character": {
+    "detune": 8
+   }
+  },
+  {
+   "id": "clavia-nord-lead-4",
+   "maker": "Clavia",
+   "model": "Nord Lead 4",
+   "year": 2013,
+   "family": "digital-poly",
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "lead",
+    "pad",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "detune": 8
+   }
+  },
+  {
+   "id": "clavia-nord-lead-a1",
+   "maker": "Clavia",
+   "model": "Nord Lead A1",
+   "year": 2014,
+   "family": "digital-poly",
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "lead",
+    "bass",
+    "keys"
+   ],
+   "character": {
+    "detune": 8
+   }
+  },
+  {
+   "id": "novation-ultranova",
+   "maker": "Novation",
+   "model": "UltraNova",
+   "year": 2010,
+   "family": "digital-poly",
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "lead",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "detune": 8
+   }
+  },
+  {
+   "id": "asm-hydrasynth",
+   "maker": "ASM",
+   "model": "Hydrasynth",
+   "year": 2019,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "wavetable",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "lead",
+    "bass",
+    "bell",
+    "pluck"
+   ],
+   "character": {
+    "detune": 6
+   },
+   "note": "Wavetables with polyphonic aftertouch."
+  },
+  {
+   "id": "modal-argon8",
+   "maker": "Modal",
+   "model": "Argon8",
+   "year": 2019,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "wavetable",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "bell",
+    "lead",
+    "bass"
+   ],
+   "character": {
+    "detune": 6
+   }
+  },
+  {
+   "id": "arturia-minifreak",
+   "maker": "Arturia",
+   "model": "MiniFreak",
+   "year": 2022,
+   "family": "digital-poly",
+   "voices": 6,
+   "osc": "digital",
+   "filter": "ota",
+   "types": [
+    "pad",
+    "pluck",
+    "lead",
+    "bass",
+    "bell"
+   ],
+   "character": {
+    "detune": 6
+   },
+   "note": "Digital oscillator engines into analog filters."
+  },
+  {
+   "id": "arturia-microfreak",
+   "maker": "Arturia",
+   "model": "MicroFreak",
+   "year": 2019,
+   "family": "digital-poly",
+   "voices": 4,
+   "osc": "digital",
+   "filter": "ota",
+   "types": [
+    "pluck",
+    "lead",
+    "bass",
+    "bell"
+   ],
+   "character": {
+    "detune": 4
+   },
+   "note": "Paraphonic; many digital engines, analog filter."
+  },
+  {
+   "id": "ensoniq-esq-1",
+   "maker": "Ensoniq",
+   "model": "ESQ-1",
+   "year": 1986,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "digital",
+   "filter": "cem",
+   "types": [
+    "keys",
+    "pad",
+    "bell",
+    "bass"
+   ],
+   "character": {
+    "chorus": 0.2
+   },
+   "note": "Digital waves, analog filters."
+  },
+  {
+   "id": "ensoniq-sq-80",
+   "maker": "Ensoniq",
+   "model": "SQ-80",
+   "year": 1988,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "digital",
+   "filter": "cem",
+   "types": [
+    "keys",
+    "pad",
+    "bell",
+    "bass"
+   ],
+   "character": {
+    "chorus": 0.2
+   }
+  },
+  {
+   "id": "ensoniq-mirage",
+   "maker": "Ensoniq",
+   "model": "Mirage",
+   "year": 1984,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "sample",
+   "filter": "cem",
+   "types": [
+    "pad",
+    "strings",
+    "keys"
+   ],
+   "character": {
+    "chorus": 0.1
+   },
+   "note": "An 8-bit sampler with a gritty grain."
+  },
+  {
+   "id": "e-mu-emulator-ii",
+   "maker": "E-mu",
+   "model": "Emulator II",
+   "year": 1984,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "sample",
+   "filter": "ssm",
+   "types": [
+    "strings",
+    "pad",
+    "keys"
+   ],
+   "character": {
+    "chorus": 0.1
+   },
+   "note": "The 8-bit choir and strings of the 80s."
+  },
+  {
+   "id": "e-mu-emax",
+   "maker": "E-mu",
+   "model": "Emax",
+   "year": 1986,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "sample",
+   "filter": "ssm",
+   "types": [
+    "strings",
+    "pad",
+    "keys"
+   ],
+   "character": {
+    "chorus": 0.1
+   }
+  },
+  {
+   "id": "e-mu-proteus",
+   "maker": "E-mu",
+   "model": "Proteus",
+   "year": 1989,
+   "family": "digital-poly",
+   "voices": 32,
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "keys",
+    "strings",
+    "pad",
+    "brass",
+    "bass"
+   ],
+   "character": {
+    "chorus": 0.2
+   }
+  },
+  {
+   "id": "casio-cz-101",
+   "maker": "Casio",
+   "model": "CZ-101",
+   "year": 1984,
+   "family": "digital-poly",
+   "voices": 4,
+   "osc": "pd",
+   "filter": "digital",
+   "types": [
+    "keys",
+    "bass",
+    "bell",
+    "pad",
+    "lead"
+   ],
+   "character": {
+    "detune": 0
+   },
+   "note": "Phase distortion."
+  },
+  {
+   "id": "casio-cz-1000",
+   "maker": "Casio",
+   "model": "CZ-1000",
+   "year": 1985,
+   "family": "digital-poly",
+   "voices": 4,
+   "osc": "pd",
+   "filter": "digital",
+   "types": [
+    "keys",
+    "bass",
+    "bell",
+    "pad"
+   ],
+   "character": {
+    "detune": 0
+   },
+   "note": "Phase distortion."
+  },
+  {
+   "id": "kawai-k5",
+   "maker": "Kawai",
+   "model": "K5",
+   "year": 1987,
+   "family": "digital-poly",
+   "voices": 16,
+   "osc": "additive",
+   "filter": "digital",
+   "types": [
+    "bell",
+    "pad",
+    "keys"
+   ],
+   "character": {
+    "chorus": 0.2
+   },
+   "note": "Additive synthesis."
+  },
+  {
+   "id": "kawai-k1",
+   "maker": "Kawai",
+   "model": "K1",
+   "year": 1988,
+   "family": "digital-poly",
+   "voices": 16,
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "bell",
+    "keys",
+    "strings"
+   ],
+   "character": {
+    "chorus": 0.3
+   }
+  },
+  {
+   "id": "fairlight-cmi",
+   "maker": "Fairlight",
+   "model": "CMI",
+   "year": 1979,
+   "family": "digital-poly",
+   "voices": 8,
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "strings",
+    "pad",
+    "keys",
+    "pluck"
+   ],
+   "character": {
+    "chorus": 0.1
+   },
+   "note": "The original sampling workstation."
+  },
+  {
+   "id": "kurzweil-k2000",
+   "maker": "Kurzweil",
+   "model": "K2000",
+   "year": 1991,
+   "family": "digital-poly",
+   "voices": 24,
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "keys",
+    "pad",
+    "strings",
+    "brass"
+   ],
+   "character": {
+    "chorus": 0.2
+   }
+  },
+  {
+   "id": "teenage-engineering-op-1",
+   "maker": "Teenage Engineering",
+   "model": "OP-1",
+   "year": 2011,
+   "family": "digital-poly",
+   "osc": "digital",
+   "filter": "digital",
+   "types": [
+    "pluck",
+    "lead",
+    "pad",
+    "bass",
+    "keys"
+   ],
+   "character": {
+    "detune": 4
+   },
+   "note": "Portable multi-engine synth and sampler."
+  },
+  {
+   "id": "elektron-monomachine",
+   "maker": "Elektron",
+   "model": "Monomachine",
+   "year": 2004,
+   "family": "digital-poly",
+   "voices": 6,
+   "osc": "digital",
+   "filter": "digital",
+   "types": [
+    "bass",
+    "lead",
+    "pluck",
+    "pad"
+   ],
+   "character": {
+    "drive": 0.3
+   }
+  },
+  {
+   "id": "yamaha-an1x",
+   "maker": "Yamaha",
+   "model": "AN1x",
+   "year": 1997,
+   "family": "digital-poly",
+   "voices": 10,
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "lead",
+    "pad",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "detune": 8
+   }
+  },
+  {
+   "id": "yamaha-montage",
+   "maker": "Yamaha",
+   "model": "Montage",
+   "year": 2016,
+   "family": "digital-poly",
+   "voices": 128,
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "keys",
+    "pad",
+    "strings",
+    "brass",
+    "bass"
+   ],
+   "character": {
+    "chorus": 0.3
+   },
+   "note": "Sample-based plus 8-operator FM."
+  },
+  {
+   "id": "yamaha-dx7",
+   "maker": "Yamaha",
+   "model": "DX7",
+   "year": 1983,
+   "family": "fm",
+   "voices": 16,
+   "osc": "fm",
+   "filter": "none",
+   "types": [
+    "keys",
+    "bell",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "drive": 0,
+    "trem": 0.15
+   },
+   "note": "Six-operator FM; the twin has two."
+  },
+  {
+   "id": "yamaha-dx7ii",
+   "maker": "Yamaha",
+   "model": "DX7II",
+   "year": 1986,
+   "family": "fm",
+   "voices": 16,
+   "osc": "fm",
+   "filter": "none",
+   "types": [
+    "keys",
+    "bell",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "drive": 0,
+    "trem": 0.15
+   }
+  },
+  {
+   "id": "yamaha-dx21",
+   "maker": "Yamaha",
+   "model": "DX21",
+   "year": 1985,
+   "family": "fm",
+   "voices": 8,
+   "osc": "fm",
+   "filter": "none",
+   "types": [
+    "bass",
+    "keys",
+    "bell"
+   ],
+   "character": {
+    "drive": 0
+   },
+   "note": "Four-operator FM."
+  },
+  {
+   "id": "yamaha-dx100",
+   "maker": "Yamaha",
+   "model": "DX100",
+   "year": 1985,
+   "family": "fm",
+   "voices": 8,
+   "osc": "fm",
+   "filter": "none",
+   "types": [
+    "bass",
+    "keys",
+    "bell"
+   ],
+   "character": {
+    "drive": 0
+   },
+   "note": "Four-operator FM, the \"Solid Bass\"."
+  },
+  {
+   "id": "yamaha-tx81z",
+   "maker": "Yamaha",
+   "model": "TX81Z",
+   "year": 1987,
+   "family": "fm",
+   "voices": 8,
+   "osc": "fm",
+   "filter": "none",
+   "types": [
+    "bass",
+    "keys",
+    "bell",
+    "pluck"
+   ],
+   "character": {
+    "drive": 0
+   },
+   "note": "Four-op FM with extra waveforms; \"Lately Bass\"."
+  },
+  {
+   "id": "yamaha-sy77",
+   "maker": "Yamaha",
+   "model": "SY77",
+   "year": 1990,
+   "family": "fm",
+   "voices": 32,
+   "osc": "fm",
+   "filter": "digital",
+   "types": [
+    "keys",
+    "bell",
+    "pad",
+    "bass"
+   ],
+   "character": {
+    "trem": 0.1
+   },
+   "note": "FM plus samples."
+  },
+  {
+   "id": "yamaha-fs1r",
+   "maker": "Yamaha",
+   "model": "FS1R",
+   "year": 1998,
+   "family": "fm",
+   "voices": 32,
+   "osc": "fm",
+   "filter": "digital",
+   "types": [
+    "pad",
+    "bell",
+    "keys"
+   ],
+   "character": {
+    "trem": 0.1
+   },
+   "note": "FM with formant shaping."
+  },
+  {
+   "id": "yamaha-reface-dx",
+   "maker": "Yamaha",
+   "model": "Reface DX",
+   "year": 2015,
+   "family": "fm",
+   "voices": 8,
+   "osc": "fm",
+   "filter": "none",
+   "types": [
+    "keys",
+    "bell",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "drive": 0.05
+   }
+  },
+  {
+   "id": "korg-opsix",
+   "maker": "Korg",
+   "model": "opsix",
+   "year": 2020,
+   "family": "fm",
+   "voices": 32,
+   "osc": "fm",
+   "filter": "digital",
+   "types": [
+    "bell",
+    "pluck",
+    "bass",
+    "pad"
+   ],
+   "character": {
+    "bright": 0.6
+   }
+  },
+  {
+   "id": "korg-volca-fm",
+   "maker": "Korg",
+   "model": "Volca FM",
+   "year": 2016,
+   "family": "fm",
+   "voices": 3,
+   "osc": "fm",
+   "filter": "none",
+   "types": [
+    "keys",
+    "bell",
+    "bass",
+    "pluck"
+   ],
+   "character": {
+    "drive": 0.05
+   },
+   "note": "DX7-compatible FM."
+  },
+  {
+   "id": "elektron-digitone",
+   "maker": "Elektron",
+   "model": "Digitone",
+   "year": 2018,
+   "family": "fm",
+   "voices": 8,
+   "osc": "fm",
+   "filter": "digital",
+   "types": [
+    "pluck",
+    "bass",
+    "bell",
+    "pad"
+   ],
+   "character": {
+    "drive": 0.15
+   }
+  },
+  {
+   "id": "casio-vz-1",
+   "maker": "Casio",
+   "model": "VZ-1",
+   "year": 1988,
+   "family": "fm",
+   "voices": 8,
+   "osc": "pd",
+   "filter": "digital",
+   "types": [
+    "keys",
+    "bell",
+    "bass"
+   ],
+   "character": {},
+   "note": "Interactive phase distortion."
+  },
+  {
+   "id": "new-england-digital-synclavier",
+   "maker": "New England Digital",
+   "model": "Synclavier",
+   "year": 1980,
+   "family": "fm",
+   "osc": "fm",
+   "filter": "digital",
+   "types": [
+    "bell",
+    "keys",
+    "pad"
+   ],
+   "character": {},
+   "note": "FM and additive, later sampling."
+  },
+  {
+   "id": "fender-rhodes-mk1",
+   "maker": "Fender",
+   "model": "Rhodes Mark I",
+   "year": 1970,
+   "family": "electric-piano",
+   "osc": "tine",
+   "filter": "none",
+   "types": [
+    "keys"
+   ],
+   "character": {
+    "bell": 0.4,
+    "trem": 0.3
+   }
+  },
+  {
+   "id": "rhodes-mark-ii",
+   "maker": "Rhodes",
+   "model": "Mark II",
+   "year": 1979,
+   "family": "electric-piano",
+   "osc": "tine",
+   "filter": "none",
+   "types": [
+    "keys"
+   ],
+   "character": {
+    "bell": 0.35,
+    "trem": 0.25
+   }
+  },
+  {
+   "id": "wurlitzer-200a",
+   "maker": "Wurlitzer",
+   "model": "200A",
+   "year": 1974,
+   "family": "electric-piano",
+   "osc": "reed",
+   "filter": "none",
+   "types": [
+    "wurly"
+   ],
+   "character": {}
+  },
+  {
+   "id": "wurlitzer-140b",
+   "maker": "Wurlitzer",
+   "model": "140B",
+   "year": 1968,
+   "family": "electric-piano",
+   "osc": "reed",
+   "filter": "none",
+   "types": [
+    "wurly",
+    "keys"
+   ],
+   "character": {
+    "drive": 0.25
+   }
+  },
+  {
+   "id": "yamaha-cp-70",
+   "maker": "Yamaha",
+   "model": "CP-70",
+   "year": 1976,
+   "family": "electric-piano",
+   "osc": "string",
+   "filter": "none",
+   "types": [
+    "keys"
+   ],
+   "character": {
+    "bell": 0.15,
+    "trem": 0,
+    "bright": 0.6
+   },
+   "note": "Electric grand: real strings, pickups."
+  },
+  {
+   "id": "yamaha-cp-80",
+   "maker": "Yamaha",
+   "model": "CP-80",
+   "year": 1978,
+   "family": "electric-piano",
+   "osc": "string",
+   "filter": "none",
+   "types": [
+    "keys"
+   ],
+   "character": {
+    "bell": 0.15,
+    "trem": 0,
+    "bright": 0.6
+   },
+   "note": "Electric grand."
+  },
+  {
+   "id": "hohner-pianet-t",
+   "maker": "Hohner",
+   "model": "Pianet T",
+   "year": 1968,
+   "family": "electric-piano",
+   "osc": "reed",
+   "filter": "none",
+   "types": [
+    "wurly",
+    "pluck",
+    "keys"
+   ],
+   "character": {
+    "decay": 1.2
+   }
+  },
+  {
+   "id": "hohner-clavinet-d6",
+   "maker": "Hohner",
+   "model": "Clavinet D6",
+   "year": 1971,
+   "family": "electric-piano",
+   "osc": "string",
+   "filter": "none",
+   "types": [
+    "pluck",
+    "keys"
+   ],
+   "character": {
+    "bright": 0.8,
+    "decay": 0.8
+   },
+   "note": "Struck strings, funky and percussive."
+  },
+  {
+   "id": "rmi-electra-piano",
+   "maker": "RMI",
+   "model": "Electra-piano",
+   "year": 1967,
+   "family": "electric-piano",
+   "osc": "electronic",
+   "filter": "none",
+   "types": [
+    "keys",
+    "pluck"
+   ],
+   "character": {}
+  },
+  {
+   "id": "roland-mks-20",
+   "maker": "Roland",
+   "model": "MKS-20",
+   "year": 1986,
+   "family": "electric-piano",
+   "voices": 16,
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "keys"
+   ],
+   "character": {},
+   "note": "SA synthesis piano module."
+  },
+  {
+   "id": "arp-solina-string-ensemble",
+   "maker": "ARP",
+   "model": "Solina String Ensemble",
+   "year": 1974,
+   "family": "string-machine",
+   "osc": "divide",
+   "filter": "none",
+   "types": [
+    "strings",
+    "pad"
+   ],
+   "character": {
+    "chorus": 3
+   },
+   "note": "Divide-down strings through ensemble."
+  },
+  {
+   "id": "arp-omni",
+   "maker": "ARP",
+   "model": "Omni",
+   "year": 1975,
+   "family": "string-machine",
+   "osc": "divide",
+   "filter": "none",
+   "types": [
+    "strings",
+    "pad",
+    "brass"
+   ],
+   "character": {
+    "chorus": 3
+   }
+  },
+  {
+   "id": "roland-rs-505-paraphonic",
+   "maker": "Roland",
+   "model": "RS-505 Paraphonic",
+   "year": 1978,
+   "family": "string-machine",
+   "osc": "divide",
+   "filter": "ota",
+   "types": [
+    "strings",
+    "pad",
+    "brass"
+   ],
+   "character": {
+    "chorus": 3
+   }
+  },
+  {
+   "id": "elka-rhapsody-610",
+   "maker": "Elka",
+   "model": "Rhapsody 610",
+   "year": 1975,
+   "family": "string-machine",
+   "osc": "divide",
+   "filter": "none",
+   "types": [
+    "strings",
+    "pad"
+   ],
+   "character": {
+    "chorus": 3
+   }
+  },
+  {
+   "id": "crumar-performer",
+   "maker": "Crumar",
+   "model": "Performer",
+   "year": 1977,
+   "family": "string-machine",
+   "osc": "divide",
+   "filter": "none",
+   "types": [
+    "strings",
+    "brass",
+    "pad"
+   ],
+   "character": {
+    "chorus": 2.5
+   }
+  },
+  {
+   "id": "mellotron-m400",
+   "maker": "Mellotron",
+   "model": "M400",
+   "year": 1970,
+   "family": "string-machine",
+   "osc": "tape",
+   "filter": "none",
+   "types": [
+    "strings",
+    "pad",
+    "keys"
+   ],
+   "character": {
+    "chorus": 0.5,
+    "lfoPitch": 0.05
+   },
+   "note": "Tape replay: strings, flutes, choirs."
+  },
+  {
+   "id": "hammond-b-3",
+   "maker": "Hammond",
+   "model": "B-3",
+   "year": 1955,
+   "family": "organ",
+   "osc": "tonewheel",
+   "filter": "none",
+   "types": [
+    "keys",
+    "pad"
+   ],
+   "character": {
+    "chorus": 0.4
+   },
+   "note": "Tonewheel organ, drawbars, Leslie."
+  },
+  {
+   "id": "vox-continental",
+   "maker": "Vox",
+   "model": "Continental",
+   "year": 1962,
+   "family": "organ",
+   "osc": "electronic",
+   "filter": "none",
+   "types": [
+    "keys"
+   ],
+   "character": {},
+   "note": "Transistor combo organ."
+  },
+  {
+   "id": "farfisa-compact",
+   "maker": "Farfisa",
+   "model": "Compact",
+   "year": 1964,
+   "family": "organ",
+   "osc": "electronic",
+   "filter": "none",
+   "types": [
+    "keys"
+   ],
+   "character": {},
+   "note": "Transistor combo organ."
+  },
+  {
+   "id": "roland-cr-78",
+   "maker": "Roland",
+   "model": "CR-78",
+   "year": 1978,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "808",
+    "lofi"
+   ],
+   "character": {
+    "drive": 0.1
+   },
+   "note": "Preset rhythms, analog voices."
+  },
+  {
+   "id": "roland-tr-606",
+   "maker": "Roland",
+   "model": "TR-606",
+   "year": 1981,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "808"
+   ],
+   "character": {
+    "kick.decay": 0.5,
+    "kick.pitch": 4,
+    "snare.snap": 0.85,
+    "snare.pitch": 3,
+    "chh.decay": 0.7
+   }
+  },
+  {
+   "id": "roland-tr-707",
+   "maker": "Roland",
+   "model": "TR-707",
+   "year": 1985,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "909",
+    "hybrid",
+    "lofi"
+   ],
+   "character": {
+    "bits": 8
+   },
+   "note": "Sampled kit with an 80s crunch."
+  },
+  {
+   "id": "roland-tr-727",
+   "maker": "Roland",
+   "model": "TR-727",
+   "year": 1985,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi"
+   ],
+   "character": {
+    "bits": 8
+   },
+   "note": "Latin percussion samples."
+  },
+  {
+   "id": "roland-tr-808",
+   "maker": "Roland",
+   "model": "TR-808",
+   "year": 1980,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "808"
+   ],
+   "character": {}
+  },
+  {
+   "id": "roland-tr-909",
+   "maker": "Roland",
+   "model": "TR-909",
+   "year": 1983,
+   "family": "drum-machine",
+   "osc": "hybrid-drum",
+   "filter": "none",
+   "types": [
+    "909"
+   ],
+   "character": {}
+  },
+  {
+   "id": "roland-tr-626",
+   "maker": "Roland",
+   "model": "TR-626",
+   "year": 1987,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi",
+    "909"
+   ],
+   "character": {
+    "bits": 8
+   }
+  },
+  {
+   "id": "roland-r-8",
+   "maker": "Roland",
+   "model": "R-8",
+   "year": 1989,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "909"
+   ],
+   "character": {}
+  },
+  {
+   "id": "roland-tr-8",
+   "maker": "Roland",
+   "model": "TR-8",
+   "year": 2014,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "909",
+    "808",
+    "hybrid"
+   ],
+   "character": {},
+   "note": "Models of the TR-808, 909, 707 and 727."
+  },
+  {
+   "id": "roland-tr-8s",
+   "maker": "Roland",
+   "model": "TR-8S",
+   "year": 2018,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "909",
+    "808",
+    "hybrid"
+   ],
+   "character": {}
+  },
+  {
+   "id": "roland-tr-6s",
+   "maker": "Roland",
+   "model": "TR-6S",
+   "year": 2020,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "909",
+    "808",
+    "hybrid"
+   ],
+   "character": {}
+  },
+  {
+   "id": "roland-tr-08",
+   "maker": "Roland",
+   "model": "TR-08",
+   "year": 2017,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "808"
+   ],
+   "character": {},
+   "note": "Boutique model of the TR-808."
+  },
+  {
+   "id": "roland-tr-09",
+   "maker": "Roland",
+   "model": "TR-09",
+   "year": 2017,
+   "family": "drum-machine",
+   "osc": "hybrid-drum",
+   "filter": "none",
+   "types": [
+    "909"
+   ],
+   "character": {},
+   "note": "Boutique model of the TR-909."
+  },
+  {
+   "id": "sp-404",
+   "maker": "Roland",
+   "model": "SP-404",
+   "year": 2005,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "lofi",
+    "hybrid"
+   ],
+   "character": {},
+   "note": "A sampler; the twin plays synthesized drums."
+  },
+  {
+   "id": "roland-sp-404mkii",
+   "maker": "Roland",
+   "model": "SP-404MKII",
+   "year": 2021,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "lofi",
+    "hybrid",
+    "acoustic"
+   ],
+   "character": {}
+  },
+  {
+   "id": "roland-mc-303",
+   "maker": "Roland",
+   "model": "MC-303",
+   "year": 1996,
+   "family": "groovebox",
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "909",
+    "808",
+    "hybrid"
+   ],
+   "character": {},
+   "note": "The first Groovebox."
+  },
+  {
+   "id": "roland-mc-505",
+   "maker": "Roland",
+   "model": "MC-505",
+   "year": 1998,
+   "family": "groovebox",
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "909",
+    "808",
+    "hybrid"
+   ],
+   "character": {}
+  },
+  {
+   "id": "roland-mc-707",
+   "maker": "Roland",
+   "model": "MC-707",
+   "year": 2019,
+   "family": "groovebox",
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "909",
+    "hybrid",
+    "808"
+   ],
+   "character": {}
+  },
+  {
+   "id": "linn-lm-1",
+   "maker": "Linn",
+   "model": "LM-1",
+   "year": 1980,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi"
+   ],
+   "character": {
+    "bits": 8
+   },
+   "note": "The first sampled drum machine."
+  },
+  {
+   "id": "linn-linndrum",
+   "maker": "Linn",
+   "model": "LinnDrum",
+   "year": 1982,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi"
+   ],
+   "character": {
+    "bits": 8
+   }
+  },
+  {
+   "id": "linn-linn-9000",
+   "maker": "Linn",
+   "model": "Linn 9000",
+   "year": 1984,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi"
+   ],
+   "character": {
+    "bits": 8
+   }
+  },
+  {
+   "id": "akai-mpc60",
+   "maker": "Akai",
+   "model": "MPC60",
+   "year": 1988,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi",
+    "hybrid"
+   ],
+   "character": {
+    "bits": 12
+   },
+   "note": "Sampler and sequencer; the swing."
+  },
+  {
+   "id": "akai-mpc3000",
+   "maker": "Akai",
+   "model": "MPC3000",
+   "year": 1994,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi",
+    "hybrid"
+   ],
+   "character": {}
+  },
+  {
+   "id": "akai-mpc2000xl",
+   "maker": "Akai",
+   "model": "MPC2000XL",
+   "year": 2000,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "hybrid",
+    "lofi"
+   ],
+   "character": {}
+  },
+  {
+   "id": "akai-mpc-live",
+   "maker": "Akai",
+   "model": "MPC Live",
+   "year": 2017,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "hybrid",
+    "acoustic",
+    "808"
+   ],
+   "character": {}
+  },
+  {
+   "id": "oberheim-dmx",
+   "maker": "Oberheim",
+   "model": "DMX",
+   "year": 1981,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi"
+   ],
+   "character": {
+    "bits": 8
+   },
+   "note": "Early hip-hop and electro."
+  },
+  {
+   "id": "oberheim-dx",
+   "maker": "Oberheim",
+   "model": "DX",
+   "year": 1983,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi"
+   ],
+   "character": {
+    "bits": 8
+   }
+  },
+  {
+   "id": "e-mu-drumulator",
+   "maker": "E-mu",
+   "model": "Drumulator",
+   "year": 1983,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi"
+   ],
+   "character": {
+    "bits": 8
+   }
+  },
+  {
+   "id": "e-mu-sp-12",
+   "maker": "E-mu",
+   "model": "SP-12",
+   "year": 1985,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "lofi",
+    "acoustic"
+   ],
+   "character": {
+    "bits": 12
+   }
+  },
+  {
+   "id": "e-mu-sp-1200",
+   "maker": "E-mu",
+   "model": "SP-1200",
+   "year": 1987,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "lofi",
+    "acoustic"
+   ],
+   "character": {
+    "bits": 12
+   },
+   "note": "12-bit sampler at 26 kHz; boom-bap."
+  },
+  {
+   "id": "sequential-drumtraks",
+   "maker": "Sequential",
+   "model": "Drumtraks",
+   "year": 1984,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi"
+   ],
+   "character": {
+    "bits": 8
+   }
+  },
+  {
+   "id": "sequential-tom",
+   "maker": "Sequential",
+   "model": "TOM",
+   "year": 1985,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi"
+   ],
+   "character": {
+    "bits": 8
+   }
+  },
+  {
+   "id": "simmons-sds-v",
+   "maker": "Simmons",
+   "model": "SDS-V",
+   "year": 1981,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "hybrid",
+    "808"
+   ],
+   "character": {},
+   "note": "Analog electronic drum brain."
+  },
+  {
+   "id": "yamaha-rx5",
+   "maker": "Yamaha",
+   "model": "RX5",
+   "year": 1986,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi"
+   ],
+   "character": {
+    "bits": 12
+   }
+  },
+  {
+   "id": "yamaha-rx11",
+   "maker": "Yamaha",
+   "model": "RX11",
+   "year": 1984,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi"
+   ],
+   "character": {
+    "bits": 8
+   }
+  },
+  {
+   "id": "alesis-hr-16",
+   "maker": "Alesis",
+   "model": "HR-16",
+   "year": 1987,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi"
+   ],
+   "character": {
+    "bits": 12
+   }
+  },
+  {
+   "id": "alesis-sr-16",
+   "maker": "Alesis",
+   "model": "SR-16",
+   "year": 1990,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic"
+   ],
+   "character": {}
+  },
+  {
+   "id": "korg-kr-55",
+   "maker": "Korg",
+   "model": "KR-55",
+   "year": 1979,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "808",
+    "lofi"
+   ],
+   "character": {},
+   "note": "Preset rhythms, analog voices."
+  },
+  {
+   "id": "korg-ddd-1",
+   "maker": "Korg",
+   "model": "DDD-1",
+   "year": 1986,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "acoustic",
+    "lofi"
+   ],
+   "character": {
+    "bits": 12
+   }
+  },
+  {
+   "id": "korg-volca-beats",
+   "maker": "Korg",
+   "model": "Volca Beats",
+   "year": 2013,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "808",
+    "lofi"
+   ],
+   "character": {
+    "drive": 0.35
+   }
+  },
+  {
+   "id": "korg-volca-drum",
+   "maker": "Korg",
+   "model": "Volca Drum",
+   "year": 2019,
+   "family": "drum-machine",
+   "osc": "digital",
+   "filter": "none",
+   "types": [
+    "efm",
+    "hybrid",
+    "lofi"
+   ],
+   "character": {},
+   "note": "Digital physical-modelling percussion."
+  },
+  {
+   "id": "korg-volca-sample",
+   "maker": "Korg",
+   "model": "Volca Sample",
+   "year": 2014,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "lofi",
+    "hybrid"
+   ],
+   "character": {
+    "bits": 12
+   }
+  },
+  {
+   "id": "korg-drumlogue",
+   "maker": "Korg",
+   "model": "Drumlogue",
+   "year": 2022,
+   "family": "drum-machine",
+   "osc": "hybrid-drum",
+   "filter": "none",
+   "types": [
+    "hybrid",
+    "909",
+    "808"
+   ],
+   "character": {}
+  },
+  {
+   "id": "korg-electribe-er-1",
+   "maker": "Korg",
+   "model": "Electribe ER-1",
+   "year": 1999,
+   "family": "drum-machine",
+   "osc": "va",
+   "filter": "none",
+   "types": [
+    "808",
+    "hybrid"
+   ],
+   "character": {},
+   "note": "Modelled analog percussion."
+  },
+  {
+   "id": "korg-electribe-2",
+   "maker": "Korg",
+   "model": "Electribe 2",
+   "year": 2014,
+   "family": "groovebox",
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "hybrid",
+    "909",
+    "808"
+   ],
+   "character": {}
+  },
+  {
+   "id": "boss-dr-55",
+   "maker": "Boss",
+   "model": "DR-55",
+   "year": 1980,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "808",
+    "lofi"
+   ],
+   "character": {}
+  },
+  {
+   "id": "boss-dr-110",
+   "maker": "Boss",
+   "model": "DR-110",
+   "year": 1983,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "808",
+    "lofi"
+   ],
+   "character": {}
+  },
+  {
+   "id": "ace-tone-rhythm-ace-fr-1",
+   "maker": "Ace Tone",
+   "model": "Rhythm Ace FR-1",
+   "year": 1967,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "lofi",
+    "808"
+   ],
+   "character": {},
+   "note": "Preset rhythms."
+  },
+  {
+   "id": "maestro-rhythm-king-mrk-2",
+   "maker": "Maestro",
+   "model": "Rhythm King MRK-2",
+   "year": 1971,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "lofi",
+    "808"
+   ],
+   "character": {},
+   "note": "Preset rhythm unit heard on early-70s funk."
+  },
+  {
+   "id": "wurlitzer-sideman",
+   "maker": "Wurlitzer",
+   "model": "Sideman",
+   "year": 1959,
+   "family": "drum-machine",
+   "osc": "electromech",
+   "filter": "none",
+   "types": [
+    "lofi",
+    "acoustic"
+   ],
+   "character": {},
+   "note": "The first commercial drum machine."
+  },
+  {
+   "id": "elektron-machinedrum",
+   "maker": "Elektron",
+   "model": "Machinedrum",
+   "year": 2001,
+   "family": "drum-machine",
+   "osc": "digital",
+   "filter": "none",
+   "types": [
+    "hybrid",
+    "efm",
+    "acoustic",
+    "lofi",
+    "909",
+    "808"
+   ],
+   "character": {},
+   "note": "Its own synthesis machines; Machina has four families of them.",
+   "twin": "machina"
+  },
+  {
+   "id": "elektron-analog-rytm",
+   "maker": "Elektron",
+   "model": "Analog Rytm",
+   "year": 2014,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "909",
+    "808",
+    "hybrid"
+   ],
+   "character": {
+    "drive": 0.25
+   },
+   "note": "Analog voices plus samples."
+  },
+  {
+   "id": "elektron-digitakt",
+   "maker": "Elektron",
+   "model": "Digitakt",
+   "year": 2017,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "hybrid",
+    "lofi",
+    "909"
+   ],
+   "character": {},
+   "note": "A sampler; the twin plays synthesized drums."
+  },
+  {
+   "id": "elektron-syntakt",
+   "maker": "Elektron",
+   "model": "Syntakt",
+   "year": 2021,
+   "family": "drum-machine",
+   "osc": "hybrid-drum",
+   "filter": "none",
+   "types": [
+    "efm",
+    "hybrid",
+    "909"
+   ],
+   "character": {},
+   "note": "Analog and digital machines."
+  },
+  {
+   "id": "elektron-model-cycles",
+   "maker": "Elektron",
+   "model": "Model:Cycles",
+   "year": 2019,
+   "family": "drum-machine",
+   "osc": "fm",
+   "filter": "none",
+   "types": [
+    "efm",
+    "hybrid"
+   ],
+   "character": {},
+   "note": "FM percussion machines."
+  },
+  {
+   "id": "elektron-model-samples",
+   "maker": "Elektron",
+   "model": "Model:Samples",
+   "year": 2019,
+   "family": "drum-machine",
+   "osc": "sample",
+   "filter": "none",
+   "types": [
+    "hybrid",
+    "lofi",
+    "acoustic"
+   ],
+   "character": {}
+  },
+  {
+   "id": "elektron-octatrack",
+   "maker": "Elektron",
+   "model": "Octatrack",
+   "year": 2010,
+   "family": "groovebox",
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "hybrid",
+    "lofi"
+   ],
+   "character": {},
+   "note": "Sampler and performance sequencer."
+  },
+  {
+   "id": "arturia-drumbrute",
+   "maker": "Arturia",
+   "model": "DrumBrute",
+   "year": 2017,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "909",
+    "808"
+   ],
+   "character": {
+    "drive": 0.45
+   }
+  },
+  {
+   "id": "arturia-drumbrute-impact",
+   "maker": "Arturia",
+   "model": "DrumBrute Impact",
+   "year": 2018,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "909",
+    "808"
+   ],
+   "character": {
+    "drive": 0.5
+   }
+  },
+  {
+   "id": "behringer-rd-8",
+   "maker": "Behringer",
+   "model": "RD-8",
+   "year": 2019,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "808"
+   ],
+   "character": {}
+  },
+  {
+   "id": "behringer-rd-9",
+   "maker": "Behringer",
+   "model": "RD-9",
+   "year": 2021,
+   "family": "drum-machine",
+   "osc": "hybrid-drum",
+   "filter": "none",
+   "types": [
+    "909"
+   ],
+   "character": {},
+   "note": "Based on the TR-909."
+  },
+  {
+   "id": "behringer-rd-6",
+   "maker": "Behringer",
+   "model": "RD-6",
+   "year": 2021,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "808"
+   ],
+   "character": {
+    "kick.decay": 0.5,
+    "snare.snap": 0.85
+   },
+   "note": "Based on the TR-606."
+  },
+  {
+   "id": "moog-dfam",
+   "maker": "Moog",
+   "model": "DFAM",
+   "year": 2018,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "ladder",
+   "types": [
+    "hybrid",
+    "808",
+    "efm"
+   ],
+   "character": {
+    "drive": 0.4
+   },
+   "note": "Analog percussion synth with an 8-step sequencer."
+  },
+  {
+   "id": "jomox-airbase-99",
+   "maker": "Jomox",
+   "model": "AirBase 99",
+   "year": 1999,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "909",
+    "808"
+   ],
+   "character": {}
+  },
+  {
+   "id": "vermona-drm1",
+   "maker": "Vermona",
+   "model": "DRM1",
+   "year": 2002,
+   "family": "drum-machine",
+   "osc": "analog-drum",
+   "filter": "none",
+   "types": [
+    "808",
+    "hybrid"
+   ],
+   "character": {}
+  },
+  {
+   "id": "novation-circuit-tracks",
+   "maker": "Novation",
+   "model": "Circuit Tracks",
+   "year": 2021,
+   "family": "groovebox",
+   "osc": "va",
+   "filter": "digital",
+   "types": [
+    "hybrid",
+    "808",
+    "909"
+   ],
+   "character": {}
+  },
+  {
+   "id": "polyend-tracker",
+   "maker": "Polyend",
+   "model": "Tracker",
+   "year": 2020,
+   "family": "groovebox",
+   "osc": "sample",
+   "filter": "digital",
+   "types": [
+    "lofi",
+    "hybrid"
+   ],
+   "character": {
+    "bits": 12
+   },
+   "note": "Sampler with a tracker sequencer."
+  },
+  {
+   "id": "teenage-engineering-op-z",
+   "maker": "Teenage Engineering",
+   "model": "OP-Z",
+   "year": 2018,
+   "family": "groovebox",
+   "osc": "digital",
+   "filter": "digital",
+   "types": [
+    "hybrid",
+    "808",
+    "lofi"
+   ],
+   "character": {}
+  }
+ ],
+ "traits": {
+  "juniper": {
+   "arch": [
+    "subtractive",
+    "strings"
+   ],
+   "osc": [
+    "dco"
+   ],
+   "filter": [
+    "ota"
+   ],
+   "voices": 6,
+   "tags": [
+    "chorus"
+   ]
+  },
+  "monolith": {
+   "arch": [
+    "subtractive"
+   ],
+   "osc": [
+    "vco"
+   ],
+   "filter": [
+    "ladder"
+   ],
+   "voices": 1
+  },
+  "poly": {
+   "arch": [
+    "subtractive",
+    "digital",
+    "organ"
+   ],
+   "osc": [
+    "vco",
+    "va",
+    "digital"
+   ],
+   "filter": [
+    "ssm",
+    "cem",
+    "sem",
+    "diode",
+    "ms20",
+    "digital"
+   ],
+   "voices": 8
+  },
+  "tine": {
+   "arch": [
+    "fm",
+    "ep"
+   ],
+   "osc": [
+    "fm",
+    "tine",
+    "reed",
+    "pd"
+   ],
+   "filter": [],
+   "voices": 8
+  },
+  "machina": {
+   "arch": [
+    "drum"
+   ],
+   "osc": [
+    "analog-drum",
+    "hybrid-drum",
+    "digital",
+    "sample",
+    "fm"
+   ],
+   "filter": [],
+   "voices": 9
+  }
+ }
 }

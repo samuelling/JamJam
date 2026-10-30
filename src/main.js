@@ -47,6 +47,8 @@ const S = {
   chat: [], unread: 0, knobGroup: null,
   mdTrack: 0, mdPage: 0, mdLock: false, held: null, hits: new Map(), md: null,
   libTab: 'builtin', standins: new Map(),
+  owned: new Map((() => { try { return JSON.parse(localStorage.getItem('jamjam.gear') || '[]'); } catch (_) { return []; } })()),  // hardware you own: id -> {port, ch}
+  hwFilter: 'all',
   routes: new Map(),                       // a bandmate's part (channel key) -> {port, ch, lat, mute}: played on your MIDI gear
   mclock: { port: '', on: false, lat: 0, next: null },  // MIDI clock out: the room's tempo to your drum machines  // channel key -> {wanted cfg} while a stand-in plays someone's library instrument
 };
@@ -173,6 +175,7 @@ function remoteCfg(pid, r, cfg, at, budget, seqSnap) {
     engine.setCfg(k, engine.resolve(engine.standIn(cfg.meta)), at);
     loadWanted(k);
   } else { S.standins.delete(k); engine.setCfg(k, cfg, at); }
+  autoOwn(pid, r, cfg);
   ensureSeq(k, cfg, seqSnap);
   if (!S.stable.has(k)) S.stable.set(k, performance.now());
   applyVolume(k);
@@ -240,6 +243,7 @@ function onMessage(p, m) {
     case 'look': { const pl = S.players.get(p.id); if (pl) { pl.peerL = m.L; if (m.budgets) for (const x of pl.rack) if (m.budgets[x.r]) x.budget = m.budgets[x.r]; } break; }
     case 'fp': checkFingerprint(p.id, m); break;
     case 'sq': { const sq = seqs.get(key(p.id, m.r)); if (sq && Array.isArray(m.op) && typeof m.at === 'number') sq.queue(m.at, m.op); break; }
+    case 'real': { const model = engine.unit(m.hw)?.model || 'synth'; const who = S.players.get(p.id)?.name || 'A bandmate'; addChat({ sys: true, text: m.on ? `${who} has a ${model} too: they hear your part on their own.` : `${who} is back to hearing your ${model} as its twin.`, t: Date.now() }); break; }
     case 'chat': addChat({ from: p.id, name: S.players.get(p.id)?.name || p.name, text: String(m.text || '').slice(0, 500), t: Date.now() }); break;
     case 'chatlog': if (!S.chat.some((c) => !c.sys) && Array.isArray(m.items)) for (const it of m.items.slice(-50)) addChat({ ...it, text: String(it.text || '').slice(0, 500), old: true }, false); break;
   }
@@ -946,27 +950,68 @@ function renderLibrary() {
   }
 }
 let hwPick = null;
+const HW_FILTERS = [['all', 'All'], ['poly', 'Polysynths', (u) => /poly|string|organ/.test(u.family)], ['mono', 'Monos & bass', (u) => /mono|bass/.test(u.family)],
+  ['drum', 'Drum machines', (u) => /drum|groove/.test(u.family)], ['digital', 'Digital & FM', (u) => /digital|fm/.test(u.family)], ['keys', 'Keys', (u) => /piano|organ/.test(u.family)],
+  ['vintage', 'Vintage (pre-1990)', (u) => u.year && u.year < 1990], ['mine', 'Mine', (u) => S.owned.has(u.id)]];
+const hwText = (u) => [u.maker, u.model, engine.hardware.families[u.family]?.label, u.year, u.year && `${String(u.year).slice(2, 3)}0s`, u.year && `${String(u.year).slice(0, 3)}0s`, u.osc, u.filter, u.note, u.voices === 1 ? 'mono' : 'poly'].filter(Boolean).join(' ').toLowerCase();
 function renderHardware() {
-  const q = ($('#hwSearch').value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const units = engine.hardware.hardware.filter((u) => !q || (u.maker + u.model + u.family).toLowerCase().replace(/[^a-z0-9]/g, '').includes(q));
+  const words = ($('#hwSearch').value || '').toLowerCase().split(/\s+/).filter(Boolean);
+  const flt = HW_FILTERS.find((f) => f[0] === S.hwFilter)?.[2];
+  const units = engine.hardware.hardware.filter((u) => {
+    if (flt && !flt(u)) return false;
+    if (!words.length) return true;
+    const t = hwText(u), squashed = t.replace(/[^a-z0-9]/g, '');
+    return words.every((w) => t.includes(w) || squashed.includes(w.replace(/[^a-z0-9]/g, '')));
+  });
+  $('#hwFilters').replaceChildren(...HW_FILTERS.map(([id, label]) => h('button', { class: 'page' + ((S.hwFilter || 'all') === id ? ' on' : ''), onclick: () => { S.hwFilter = id; renderHardware(); } }, label)));
+  setText($('#hwCount'), `${units.length} of ${engine.hardware.hardware.length}`);
   $('#hwList').replaceChildren(...units.map((u) => h('button', { class: u.id === hwPick ? 'on' : '', onclick: () => { hwPick = u.id; renderHardware(); } },
-    u.model, h('small', {}, `${u.maker} · ${engine.hardware.families[u.family]?.label || u.family}`))));
+    u.model, S.owned.has(u.id) ? h('span', { class: 'mine', title: 'You have one' }, ' ●') : null,
+    h('small', {}, `${u.maker}${u.year ? ' · ' + u.year : ''} · ${engine.hardware.families[u.family]?.label || u.family}`))));
   const unit = hwPick && engine.unit(hwPick);
   if (!unit) { $('#twinPick').replaceChildren(h('p', { class: 'help' }, 'Choose your unit above.')); return; }
   const cands = engine.twinCandidates(unit);
+  const own = S.owned.get(unit.id);
+  const portSel = h('select', { class: 'lcdsel', 'aria-label': 'Your ' + unit.model + "'s MIDI port", onchange: (e) => setOwned(unit.id, e.target.value ? { port: e.target.value, ch: own?.ch || 1 } : null) },
+    h('option', { value: '' }, input.midi ? (input.outputs.length ? "I don't have one" : 'no MIDI outputs') : 'Enable MIDI to choose a port'), ...input.outputs.map((o) => h('option', { value: o.id, selected: own?.port === o.id }, o.name)));
+  const chSel = h('select', { class: 'lcdsel', 'aria-label': 'Channel', disabled: !own, onchange: (e) => setOwned(unit.id, { ...own, ch: +e.target.value }) }, ...Array.from({ length: 16 }, (_, i) => h('option', { value: i + 1, selected: (own?.ch || 1) === i + 1 }, `ch ${i + 1}`)));
   $('#twinPick').replaceChildren(
-    h('p', { class: 'help' }, `The band will hear your ${unit.model} as one of these. Best match first.`),
+    h('div', { class: 'owned' + (own ? ' on' : '') },
+      h('div', {}, h('b', {}, unit.model.startsWith(unit.maker) ? unit.model : `${unit.maker} ${unit.model}`), h('small', {}, [unit.year, unit.voices ? (unit.voices === 1 ? 'mono' : unit.voices + ' voices') : null, unit.note].filter(Boolean).join(' · '))),
+      h('div', { class: 'row' }, h('span', { class: 'help' }, `I have one too: when a bandmate plays a ${unit.model}, play it on mine`), portSel, chSel,
+        input.midi ? null : h('button', { class: 'btn small', onclick: async () => { await input.enableMIDI(); renderHardware(); } }, 'Enable MIDI'))),
+    h('p', { class: 'help' }, `Bringing yours? The band will hear your ${unit.model} as one of these (unless they have one too). Best match first.`),
     h('div', { class: 'cards' }, ...cands.map((c) => {
       const d = engine.defs.get(c.inst), cfg = engine.resolve({ hw: unit.id, inst: c.inst });
       return h('div', { class: 'card' },
         iconEl(d),
         h('div', { class: 'top' }, h('span', { class: 'fam' }, d.family), h('span', { class: 'score' }, `${Math.round(c.score * 100)}%`)),
-        h('div', { class: 'name' }, d.name), h('p', {}, (unit.twin === c.inst ? `Set up with ${unit.model} character. ` : '') + (d.blurb || '')),
+        h('div', { class: 'name' }, d.name), h('p', {}, (c.why.length ? 'Shares: ' + c.why.join(', ') + '. ' : '') + (d.blurb || '')),
         h('div', { class: 'chips' }, ...engine.patchTypes(cfg).map((t) => h('span', { class: 'chip' }, t))),
         h('div', { class: 'row' },
           h('button', { class: 'btn small', onclick: () => audition(cfg) }, 'Audition'),
           h('button', { class: 'btn small hot', onclick: () => { addEntry({ hw: unit.id, inst: c.inst }); closeDrawers(); } }, 'Use this twin')));
     })));
+}
+
+// --- "I have one too": your own unit plays a bandmate's part on that model instead of a twin
+function saveOwned() { try { localStorage.setItem('jamjam.gear', JSON.stringify([...S.owned])); } catch (_) {} }
+function setOwned(id, v) {
+  if (v) S.owned.set(id, v); else S.owned.delete(id);
+  saveOwned();
+  for (const [pid, pl] of S.players) for (const x of pl.rack || []) if (x.cfg?.hw === id) autoOwn(pid, x.r, x.cfg);
+  if ($('#hwDrawer') && !$('#hwDrawer').classList.contains('hide')) renderHardware();
+  renderMidiPanel();
+}
+function autoOwn(pid, r, cfg) {
+  const k = key(pid, r), cur = S.routes.get(k), own = cfg?.hw && S.owned.get(cfg.hw);
+  if (own && own.port && (!cur || cur.auto)) {
+    if (cur && cur.port === own.port && cur.ch === own.ch) return;
+    setRoute(k, { port: own.port, ch: own.ch || 1, mute: true, auto: true });
+    const model = engine.unit(cfg.hw)?.model || 'synth';
+    addChat({ sys: true, text: `${S.players.get(pid)?.name || 'A bandmate'}'s ${model} is playing on your own ${model}.`, t: Date.now() });
+    room.send({ k: 'real', r, hw: cfg.hw, on: true }, pid);
+  } else if (!own && cur?.auto) { setRoute(k, { port: '' }); room.send({ k: 'real', r, hw: cfg?.hw, on: false }, pid); }
 }
 
 // --- tempo, lookahead, keyboard, wiring
@@ -1123,7 +1168,7 @@ function renderMidiPanel() {
   const portSel = (value, on, label) => h('select', { class: 'lcdsel', 'aria-label': label, onchange: (e) => on(e.target.value) }, h('option', { value: '' }, ports.length ? '— off —' : 'no outputs'), ...ports.map((o) => h('option', { value: o.id, selected: o.id === value }, o.name)));
   const chSel = (value, on) => h('select', { class: 'lcdsel', 'aria-label': 'Channel', onchange: (e) => on(+e.target.value) }, ...Array.from({ length: 16 }, (_, i) => h('option', { value: i + 1, selected: i + 1 === value }, `ch ${i + 1}`)));
   const parts = [];
-  for (const [pid, pl] of S.players) for (const x of pl.rack || []) parts.push({ k: key(pid, x.r), who: pl.name, what: describe(x.cfg) });
+  for (const [pid, pl] of S.players) for (const x of pl.rack || []) parts.push({ k: key(pid, x.r), who: pl.name, what: describe(x.cfg), hw: x.cfg?.hw && engine.unit(x.cfg.hw) });
   const m = S.mclock;
   box.replaceChildren(
     input.midi ? h('p', { class: 'help', style: 'margin:0' }, `${ports.length} MIDI output${ports.length === 1 ? '' : 's'}${input.inputs.length ? ` · ${input.inputs.length} input${input.inputs.length === 1 ? '' : 's'}` : ''}. Everything here is sent ahead and timestamped, so it lands in lockstep with the room.`)
@@ -1135,12 +1180,13 @@ function renderMidiPanel() {
       h('label', { class: 'help' }, 'early ', h('input', { type: 'number', min: 0, max: 80, value: m.lat, style: 'width:52px', onkeydown: (e) => e.stopPropagation(), onchange: (e) => { m.lat = Math.max(0, Math.min(80, +e.target.value || 0)); } }), ' ms')),
     h('h3', { class: 'legend', style: 'margin:8px 0 0' }, "The band's parts on your gear"),
     h('p', { class: 'help', style: 'margin:0' }, parts.length ? "Pick an output and channel to play a bandmate's part (notes, pitch bend, mapped knobs, sequencer hits) on your own synth or DAW, at the moment the room hears it." : 'When bandmates walk in, their parts show up here.'),
-    ...parts.map(({ k, who, what }) => {
+    ...parts.map(({ k, who, what, hw }) => {
       const r = S.routes.get(k) || { port: '', ch: 1, mute: true };
       return h('div', { class: 'row', style: 'border-top:1px solid #222428;padding-top:6px' },
         h('span', { style: 'flex:1 1 100%;font-size:12px' }, h('b', {}, who), ' · ', what),
         portSel(r.port, (v) => setRoute(k, { port: v }), `Output for ${who}'s ${what}`), chSel(r.ch || 1, (v) => setRoute(k, { ch: v })),
-        h('label', { class: 'help' }, h('input', { type: 'checkbox', checked: r.mute !== false, onchange: (e) => setRoute(k, { mute: e.target.checked }) }), ' mute in browser'));
+        h('label', { class: 'help' }, h('input', { type: 'checkbox', checked: r.mute !== false, onchange: (e) => setRoute(k, { mute: e.target.checked }) }), ' mute in browser'),
+        hw ? h('label', { class: 'help', title: `Every ${hw.model} a bandmate plays goes to this port, in any jam` }, h('input', { type: 'checkbox', checked: S.owned.has(hw.id), disabled: !r.port, onchange: (e) => setOwned(hw.id, e.target.checked ? { port: r.port, ch: r.ch || 1 } : null) }), ` I have a ${hw.model}`) : null);
     }));
 }
 
@@ -1296,6 +1342,7 @@ Object.assign(window.JJ, {
   removeEntry: (r) => removeEntry(entry(r)),
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
+  own: (id, v) => setOwned(id, v),
   addExternal: async (name, port, ch, twin) => { if (!input.midi) await input.enableMIDI(); return addEntry({ ext: { name, port, ch }, inst: twin })?.r; },
   enableMIDI: () => input.enableMIDI(),
   route: (k, patch) => setRoute(k, patch),

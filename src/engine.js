@@ -10,6 +10,17 @@ const sha = async (text) => {
 const fnv = (s) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(16); };
 const r4 = (x) => Math.round(x * 1e4) / 1e4;
 
+const FILTER_NAME = { ladder: 'ladder filter', ota: 'OTA filter', ssm: 'SSM-type filter', cem: 'Curtis-type filter', sem: 'two-pole SEM filter', diode: 'diode filter', ms20: 'MS-20-type filter', steiner: 'Steiner filter', svf: 'state-variable filter', arp: 'ARP-type filter', digital: 'digital filter' };
+// an instrument without declared traits still gets ranked from what its family string says
+function guessTraits(def) {
+  const f = String(def.family || '').toLowerCase();
+  if (def.drums || /drum|perc|kit/.test(f)) return { arch: ['drum'] };
+  if (/fm|piano|tine|bell/.test(f)) return { arch: ['fm', 'ep'] };
+  if (/mono|bass|lead/.test(f)) return { arch: ['subtractive'], voices: 1 };
+  if (/poly|pad|string|analog|synth/.test(f)) return { arch: ['subtractive', 'digital'], voices: 8 };
+  return null;
+}
+
 export class Engine {
   constructor(clock, tempo) {
     this.clock = clock;
@@ -169,12 +180,31 @@ export class Engine {
     const t = unit ? unit.types.filter((x) => def.presets[x]) : [];
     return t.length ? t : Object.keys(def.presets);
   }
-  // ranked software twins for a hardware unit: its own named twin first, then its family's candidates
+  // ranked software twins for a hardware unit. The family's table gives the base score; circuit traits (oscillator,
+  // filter, mono or poly) move it up or down, and any loaded instrument that declares traits (a library's, say)
+  // can rank too. Each candidate says why, for the gear wall.
   twinCandidates(unit) {
     const fam = this.hardware.families[unit.family] || {};
-    const list = (fam.twins || []).map(([inst, score]) => ({ inst, score }));
-    if (unit.twin) { const own = list.find((c) => c.inst === unit.twin); if (own) own.score = Math.max(own.score, 0.95); else list.push({ inst: unit.twin, score: 0.95 }); }
-    return list.filter((c) => this.defs.has(c.inst)).sort((a, b) => b.score - a.score);
+    const ARCH = { 'analog-poly': 'subtractive', 'analog-mono': 'subtractive', 'bass-machine': 'subtractive', 'string-machine': 'strings', fm: 'fm', 'electric-piano': 'ep', 'digital-poly': 'digital', organ: 'organ', 'drum-machine': 'drum', groovebox: 'drum' };
+    const arch = ARCH[unit.family], table = new Map((fam.twins || []).map(([i, sc]) => [i, sc]));
+    const list = [];
+    for (const def of this.defs.values()) {
+      if (def.internal || def.standin) continue;
+      const t = def.traits || this.hardware.traits?.[def.id] || guessTraits(def);
+      if (!t) continue;
+      const base = table.has(def.id) ? table.get(def.id) : (t.arch || []).includes(arch) ? 0.7 : null;
+      if (base == null && unit.twin !== def.id) continue;
+      let score = base ?? 0.5; const why = [];
+      if (unit.osc && (t.osc || []).includes(unit.osc)) { score += 0.03; why.push(unit.osc.toUpperCase() + ' oscillators'); }
+      if (unit.filter && unit.filter !== 'none' && (t.filter || []).includes(unit.filter)) { score += 0.05; why.push(FILTER_NAME[unit.filter] || unit.filter); }
+      if (unit.voices && t.voices && arch !== 'drum') {
+        if ((unit.voices === 1) === (t.voices === 1)) { score += 0.03; why.push(unit.voices === 1 ? 'mono' : 'polyphonic'); } else score -= 0.08;
+      }
+      if (unit.twin === def.id) { score = Math.max(score, 0.95); why.unshift(`set up as a ${unit.model}`); }
+      if (def.lib && t.models && t.models.includes(unit.id)) { score = Math.max(score, 0.97); why.unshift(`modelled on the ${unit.model}`); }
+      list.push({ inst: def.id, score: Math.min(0.99, score), why });
+    }
+    return list.sort((a, b) => b.score - a.score);
   }
 
   channel(pid) {
