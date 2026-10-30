@@ -1,0 +1,1400 @@
+{
+ "teenage-engineering-op-xy": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://teenage.engineering/guides/op-xy/com",
+   "https://teenage.engineering/guides/op-xy/how-to",
+   "https://teenage.engineering/guides/op-xy/midi-references",
+   "https://teenage.engineering/_img/68ef8a079775f13263a349ef_original.pdf"
+  ],
+  "notes": "Ports: USB-C (MIDI host and device), a 3.5 mm MIDI IN jack, and a 3.5 mm multi-out jack that can be set to MIDI out (TRS-to-DIN cable; the function can't be changed while plugged in), plus Bluetooth LE MIDI. Each of the 16 tracks has its own MIDI channel (project settings > config > midi). Almost all controls are pre-mapped to CCs; documented ones: track volume CC7, mute CC9, pan CC10, track parameters CC46 (channel 1-16), and global tempo CC80, groove 81, scene 82-85, project 86, EQ 90. Program change and SysEx are not documented (the monitor page only displays incoming SysEx). Presets and projects move as files over USB MTP, so there is no MIDI patch dump; mirror sounds with CC relay only."
+ },
+ "teenage-engineering-op-1-field": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://teenage.engineering/_img/676030a8ef599a28c8bc97cf_original.pdf"
+  ],
+  "notes": "Separate product from the 2011 OP-1 (the existing teenage-engineering-op-1 entry is the original). MIDI over USB-C (host and device) and Bluetooth LE; no DIN or TRS MIDI jack. COM > T1 MIDI sets channel and toggles MIDI clock, notes and 'other MIDI' (CC data); T2 CTRL turns it into a controller with relative/absolute encoders. CC numbers, program change and SysEx are not documented. Synths and drum kits are files reached via MTP/disk mode, so there's no MIDI patch dump."
+ },
+ "teenage-engineering-po-14-sub": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/products/po"
+  ],
+  "notes": "No MIDI. Pocket Operators only exchange sync pulses on the left channel of the 3.5 mm jacks (SY modes)."
+ },
+ "teenage-engineering-po-16-factory": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/products/po"
+  ],
+  "notes": "No MIDI. Pocket Operators only exchange sync pulses on the left channel of the 3.5 mm jacks (SY modes)."
+ },
+ "teenage-engineering-po-20-arcade": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/products/po"
+  ],
+  "notes": "No MIDI. Pocket Operators only exchange sync pulses on the left channel of the 3.5 mm jacks (SY modes)."
+ },
+ "teenage-engineering-po-28-robot": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/products/po"
+  ],
+  "notes": "No MIDI. Pocket Operators only exchange sync pulses on the left channel of the 3.5 mm jacks (SY modes)."
+ },
+ "dreadbox-erebus": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://www.vintagesynth.com/articles/erebus-and-hades-synths-reissued-dreadbox"
+  ],
+  "notes": "MIDI IN (5-pin) for notes, pitch bend and gate; no patch memory and no CC control of the panel. V1 (2015), V2 and the V3 desktop (2017) share the voice."
+ },
+ "dreadbox-erebus-reissue": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://www.vintagesynth.com/articles/erebus-and-hades-synths-reissued-dreadbox"
+  ],
+  "notes": "Like the original: MIDI in for notes, no patch memory, panel not mapped to CC (not verified for the reissue)."
+ },
+ "dreadbox-lil-erebus": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://www.sonicstate.com/news/2018/04/26/dreadbox-releases-lil-erebus-diy-synth-kit/"
+  ],
+  "notes": "Built-in MIDI-to-CV for notes only; no memory, no CC."
+ },
+ "dreadbox-hades": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://www.vintagesynth.com/articles/erebus-and-hades-synths-reissued-dreadbox"
+  ],
+  "notes": "MIDI in for notes; no memory, panel not on CC."
+ },
+ "dreadbox-abyss": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in/out on 5-pin DIN; responds to notes and a small set of CCs. No patch memory, so no dump. CC map not verified."
+ },
+ "dreadbox-nyx": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in for notes; no memory; panel not on CC."
+ },
+ "dreadbox-murmux": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in for notes and clock; panel CC support not verified."
+ },
+ "dreadbox-typhon": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://cdn.shopify.com/s/files/1/0527/2557/9960/files/Typhon-Users-Manual.pdf",
+   "https://synthanatomy.com/2026/04/dreadbox-typhon-4-2-new-firmware-brings-major-midi-improvements-and-more.html"
+  ],
+  "notes": "MIDI on 5-pin DIN in/out and USB. Receives notes, aftertouch, velocity, mod wheel, CC, program change, clock and transport. Firmware 4.2 (2026) adds CC transmit for all parameters over USB and DIN and reworks the CC list to standard CCs; older firmware only receives CC. No SysEx patch dump documented."
+ },
+ "dreadbox-nymphes": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://synthanatomy.com/?p=63153",
+   "https://github.com/jtpack/nymphes-osc"
+  ],
+  "notes": "USB MIDI only (no DIN). Firmware v2 reworks the CC list, transmits all CCs on preset load, and adds SysEx preset import/export and MPE. SysEx (from the open-source nymphes-osc library): manufacturer 00 21 35, model 06. F0 00 21 35 00 06 02 F7 requests a dump of ALL stored presets (one message per preset), so there's no current-sound request. A preset message is F0 00 21 35 00 06 <import> <user/factory> <bank 1-7> <preset 1-7> <crc lo> <crc hi> <nibblized protobuf> F7; import byte 0x00 = non-persistent load (plays it without storing), 0x01 = persistent import into the slot. A relay could rewrite that byte to 00 to audition a bandmate's preset."
+ },
+ "polyend-medusa": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI on USB and 5-pin DIN; up to 6 voices (mono, duo, poly modes). Panel parameters send/receive CC (map in the manual). Presets are handled by Polyend's tools; no documented SysEx current-sound request."
+ },
+ "analogue-solutions-treadstone": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://www.synthtopia.com/content/2018/01/24/analogue-solutions-intros-599-treadstone-analog-mono-synth/"
+  ],
+  "notes": "Built-in MIDI-to-CV (16-bit) for notes; no patch memory and no CC map documented. (Treadstone is an Analogue Solutions instrument, not Dreadbox.)"
+ },
+ "black-corporation-deckards-dream": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in (DIN) with polyphonic aftertouch/MPE-style expression. Mk1 is a performance instrument with limited/no patch memory; no SysEx dump documented."
+ },
+ "black-corporation-deckards-dream-mk2": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI DIN/USB; SysEx format not published, no verified dump request."
+ },
+ "black-corporation-kijimi": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": {
+   "request": "F0 02 14 F7",
+   "reply": "F0 02 23",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/BC_Kijimi.py"
+  ],
+  "notes": "From KnobKraft: Kijimi uses manufacturer byte 02 with no device or model byte. F0 02 14 F7 'get state' returns the current sound as F0 02 23 ... F7 (260 bytes, firmware 1.3.6), which is the 'set state' command, so sending it back loads the edit buffer without storing. F0 02 13 bb pp F7 requests a stored patch and the reply (F0 02 00 bb pp ...) writes a slot, so don't relay those. F0 02 15 F7 returns the firmware version. Older (factory-bank) messages are a different length; keep both units on the same firmware."
+ },
+ "black-corporation-kijimi-mk2": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/BC_Kijimi.py"
+  ],
+  "notes": "Probably shares the Kijimi SysEx (F0 02 14 F7 get state / F0 02 23 set state) but not verified for MK2 firmware; don't assume dumps cross between MK1 and MK2."
+ },
+ "black-corporation-xerxes": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://synthanatomy.com/2019/08/black-corporation-xerxes-pre-order-started-poly-analog-synthesizer.html"
+  ],
+  "notes": "10 banks x 128 presets; poly velocity and aftertouch, full MPE. SysEx patch format not published; no verified dump request. MK2 (2022) is a limited revision with the same voice."
+ },
+ "udo-super-6": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": "SHIFT, then P DUMP: sends the currently selected patch as SysEx.",
+  "confidence": "manual",
+  "sources": [
+   "https://cdn.shopify.com/s/files/1/0024/2352/1341/files/UDO-Super-6-Manual.pdf"
+  ],
+  "notes": "Global settings (SHIFT): MIDI CH, TX/RX E (button 1 = transmit parameter changes as CC, 2 = receive CC, 3 = high-resolution 14-bit NRPN for knobs/faders), TX/RX P (program change send/receive), P DUMP. The manual warns against using DIN MIDI and USB at the same time. No SysEx request command is documented, so a bandmate has to press P DUMP; whether a received dump loads into the edit buffer isn't stated. Patches can also be copied as files over USB."
+ },
+ "udo-super-gemini": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://synthanatomy.com/2023/05/superbooth-23-udo-audio-super-gemini-poly-binaural-hybrid-synth-with-poly-at.html"
+  ],
+  "notes": "Likely follows the Super 6 scheme (global TX/RX settings for CC/NRPN and a manual patch dump), not verified."
+ },
+ "groove-synthesis-3rd-wave": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 00 02 4A 01 06 F7",
+   "reply": "F0 00 02 4A 01 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/GrooveSynthesis_3rdWave.py"
+  ],
+  "notes": "From KnobKraft: manufacturer 00 02 4A, family byte 01. 06 requests the edit buffer; reply command 03 is an edit-buffer dump that loads without storing. 05 bb pp requests a stored program and returns 02 bb pp (store-to-slot), so don't relay 02 messages. Bank select is CC32. Universal identity reply carries family 01. Wavetable programs that use user waves need the same user waves on the other unit."
+ },
+ "groove-synthesis-3rd-wave-8m": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/GrooveSynthesis_3rdWave.py"
+  ],
+  "notes": "Probably uses the 3rd Wave SysEx (F0 00 02 4A 01 06 F7) but this wasn't verified for the 8M; not given as a dump here."
+ },
+ "melbourne-instruments-nina": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI DIN and USB; knobs send CC/NRPN. Presets live on the unit and move by file/app; no published SysEx dump."
+ },
+ "melbourne-instruments-delia": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI DIN and USB; knobs send CC/NRPN; no published SysEx dump."
+ },
+ "expressive-e-osmose": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "USB and DIN MIDI; transmits MPE (per-note pitch, pressure, timbre). Presets are managed in the Osmose editor; no documented SysEx current-sound request. A non-MPE twin will lose per-key expression."
+ },
+ "tasty-chips-gr-1": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in (DIN and USB host for controllers); parameters respond to CC. Sounds depend on user samples on the device, so no portable patch dump."
+ },
+ "soma-lyra-8": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [],
+  "notes": "Original Lyra-8 has no MIDI; voices are played by touch plates and tuned by knobs."
+ },
+ "soma-terra": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Has MIDI; implementation details not verified. No known SysEx patch dump."
+ },
+ "erica-synths-bassline-db-01": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in/out (DIN) and USB; panel controls send/receive CC. No published SysEx patch dump (patterns, not patches, are the stored data)."
+ },
+ "erica-synths-syntrx": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in for notes and clock; no patch memory, the matrix routing isn't sent over MIDI."
+ },
+ "erica-synths-syntrx-ii": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Adds presets and CC control over the original; SysEx format not published."
+ },
+ "erica-synths-steampipe": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI DIN/USB with CC control; no SysEx dump documented."
+ },
+ "twisted-electrons-megafm": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Faders/knobs send and receive CC; DIN and USB MIDI. Patch SysEx not verified."
+ },
+ "twisted-electrons-acid8-mkiii": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in/out with CC; no patch dump."
+ },
+ "sonicware-liven-xfm": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Knobs send/receive CC; patches are not exchanged over SysEx (backup via the maker's tools/files)."
+ },
+ "sonicware-liven-8bit-warps": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Knobs send/receive CC; patches are not exchanged over SysEx (backup via the maker's tools/files)."
+ },
+ "sonicware-liven-ambient-0": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Knobs send/receive CC; patches are not exchanged over SysEx (backup via the maker's tools/files)."
+ },
+ "sonicware-elz-1": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Knobs send/receive CC; patches are not exchanged over SysEx (backup via the maker's tools/files)."
+ },
+ "sonicware-elz-1-play": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Knobs send/receive CC; patches are not exchanged over SysEx (backup via the maker's tools/files)."
+ },
+ "supercritical-redshift-6": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://www.sonicstate.com/news/2024/04/07/supercritical-redshift-6/"
+  ],
+  "notes": "Supports MPE; voices can run poly, 3+3 layered or as six separate instruments. MIDI implementation and any SysEx not verified."
+ },
+ "ik-multimedia-uno-synth": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "USB MIDI and a 3.5 mm MIDI in (adapter supplied); parameters respond to CC (IK publishes a CC chart). Patches are moved with IK's editor; SysEx not published."
+ },
+ "ik-multimedia-uno-synth-pro": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://www.dj-technik.de/mediafiles/Bedienungsanleitungen/IK_Multimedia/IK_Multimedia_UNO_Synth_Pro_MIDI-Chart_englisch.pdf"
+  ],
+  "notes": "DIN MIDI and USB; CC chart published by IK. SysEx used by IK's editor isn't documented; Edisyn's editor for it is unfinished (disabled in its synth list)."
+ },
+ "modal-cobalt8": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Parameters send/receive CC and NRPN (selectable in the global MIDI settings). Patches move with the Modal App over USB; SysEx format not published."
+ },
+ "modal-cobalt5s": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Parameters send/receive CC and NRPN (selectable in the global MIDI settings). Patches move with the Modal App over USB; SysEx format not published."
+ },
+ "modal-skulpt": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Parameters send/receive CC and NRPN (selectable in the global MIDI settings). Patches move with the Modal App over USB; SysEx format not published."
+ },
+ "modal-craft-synth-2": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Parameters send/receive CC and NRPN (selectable in the global MIDI settings). Patches move with the Modal App over USB; SysEx format not published."
+ },
+ "modal-002": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Parameters send/receive CC and NRPN (selectable in the global MIDI settings). Patches move with the Modal App over USB; SysEx format not published."
+ },
+ "modal-008": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Parameters send/receive CC and NRPN (selectable in the global MIDI settings). Patches move with the Modal App over USB; SysEx format not published."
+ },
+ "korg-kingkorg-neo": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 42 30 00 01 18 10 F7",
+   "reply": "F0 42 30 00 01 18 40",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/943/"
+  ],
+  "notes": "KingKORG NEO MIDI implementation (2025): product ID 00 01 18 (shared with the original KingKORG). CURRENT PROGRAM DATA DUMP REQUEST (10H) returns 40H from the edit buffer; receiving 40H saves to the edit buffer and replies 23H/24H. Byte 2 is 3g (global channel). Requires the MIDI filter 'SysEx' parameter = Enable. 4CH program dumps (1C request) carry a program number and write a slot. The original KingKORG uses the same ID, but the NEO's program format may differ, so don't assume dumps cross between them."
+ },
+ "korg-kingkorg": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 42 30 00 01 18 10 F7",
+   "reply": "F0 42 30 00 01 18 40",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/97/"
+  ],
+  "notes": "KingKORG MIDI implementation: product ID 00 01 18; 10H current program request, 40H current program dump into the edit buffer (23H/24H acknowledge). Byte 2 = 3g, global channel. SysEx MIDI filter must be enabled."
+ },
+ "korg-microkorg-2": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 42 30 00 01 71 10 F7",
+   "reply": "F0 42 30 00 01 71 40",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/944/"
+  ],
+  "notes": "microKORG2 MIDI implementation (2024): header F0 42 3g 00 01 71. CURRENT PROGRAM DATA DUMP REQUEST 10H returns 40H; receiving 40H saves to the edit buffer and replies 23H/24H. 1CH requests a stored program (writes a slot), so relay only 40H. Needs MIDI FILTER 'SysEx' enabled. Not compatible with original microKORG patches (different engine)."
+ },
+ "korg-nts-1-mkii": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 42 30 00 01 73 10 F7",
+   "reply": "F0 42 30 00 01 73 40",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": "Executing 'Program Dump' sends the current program (40H) from the edit buffer.",
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/933/"
+  ],
+  "notes": "NTS-1 mkII MIDI implementation: header F0 42 3g 00 01 73; 10H requests the current program, 40H (576 bytes 7-bit / 505 decoded) loads into the edit buffer. CCs per parameter with 14-bit pairs (e.g. cutoff CC43/107). Receive needs global 'MIDI Short Message' on. Programs reference user oscillators/effects by slot, so the other unit needs the same logue units loaded."
+ },
+ "korg-nts-1": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/832/"
+  ],
+  "notes": "No program memory, so no program dump: its SysEx only covers user-slot data and API info (17H-1AH). Knobs send/receive CC. MIDI over USB and 3.5 mm TRS in."
+ },
+ "korg-volca-fm2": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": {
+   "request": "F0 42 30 00 01 2F 12 F7",
+   "reply": "F0 42 30 00 01 2F 42",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/892/"
+  ],
+  "notes": "volca fm2 MIDI implementation (2022): header F0 42 3g 00 01 2F. Note the function IDs differ from other Korgs: 12H requests the current program and 42H is the current program dump (160 bytes 7-bit / 140 decoded), saved to the edit buffer (reply 23H-26H). 10H/40H are the current SEQUENCE. Knob CCs from 40 up (needs 'MIDI Short Message' on)."
+ },
+ "korg-volca-nubass": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/820/"
+  ],
+  "notes": "MIDI IN only (no MIDI out), receive-only CCs 40-50 (VTO pitch, saturation, level, cutoff, peak, VCF EG, accent, LFO) when 'MIDI RX Short Message' is on. No SysEx program dump."
+ },
+ "korg-ms-20-mini": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [],
+  "notes": "MIDI IN (DIN) and USB for notes only; the panel isn't sent or received as MIDI; no memory."
+ },
+ "korg-multi-poly": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/976/"
+  ],
+  "notes": "multi/poly Property Exchange MIDI implementation (2025): the only SysEx is MIDI-CI Property Exchange with Get-only ProgramList and X-ProgramEdit; nothing can be Set, so a bandmate's program can't be written over MIDI. Mirror with CC only."
+ },
+ "korg-phase8": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://www.musicradar.com/music-tech/its-beyond-analogue-vs-digital-its-even-beyond-electronics-korg-releases-experimental-phase8-eight-voice-acoustic-synthesizer"
+  ],
+  "notes": "MIDI in/out on 3.5 mm TRS and USB MIDI, plus sync and CV. Each voice is a physical resonator tuned to one pitch, so it can't play arbitrary notes like a keyboard synth; a twin is an approximation. MIDI CC map not verified."
+ },
+ "roland-jd-xi": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": {
+   "request": "F0 41 10 00 00 00 0E 11 19 01 00 00 00 00 00 40 26 F7 F0 41 10 00 00 00 0E 11 19 01 20 00 00 00 00 3D 09 F7 F0 41 10 00 00 00 0E 11 19 01 21 00 00 00 00 3D 08 F7 F0 41 10 00 00 00 0E 11 19 01 22 00 00 00 00 3D 07 F7 F0 41 10 00 00 00 0E 11 19 01 50 00 00 00 00 25 71 F7",
+   "reply": "F0 41 10 00 00 00 0E 12 19 01",
+   "replies": 5,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/JD-Xi_MIDI_Imple_e01_W.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Roland_JD_Xi.py"
+  ],
+  "notes": "Roland JD-Xi MIDI implementation: model ID 00 00 00 0E, device 10H. Temporary tones: Digital Synth Part 1 at 19 00 00 00, Part 2 at 19 20 00 00, Analog at 19 40 00 00, Drums at 19 60 00 00; the SuperNATURAL synth tone sits at offset 01 00 00. The request is five RQ1s for Digital Synth Part 1 (common 40H, partials 1-3 at 20/21/22 3DH each, modify 50 25H; block sizes as in KnobKraft, which uses Part 2 at 19 21 xx xx). Replaying the five DT1 replies sets the temporary tone without writing memory. Only the Digital 1 sound is shared; the analog part, drums and program effects (18 00 00 00) are not."
+ },
+ "roland-jd-xa": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/JD-XA_MIDI_Imple_e01_W.pdf"
+  ],
+  "notes": "RQ1/DT1 with model ID 00 00 00 0F, device 10H-1FH. A program spans four analog parts, four digital parts and effects, so no single-request dump is given here."
+ },
+ "roland-system-8": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel controls send/receive CC; current-sound SysEx dump not verified (newer Roland units move sounds as files or via Roland Cloud/apps)."
+ },
+ "roland-gaia-sh-01": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel controls send/receive CC; current-sound SysEx dump not verified (newer Roland units move sounds as files or via Roland Cloud/apps)."
+ },
+ "roland-gaia-2": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel controls send/receive CC; current-sound SysEx dump not verified (newer Roland units move sounds as files or via Roland Cloud/apps)."
+ },
+ "roland-sh-4d": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel controls send/receive CC; current-sound SysEx dump not verified (newer Roland units move sounds as files or via Roland Cloud/apps)."
+ },
+ "roland-s-1": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel controls send/receive CC; current-sound SysEx dump not verified (newer Roland units move sounds as files or via Roland Cloud/apps)."
+ },
+ "roland-j-6": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel controls send/receive CC; current-sound SysEx dump not verified (newer Roland units move sounds as files or via Roland Cloud/apps)."
+ },
+ "roland-sh-01a": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel controls send/receive CC; current-sound SysEx dump not verified (newer Roland units move sounds as files or via Roland Cloud/apps)."
+ },
+ "roland-jx-03": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel controls send/receive CC; current-sound SysEx dump not verified (newer Roland units move sounds as files or via Roland Cloud/apps)."
+ },
+ "roland-jx-08": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel controls send/receive CC; current-sound SysEx dump not verified (newer Roland units move sounds as files or via Roland Cloud/apps)."
+ },
+ "roland-jd-08": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel controls send/receive CC; current-sound SysEx dump not verified (newer Roland units move sounds as files or via Roland Cloud/apps)."
+ },
+ "yamaha-reface-cs": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": {
+   "request": "F0 43 20 7F 1C 03 0E 0F 00 F7",
+   "reply": "F0 43 00 7F 1C",
+   "replies": 3,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://hu.yamaha.com/files/download/other_assets/7/794817/reface_en_dl_b0.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/YamahaRefaceCP.py"
+  ],
+  "notes": "reface Data List: model ID 03H. A bulk dump request at the TG bulk-header address (0E 0F 00) returns 3 messages: bulk header (0E 0F 00), TG Common (30 00 00) and bulk footer (0F 0F 00); in replies the model byte sits at index 7 and the address at 8-10 (after a 2-byte count). Replaying all 3 in order sets the current sound (KnobKraft does this for the CP). Byte 2 = 2n (request) / 0n (dump) with n = device number. CCs are sent/received only when MIDI Control is on."
+ },
+ "yamaha-reface-cp": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": {
+   "request": "F0 43 20 7F 1C 04 0E 0F 00 F7",
+   "reply": "F0 43 00 7F 1C",
+   "replies": 3,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://hu.yamaha.com/files/download/other_assets/7/794817/reface_en_dl_b0.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/YamahaRefaceCP.py"
+  ],
+  "notes": "reface Data List: model ID 04H. A bulk dump request at the TG bulk-header address (0E 0F 00) returns 3 messages: bulk header (0E 0F 00), TG Common (30 00 00) and bulk footer (0F 0F 00); in replies the model byte sits at index 7 and the address at 8-10 (after a 2-byte count). Replaying all 3 in order sets the current sound (KnobKraft does this for the CP). Byte 2 = 2n (request) / 0n (dump) with n = device number. CCs are sent/received only when MIDI Control is on."
+ },
+ "yamaha-reface-yc": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": {
+   "request": "F0 43 20 7F 1C 06 0E 0F 00 F7",
+   "reply": "F0 43 00 7F 1C",
+   "replies": 3,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://hu.yamaha.com/files/download/other_assets/7/794817/reface_en_dl_b0.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/YamahaRefaceCP.py"
+  ],
+  "notes": "reface Data List: model ID 06H. A bulk dump request at the TG bulk-header address (0E 0F 00) returns 3 messages: bulk header (0E 0F 00), TG Common (30 00 00) and bulk footer (0F 0F 00); in replies the model byte sits at index 7 and the address at 8-10 (after a 2-byte count). Replaying all 3 in order sets the current sound (KnobKraft does this for the CP). Byte 2 = 2n (request) / 0n (dump) with n = device number. CCs are sent/received only when MIDI Control is on."
+ },
+ "yamaha-modx": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Performances are large multi-part structures; Yamaha bulk dumps exist but no single current-sound request is given here."
+ },
+ "yamaha-montage-m": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "No single current-sound request given; performances are multi-part."
+ },
+ "novation-a-station": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 00 20 29 01 40 7F 40 21 00 00 00 00 F7",
+   "reply": "F0 00 20 29 01 40 7F 00",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 6
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Novation_AStation.py",
+   "https://github.com/eclab/edisyn/tree/master/edisyn/synth/novationastation"
+  ],
+  "notes": "Header F0 00 20 29 01 40 <7F or channel>; byte 7 is the message type: 40 = current program dump request, 00 = current program dump (loads the edit buffer), 41/01 = stored program request/dump (writes bank/slot at bytes 11-12, don't relay). KnobKraft sends control byte 21 at index 8; Edisyn sends 00 there; both document the same 40 request. Byte 6 may be 7F (any) or the receive channel."
+ },
+ "novation-k-station": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Knobs send CC/NRPN. Novation SysEx for this model isn't documented in KnobKraft or Edisyn; patches move with Novation Components/librarian."
+ },
+ "novation-mininova": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Knobs send CC/NRPN. Novation SysEx for this model isn't documented in KnobKraft or Edisyn; patches move with Novation Components/librarian."
+ },
+ "novation-circuit-mono-station": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Knobs send CC/NRPN. Novation SysEx for this model isn't documented in KnobKraft or Edisyn; patches move with Novation Components/librarian."
+ },
+ "waldorf-kyra": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 3E 22 00 20 01 7F 7F F7",
+   "reply": "F0 3E 22 00 40",
+   "replies": 1,
+   "loads": "unknown",
+   "deviceIdByte": 3
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Waldorf_Kyra.py",
+   "https://github.com/eclab/edisyn/tree/master/edisyn/synth/waldorfkyra"
+  ],
+  "notes": "KnobKraft/Edisyn: F0 3E 22 <dev> 20 01 <bank> <prog> F7 requests a patch; bank=prog=7F means the edit buffer. The Kyra replies with message type 40; to send it back the type must be 00 with bank/prog 7F 7F (KnobKraft rewrites byte 4 from 40 to 00; checksum unaffected), so a relay has to patch byte 4. Byte 3 is the device/channel. Multis are requested with 21 (8 parts). Not replayed as received: byte 4 must change from 40 to 00 first, which MEGAjam does not do yet."
+ },
+ "waldorf-m": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 3E 30 7F 74 00 00 00 F7",
+   "reply": "F0 3E 30",
+   "replies": 1,
+   "loads": "unknown",
+   "deviceIdByte": 3
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Waldorf_M.py",
+   "https://github.com/eclab/edisyn/tree/master/edisyn/synth/waldorfm"
+  ],
+  "notes": "KnobKraft/Edisyn: F0 3E 30 <dev> 74 00 00 00 F7 requests the current patch (Edisyn uses dev 00, KnobKraft 7F until detected). Reply: 512 bytes, F0 3E 30 dd 72 01 .... Before sending it back, KnobKraft sets bytes 32-35 to 00 00 01 00 (byte 34 = 1 means 'do not save'), otherwise it may be stored; so loads is marked unknown and a relay should patch those bytes. Multi arrangement request is 75 01."
+ },
+ "waldorf-rocket": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/eclab/edisyn/tree/master/edisyn/synth/waldorfrocket"
+  ],
+  "notes": "Panel sends/receives CC (two CC maps; Edisyn's alt map is switched with SysEx F0 3E 17 00 24 02 0x F7). No stored patches, so nothing to dump; Edisyn's 'request' F0 3E 17 00 50 F7 is not a documented patch dump."
+ },
+ "waldorf-streichfett": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Knobs send/receive CC; no SysEx current-sound request documented."
+ },
+ "waldorf-stvc": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Knobs send/receive CC; no SysEx current-sound request documented."
+ },
+ "waldorf-microwave-xt": {
+  "midi": true,
+  "programChange": true,
+  "params": "sysex",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/eclab/edisyn/tree/master/edisyn/synth/waldorfmicrowavext"
+  ],
+  "notes": "Edisyn has a full editor (Microwave II/XT/XTk). Single-sound request and dump use Waldorf's SysEx; bytes not copied here because the current-sound handshake wasn't checked."
+ },
+ "studiologic-sledge": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": {
+   "request": "F0 3E 15 00 00 7F 00 F7",
+   "reply": "F0 3E 15 00 10 7F 00",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 3
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Studiologic%20Sledge.py"
+  ],
+  "notes": "From KnobKraft: Waldorf ID 3E, Sledge device ID 15, byte 3 = channel. 00 7F 00 requests the edit-buffer sound; reply 10 7F 00 (sound dump, edit buffer, sound mode) loads without storing. Stored-program dumps carry bank/program and are converted to 10 7F 00 before sending."
+ },
+ "pioneer-toraiz-as-1": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 00 40 05 00 00 01 08 10 06 F7",
+   "reply": "F0 00 40 05 00 00 01 08 10 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/PioneerToraiz-AS1.py"
+  ],
+  "notes": "From KnobKraft (citing manual pp. 33-35): Pioneer ID 00 40 05, Toraiz ID 00 00 01 08, device 10. 06 requests the edit buffer; 03 is the edit-buffer dump (loads without storing). Program dumps 02 carry bank/program, don't relay."
+ },
+ "alesis-andromeda-a6": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 00 00 0E 1D 03 10 F7",
+   "reply": "F0 00 00 0E 1D 02 10",
+   "replies": 1,
+   "loads": "needs-slot",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/AlesisAndromedaA6.py"
+  ],
+  "notes": "KnobKraft: F0 00 00 0E 1D 03 10 F7 requests the program edit buffer (buffer 16) and returns F0 00 00 0E 1D 02 10 <2341 bytes> F7. To load it, KnobKraft rewrites it as a program dump (command 00) into a slot and then sends a program change, so it needs a scratch slot."
+ },
+ "audiothingies-micromonsta-2": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/eclab/edisyn/tree/master/edisyn/synth/audiothingiesmicromonsta"
+  ],
+  "notes": "Edisyn (for the original MicroMonsta): the patch SysEx (F0 00 21 22 4D 4D 03 + name + params, 191 bytes) has no patch number or checksum and can't be loaded into current memory, and there's no request. Parameters are CC/NRPN (documented MIDI map; Edisyn notes an NRPN parsing bug on v1). The MicroMonsta 2 format isn't verified."
+ },
+ "kodamo-essencefm": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI implementation not verified; no known SysEx current-sound dump."
+ },
+ "nonlinear-labs-c15": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI implementation not verified; no known SysEx current-sound dump."
+ },
+ "vermona-perfourmer-mkii": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI implementation not verified; no known SysEx current-sound dump."
+ },
+ "vermona-mono-lancet": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI implementation not verified; no known SysEx current-sound dump."
+ },
+ "critter-and-guitari-organelle-m": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI implementation not verified; no known SysEx current-sound dump. Sound depends on the loaded Pure Data patch, so both units need the same patch."
+ },
+ "abstrakt-instruments-avalon": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI implementation not verified; no known SysEx current-sound dump."
+ },
+ "cyclone-analogic-tt-303": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI implementation not verified; no known SysEx current-sound dump."
+ },
+ "arturia-polybrute-12": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel sends CC/NRPN; presets move with PolyBrute Connection over USB, SysEx undocumented. Like the PolyBrute 6, a twin can't reproduce the A/B morph."
+ },
+ "arturia-astrolab": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Sounds come from many different engines (from the Analog Lab library), so a twin is a rough match. Macros send CC; no SysEx sound dump."
+ },
+ "arturia-minibrute-2s": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "No patch memory; some controls send CC. No dump."
+ },
+ "asm-hydrasynth-deluxe": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/eclab/edisyn/tree/master/edisyn/synth/asmhydrasynth"
+  ],
+  "notes": "Same patch format as the Hydrasynth (Edisyn's editor covers the Deluxe); patch SysEx is chunked base64 with CRC and ACKs and requested by bank/slot only, so no simple current-patch relay. Use NRPN for live parameters. Deluxe has more banks (Edisyn: 8 banks)."
+ },
+ "elektron-digitone-ii": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Elektron SysEx is undocumented; sounds move with Elektron Transfer. Each track has its own channel and sends CC/NRPN."
+ },
+ "elektron-digitone-keys": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Elektron_Digitone.py"
+  ],
+  "notes": "Likely shares Digitone SysEx (product id differs); KnobKraft only requests stored sound-pool slots, not a work buffer, so no dump is given."
+ },
+ "gamechanger-audio-motor-synth": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI DIN/USB; panel CC map in the manual. No SysEx dump documented. Motors take a moment to spin up, so fast lines lag."
+ },
+ "gamechanger-audio-motor-synth-mkii": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI DIN/USB; panel CC map in the manual. No SysEx dump documented. Motors take a moment to spin up, so fast lines lag."
+ },
+ "polyend-synth": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI DIN/USB; CC per engine parameter. Presets are files; no SysEx dump."
+ },
+ "1010music-lemondrop": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI over USB and 3.5 mm TRS; CC mappable. Presets reference sample/wavetable files on SD, so no SysEx dump."
+ },
+ "1010music-fireball": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI over USB and 3.5 mm TRS; CC mappable. Presets reference sample/wavetable files on SD, so no SysEx dump."
+ },
+ "make-noise-strega": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [],
+  "notes": "No MIDI; CV and touch plates only."
+ },
+ "bastl-instruments-kastle-2": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "No MIDI; sync/CV patch points only."
+ },
+ "bastl-instruments-softpop-sp2": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "No MIDI; sync/CV patch points only."
+ },
+ "pittsburgh-modular-taiga": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in for notes/clock via built-in MIDI-to-CV; panel not on CC; no memory."
+ },
+ "pittsburgh-modular-microvolt-3900": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in for notes/clock via built-in MIDI-to-CV; panel not on CC; no memory."
+ },
+ "pittsburgh-modular-lifeforms-sv-1": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in for notes/clock via built-in MIDI-to-CV; panel not on CC; no memory."
+ },
+ "clavia-nord-wave-2": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel sends/receives CC per layer; programs move with Nord Sound Manager; no published SysEx dump."
+ },
+ "clavia-nord-lead-3": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Knobs send CC; program SysEx exists but the current-sound request wasn't verified here."
+ }
+}

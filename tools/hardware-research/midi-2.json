@@ -1,0 +1,1271 @@
+{
+  "roland-juno-6": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate, DCB or DIN sync only); nothing to hand-shake."
+  },
+  "roland-jupiter-4": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate, DCB or DIN sync only); nothing to hand-shake."
+  },
+  "roland-sh-101": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate, DCB or DIN sync only); nothing to hand-shake."
+  },
+  "roland-sh-09": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate, DCB or DIN sync only); nothing to hand-shake."
+  },
+  "roland-sh-2": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate, DCB or DIN sync only); nothing to hand-shake."
+  },
+  "roland-sh-1000": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate, DCB or DIN sync only); nothing to hand-shake."
+  },
+  "roland-system-100": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate, DCB or DIN sync only); nothing to hand-shake."
+  },
+  "roland-promars-mrs-2": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate, DCB or DIN sync only); nothing to hand-shake."
+  },
+  "roland-tb-303": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate, DCB or DIN sync only); nothing to hand-shake."
+  },
+  "roland-rs-505-paraphonic": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate, DCB or DIN sync only); nothing to hand-shake."
+  },
+  "roland-cr-78": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate, DCB or DIN sync only); nothing to hand-shake."
+  },
+  "roland-tr-606": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate, DCB or DIN sync only); nothing to hand-shake."
+  },
+  "roland-tr-808": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate, DCB or DIN sync only); nothing to hand-shake."
+  },
+  "roland-juno-60": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI stock. It has Roland DCB (pre-MIDI) only; MIDI needs a DCB-to-MIDI box or retrofit. Patches can't be dumped over MIDI."
+  },
+  "roland-jupiter-8": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI stock (later units only had the non-MIDI JP-8 interface). Retrofits like Encore or Kiwi add MIDI but aren't stock."
+  },
+  "roland-mc-202": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the stock unit (CV/gate and DIN sync only). No sound memory: the panel sets the sound."
+  },
+  "roland-juno-106": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": "No request command. With the rear MIDI FUNCTION switch set to II or III (sysex enabled), selecting a patch sends its full tone as one sysex (F0 41 30 0n pp + 18 data bytes + F7). Pressing MANUAL sends the current panel settings as F0 41 31 0n ... F7. To capture the edited sound, press MANUAL (that loads the panel state, which is what you hear after edits).",
+    "confidence": "secondary",
+    "sources": [
+      "https://www.atarimagazines.com/st-log/issue33/64_1_THE_ST_AND_THE_ROLAND_JUNO_106_SYNTHESIZER.php"
+    ],
+    "notes": "Format: F0 41 3x 0n pp d1..d18 F7. x=0 is a patch change (pp = patch number), x=1 is MANUAL mode (pp ignored), x=2 is a single-parameter change (F0 41 32 0n pp vv F7, sent on every slider/switch move). n is the MIDI channel (byte 3). Receiving a 30H/31H message loads the sound into the voice without writing memory. Panel moves arrive as 32H sysex, not CC, so relay them as raw sysex. The receiving unit must also have the function switch on II/III. Expect duplicate ghost messages from worn sliders, and voice-chip (80017A) failures on old units.",
+    "manualReply": {
+      "reply": "F0 41 31",
+      "altReply": "F0 41 30",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 3
+    }
+  },
+  "roland-alpha-juno-2": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": "No edit-buffer request. When a tone is selected (MIDI exclusive on in the MIDI functions), the synth sends the tone as one APR message: F0 41 35 0n 23 20 01 + tone data (36 packed parameter bytes, plus name) + F7. Sending it a Program Change also makes it send the APR, but that recalls the stored tone and drops unsaved edits. BULK DUMP in Data Transfer sends the whole memory (BLD, a different packed format), which is not what you want here.",
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland_MKS50.py"
+    ],
+    "notes": "Alpha Juno 1/2 and the MKS-50 share the tone format (format type 23H). The device byte is the MIDI channel at index 3. Receiving an APR loads the edit buffer and doesn't write memory. Panel and alpha-dial moves go out as IPR sysex (F0 41 36 0n 23 20 01 pp vv F7), so relay them as sysex. There is no way to pull the edited buffer remotely: the source player has to reselect the tone (which loses edits) or you capture the IPR stream.",
+    "manualReply": {
+      "reply": "F0 41 35 00 23 20 01",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 3
+    }
+  },
+  "roland-jx-3p": {
+    "midi": true,
+    "programChange": true,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "Early MIDI: notes, program change and little else. No sysex patch dump, and panel or PG-200 moves aren't sent over MIDI (the PG-200 uses its own non-MIDI link). The only way to share a sound is to share settings by hand."
+  },
+  "roland-jx-8p": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": "No request command. Selecting a tone sends it as an APR (All Parameters) message, F0 41 35 0n 21 20 01 + 10 name bytes + params + F7. So the source player reselects the tone, which drops unsaved edits. PG-800 and panel edits go out as IPR sysex.",
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland%20JX-8P.py"
+    ],
+    "notes": "KnobKraft treats the APR as the edit buffer: it only patches the channel byte (index 3) and sends it back. A received APR loads the current tone without overwriting memory. The JX-8P answers no inquiry or request messages at all. Panel moves are IPR: F0 41 36 0n 21 20 01 pp vv F7.",
+    "manualReply": {
+      "reply": "F0 41 35 00 21 20 01",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 3
+    }
+  },
+  "roland-super-jx-mks-70": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": "Stock ROM has no request. Changing patch makes it send a PGR message, then an APR for the patch (F0 41 35 0n 24 30 01 ...) and an APR for each RAM tone used (F0 41 35 0n 24 20 01/02 ...). Bulk dump is MIDI+WRITE, BULK DUMP, ENTER (whole memory).",
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland_MKS-70.py",
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland_MKS70V4.py"
+    ],
+    "notes": "A sound is 1 patch APR plus 0 to 2 tone APRs (ROM tones 50+ aren't sent). Byte 3 is the channel, and tones A and B may be on different channels (MIDI functions 21 and 31). With the Vecoven V4 ROM (4.19+) there IS an edit-buffer request, F0 41 3D 0n 24 02 01 07 F7 (per KnobKraft; untested here), and the APR format changes to 38H with a longer tone (101 bytes). V3 and V4 dumps aren't interchangeable, so check both players' ROMs match. Panel edits go out as IPR (36H).",
+    "manualReply": {
+      "reply": "F0 41 35",
+      "replies": "1-3",
+      "loads": "edit-buffer",
+      "deviceIdByte": 3
+    }
+  },
+  "roland-jupiter-6": {
+    "midi": true,
+    "programChange": true,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "One of the first MIDI synths: notes and patch numbers, nothing more. No sysex patch dump, and panel moves aren't sent. Early units have a quirky MIDI implementation, fixed by later EPROMs or the Europa retrofit (not stock)."
+  },
+  "roland-mks-80-super-jupiter": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "Has sysex (IPR parameter changes from the MPG-80 programmer, plus bulk dump), but I couldn't verify an edit-buffer request or a per-patch APR transmit on the stock ROM. Leave dump off until checked against the MKS-80 manual. Rev 4 vs Vecoven 4 firmware also differ."
+  },
+  "roland-ju-06a": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/JU-06A_MIDIImpleChart_multi02_W.pdf"
+    ],
+    "notes": "The MIDI implementation chart lists System Exclusive as not transmitted and not recognized. So no patch handshake is possible: send the panel state as the CC list instead (every knob is a CC). Program Change 0-63 selects patches."
+  },
+  "roland-jp-08": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/JP-08_MIDI_Imple_eng03_W.pdf"
+    ],
+    "notes": "The chart lists System Exclusive as not transmitted and not recognized. Program Change 0-63 selects user patches and 64-71 presets. Mirror the sound by sending the full CC set."
+  },
+  "roland-se-02": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/SE-02_MIDI_Imple_Chart_eng01_W.pdf",
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland_SE02.py"
+    ],
+    "notes": "The chart says SysEx is transmitted and received, but Program Change is received only (not sent). KnobKraft found no reliable RQ1 edit-buffer request. It sends sounds as 4 DT1 messages to the edit-buffer area F0 41 10 00 00 00 44 12 05 00 xx xx ... (blocks at offsets 00 00, 00 40, 01 00 and 01 40), with Roland checksum and device ID 10H. Those DT1s load the edit buffer without writing memory, so replay works if you can get the bytes (for example from an editor or a .prm conversion). There is no known front-panel 'send current sound'."
+  },
+  "roland-tb-3": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": {
+      "request": "F0 41 10 00 00 7B 11 00 20 00 00 00 00 00 21 3F F7 F0 41 10 00 00 7B 11 00 20 10 00 00 00 00 07 49 F7 F0 41 10 00 00 7B 11 00 20 20 00 00 00 00 1A 26 F7 F0 41 10 00 00 7B 11 00 20 30 00 00 00 00 16 1A F7",
+      "reply": "F0 41 10 00 00 7B 12 00 20",
+      "replies": 4,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TB-3_MI_1.pdf",
+      "https://static.roland.com/assets/media/pdf/TB-3_MI_2.pdf"
+    ],
+    "notes": "The request is 4 RQ1 messages: Patch (00 20 00 00, 21H bytes), Distortion (00 20 10 00, 7), EFX1 (00 20 20 00, 1AH) and EFX2 (00 20 30 00, 16H). Model ID is 00 00 7B and device ID 10H. The address map has only this one patch area (the current sound), so replaying the DT1s sets the current sound. 2-byte '#' parameters are split into nibbles. Caveat: the separate MIDI chart marks SysEx as transmitted 'x' (received 'o'), which conflicts with the implementation's RQ1/DT1 section, so the TB-3 might not answer. The request is harmless if it doesn't. The Controller block (00 10 00 00) is not RQ1-readable. Knobs also send CC (cutoff 74, reso 71, accent 16, effect 17, env mod 12/13, tuning 104)."
+  },
+  "roland-tb-03": {
+    "midi": true,
+    "programChange": false,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TB-03_MIDI_Imple_e01_W.pdf"
+    ],
+    "notes": "The chart lists Program Change and System Exclusive as not supported. The sound is just the panel (no sound memory), so mirror it with CCs (cutoff 74, resonance 71, decay 75, tuning 104, and so on)."
+  },
+  "roland-d-50": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": {
+      "request": "F0 41 00 14 11 00 00 00 00 00 40 40 F7 F0 41 00 14 11 00 00 40 00 00 40 00 F7 F0 41 00 14 11 00 01 00 00 00 40 3F F7 F0 41 00 14 11 00 01 40 00 00 40 7F F7 F0 41 00 14 11 00 02 00 00 00 40 3E F7 F0 41 00 14 11 00 02 40 00 00 40 7E F7 F0 41 00 14 11 00 03 00 00 00 40 3D F7",
+      "reply": "F0 41 00 14 12 00",
+      "replies": 7,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/RolandD50.py"
+    ],
+    "notes": "Seven RQ1 messages, one per 40H-byte block of the temporary patch at 00 00 00: Upper partial 1, Upper partial 2, Upper common, Lower partial 1, Lower partial 2, Lower common, Patch. Send each after the previous DT1 arrives, the way KnobKraft does it. One-way RQ1/DT1, model ID 14H. The device ID is the basic channel minus 1, so 00 for channel 1, NOT 10H/17. Replies are DT1 at the same addresses. Replaying them into the temporary area loads the sound without writing memory; internal patches live at 02 00 00. Roland checksum is used. Switch MIDI exclusive on, and turn the D-50's memory protect off if anything is refused. Panel and PG-1000 edits are sent as DT1 parameter changes."
+  },
+  "roland-jd-800": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "All sliders send DT1 parameter-change sysex, and RQ1/DT1 is supported, but I didn't verify the temporary patch address or size for the JD-800. Fill in from the JD-800 MIDI implementation before enabling."
+  },
+  "roland-jv-1080": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": {
+      "request": "F0 41 10 6A 11 03 00 00 00 00 00 00 48 35 F7 F0 41 10 6A 11 03 00 10 00 00 00 01 01 6B F7 F0 41 10 6A 11 03 00 12 00 00 00 01 01 69 F7 F0 41 10 6A 11 03 00 14 00 00 00 01 01 67 F7 F0 41 10 6A 11 03 00 16 00 00 00 01 01 65 F7",
+      "reply": "F0 41 10 6A 12 03 00",
+      "replies": 5,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland_JV1080.py"
+    ],
+    "notes": "Five RQ1 messages for the Patch-mode temporary patch: Common (03 00 00 00, 48H bytes) and Tones 1-4 (03 00 10/12/14/16 00, 0101H bytes each). Default device ID is 10H (shown as 17 on the unit). The unit must be in PATCH mode: in Performance mode the temporary patch area is per part, so these addresses don't cover the sound you hear. Replaying the DT1s writes the temporary patch only; user patches are 11 xx xx xx. Waveforms on expansion boards (SR-JV80) must exist on both units. Turn Rx Exclusive on in System MIDI. The JV-2080 uses the same map but a 4AH-byte common, so it isn't byte-compatible."
+  },
+  "roland-jp-8000": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": {
+      "request": "F0 41 10 00 06 11 01 00 00 00 00 00 43 6F 4D F7",
+      "reply": "F0 41 10 00 06 12 01 00",
+      "replies": 5,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/JP-8000_OM.pdf"
+    ],
+    "notes": "From the owner's manual MIDI implementation, Example 3 (Temporary Performance RQ1): model ID 00 06, device ID 10H (17). Address 01 00 00 00 with size 00 00 43 6F covers Performance Common, Part Upper/Lower and Patch Upper/Lower. MANUAL MISPRINT: the manual prints the checksum as 4F, but the correct Roland checksum for these bytes is 4D (Example 1 in the same manual checks out with the same formula). Expect 5 or more DT1 messages back (at least one per block; long blocks may be split). Replay writes the temporary performance only. Panel moves go out as CC or as sysex depending on System 'Tx/Rx Edit Mode'. Set both units the same, and make sure 'Tx/Rx Edit Switch' is on. The JP-8080 is a different model ID."
+  },
+  "roland-juno-x": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/JUNO-X_MIDI_imple_eng01_W.pdf"
+    ],
+    "notes": "Supports RQ1/DT1 (device 10H-1FH), but the current sound is a Scene: Temporary Scene 01 00 00 00 plus up to 4 temporary tones at 02 0p 00 00 (ZEN-Core), 02 1p (Analog Synth Model), 02 20 (RD piano) or 02 4p (JUNO-X model), depending on each part's tone type. A correct handshake needs a multi-step read (scene first, then each part's tone by type), so no single request string is given. Edit data is transmitted only when 'Transmit Edit Data' is ON (or on RQ1)."
+  },
+  "roland-jupiter-x": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/JUPITER-X_Xm_MIDI_imple_eng06_W.pdf"
+    ],
+    "notes": "RQ1/DT1 with model ID 00 00 00 65 and device 10H-1FH. The current sound is Temporary Scene 01 00 00 00 plus up to 4 temporary tones at 02 0p 00 00 (ZEN-Core), 02 1p (Analog Synth Model), 02 20 (RD) or 02 5p (JUPITER-X model), by part tone type. It needs a scene read, then per-part tone reads, so no single request is given. Versions differ (this doc is for OS 3.0+), so both units should run the same OS. The Xm uses the same map."
+  },
+  "roland-mks-20": {
+    "midi": true,
+    "programChange": true,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "Piano module with preset tones plus tone-modify settings. I found no verified sysex patch transfer. Program change selects tones."
+  },
+  "roland-tr-707": {
+    "midi": true,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "MIDI notes and clock; pattern data dumps only to tape or cartridge. No sound memory to share."
+  },
+  "roland-tr-727": {
+    "midi": true,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "MIDI notes and clock only; no sound memory to share."
+  },
+  "roland-tr-909": {
+    "midi": true,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "MIDI notes, clock and accent only. Panel tune and decay knobs aren't on MIDI and there's no sound memory."
+  },
+  "roland-tr-626": {
+    "midi": true,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "MIDI notes and clock; instrument tuning and level are per pattern or global, with no verified sysex transfer."
+  },
+  "roland-r-8": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "Has sysex bulk dump for patterns and instrument settings (pitch, decay, nuance) and ROM cards, but I couldn't verify an edit-buffer request. Leave dump off."
+  },
+  "roland-tr-8": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TR-8_MIDI_Imple_Chart_e02_W.pdf"
+    ],
+    "notes": "No SysEx in or out. Program Change is received only (1-15). All knobs are CC, so mirror the sound by sending the full CC state."
+  },
+  "roland-tr-8s": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TR-8S_MIDIImpleChart_eng03_W.pdf"
+    ],
+    "notes": "The chart lists SysEx as not supported. Program Change 0-127 in and out selects patterns. Kits, including user samples, can only be shared via SD card or backup. Knob moves are CC."
+  },
+  "roland-tr-6s": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TR-6S_MIDIImpleChart_eng02_W.pdf"
+    ],
+    "notes": "The chart lists SysEx as not supported. Program Change 0-127 in and out. Knob moves are CC; there's no patch handshake."
+  },
+  "roland-tr-08": {
+    "midi": true,
+    "programChange": false,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TR-08_MIDI_Imple_Chart_eng01_W.pdf"
+    ],
+    "notes": "No Program Change and no SysEx. The sound is the panel, so mirror it with CCs."
+  },
+  "roland-tr-09": {
+    "midi": true,
+    "programChange": false,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TR-09_MIDI_Imple_e01_W.pdf"
+    ],
+    "notes": "No Program Change and no SysEx. The sound is the panel, so mirror it with CCs."
+  },
+  "sp-404": {
+    "midi": true,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "Sampler: MIDI notes trigger pads. The sound is sample data on CF card, with no sysex patch."
+  },
+  "roland-sp-404mkii": {
+    "midi": true,
+    "programChange": false,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "Sampler: notes, CCs for effects. Samples and projects live on SD; no sysex patch handshake."
+  },
+  "roland-mc-303": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "Groovebox with GS-style sysex. Knobs can send CC or sysex. The edit-buffer request was not verified."
+  },
+  "roland-mc-505": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "Patch and part data is RQ1/DT1 addressable, but the temporary patch address map wasn't verified (only scanned owner's manuals are online). Knobs send CC or sysex depending on the setting."
+  },
+  "roland-mc-707": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/MC-707_MIDIImpleChart_eng03_W.pdf"
+    ],
+    "notes": "The chart lists SysEx as not supported. Program Change switches scenes and clips. Share projects via SD card."
+  },
+  "korg-polysix": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI stock (KLM-367 MIDI kits are retrofits)."
+  },
+  "korg-mono-poly": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI stock (CV/gate only)."
+  },
+  "korg-poly-61": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the original Poly-61; the later Poly-61M has MIDI."
+  },
+  "korg-ps-3300": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI (CV/gate, patch-cable synth)."
+  },
+  "korg-ms-20": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the original MS-20 (the MS-20 mini/FS reissues have MIDI). It's a patch-cable synth with no memory."
+  },
+  "korg-ms-10": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI (CV/gate)."
+  },
+  "korg-minikorg-700": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI (1973 monosynth, no CV standard by modern terms)."
+  },
+  "korg-kr-55": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI (DIN sync / trigger only; the KR-55 Pro reissue is a different product)."
+  },
+  "korg-poly-800": {
+    "midi": true,
+    "programChange": true,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [
+      "https://www.circuitbenders.co.uk/forsale/MDK/MDK.html"
+    ],
+    "notes": "Poly-800 mk I has MIDI notes and program change but no sysex patch dump: sounds go to and from cassette only. The EX-800 and Poly-800 II have sysex, and the Circuitbenders MDK retrofit adds whole-memory sysex dumps, but none of these give a per-patch edit-buffer transfer. Panel (joystick/data-entry) edits aren't sent as CC."
+  },
+  "korg-dw-8000": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": {
+      "request": "F0 42 30 03 10 F7",
+      "reply": "F0 42 30 03 40",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/KorgDW8000.py"
+    ],
+    "notes": "Request is 'Data Save Request' (10H); the reply is a Data Dump (40H) of the current edit buffer. Byte 2 is 3n with n = MIDI channel (0 = ch 1), and the reply carries the sender's channel. When replaying, rewrite byte 2 to 3n with the RECEIVER's channel. A received dump goes to the edit buffer, so nothing is stored until WRITE. Sysex must be enabled (MIDI function, 'exclusive' on). Parameter edits are sent as Parameter Change sysex F0 42 3n 03 41 pp vv F7, so relay them as sysex. The EX-8000 module uses the same format."
+  },
+  "korg-minilogue": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": {
+      "request": "F0 42 30 00 01 2C 10 F7",
+      "reply": "F0 42 30 00 01 2C 40",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/ff9fbf05d3dd4b89390f2ffcf1450bdb.txt",
+      "https://gist.github.com/eric-wood/1d5916895b3da0aee183"
+    ],
+    "notes": "From the KORG minilogue MIDI implementation: CURRENT PROGRAM DATA DUMP REQUEST is F0 42 3g 00 01 2C 10 F7, and the reply is CURRENT PROGRAM DATA DUMP (40H), 7-bit packed data. g = global MIDI channel (0 = ch 1); the reply prefix byte 2 changes with the sender's channel. When replaying, set byte 2 to 3g with the receiver's channel. 'Receive this message & data, save them to Edit Buffer and transmits Func=23 (load completed) or 24 (error).' MIDI filter 'SystemEx' must be enabled on both units. Panel knobs are CC (needs 'Enable Tx/Rx MIDI' and short-message settings on). Program Change covers 0-99 only (use Bank Select LSB for higher programs)."
+  },
+  "korg-minilogue-xd": {
+    "midi": true,
+    "programChange": true,
+    "params": "nrpn+cc",
+    "dump": {
+      "request": "F0 42 30 00 01 51 10 F7",
+      "reply": "F0 42 30 00 01 51 40",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/432b65f8355a288eac5d091f338d08aa.txt",
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/KorgMinilogue_XD.py"
+    ],
+    "notes": "Same scheme as the other logues, with model 51H. The reply is 384 7-bit bytes (336 decoded). Byte 2 = 3g (global channel). A received dump goes to the edit buffer and replies 23H/24H. Knobs send CC; some parameters use NRPN. The program references a user oscillator or effect slot by index, and that user unit (logue-SDK) must be loaded in the same slot on the other XD, or the sound differs. The firmware 2.x program format adds fields; keep both units on matching firmware."
+  },
+  "korg-prologue": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": {
+      "request": "F0 42 30 00 01 4B 10 F7",
+      "reply": "F0 42 30 00 01 4B 40",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": "Front panel: in Edit mode go to FUNCTION, button 7 (DUMP), turn to 'Press WRITE' and press WRITE. It sends a Program Dump of the current program.",
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/3200e18af22d1668d51f8ca5069fe9f3.txt",
+      "https://cdn.korg.com/us/support/download/files/9317b94261e53e700b0145502850edc2.pdf"
+    ],
+    "notes": "From the prologue MIDI implementation: CURRENT PROGRAM DATA DUMP REQUEST is F0 42 3g 00 01 4B 10 F7 and the reply is 40H with 384 bytes (7-bit). g is the global MIDI channel. The sub-timbre is on a separate 'MIDI Sub CC Ch'. prologue-8 and -16 share the model ID, but the 16 has the L.F. COMP section. The program references user oscillator or effect slots, which must match on the other unit. Receiving goes to the edit buffer (reply 23H/24H)."
+  },
+  "korg-monologue": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": {
+      "request": "F0 42 30 00 01 44 10 F7",
+      "reply": "F0 42 30 00 01 44 40",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/e3733d5dacc8a3b7e73f1c2a3367225b.txt",
+      "https://www.github.com/Windfisch/monologue-extract"
+    ],
+    "notes": "From the monologue MIDI implementation: request F0 42 3g 00 01 44 10 F7, reply 40H current program, which goes to the edit buffer (reply 23H ok / 24H error). g is the global channel. The MIDI filter SystemEx must be enabled. The program includes the motion sequence. A custom microtuning (user scale) is global, not part of the program."
+  },
+  "korg-volca-keys": {
+    "midi": true,
+    "programChange": false,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/bae98287e80d2000189c2c5f1d017504.txt"
+    ],
+    "notes": "The MIDI implementation says 'No message is transmitted. (The volca keys is not equipped with a MIDI Out jack.)'. It receives notes, CCs (cutoff 44, etc.) and pitch bend only: no sysex and no program change. It can be a receiver of CC mirroring but never a source."
+  },
+  "korg-volca-bass": {
+    "midi": true,
+    "programChange": false,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/1ad5dbde638d47b6335892cfcff36294.txt"
+    ],
+    "notes": "MIDI IN only; there's no MIDI out. Receives notes and CCs: no sysex, no program change. It can only receive mirrored CCs."
+  },
+  "korg-volca-modular": {
+    "midi": true,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "Patch-cable synth with no sound memory, so there's nothing to dump. The MIDI implementation document isn't published; treat it as notes-only until checked."
+  },
+  "korg-volca-beats": {
+    "midi": true,
+    "programChange": false,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/b226776b4c8deac167594462c9d320cc.txt"
+    ],
+    "notes": "MIDI IN only, with no out. Receives notes per part and CCs: no sysex, no program change."
+  },
+  "korg-volca-drum": {
+    "midi": true,
+    "programChange": false,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/9158546658cc003adedb11553473363b.pdf"
+    ],
+    "notes": "MIDI IN only (single or split channel modes). Receives notes and CCs per part, so mirror the sound via CC. No documented sysex sound dump."
+  },
+  "korg-volca-sample": {
+    "midi": true,
+    "programChange": false,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/59b2a58164763d47fddc93d60ffcc140.pdf"
+    ],
+    "notes": "MIDI IN only. Samples load via the audio-modem SDK, not MIDI sysex. Part parameters are CC."
+  },
+  "korg-volca-fm": {
+    "midi": true,
+    "programChange": false,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/fad6ba6b2fa1c474cb1dfe3fb9103320.txt"
+    ],
+    "notes": "Receive-only (no MIDI out), so it can't be the source of a handshake. As a receiver it accepts DX7-format voice data: 1 voice F0 43 0n 00 01 1B ... F7 (format 0, 155 bytes) or 32 voices (format 9, 20 00). So a DX7 voice captured from a DX7 or DX7II can be replayed into it. Byte 2 is the global channel ('0n'). Knobs map to CCs from 40 up (see the implementation)."
+  },
+  "korg-m1": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": {
+      "request": "F0 42 30 19 10 F7",
+      "reply": "F0 42 30 19 40",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Korg_M1.py"
+    ],
+    "notes": "PROGRAM PARAMETER DUMP REQUEST (10H) returns the current program as PROGRAM PARAMETER DUMP (40H). Model 19H; byte 2 = 3n (global channel). The M1 must be in PROGRAM mode: in COMBI mode the 'current sound' is a combi (different message). Enable exclusive in Global MIDI. A received dump loads the edit buffer. Parameter edits are sent as Parameter Change sysex when enabled. Programs using card PCM need the same card on both units."
+  },
+  "korg-wavestation": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [
+      "https://danphillips.com/wavestation/ws_sysex.htm"
+    ],
+    "notes": "Has sysex for patches, performances and wave sequences, but I couldn't verify an edit-buffer (current performance) request. Dumps embed the MIDI channel, so the receiver's basic channel must match. A sound depends on its performance, patches and wave sequences together, so a single-patch dump isn't enough."
+  },
+  "korg-triton": {
+    "midi": true,
+    "programChange": true,
+    "params": "nrpn+cc",
+    "dump": null,
+    "manualDump": "With Global P1: MIDI 'Enable Exclusive' checked, selecting a program in Program P0: Play (or a combi in Combination P0) transmits that program's edit-buffer data. A dump request also returns it (request bytes not verified here). Data is sent on the global channel.",
+    "confidence": "manual",
+    "sources": [
+      "https://m.barryrudolph.com/recall/manuals/korgtriton.pdf"
+    ],
+    "notes": "The Triton manual says received program or combi dumps are 'written into the edit buffer', so they aren't saved until Write. So the replay path is safe, but I didn't verify the request and reply header bytes. Capture by having the source player reselect the program (which drops unsaved edits). Programs using EXB-PCM expansion or sample RAM need the same on the other unit."
+  },
+  "korg-ms2000": {
+    "midi": true,
+    "programChange": true,
+    "params": "nrpn+cc",
+    "dump": {
+      "request": "F0 42 30 58 10 F7",
+      "reply": "F0 42 30 58 40",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/KorgMS2000.py"
+    ],
+    "notes": "CURRENT PROGRAM DATA DUMP REQUEST 10H, reply 40H, model 58H, byte 2 = 3g (global channel). Global 'SystemEx' must be ENA. Users report memory protect off and MIDI clock set to external are needed for dumps, and it needs slow pacing (about 100 ms between messages). Model ID 58H is shared with the microKORG, so don't cross-load between the two. A received dump goes to the edit buffer. Knobs send CC, and some parameters NRPN."
+  },
+  "korg-microkorg": {
+    "midi": true,
+    "programChange": true,
+    "params": "nrpn+cc",
+    "dump": {
+      "request": "F0 42 30 58 10 F7",
+      "reply": "F0 42 30 58 40",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/302b2c88d5ee7778b5cc817108398ff6.txt"
+    ],
+    "notes": "From the microKORG (2002) MIDI implementation: header F0 42 3g 58, CURRENT PROGRAM DATA DUMP REQUEST 10H, CURRENT PROGRAM DATA DUMP 40H. 'Receive this message & data, save them to Edit Buffer and transmits Func=23 or Func=24'. g is the global MIDI channel. MIDI FILTER 'SystemEx' must be enabled (the SHIFT+4 filter shows E-E). Arpeggio and patch routing are NRPN; knobs are CC. Model 58H equals the MS2000's. The microKORG S uses a different header (00 01 40), so it isn't byte-compatible."
+  },
+  "korg-wavestate": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/4acb42ff14ef122cac302eb61601284e.txt"
+    ],
+    "notes": "No classic SysEx program dump is documented. The only SysEx is MIDI-CI Property Exchange: ProgramList and X-ProgramEdit are transmitted (Get), but nothing can be Set. So you can read the current program's parameters as JSON, but not write a program to the bandmate's unit. Transfers go via the Editor/Librarian over USB. Mirror sounds with CC only, and as best-effort."
+  },
+  "korg-modwave": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/2053a5dc3f4b1f7159650c2d6b1e0b0a.txt"
+    ],
+    "notes": "Same as wavestate: only MIDI-CI Property Exchange (Get-only ProgramList / X-ProgramEdit), with no program write over MIDI. No patch handshake."
+  },
+  "korg-opsix": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/296e76e62c6774a8fe1bf2648b383259.txt"
+    ],
+    "notes": "Same as wavestate: only MIDI-CI Property Exchange (Get-only), with no SysEx program dump or write. No patch handshake; mirror with CC."
+  },
+  "korg-electribe-2": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": {
+      "request": "F0 42 30 00 01 23 10 F7",
+      "reply": "F0 42 30 00 01 23 40",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/7d4d8d58c389a73c82c958516d0be47d.txt"
+    ],
+    "notes": "The 'sound' is the current PATTERN: CURRENT PATTERN DATA DUMP REQUEST F0 42 3g 00 01 23 10 F7, reply 40H, which goes to the edit buffer ('save them to Edit Buffer'), so nothing is saved until write. Model 23H is the electribe (synth, 2014). The electribe sampler has a different ID, and its samples aren't in the pattern. g is the global channel. Part knobs send CC on each part's channel."
+  },
+  "korg-electribe-er-1": {
+    "midi": true,
+    "programChange": true,
+    "params": "nrpn+cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "Has sysex pattern and global dumps and CC/NRPN for part parameters, but I didn't verify the current-pattern request bytes. Leave dump off."
+  },
+  "korg-ddd-1": {
+    "midi": true,
+    "programChange": true,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "MIDI notes and program change. Sounds are ROM or card samples with per-pattern settings; no verified sysex sound transfer."
+  },
+  "korg-drumlogue": {
+    "midi": true,
+    "programChange": true,
+    "params": "cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "The owner's manual has Program Change and CC Tx/Rx filters but no SysEx kit dump. Kits and user units are shared via USB mass storage. Mirror sounds with CC."
+  },
+  "yamaha-cs-80": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI (1977). Patch memories are internal pots and sliders; nothing to dump."
+  },
+  "yamaha-cs-15": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI (CV/gate)."
+  },
+  "yamaha-cs-01": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the CS-01 (the CS01-II also has none). CV/gate only, with no memory."
+  },
+  "yamaha-cp-70": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the original CP-70/CP-70B (the CP-70M added MIDI). It's an acoustic-electric piano with no patches."
+  },
+  "yamaha-cp-80": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI on the original CP-80 (the CP-80M added MIDI). No patches."
+  },
+  "yamaha-dx7": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": "The original DX7 doesn't answer dump requests (KnobKraft: initiate dumps from the DX7). From memory (check against the DX7 manual): with FUNCTION 8 set to SYS INFO AVAIL, selecting a voice sends it as a 1-voice bulk dump (F0 43 0n 00 01 1B + 155 bytes + checksum + F7), and function 8's 'MIDI TRANSMIT ?' with YES sends all 32 voices. Selecting a voice recalls the stored version, so the source player must store edits first.",
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/YamahaDX7.py"
+    ],
+    "notes": "KnobKraft treats the 1-voice dump (F0 43 00 00 01 1B ...) as the edit buffer and sends it unchanged. The receiving DX7 must have SYS INFO AVAIL and, per KnobKraft, INTERNAL MEMORY PROTECT off to accept it. It then loads into the edit buffer without overwriting a voice. Byte 2 is 0n (n = channel). With SYS INFO AVAIL, panel and data-entry edits go out as parameter-change sysex (F0 43 1n ...). The checksum is the 2's complement of the 7-bit sum of the 155 data bytes. Mod ROMs (E!, Centauri) behave differently.",
+    "manualReply": {
+      "reply": "F0 43 00 00 01 1B",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    }
+  },
+  "yamaha-dx7ii": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": {
+      "request": "F0 43 20 00 F7",
+      "reply": "F0 43 00 00 01 1B",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/YamahaDX7II.py"
+    ],
+    "notes": "Dump request format 0 returns the 1-voice VCED edit buffer (DX7-compatible). The DX7II's extra voice parameters (ACED, format 05: request F0 43 20 05 F7) are separate. Request both for a faithful copy: replaying only VCED keeps the DX7 part and leaves the II-specific settings as they were. Performance (dual or split) is separate again. On the receiver: memory protect off (button 14) and MIDI IN set to 'normal' (button 29), or it silently ignores sysex. Byte 2 is 0n/2n with n = device number (channel)."
+  },
+  "yamaha-dx21": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": {
+      "request": "F0 43 20 03 F7",
+      "reply": "F0 43 00 03 00 5D",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://www.manualsdir.com/manuals/228881/yamaha-dx21.html?page=46"
+    ],
+    "notes": "From the DX21 manual: Dump Request F0 43 2n 03 F7 (f=3: 1 voice bulk data), received only when MIDI SYS INFO is ON. The reply is VCED 1-voice data F0 43 0n 03 00 5D + 93 bytes + checksum + F7, from the voice edit buffer. A received 1-voice dump goes to the edit buffer; 32-voice data needs memory protect OFF. Edits go out as parameter-change sysex when SYS INFO is on. The DX21's dual/split performance settings are not in VCED."
+  },
+  "yamaha-dx100": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": {
+      "request": "F0 43 20 03 F7",
+      "reply": "F0 43 00 03 00 5D",
+      "replies": 1,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "manual",
+    "sources": [
+      "https://caraudio.manualsonline.com/manuals/mfg/yamaha/dx100.html?p=48"
+    ],
+    "notes": "From the DX100 manual: 'Data in the voice edit buffer is transmitted when a format no. f=3 dump request is received.' The header is F0 43 0n 03 00 5D (93-byte VCED). System exclusive requires MIDI SYS INFO ON. VCED is the same format as the DX21/27, so they cross-load, but only same-model is in scope here."
+  },
+  "yamaha-tx81z": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": {
+      "request": "F0 43 20 7E 4C 4D 20 20 38 39 37 36 41 45 F7",
+      "reply": "F0 43 00",
+      "replies": 2,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Yamaha_TX81Z.py"
+    ],
+    "notes": "The request asks for the ACED ('LM  8976AE') of the edit buffer; the TX81Z answers with two messages: ACED (F0 43 0n 7E 00 21 'LM  8976AE' ...) and VCED (F0 43 0n 03 00 5D ...). Replay both, ACED first then VCED (KnobKraft order). Utility > MIDI Control > 'Exclusive' must be On, and Basic Rx channel should equal the Transmit channel. Rev 1.0 firmware has a checksum bug in bank dumps (single-voice edit-buffer dumps are fine). Performance (PCED) is a separate message."
+  },
+  "yamaha-fs1r": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": {
+      "request": "F0 43 20 5E 10 00 00 F7",
+      "reply": "F0 43 00 5E",
+      "replies": "1-5",
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Yamaha_FS1R.py"
+    ],
+    "notes": "The request returns the Performance edit buffer (address 10 00 00). For each part using a USER voice, also request that part's voice edit buffer: F0 43 20 5E 40 00 00 F7, 41 00 00, 42 00 00 and 43 00 00 for parts 1-4. KnobKraft reads the voice references from the performance and asks only for the user ones. So a full sound is 1 performance plus 0-4 voice messages. Preset voices are referenced, not sent. Byte 2 is 0n/2n with n = device number (0 = device 1). Fseq data is separate. The FS1R is slow to answer (KnobKraft waits 700 ms on detection), so pace the requests."
+  },
+  "yamaha-reface-dx": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": {
+      "request": "F0 43 20 7F 1C 05 0E 0F 00 F7",
+      "reply": "F0 43 00 7F 1C",
+      "replies": 7,
+      "loads": "edit-buffer",
+      "deviceIdByte": 2
+    },
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/YamahaRefaceDX.py",
+      "https://coffeeshopped.com/patch-base/help/synth/yamaha/reface-dx"
+    ],
+    "notes": "A bulk dump request at the bulk-header address (0E 0F 00) returns the current voice as 7 messages: bulk header (0E 0F 00), common voice (30 00 00), 4 operators, and bulk footer (0F 0F 00). In replies the model byte 05 sits at index 7 and the address at 8-10. Replay all 7 in order to load the edit buffer. Stored-program addresses (0E 00 xx) write memory, so don't use them. Byte 2 = 0n/2n with n = device number. Panel moves: not verified whether they're CC or sysex parameter change. Check the reface DX MIDI reference before relaying."
+  },
+  "yamaha-an1x": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "Has sysex bulk transfer of the current voice, but I didn't verify the request address. Knobs can send CC (per the free-control settings). Leave dump off."
+  },
+  "yamaha-montage": {
+    "midi": true,
+    "programChange": true,
+    "params": "nrpn+cc",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "Supports bulk dump requests for the edit-buffer Performance, but a Performance is many messages (common plus up to 16 parts) and may depend on user waveforms or libraries. Not verified, so dump is off. Firmware versions add parameters."
+  },
+  "yamaha-sy77": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "Uses Yamaha 'LM  8101VC'-style universal bulk dumps. I didn't verify an edit-buffer request. AFM+AWM voices also depend on wave cards."
+  },
+  "yamaha-rx5": {
+    "midi": true,
+    "programChange": true,
+    "params": "sysex",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "Drum machine with editable voices and sysex bulk (voices and patterns); no verified edit-buffer request."
+  },
+  "yamaha-rx11": {
+    "midi": true,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "guess",
+    "sources": [],
+    "notes": "MIDI notes and clock; there's no sound memory beyond levels."
+  },
+  "boss-dr-55": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI (1980 Dr. Rhythm; trigger out only)."
+  },
+  "boss-dr-110": {
+    "midi": false,
+    "programChange": false,
+    "params": "none",
+    "dump": null,
+    "manualDump": null,
+    "confidence": "secondary",
+    "sources": [],
+    "notes": "No MIDI (trigger out only)."
+  }
+}

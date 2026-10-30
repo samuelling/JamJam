@@ -1,0 +1,719 @@
+{
+ "sequential-prophet-5-rev4": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 01 32 06 F7",
+   "reply": "F0 01 32 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://sequential.com/wp-content/uploads/2021/03/Prophet-5-MIDI-Implementation-1.4.pdf",
+   "https://sequential.com/wp-content/uploads/2025/03/Prophet-510-Factory-Programs-ReadMe1.03.zip",
+   "https://sequential.com/wp-content/uploads/2025/05/Prophet-5-10-Main-OS-2.1.0-and-Panel-OS-1.1.3.zip",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Sequential%20Prophet%205%20Rev4.py"
+  ],
+  "notes": "Device id byte is 0x32: Sequential's own factory program files and OS update files start F0 01 32, and KnobKraft uses 0x32. The MIDI Implementation 1.4 PDF is inconsistent: its command tables print 0011 0001 (0x31, the Pro 3's id) and its device-inquiry reply prints 0x33. Accept edit-buffer replies whose id byte is 0x32 or 0x33. Reply is F0 01 32 03 + 128 bytes packed to 152 + F7 (157 bytes); sending it back loads the edit buffer. Filter-revision switch and Vintage setting are program parameters, so they travel with the sound."
+ },
+ "sequential-prophet-10-rev4": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 01 32 06 F7",
+   "reply": "F0 01 32 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://sequential.com/wp-content/uploads/2025/03/Prophet-510-Factory-Programs-ReadMe1.03.zip",
+   "https://sequential.com/wp-content/uploads/2025/05/Prophet-5-10-Main-OS-2.1.0-and-Panel-OS-1.1.3.zip",
+   "https://sequential.com/wp-content/uploads/2021/02/Prophet-10-Users-Guide-1.4.pdf",
+   "https://sequential.com/wp-content/uploads/2021/03/Prophet-5-MIDI-Implementation-1.4.pdf"
+  ],
+  "notes": "Prophet-5 and Prophet-10 Rev4 share one OS and one factory program file (both use id 0x32, and Sequential says the same file loads into either), so the request F0 01 32 06 F7 is accepted by the Prophet-10. It may identify itself as 0x33 in replies (the shared MIDI document's inquiry reply shows 0x33): accept 0x32 or 0x33. Prophet-5 and Prophet-10 programs are interchangeable. Not confirmed on hardware. MEGAjam accepts any model byte at index 2 in the reply, since variants of this unit answer with a neighbouring id."
+ },
+ "sequential-trigon-6": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 01 39 06 F7",
+   "reply": "F0 01 39 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/wp-content/uploads/2022/12/Trigon-6-MIDI-Implementation-1.1.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Sequential_Trigon6.py"
+  ],
+  "notes": "Trigon-6 MIDI Implementation 1.1 gives id 0b11 1001 (0x39) for all SysEx and the inquiry reply; KnobKraft and its factory file (F0 01 39 02 ...) agree. The User's Guide 1.1 SysEx appendix wrongly prints 0010 1101 (the Prophet-6 id); ignore it. Reply F0 01 39 03 + 1024 bytes packed to 1171 + F7; loads the edit buffer. Desktop module id not separately documented."
+ },
+ "sequential-fourm": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 01 3B 06 F7",
+   "reply": "F0 01 3B 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/wp-content/uploads/2025/12/Fourm-MIDI-Implementation-Document_V1.1.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Sequential_Fourm.py"
+  ],
+  "notes": "Fourm MIDI Implementation V1.1: Fourm ID 0011 1011 (0x3B). Reply F0 01 3B 03 + 4096 bytes packed to 4690 + F7; loads the edit buffer. Large message: send over USB if possible."
+ },
+ "dave-smith-instruments-prophet-08": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 01 23 06 F7",
+   "reply": "F0 01 23 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/downloads/prophet_keyboard/doc/Prophet_08_Manual_v1.3.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/DSI%20Prophet%2008.py",
+   "https://github.com/eclab/edisyn/blob/master/edisyn/synth/dsiprophet08/DSIProphet08.java"
+  ],
+  "notes": "Prophet '08 Manual 1.3: id 0010 0011 (0x23); the Special Edition uses 0010 0100 (0x24): accept either in replies. Edit buffer holds both layers A and B. No USB on the keyboard or module: 5-pin MIDI only. MEGAjam accepts any model byte at index 2 in the reply, since variants of this unit answer with a neighbouring id."
+ },
+ "dave-smith-instruments-mopho-keyboard": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 01 27 06 F7",
+   "reply": "F0 01 27 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/downloads/mopho_keyboard/doc/MophoKey_Manual_v.1.1.pdf",
+   "https://sequential.com/wp-content/uploads/2014/12/DSI-504R-Mopho-SE-Manual-v.1.1.pdf",
+   "https://github.com/eclab/edisyn/blob/master/edisyn/synth/dsiprophet08/DSIProphet08.java"
+  ],
+  "notes": "Mopho Keyboard and Mopho SE manuals both give Mopho Keyboard ID 0010 0111 (0x27). Programs are compatible with the Mopho desktop (0x25) and Mopho x4 (0x29); to load a sound from one of those, rewrite byte 2 of the edit-buffer message to 0x27."
+ },
+ "dave-smith-instruments-mopho-x4": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 01 29 06 F7",
+   "reply": "F0 01 29 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/downloads/mophox4/doc/Mopho_x4_Operation_Manual_v.1.0.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/DSI_Mopho_X4.py"
+  ],
+  "notes": "Mopho x4 Operation Manual 1.0: id 0010 1001 (0x29). Programs are shared with Mopho (0x25) and Mopho Keyboard/SE (0x27); rewrite byte 2 to load across models."
+ },
+ "dave-smith-instruments-poly-evolver": {
+  "midi": true,
+  "programChange": true,
+  "params": "sysex",
+  "dump": {
+   "request": "F0 01 20 01 06 F7",
+   "reply": "F0 01 20 01 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/downloads/poly_evolver/doc/Poly_rack_manual_2.2.pdf",
+   "https://sequential.com/downloads/poly_evolver_key/doc/Poly_Evo_Key_Manual_1.4.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/DSI_Evolver.py"
+  ],
+  "notes": "Rack and keyboard manuals: Evolver-family header F0 01 20 01 (0x20 Evolver ID, 0x01 file version); inquiry reply family 0x21 = Poly Evolver. Reply F0 01 20 01 03 + 220 packed bytes (program + sequence) + F7; loads the program edit buffer. Combo mode has a separate combo edit buffer (F0 01 20 01 37), not covered by this request. Program name and user waveshapes are separate messages, so a sound using a user wave may differ. Panel moves are sent as SysEx parameter messages, not NRPN. No USB."
+ },
+ "dave-smith-instruments-mono-evolver-keyboard": {
+  "midi": true,
+  "programChange": true,
+  "params": "sysex",
+  "dump": {
+   "request": "F0 01 20 01 06 F7",
+   "reply": "F0 01 20 01 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/downloads/evolver_keyboard/doc/Evo_Key_Manual_1.3.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/DSI_Evolver.py"
+  ],
+  "notes": "Evolver Keyboard Manual 1.3: requests use Evolver ID 0x20 + file version 0x01; inquiry reply family 0x22 identifies the keyboard. Program data is compatible with the desktop Evolver and Poly Evolver. Name and user waveshapes are separate messages. Manual: with MIDI SysEx on, all knobs/parameters are sent as SysEx messages. No USB."
+ },
+ "dave-smith-instruments-prophet-12": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 01 2A 06 F7",
+   "reply": "F0 01 2A 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/downloads/prophet_12/doc/Prophet_12_Operation_Manual_v.1.0.pdf",
+   "https://sequential.com/wp-content/uploads/2021/02/Prophet_12_Module-Op_Man_v1.2.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/DSI%20Prophet%2012.py"
+  ],
+  "notes": "Keyboard and Module manuals both give Prophet 12 ID 0010 1010 (0x2A). KnobKraft reports the module identifies itself as 0x2B: accept 0x2A or 0x2B in replies. Edit buffer holds both layers. MEGAjam accepts any model byte at index 2 in the reply, since variants of this unit answer with a neighbouring id."
+ },
+ "dave-smith-instruments-pro-2": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 01 2C 06 F7",
+   "reply": "F0 01 2C 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/wp-content/uploads/2017/04/Pro-2-Operation-Manual-1.2.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/DSI%20Pro%202.py"
+  ],
+  "notes": "Pro 2 Operation Manual 1.2: Pro 2 ID 0010 1100 (0x2C). Sequencer data is part of the program."
+ },
+ "dave-smith-instruments-tempest": {
+  "midi": true,
+  "programChange": true,
+  "params": "none",
+  "dump": null,
+  "manualDump": "Save/Load > Export Sound in RAM over MIDI > Export Now: sends F0 01 28 60 ... F7; importing it replaces the current Sound in RAM (not saved to flash).",
+  "confidence": "secondary",
+  "sources": [
+   "https://sequential.com/wp-content/uploads/2015/02/Tempest-Operation-Manual-v.1.4.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/DSI_Tempest.py"
+  ],
+  "notes": "No documented SysEx request (KnobKraft: 'Tempest cannot be queried'). RAM exports use id 0x28, type 0x60; flash exports use 0x63 and import into a flash folder. A Sound is one pad's drum voice, not a kit. Panel moves are not documented as CC/NRPN."
+ },
+ "sequential-prophet-vs": {
+  "midi": true,
+  "programChange": true,
+  "params": "sysex",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://cdn.shopify.com/s/files/1/0024/2352/1341/files/Stereoping_ProVessorS_Manual_Addendum_SCI_Prophet_VS.pdf"
+  ],
+  "notes": "Has SysEx program dumps, but request/reply bytes were not verified. Panel edits go over SysEx as parameter number then value; the 'MIDI Parameters' option in the MIDI menu resets to disabled at every power-up (Stereoping). No knob CCs."
+ },
+ "sequential-prophet-t8": {
+  "midi": true,
+  "programChange": true,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Early MIDI implementation: notes and program changes. No verified SysEx patch request; panel moves not transmitted."
+ },
+ "sequential-max": {
+  "midi": true,
+  "programChange": true,
+  "params": "sysex",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Has MIDI SysEx for program data (edits come in over MIDI), but request/reply bytes were not verified."
+ },
+ "sequential-multi-trak": {
+  "midi": true,
+  "programChange": true,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Has MIDI and SysEx program dumps; bytes not verified here. Panel moves are not sent as CC."
+ },
+ "sequential-split-eight": {
+  "midi": true,
+  "programChange": true,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Has MIDI and SysEx program dumps; bytes not verified here. Panel moves are not sent as CC."
+ },
+ "sequential-prophet-2000": {
+  "midi": true,
+  "programChange": true,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "A sampler: the sound depends on loaded samples (MIDI Sample Dump Standard), so there is no small patch to share. The twin plays a synthesized stand-in."
+ },
+ "sequential-studio-440": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Sample-based drum machine; no synth patch to share."
+ },
+ "oberheim-teo-5": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 10 5A 06 F7",
+   "reply": "F0 10 5A 03",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://oberheim.com/wp-content/uploads/2025/07/TEO-5-MIDI-Implementation-Document_v2.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Oberheim_Teo5.py"
+  ],
+  "notes": "TEO-5 MIDI Implementation v2: TEO-5 ID 0b1011010 (0x5A), Request Program Edit Buffer Transmit 0x06, reply type 0x03 + 4096 bytes packed to 4690 + F7, loads the edit buffer. The document prints the manufacturer byte as 0000 0010, but Oberheim's factory program file starts F0 10 5A and KnobKraft uses manufacturer 0x10 (as on the OB-X8), so use 0x10. KnobKraft's generic code would send F0 01 5A 06 F7; not confirmed whether the TEO-5 answers that. Desktop module id not documented."
+ },
+ "oberheim-matrix-6": {
+  "midi": true,
+  "programChange": true,
+  "params": "sysex",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Matrix%206.py"
+  ],
+  "notes": "No edit-buffer request. Single-patch request is F0 10 06 04 01 <patch 0-99> F7, preceded by the Quick Edit message F0 10 06 05 F7 (the Matrix-6 only accepts SysEx in Quick Edit). Reply F0 10 06 01 <patch> <nibblized data> <checksum> F7; sending it back writes stored patch <patch> (needs-slot). Same family format as the Matrix-1000, but the Matrix-1000's edit-buffer request (04 04) is not supported. Panel edits are not sent as CC."
+ },
+ "oberheim-eight-voice": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Pre-MIDI; optional programmer stored panel settings but no MIDI."
+ },
+ "oberheim-ob-1": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Pre-MIDI; patch memory but no MIDI or dump."
+ },
+ "oberheim-ob-sx": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Pre-MIDI; sounds come from factory preset chips."
+ },
+ "oberheim-ob-mx": {
+  "midi": true,
+  "programChange": true,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Has MIDI with SysEx; dump format not verified. Panel parameter transmission not verified."
+ },
+ "oberheim-ob-12": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel knobs transmit CC; SysEx program dump exists but bytes not verified."
+ },
+ "oberheim-ob3-2": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Drawbars and switches send CC; no patch dump verified."
+ },
+ "oberheim-two-voice-pro": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in for notes; no patch memory, so there is nothing to dump. The sound is the knob settings."
+ },
+ "moog-minimoog-voyager": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": {
+   "request": "F0 04 01 00 05 F7",
+   "reply": "F0 04 01 00 02",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 3
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Moog_Voyager.py",
+   "https://www.allfordj.ru/upload/iblock/e74/rukovodstvo_polzovatelya_moog_minimoog_voyager_performer_edition.pdf",
+   "https://forum.moogmusic.com/t/saving-patches-from-one-voyager-to-another/3796"
+  ],
+  "notes": "Panel (edit buffer) dump request F0 04 01 <dev> 05 F7, reply F0 04 01 <dev> 02 <packed data> F7 (Moog id 0x04, Voyager 0x01), per KnobKraft's Voyager adaptation. <dev> at byte 3 is the SYSEX DEVICE ID from Master Mode (shown 1-128, default 1); the byte is assumed to be 00 for the default, so if no reply, scan 00-7F as KnobKraft does, and rewrite byte 3 to the receiver's id before sending. The manual confirms a received panel sound loads into the current preset's buffer without overwriting, and that SysEx is ignored unless Receive Presets is enabled. Single-preset messages (type 03/06) carry a slot number and overwrite it. Panel knobs send 14-bit CC (MSB 0-31, LSB +32)."
+ },
+ "moog-minimoog-voyager-xl": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": {
+   "request": "F0 04 01 00 05 F7",
+   "reply": "F0 04 01 00 02",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 3
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Moog_Voyager.py",
+   "https://www.allfordj.ru/upload/iblock/e74/rukovodstvo_polzovatelya_moog_minimoog_voyager_performer_edition.pdf"
+  ],
+  "notes": "Same Voyager engine and preset format, assumed to use the Voyager SysEx header (not separately verified). Panel (edit buffer) dump request F0 04 01 <dev> 05 F7, reply F0 04 01 <dev> 02 <packed data> F7 (Moog id 0x04, Voyager 0x01), per KnobKraft's Voyager adaptation. <dev> at byte 3 is the SYSEX DEVICE ID from Master Mode (shown 1-128, default 1); the byte is assumed to be 00 for the default, so if no reply, scan 00-7F as KnobKraft does, and rewrite byte 3 to the receiver's id before sending. The manual confirms a received panel sound loads into the current preset's buffer without overwriting, and that SysEx is ignored unless Receive Presets is enabled. Single-preset messages (type 03/06) carry a slot number and overwrite it. Panel knobs send 14-bit CC (MSB 0-31, LSB +32)."
+ },
+ "moog-minimoog-voyager-old-school": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://medias.audiofanzine.com/files/minimoog-old-school-manual-1-0-470199.pdf"
+  ],
+  "notes": "Manual: the Old School has the Voyager engine 'without the digital elements of patch storage and MIDI control'. CV/gate only."
+ },
+ "moog-little-phatty": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": "SEND CURRENT PRESET in the menu sends the current preset as SysEx; enable reception on the receiving unit first.",
+  "confidence": "secondary",
+  "sources": [
+   "https://forum.moogmusic.com/t/phatty-to-phatty-patch-transfer/19120"
+  ],
+  "notes": "Panel knobs send CC (OS 3 and later). No verified SysEx request; Moog's editor uses undocumented SysEx. The front-panel SEND CURRENT PRESET sends the current sound as SysEx to another Little Phatty or Slim Phatty over 5-pin MIDI."
+ },
+ "moog-slim-phatty": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": "SEND CURRENT PRESET sends the current preset as SysEx to another Slim/Little Phatty (enable the receiver first).",
+  "confidence": "secondary",
+  "sources": [
+   "https://forum.moogmusic.com/t/phatty-to-phatty-patch-transfer/19120"
+  ],
+  "notes": "Panel knobs send CC (OS 3 and later). No verified SysEx request; Moog's editor uses undocumented SysEx. The front-panel SEND CURRENT PRESET sends the current sound as SysEx to another Little Phatty or Slim Phatty over 5-pin MIDI. Little Phatty and Slim Phatty presets are interchangeable (forum report)."
+ },
+ "moog-sub-phatty": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://forum.moogmusic.com/t/sub37-buffer-and-current-preset-sysex-specifications/16837"
+  ],
+  "notes": "Knobs send CC (7- or 14-bit). Preset SysEx used by Moog's editor is undocumented; no verified request."
+ },
+ "moog-sub-37": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://forum.moogmusic.com/t/sub37-buffer-and-current-preset-sysex-specifications/16837"
+  ],
+  "notes": "Same situation as the Subsequent 37: panel CCs (MSB/LSB pairs in 14-bit mode), undocumented preset SysEx, no verified edit-buffer request."
+ },
+ "moog-sirin": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Panel knobs send CC. Presets handled by Moog's editor over undocumented SysEx; no public request."
+ },
+ "moog-taurus-3": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Has MIDI/USB and preset SysEx for Moog's librarian; format not verified. Parameter CC transmission not verified."
+ },
+ "moog-taurus-ii": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Pre-MIDI pedal synth."
+ },
+ "moog-werkstatt-01": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "No MIDI; CV/gate only (the CV Expander adds more CV jacks, not MIDI)."
+ },
+ "moog-mavis": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "No MIDI; CV/gate patch bay only."
+ },
+ "moog-subharmonicon": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in for notes and clock only; no sound memory (stores no patches)."
+ },
+ "moog-labyrinth": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://musictech.com/reviews/hardware-instruments/moog-labyrinth-review/",
+   "https://forum.moogmusic.com/t/moog-labyrinth-with-daw/22953"
+  ],
+  "notes": "MIDI in on a 3.5 mm TRS jack (users report type-A adapters), for notes/clock; no presets (the manual calls exact recall impossible)."
+ },
+ "moog-spectravox": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI in for notes on the carrier oscillator (not verified); no presets."
+ },
+ "moog-messenger": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://www.synthtopia.com/content/2025/05/08/moog-messenger-is-moogs-most-accessible-analog-synthesizer-ever/"
+  ],
+  "notes": "MIDI over 5-pin DIN and USB-C. Panel CC transmission likely but not verified; no documented preset SysEx request."
+ },
+ "moog-sonic-six": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Pre-MIDI, no memory."
+ },
+ "moog-satellite": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Pre-MIDI, no memory."
+ },
+ "moog-micromoog": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Pre-MIDI, no memory."
+ },
+ "moog-minitmoog": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Pre-MIDI, no memory."
+ },
+ "moog-multimoog": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Pre-MIDI, no memory."
+ },
+ "moog-opus-3": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Pre-MIDI."
+ },
+ "moog-liberation": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Pre-MIDI."
+ },
+ "moog-concertmate-mg-1": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Pre-MIDI."
+ },
+ "moog-system-35": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "No MIDI: modular system driven by CV/gate; patches are cables and knobs."
+ },
+ "moog-model-55": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "No MIDI: modular system driven by CV/gate; patches are cables and knobs."
+ },
+ "moog-model-15": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "No MIDI: modular system driven by CV/gate; patches are cables and knobs."
+ },
+ "moog-model-10": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "No MIDI: modular system driven by CV/gate; patches are cables and knobs."
+ }
+}

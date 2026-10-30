@@ -1,0 +1,1062 @@
+{
+ "teenage-engineering-ep-133": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/guides/ep-133/system"
+  ],
+  "notes": "EP-series MIDI over USB-C and 3.5 mm TRS: notes per pad group (A 36-47, B 48-59, C 60-71, D 72-83), a few CCs (1 vibrato, 12/13 FX knobs X/Y, 64 sustain), bank select + program change for sounds. SysEx is listed only as identity and proprietary messages; sounds and projects move with TE's sample tool. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "teenage-engineering-ep-1320": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://teenage.engineering/guides/ep-133/system"
+  ],
+  "notes": "EP-series MIDI over USB-C and 3.5 mm TRS: notes per pad group (A 36-47, B 48-59, C 60-71, D 72-83), a few CCs (1 vibrato, 12/13 FX knobs X/Y, 64 sustain), bank select + program change for sounds. SysEx is listed only as identity and proprietary messages; sounds and projects move with TE's sample tool. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded. Assumed to share the EP-133 MIDI map (same platform)."
+ },
+ "teenage-engineering-ep-40": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://teenage.engineering/guides/ep-133/system"
+  ],
+  "notes": "EP-series MIDI over USB-C and 3.5 mm TRS: notes per pad group (A 36-47, B 48-59, C 60-71, D 72-83), a few CCs (1 vibrato, 12/13 FX knobs X/Y, 64 sustain), bank select + program change for sounds. SysEx is listed only as identity and proprietary messages; sounds and projects move with TE's sample tool. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded. Assumed to share the EP-133 MIDI map (same platform)."
+ },
+ "teenage-engineering-po-12-rhythm": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/guides/po-24/en"
+  ],
+  "notes": "No MIDI; sync is an audio click on the 3.5 mm jacks (SY modes)."
+ },
+ "teenage-engineering-po-32-tonic": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/guides/po-24/en"
+  ],
+  "notes": "No MIDI; sync by audio click. Sounds and patterns can be beamed in as audio from Sonic Charge Microtonic, not over MIDI."
+ },
+ "teenage-engineering-po-33-ko": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/guides/po-24/en"
+  ],
+  "notes": "No MIDI; sync by audio click. Samples are recorded in by mic or line input."
+ },
+ "elektron-digitakt-ii": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": "SETTINGS > SYSEX DUMP > SYSEX SEND > PATTERN (or PROJECT); the other unit is always listening.",
+  "confidence": "manual",
+  "sources": [
+   "https://elektron.se/wp-content/uploads/2026/10/Digitakt-2-User-Manual_ENG_OS1.17_260930.pdf"
+  ],
+  "notes": "No documented request message. SysEx dump sends project, pattern and preset data but, per the manual, not the samples. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "elektron-analog-rytm-mkii": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 00 20 3C 07 00 68 01 01 00 00 00 00 05 F7",
+   "reply": "F0 00 20 3C 07 00 58",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 5
+  },
+  "manualDump": "GLOBAL SETTINGS > SYSEX DUMP > SYSEX SEND > KIT, with the other unit in SYSEX RECEIVE > KIT > ACTIVE KIT.",
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Elektron_AnalogRytm.py",
+   "https://github.com/bsp2/libanalogrytm/blob/master/sysex.h",
+   "https://elektron.se/wp-content/uploads/2024/09/AnalogRytmMKIIUserManual_ENG_OS1.70_231122.pdf"
+  ],
+  "notes": "Request is the kit work-buffer request (0x68) used by KnobKraft and libanalogrytm for the Analog Rytm (product ID 07); the MKII runs the same OS 1.70 sysex, but neither source names the MKII separately. Byte 5 low nibble is the device ID. Kits reference samples by slot. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "elektron-tonverk": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://kmraudio.com/cdn/shop/files/Tonverk-User-Manual_ENG_OS1.0.0_250915.pdf"
+  ],
+  "notes": "The OS 1.0 manual lists CC and NRPN maps (Appendix B) and RECEIVE CC, but no SysEx dump menu and no knob-send setting. Presets are multisample-based. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "erica-synths-perkons-hd-01": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Four voices on MIDI notes/channels, knobs send and receive CC; clock in/out; no SysEx sound dump known."
+ },
+ "erica-synths-lxr-02": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/rudeog/LXR/blob/master/mainboard/firmware/DrumSynth_FPU/src/MIDI/MidiParser.c"
+  ],
+  "notes": "Built on the Sonic Potions LXR design; voice parameters by CC/NRPN, kits on SD card. No SysEx sound dump known; firmware is now open source."
+ },
+ "erica-synths-hexdrums": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Analog drum machine with MIDI notes, clock and CC; details not verified."
+ },
+ "sonicware-liven-lofi-12": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Sonicware MIDI in/out (TRS on most models, USB on newer units): notes, clock and CC for the main knobs. No SysEx sound dump known. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "sonicware-liven-bass-and-beats": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Sonicware MIDI in/out (TRS on most models, USB on newer units): notes, clock and CC for the main knobs. No SysEx sound dump known."
+ },
+ "sonicware-smpltrek": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Sonicware MIDI in/out (TRS on most models, USB on newer units): notes, clock and CC for the main knobs. No SysEx sound dump known. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "sonicware-cydrums": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Sonicware MIDI in/out (TRS on most models, USB on newer units): notes, clock and CC for the main knobs. No SysEx sound dump known."
+ },
+ "polyend-play": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI over USB and TRS; tracks have MIDI channels, clock in/out and CC control. No SysEx sound dump; projects and samples live on the microSD card. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "polyend-play-plus": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI over USB and TRS; tracks have MIDI channels, clock in/out and CC control. No SysEx sound dump; projects and samples live on the microSD card. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "polyend-tracker-plus": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI over USB and TRS (5-pin on Tracker+ via adaptor); per-track MIDI channels and clock; no SysEx sound dump. Instruments are samples or synth engines saved in projects on microSD. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "polyend-tracker-mini": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI over USB and TRS (5-pin on Tracker+ via adaptor); per-track MIDI channels and clock; no SysEx sound dump. Instruments are samples or synth engines saved in projects on microSD. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "1010music-blackbox": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI over USB and TRS; pads and clips map to notes and channels, clock in/out. No SysEx; presets and samples live on the SD card. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "1010music-nanobox-razzmatazz": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI over USB and TRS; pads on notes, clock in/out, CC to parameters. No SysEx; kits live on microSD."
+ },
+ "1010music-bento": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Eight-track sampler groovebox; MIDI over USB and TRS for notes, CC and clock. No SysEx sound dump; projects live on the SD card. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "torso-s-4": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Four tracks with their own MIDI channels; parameters respond to CC; clock in/out over USB-C and TRS. No SysEx; it mostly processes live audio and stored samples. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "roland-tr-1000": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://files.kraftmusic.com/media/ownersmanual/Roland_TR-1000_MIDI_Implementation_Chart.pdf",
+   "https://files.kraftmusic.com/media/ownersmanual/Roland_TR-1000_Reference_Manual.pdf"
+  ],
+  "notes": "The MIDI implementation chart (v1.11) marks System Exclusive as not transmitted or recognized. Every instrument's tune, decay, mix, ctrl and level knob has a CC; program change 0-127 switches kits (Kit Ch, default 1) and patterns (Pattern Ch, default 10). Kits with user samples move only by SD card or USB."
+ },
+ "roland-tr-06": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/TR-06_MIDI_Imple_Chart_eng01_W.pdf",
+   "https://static.roland.com/assets/media/pdf/TR-06_eng02_W.pdf"
+  ],
+  "notes": "MIDI implementation chart: no System Exclusive; instrument knobs (tune, decay, attack, level and others) are CCs. Patterns are shared by USB backup files."
+ },
+ "roland-tr-505": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "1986 PCM machine with MIDI IN/OUT for notes and clock; fixed sounds, so there is nothing to send."
+ },
+ "roland-cr-8000": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [],
+  "notes": "Pre-MIDI CompuRhythm; no MIDI."
+ },
+ "roland-mc-101": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/MC-101_MIDIImpleChart_eng03_W.pdf",
+   "https://static.roland.com/assets/media/pdf/MC-101_Reference_eng01_W.pdf"
+  ],
+  "notes": "MIDI implementation chart: no System Exclusive. Each of the four tracks has its own channel (Track1-4 Ch); knobs send CC. Projects move by SD card."
+ },
+ "roland-mv-1-verselab": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/MV-1_MIDIImpleChart_eng01_W.pdf",
+   "https://static.roland.com/assets/media/pdf/MV-1_parameter_eng02_W.pdf"
+  ],
+  "notes": "MIDI implementation chart: no System Exclusive. Tracks have their own MIDI channels and knobs send CC; songs move by SD card."
+ },
+ "roland-p-6": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/P-6_eng01_W.pdf"
+  ],
+  "notes": "The owner's manual has a control-change table; no sound SysEx found. Samples load with Roland's P-6 Sample Tool. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "roland-t-8": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/T-8_eng01_W.pdf"
+  ],
+  "notes": "AIRA Compact: drum and bass parts on separate MIDI channels, knobs as CC; no sound SysEx found."
+ },
+ "roland-mc-909": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/MC-909_MI.pdf"
+  ],
+  "notes": "Roland SysEx with model ID 00 59 (device ID 10-1F): RQ1 data requests are received and DT1 is transmitted. Part n's temporary patch/rhythm sits at 11 00 00 00 + (n-1) x 00 20 00 00, but a whole patch spans several blocks, so no single request was built here. Samples aren't in SysEx."
+ },
+ "boss-sp-202": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://support.roland.com/hc/en-us/articles/201923749-SP-303-SP-202-Setting-the-Receive-MIDI-Channel"
+  ],
+  "notes": "MIDI IN only (pads play from notes). Samples live on SmartMedia/internal memory. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "boss-sp-303": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://manualmachine.com/rolandcorporation/sp303/6486501-users-manual"
+  ],
+  "notes": "The MIDI implementation says there is no MIDI OUT. It receives notes, All Sound Off and MIDI clock (with MIDI Sync on AUTO SYNC or TEMPO SYNC). Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "boss-dr-660": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI IN/OUT for notes, clock and bulk data backup; sounds are fixed PCM, so there is no sound to share."
+ },
+ "boss-dr-202": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Knobs send and receive CC on the drum and bass part channels; no sound SysEx documented here."
+ },
+ "boss-dr-880": {
+  "midi": true,
+  "programChange": true,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI and USB MIDI for notes, clock and program changes; no knob CC map or sound SysEx documented here."
+ },
+ "korg-volca-sample-2": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": {
+   "request": "F0 42 30 00 01 2D 11 F7",
+   "reply": "F0 42 30 00 01 2D 41",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://cdn.korg.com/us/support/download/files/00ac0e27b085368752b57d0e3a7c9773.txt",
+   "https://cdn.korg.com/us/support/download/files/f1a4d55aaf79955cf400a28da7080a7f.pdf"
+  ],
+  "notes": "CURRENT SEQUENCE DATA DUMP REQUEST (11H); the 41H reply (878 bytes) is saved to the edit buffer when received. Replies can only come back over USB (micro-B): the 5-pin jack is MIDI IN only. A sequence holds part settings but points at samples by number. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "korg-volca-kick": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://cdn.korg.com/us/support/download/files/c21ab8d36e8dc6c4287be72b06a497cd.txt",
+   "https://cdn.korg.com/us/support/download/files/8a661f5232cc2c13780c706191ff8356.pdf"
+  ],
+  "notes": "MIDI IN only. Every knob (pulse colour/level, amp attack/decay, drive, tone, resonator pitch/bend/time, accent) has a CC, so a sound can be rebuilt by sending CCs but not read back."
+ },
+ "korg-electribe-sampler": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": {
+   "request": "F0 42 30 00 01 24 10 F7",
+   "reply": "F0 42 30 00 01 24 40",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://cdn.korg.com/us/support/download/files/1d5b06f3afe80bb12274be4b6fca5dc8.txt",
+   "https://cdn.korg.com/us/support/download/files/39d238e0f840ee25e68f1618517b4731.pdf"
+  ],
+  "notes": "CURRENT PATTERN DATA DUMP REQUEST (10H), product ID 00 01 24; the 40H reply is saved to the edit buffer when received. Low nibble of byte 2 is the global MIDI channel. Patterns call samples by number. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "korg-electribe-esx-1": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn",
+  "dump": null,
+  "manualDump": "Press Global, hold Shift and press step key 15 (MIDI UTILITY), change 'Filter' to 'Dump', press key 15, choose a pattern bank, then key 15 again to send.",
+  "confidence": "secondary",
+  "sources": [
+   "https://www.manualslib.com/manual/90188/Korg-Esx-1.html?page=92"
+  ],
+  "notes": "The owner's manual says it also answers Data Dump Request messages, but the request bytes were not verified. Dumps are whole pattern banks or songs, and samples are not included. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "korg-electribe-emx-1": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn",
+  "dump": null,
+  "manualDump": "Same as the ESX-1: Global, Shift + step key 15 (MIDI UTILITY), switch to 'Dump', choose what to send, press key 15.",
+  "confidence": "secondary",
+  "sources": [
+   "https://www.manualsdir.com/manuals/157943/korg-emx-1.html?page=82"
+  ],
+  "notes": "Owner's manual describes transmitting pattern, song and global data as SysEx; request bytes were not verified. Synth part sounds live inside the pattern, so a pattern dump carries them."
+ },
+ "korg-electribe-es-1": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn",
+  "dump": {
+   "request": "F0 42 30 57 10 F7",
+   "reply": "F0 42 30 57 40",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 2
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://synthmania.com/wp-content/uploads/2020/06/es1mdimp.pdf"
+  ],
+  "notes": "Korg's ES-1 MIDI implementation: CURRENT PATTERN DATA DUMP REQUEST (10H) answered with 40H; knob parameters are NRPN. All SysEx is received only while the sequencer is stopped. Patterns point at samples by number. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "korg-kpr-77": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [],
+  "notes": "No MIDI; sync is via its trigger/DIN-sync style jacks only."
+ },
+ "korg-microsampler": {
+  "midi": true,
+  "programChange": true,
+  "params": "sysex",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/eclab/edisyn/blob/master/edisyn/synth/korgmicrosampler/KorgMicrosampler.html"
+  ],
+  "notes": "Edisyn's editor notes there are no patches and no bulk dump: only a limited set of sample, pattern and effect parameters can be set by SysEx. It sends MIDI clock without proper Start/Stop and starts its sequencer on any MIDI Start. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "akai-mpc-one": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live",
+   "https://cdn.inmusicbrands.com/akai/M2P10CUP/MPC%20Software%20-%20User%20Guide%20-%20v2.10.pdf"
+  ],
+  "notes": "MPC standalone OS: no SysEx sound dump; programs, samples and projects move as files (SD/USB/drive). Q-Link knobs can be set to send CC; tracks have their own MIDI in/out channels. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "akai-mpc-one-plus": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live",
+   "https://cdn.inmusicbrands.com/akai/M2P10CUP/MPC%20Software%20-%20User%20Guide%20-%20v2.10.pdf"
+  ],
+  "notes": "MPC standalone OS: no SysEx sound dump; programs, samples and projects move as files (SD/USB/drive). Q-Link knobs can be set to send CC; tracks have their own MIDI in/out channels. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "akai-mpc-live-ii": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live",
+   "https://cdn.inmusicbrands.com/akai/M2P10CUP/MPC%20Software%20-%20User%20Guide%20-%20v2.10.pdf"
+  ],
+  "notes": "MPC standalone OS: no SysEx sound dump; programs, samples and projects move as files (SD/USB/drive). Q-Link knobs can be set to send CC; tracks have their own MIDI in/out channels. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "akai-mpc-live-iii": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live",
+   "https://cdn.inmusicbrands.com/akai/M2P10CUP/MPC%20Software%20-%20User%20Guide%20-%20v2.10.pdf"
+  ],
+  "notes": "MPC standalone OS: no SysEx sound dump; programs, samples and projects move as files (SD/USB/drive). Q-Link knobs can be set to send CC; tracks have their own MIDI in/out channels. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "akai-mpc-x": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live",
+   "https://cdn.inmusicbrands.com/akai/M2P10CUP/MPC%20Software%20-%20User%20Guide%20-%20v2.10.pdf"
+  ],
+  "notes": "MPC standalone OS: no SysEx sound dump; programs, samples and projects move as files (SD/USB/drive). Q-Link knobs can be set to send CC; tracks have their own MIDI in/out channels. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "akai-mpc-xl": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live",
+   "https://cdn.inmusicbrands.com/akai/M2P10CUP/MPC%20Software%20-%20User%20Guide%20-%20v2.10.pdf"
+  ],
+  "notes": "MPC standalone OS: no SysEx sound dump; programs, samples and projects move as files (SD/USB/drive). Q-Link knobs can be set to send CC; tracks have their own MIDI in/out channels. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "akai-mpc-key-61": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live",
+   "https://cdn.inmusicbrands.com/akai/M2P10CUP/MPC%20Software%20-%20User%20Guide%20-%20v2.10.pdf"
+  ],
+  "notes": "MPC standalone OS: no SysEx sound dump; programs, samples and projects move as files (SD/USB/drive). Q-Link knobs can be set to send CC; tracks have their own MIDI in/out channels. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "akai-mpc-key-37": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live",
+   "https://cdn.inmusicbrands.com/akai/M2P10CUP/MPC%20Software%20-%20User%20Guide%20-%20v2.10.pdf"
+  ],
+  "notes": "MPC standalone OS: no SysEx sound dump; programs, samples and projects move as files (SD/USB/drive). Q-Link knobs can be set to send CC; tracks have their own MIDI in/out channels. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "akai-mpc-sample": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Portable MPC; no SysEx sound dump is known. Samples and kits move as files. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "akai-mpc1000": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Classic MPC OS (or JJOS): MIDI clock/MTC sync, Q-Link sliders/knobs can send CC; no SysEx program dump. Programs and samples move on CF card. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "akai-force": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live",
+   "https://cdn.inmusicbrands.com/akai/M2P10CUP/MPC%20Software%20-%20User%20Guide%20-%20v2.10.pdf"
+  ],
+  "notes": "MPC standalone OS: no SysEx sound dump; programs, samples and projects move as files (SD/USB/drive). Q-Link knobs can be set to send CC; tracks have their own MIDI in/out channels. Force runs the same OS family with a clip-launch layout. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "akai-s950": {
+  "midi": true,
+  "programChange": true,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Rack sampler; programs are played by MIDI note and program change. Akai SysEx exists for programs and samples, but nothing here was verified, and samples are far too big to send during a jam. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "akai-rhythm-wolf": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI and USB MIDI for notes and clock; knob CC support is limited. Nothing to dump."
+ },
+ "native-instruments-maschine-plus": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Standalone Maschine; MIDI in/out over 5-pin and USB host. Knobs can send CC in MIDI mode; no SysEx sound dump. Kits and samples move as files. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "jomox-alpha-base": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": "BPM/MIDI > MIDI page 3 (Sysex Dump Functions) > DumpKit, press Enter.",
+  "confidence": "manual",
+  "sources": [
+   "https://jomox.de/upload/manuals/AlphaBase_E.pdf"
+  ],
+  "notes": "Channels are fixed per instrument (kick ch 1, MBrane ch 2, samples ch 3-10, FM ch 11, globals ch 16). Knobs send CC with TxCC on. A kit can be sent from the front panel as 'Single Preset bulk dump' (F0 31 7F 5D 01 55 ...); the manual lists no request message. The two sample voices depend on sample content."
+ },
+ "jomox-mbase-11": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Analog kick with MIDI notes, clock and CC for its knobs; preset dumps by SysEx exist but no request was verified."
+ },
+ "jomox-xbase-09": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI notes and CC for the analog voice knobs; clock sync. No sound request message verified."
+ },
+ "jomox-xbase-999": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI notes and CC for the voice parameters; clock sync. No sound request message verified."
+ },
+ "mfb-tanzbar": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Per-instrument MIDI notes and CC for the knobs; clock in/out; no sound request message known."
+ },
+ "mfb-522": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI IN for notes and clock; knobs are not on MIDI."
+ },
+ "sonic-potions-lxr": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/rudeog/LXR/blob/master/mainboard/firmware/DrumSynth_FPU/src/MIDI/MidiParser.c"
+  ],
+  "notes": "Open firmware: external SysEx is passed through but not interpreted ('we don't interpret sysex data right now'); parameters respond to CC and NRPN. Kits are files on the SD card."
+ },
+ "soma-pulsar-23": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI IN for clock/notes (the instrument is mostly patched by CV); no sound memory."
+ },
+ "novation-circuit": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 00 20 29 01 60 40 00 F7",
+   "reply": "F0 00 20 29 01 60 00 00",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://fael-downloads-prod.focusrite.com/customer/prod/downloads/Circuit%20Programmer's%20Reference%20Guide%201.3_2.pdf"
+  ],
+  "notes": "Current Patch Dump Request for Synth 1 (last data byte 00; 01 = Synth 2). Circuit answers with a 350-byte Replace Current Patch message, which loads into RAM for that synth part when received. Replies go to USB only, even if the request came by 5-pin MIDI. Drum tracks are samples and aren't in the patch."
+ },
+ "novation-circuit-rhythm": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://fael-downloads-prod.focusrite.com/customer/prod/downloads/circuit_rhythm_programmer_s_reference_guide_v5_2.pdf"
+  ],
+  "notes": "The programmer's reference lists CC/NRPN per track (tracks 1-8 on channels 1-8) but no patch SysEx; projects and samples move with Novation Components. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "novation-drum-station": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": "Go to MODE 5 ('Save'), choose 'SS' (single program) and press '+' once: the current patch is sent as SysEx.",
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/eclab/edisyn/blob/master/edisyn/synth/novationdstation/NovationDStation.html"
+  ],
+  "notes": "No SysEx request command (per Edisyn). A received single patch goes to working memory when the Write switch is on PROTECT; with ENABLE it overwrites the current slot. Only a limited set of parameters is mirrored as CC. Needs firmware 1.3 or the D Station."
+ },
+ "synthstrom-deluge": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI over 5-pin and USB; clock in/out; MIDI learn for parameters. Synths, kits and songs are XML files on the SD card, not SysEx. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "dirtywave-m8": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Tracker with MIDI over USB and TRS: per-track MIDI settings, clock sync in/out and a control map. Songs and instruments are files on microSD, not SysEx."
+ },
+ "yamaha-seqtrak": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://usa.yamaha.com/products/music_production/music-production-studios/seqtrak/specs.html"
+  ],
+  "notes": "Seven drum tracks, two synth tracks, an FM (DX) track and a sampler, each on its own MIDI channel. MIDI runs over USB-C, Bluetooth and a MIDI IN/OUT port that needs the included converter cable. No SysEx sound dump was verified; projects move with the SEQTRAK app."
+ },
+ "yamaha-rx21": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI IN/OUT for notes and clock; fixed sounds."
+ },
+ "yamaha-rx7": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI notes and clock; voice edits and patterns can be saved by bulk dump, but no request message was verified here."
+ },
+ "yamaha-ry30": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI notes and clock; bulk dump of user data exists but no request message was verified here."
+ },
+ "yamaha-rm1x": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "16-part sequencer and tone generator; knobs send CC, bulk dump of patterns and songs exists but no request was verified here."
+ },
+ "alesis-d4": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn",
+  "dump": {
+   "request": "F0 00 00 0E 06 00 41 F7",
+   "reply": "F0 00 00 0E 06",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": 5
+  },
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/eclab/edisyn/blob/master/edisyn/synth/alesisd4/AlesisD4.java"
+  ],
+  "notes": "From Edisyn's D4/DM5 editor: current drum-set request is F0 00 00 0E 06 <channel> 41 F7 (the DM5 uses 13 instead of 06). Edisyn sends a dump with byte 6 = 01 to load working memory. Byte 5 is the MIDI channel; Edisyn edits single values by NRPN."
+ },
+ "alesis-sr-18": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI notes, clock and pattern selection; no documented sound SysEx or knob CCs found."
+ },
+ "casio-rz-1": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI notes and clock; the four sample pads hold user samples that MIDI can't carry."
+ },
+ "casio-sk-1": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [],
+  "notes": "No MIDI."
+ },
+ "ensoniq-asr-10": {
+  "midi": true,
+  "programChange": true,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Keyboard sampler with MIDI; Ensoniq SysEx exists for parameters and samples, but nothing here was verified and samples can't be sent mid-jam. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "bastl-microgranny-2": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI IN for notes and clock; samples live on its microSD card. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "bastl-kastle-drum": {
+  "midi": false,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [],
+  "notes": "No MIDI; clock and modulation are by patch cables."
+ },
+ "acidlab-miami": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI notes and clock (808-style); knobs aren't on MIDI."
+ },
+ "clavia-nord-drum-3p": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Each channel's parameters respond to CC and program change picks programs; programs move with Nord Sound Manager, not a documented SysEx."
+ },
+ "ik-multimedia-uno-drum": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Notes, CC and clock over USB and TRS MIDI; IK's editor uses SysEx that isn't documented publicly."
+ },
+ "pioneer-dj-toraiz-sp-16": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "16 tracks on MIDI channels, knobs as CC, clock in/out; no SysEx sound dump. Samples and projects move by USB drive. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "isla-instruments-s2400": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "MIDI over 5-pin and USB; pads on notes, CC for parameters, clock in/out. No SysEx sound dump known. Sounds depend on sample content, which SysEx can't carry: both players need the same samples loaded."
+ },
+ "modor-dr-2": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [],
+  "notes": "Per-track MIDI channels and CC for the voice parameters; clock in/out. No SysEx sound dump verified."
+ },
+ "cre8audio-boom-chick": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://analoguehaven.com/cre8audio/boom-chick/manual.pdf"
+  ],
+  "notes": "TRS (Type A) MIDI in and out: notes per drum (default channel 10), clock, start/stop/continue. No CC or SysEx sound data in the manual."
+ }
+}

@@ -1,0 +1,420 @@
+{
+ "behringer-ms-5": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://www.behringer.com/en/products/0722-AAR",
+   "https://cdn-media.empowertribe.com/23c182e6f3be4eaf91478d5d7a11c414/QSG_BE_0722-AAR_MS-5_WW.pdf"
+  ],
+  "notes": "No patch memory: the sound is whatever the knobs are set to, so there is nothing to dump. The quick start guide lists MIDI IN/OUT/THRU and USB MIDI; settings and firmware go through SynthTribe."
+ },
+ "behringer-proton": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-AAO",
+   "https://cdn-media.empowertribe.com/0c97d98d4d5f450bbb098fcc8a11283a/QSG_BE_0718-AAO_PROTON.pdf"
+  ],
+  "notes": "No patch memory: the sound is whatever the knobs are set to, so there is nothing to dump. The manual says it responds to only two CCs: mod wheel (CC 1/33) and sustain (CC 64)."
+ },
+ "behringer-kobol-expander": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-ABY",
+   "https://cdn-media.empowertribe.com/3c8cdd6dd5414872b4d0a5e729092ffd/QSG_BE_0718-ABY_KOBOL-EXPANDER_WW.pdf",
+   "https://synthanatomy.com/2022/04/behringer-kobol-expander-replica-of-a-weird-french-analog-synthesizer.html"
+  ],
+  "notes": "No patch memory: the sound is whatever the knobs are set to, so there is nothing to dump. MIDI is note/gate in; poly chain and gate polarity are set in SynthTribe."
+ },
+ "behringer-wasp-deluxe": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-AAF",
+   "https://cdn-media.empowertribe.com/176234399ee64acd86495418ccbb9b21/QSG_BE_0718-AAF_WASP-DELUXE_WW.pdf"
+  ],
+  "notes": "No patch memory: the sound is whatever the knobs are set to, so there is nothing to dump. Its SysEx tables only cover settings (MIDI channel, transpose, poly chain ID), not sounds."
+ },
+ "behringer-cat": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-AAH",
+   "https://cdn-media.empowertribe.com/6c16b8be2ce943c1b752376f0c35479b/QSG_BE_0718-AAH_CAT_WW.pdf",
+   "https://www.perfectcircuit.com/signal/octave-the-cat"
+  ],
+  "notes": "No patch memory: the sound is whatever the knobs are set to, so there is nothing to dump. SysEx in the guide only sets the MIDI channel."
+ },
+ "behringer-model-15": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-AAW"
+  ],
+  "notes": "No patch memory: the sound is whatever the knobs are set to, so there is nothing to dump. Behringer's product page lists no manual download; MIDI is note-to-CV only as far as known."
+ },
+ "behringer-toro": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-ABE",
+   "https://cdn-media.empowertribe.com/0861daf3fefe49bbb080d611f5815f51/QSG_BE_0718-ABE_TORO_WW.pdf"
+  ],
+  "notes": "The Toro, Tuba and Bass presets are fixed panel voicings, not patch memory; there is nothing to dump."
+ },
+ "behringer-d-mini": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0722-AAW",
+   "https://cdn-media.empowertribe.com/2383dfeba762497d820d2940fb8ce0c8/QSG_BE_0722-AAW_D-MINI.pdf",
+   "https://synthanatomy.com/2026/08/behringer-d-mini-minimoog-model-d-based-mini-synth.html"
+  ],
+  "notes": "No patch memory (only sequencer/motion memories), so no sound dump. The guide has a full MIDI CC table for the panel."
+ },
+ "behringer-ub-1-micro": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": "SETTINGS menu: choose PROG SINGLE SYX SEND and press ENTER to send the current program over USB; the receiving UB-1 Micro needs SYSEX RECEIVE on.",
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0722-ABS",
+   "https://cdn-media.empowertribe.com/e2441bd3e41d45f89d09044dddb6f26c/QSG_BE_0722-ABS_UB-1-MICRO_2025-04-02_Rev.0.pdf",
+   "https://synthanatomy.com/2026/08/behringer-ub-1-portable-49-oberheim-ob-1-inspired-analog-synthesizer.html"
+  ],
+  "notes": "Has preset memory. No dump request is documented; the SETTINGS menu has PROG SINGLE SYX SEND (current program over USB) and SYSEX RECEIVE. SysEx layout not published."
+ },
+ "behringer-jt-2": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-AAY",
+   "https://cdn-media.empowertribe.com/0720f6983dbdf494b1d98481f3f23e84/QSG_BE_0718-AAY_JT-2_2026-01-12_Rev.0.pdf",
+   "https://synthanatomy.com/2026/07/behringer-jt-2-a-jupiter-8-style-paraphonic-analog-synthesizer-for-eurorack.html"
+  ],
+  "notes": "No patch memory: the sound is whatever the knobs are set to, so there is nothing to dump. The guide says it responds to mod wheel (CC 1) and All Notes Off only."
+ },
+ "behringer-spice": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-ACD",
+   "https://cdn-media.empowertribe.com/108510958295485e8671ea86848f76f4/QSG_BE_0718-ACD_SPICE_WW.pdf"
+  ],
+  "notes": "No patch memory. Responds to a set of CCs (VCO frequencies as 14-bit MSB/LSB pairs, envelope times and more)."
+ },
+ "behringer-grind": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-ACI",
+   "https://cdn-media.empowertribe.com/35d4371777e541d4947a481dfb0941fa/QSG_BE_0718-ACI_GRIND_WW.pdf"
+  ],
+  "notes": "No patch memory; settings SysEx only. Its BX7 engine accepts a DX7 SysEx file over USB that replaces its presets, but that is not the Grind's own sound."
+ },
+ "behringer-2-xm": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-ABA",
+   "https://cdn-media.empowertribe.com/64608a8482a740978a1fdefa280044c9/QSG_BE_0718-ABA_2-XM_WW.pdf",
+   "https://www.synthtopia.com/content/2025/04/02/behringer-2-xm-a-euro-format-oberheim-2-voice-copy-now-shipping/"
+  ],
+  "notes": "No patch memory: the sound is whatever the knobs are set to, so there is nothing to dump. Voice 1 (XM1) listens on the dip-switch channel; XM2 can use the next channel up."
+ },
+ "behringer-monopoly": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0722-AAS",
+   "https://cdn-media.empowertribe.com/355554dd7c7940fea5dda42fd684c744/QSG_BE_0722-AAS_MONOPOLY_WW.pdf"
+  ],
+  "notes": "No patch memory: the sound is whatever the knobs are set to, so there is nothing to dump. Its SysEx (model 00 01 12) only sets global options such as MIDI channels and outputs."
+ },
+ "behringer-ub-xa-d": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "guess",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-AAL",
+   "https://cdn-media.empowertribe.com/95d6c45f3ee44f849d053b479509f03f/QSG_BE_0718-AAL_UB-Xa-D_WW.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Behringer_UB-Xa.py"
+  ],
+  "notes": "Has patch memory, but patches move as a multi-packet file transfer that needs an acknowledge per packet (as reverse-engineered for the keyboard UB-Xa in KnobKraft), so no simple request/reply. Not verified on the D. Parameter CC/NRPN map not checked."
+ },
+ "behringer-jt-mini": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0722-AAX",
+   "https://cdn-media.empowertribe.com/59194e138cf34c498b07fe2449cf5e88/QSG_BE_0722-AAX_JT-MINI_A7_WW_WEB.pdf"
+  ],
+  "notes": "No patch memory (memories hold sequences), so no sound dump. Responds to a table of MIDI CCs in the guide."
+ },
+ "behringer-ub-xa-mini": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://www.behringer.com/en/products/0722-AAZ",
+   "https://synthanatomy.com/2025/10/behringer-ub-xa-mini-portable-oberheim-ob-xa-style-synth-for-99.html",
+   "https://www.synthtopia.com/?p=152221"
+  ],
+  "notes": "No preset memory (10 motion-sequence memories only). A third-party editor controls it over MIDI, which implies CC control; no CC table was checked."
+ },
+ "behringer-phara-o-mini": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "secondary",
+  "sources": [
+   "https://www.behringer.com/en/products/0722-AAU",
+   "https://www.manualslib.de/manual/1366335/Behringer-Phara-O-Mini.html",
+   "https://www.musicradar.com/music-tech/synths/behringer-releases-phara-o-mini-an-ancient-egyptian-themed-mini-synth-with-a-filter-based-on-the-minikorg-700s"
+  ],
+  "notes": "The manual has a 'responds to the following MIDI CCs' table (not read in full). No patch memory found."
+ },
+ "behringer-jn-80": {
+  "midi": true,
+  "programChange": true,
+  "params": "cc",
+  "dump": {
+   "request": "F0 00 20 32 00 01 1D 00 77 00 00 F7",
+   "reply": "F0 00 20 32 00 01 1D 00",
+   "replies": 1,
+   "loads": "needs-slot",
+   "deviceIdByte": null
+  },
+  "manualDump": "SHIFT + INITIAL/WRITE, INITIAL menu: Dump Presets sends all patches in memory as SysEx over USB (bulk, not just the current sound).",
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0722-AAP",
+   "https://cdn-media.empowertribe.com/3f04d24ffc354101951b53aa2b7f92aa/Manual_BE_0722-AAP_JN-80.pdf",
+   "https://synthanatomy.com/tag/behringer"
+  ],
+  "notes": "Manual documents SysEx read/write by storage address (0-399, bank*20+number, two 7-bit address bytes): read = F0 00 20 32 00 01 1D 00 77 lo hi F7, write = ... 78 lo hi data F7. The request below reads slot A01 (address 0). The reply's command byte and message count are not stated; the prefix is the documented header. No edit-buffer address is documented, so save first. Parameters also have a full CC table (CC Settings must allow receive/transmit)."
+ },
+ "behringer-wave": {
+  "midi": true,
+  "programChange": true,
+  "params": "nrpn+cc",
+  "dump": {
+   "request": "F0 00 20 32 00 01 39 00 74 07 F7",
+   "reply": "F0 00 20 32 00 01 39 00 74 08",
+   "replies": 1,
+   "loads": "edit-buffer",
+   "deviceIdByte": null
+  },
+  "manualDump": "Program menu: move to DTF and set SYSEX to 1 to send the current edit buffer (2 sends the current program).",
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0722-ABD",
+   "https://cdn-media.empowertribe.com/2ee6f3a6dfad48bb85241add20b97f07/Manual_BE_0722-ABD_WAVE.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Behringer_Wave.py"
+  ],
+  "notes": "Manual: header F0 00 20 32 00 01 39 (Wave), device ID always 0. SPKT 07 = edit buffer dump request, 08 = edit buffer dump/response (sending 08 loads the edit buffer). Program dump: 74 05 bank prog / 74 06. Checksum = sum of data & 7F. Sound parameter CC/NRPN only when PAR-COM is 1-3. Patch names are not kept by the hardware (KnobKraft notes)."
+ },
+ "behringer-jt-4000-micro": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": "SETTINGS menu: choose PROG SING SYX SEND to send the current program over USB; the receiving JT-4000 Micro needs SYSEX RECEIVE on.",
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0722-ABR",
+   "https://cdn-media.empowertribe.com/7bad56e3d4f94b5ca2d36494034e1ea9/QSG_BE_0722-ABR_JT-4000-MICRO_WW.pdf",
+   "https://github.com/pencilresearch/midi/blob/main/Behringer/JT-4000M%20MICRO.csv"
+  ],
+  "notes": "32 presets archivable by SysEx. No dump request is documented; the settings menu sends PROG SING SYX SEND (current program) over USB. SysEx layout not published."
+ },
+ "behringer-pro-vs-mini": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": "FUNC, then press MENU (key 31) until PROG SING SYX SEND, then press + or -: sends the current program over USB; the receiver needs SYSEX RECEIVE LISTENING.",
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0722-ABF",
+   "https://cdn-media.empowertribe.com/07c681beb5724cb797eff24a67095bc7/QSG_BE_0722-ABF_PRO-VS-MINI_WW.pdf",
+   "https://github.com/pencilresearch/midi/blob/main/Behringer/Pro%20VS%20Mini.csv"
+  ],
+  "notes": "Has program memory. No dump request is documented; menu items PROG SING SYX SEND (current program) and SYSEX RECEIVE LISTENING work over USB. SysEx layout not published."
+ },
+ "behringer-cz-1-mini": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": "Press FUNC, then MENU repeatedly to PROG SING SYX SEND and press PROG/OCTAVE +/-: sends the current program over USB; the receiver needs SYSEX RECEIVE on.",
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-ACK",
+   "https://cdn-media.empowertribe.com/c188d499282940259ac0587832796ccb/Manual_BE_0718-ACK_CZ-1-MINI_WW.pdf",
+   "https://sonicstate.com/news/2025/10/15/behringer-releases-a-portable-synth"
+  ],
+  "notes": "Has preset memory. No dump request is documented; PROG SING SYX SEND outputs the current program over USB and SYSEX RECEIVE accepts it. SysEx layout not published."
+ },
+ "behringer-solina-string-ensemble": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-AAM",
+   "https://cdn-media.empowertribe.com/124c172e1777442182f7128b0037e012/QSG_BE_0718-AAM_SOLINA-STRING-ENSEMBLE_WW_2025-06-25_Rev.0.pdf"
+  ],
+  "notes": "No patch memory: the sound is whatever the knobs are set to, so there is nothing to dump. Notes in only."
+ },
+ "behringer-vocoder-vc340": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0722-AAG",
+   "https://cdn-media.empowertribe.com/31c46ab4d1724ed0b1326daadedcbcae/QSG_BE_0722-AAG_VOCODER-VC340_WW.pdf"
+  ],
+  "notes": "No patch memory: the sound is whatever the knobs are set to, so there is nothing to dump. SysEx (model 00 01 07) only changes settings such as MIDI channels and transpose."
+ },
+ "behringer-rd-78": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0704-AAR",
+   "https://cdn-media.empowertribe.com/89775197d2ed4747a2a7dd35162efc0d/QSG_BE_0704-AAR_RD-78_WW.pdf",
+   "https://synthanatomy.com/2025/07/behringer-rd-78-in-the-air-tonight-roland-cr-78-drum-machine-clone.html"
+  ],
+  "notes": "The guide says it does not respond to any MIDI CCs. Patterns live in memory, but there are no sound settings to share."
+ },
+ "behringer-lm-drum": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0704-AAC",
+   "https://www.adorama.com/col/productManuals/BE0704AAC86.pdf",
+   "https://github.com/pencilresearch/midi/blob/main/Behringer/LM%20DRUM.csv"
+  ],
+  "notes": "Filter cutoff on CC 74 and drum tunings on further CCs. The DUMP button sends patterns, songs or global settings as SysEx, not a sound; no request documented."
+ },
+ "behringer-bmx": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0704-AAD",
+   "https://cdn-media.empowertribe.com/d09aec5733c740eca8f51a442cfad6ec/Manual_0704-AAD_BMX_A4_WW_2025-12-11_Rev.0.pdf",
+   "https://synthanatomy.com/2026/04/behringer-bmx-a-hybrid-sampling-drum-machine-with-cloned-oberheim-dmx-core.html"
+  ],
+  "notes": "Responds to and transmits a CC list (filter cutoff on CC 74). DUMP sends patterns, songs or globals as SysEx, not a sound; no request documented."
+ },
+ "behringer-edge": {
+  "midi": true,
+  "programChange": false,
+  "params": "none",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-ABM",
+   "https://cdn-media.empowertribe.com/8bde2c594a4e4e35b07fe00fff6290c8/QSG_BE_0718-ABM_EDGE_WW.pdf"
+  ],
+  "notes": "No patch memory: the sound is whatever the knobs are set to, so there is nothing to dump. Its sequencer and channel live in SynthTribe settings."
+ },
+ "behringer-syncussion-sy-1": {
+  "midi": true,
+  "programChange": false,
+  "params": "cc",
+  "dump": null,
+  "manualDump": null,
+  "confidence": "manual",
+  "sources": [
+   "https://www.behringer.com/en/products/0718-ABL",
+   "https://cdn-media.empowertribe.com/9f625b2f6c8648ccbd08d63bf4361d3c/QSG_BE_0718-ABL_SYNCUSSION-SY-1_WW.pdf"
+  ],
+  "notes": "Only the two decays respond to CC (CC 80 and 81). No memory."
+ }
+}

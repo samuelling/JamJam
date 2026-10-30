@@ -1,0 +1,2499 @@
+[
+ {
+  "id": "teenage-engineering-op-xy",
+  "maker": "Teenage Engineering",
+  "model": "OP-XY",
+  "year": 2024,
+  "family": "digital-poly",
+  "voices": 24,
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "keys",
+   "pad",
+   "lead",
+   "pluck"
+  ],
+  "character": {
+   "chorus": 0.1,
+   "bright": 0.6
+  },
+  "note": "24-voice digital synth and sequencer with several engines (wavetable, hardsync, organ, e-piano, drum and more)."
+ },
+ {
+  "id": "teenage-engineering-op-1-field",
+  "maker": "Teenage Engineering",
+  "model": "OP-1 field",
+  "year": 2022,
+  "family": "digital-poly",
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "pluck",
+   "lead",
+   "pad",
+   "keys"
+  ],
+  "character": {
+   "detune": 4,
+   "chorus": 0.1
+  },
+  "note": "Second-generation OP-1: portable multi-engine synth (FM, phase, string, wavetable-style engines) with sampler and tape, now in stereo."
+ },
+ {
+  "id": "teenage-engineering-po-14-sub",
+  "maker": "Teenage Engineering",
+  "model": "PO-14 sub",
+  "year": 2015,
+  "family": "bass-machine",
+  "voices": 1,
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "bass",
+   "lofi",
+   "lead"
+  ],
+  "character": {
+   "mono": 1,
+   "bits": 12,
+   "sub": 0.4
+  },
+  "note": "Pocket Operator bass synth: digital mono bass and lead sounds with a step sequencer, no MIDI.",
+  "midi": false
+ },
+ {
+  "id": "teenage-engineering-po-16-factory",
+  "maker": "Teenage Engineering",
+  "model": "PO-16 factory",
+  "year": 2015,
+  "family": "digital-poly",
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "pluck",
+   "lofi"
+  ],
+  "character": {
+   "bits": 12,
+   "bright": 0.6
+  },
+  "note": "Pocket Operator melody synth with chord and lead presets and a step sequencer, no MIDI.",
+  "midi": false
+ },
+ {
+  "id": "teenage-engineering-po-20-arcade",
+  "maker": "Teenage Engineering",
+  "model": "PO-20 arcade",
+  "year": 2016,
+  "family": "digital-poly",
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "lead",
+   "pluck"
+  ],
+  "character": {
+   "bits": 8,
+   "bright": 0.7
+  },
+  "note": "Pocket Operator chiptune synth: arcade-style square and noise voices with a sequencer, no MIDI.",
+  "midi": false
+ },
+ {
+  "id": "teenage-engineering-po-28-robot",
+  "maker": "Teenage Engineering",
+  "model": "PO-28 robot",
+  "year": 2016,
+  "family": "digital-poly",
+  "voices": 1,
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "lofi",
+   "bass"
+  ],
+  "character": {
+   "mono": 1,
+   "bits": 10,
+   "bright": 0.6
+  },
+  "note": "Pocket Operator live mono synth with glitchy 8-bit leads and a sequencer, no MIDI.",
+  "midi": false
+ },
+ {
+  "id": "dreadbox-erebus",
+  "maker": "Dreadbox",
+  "model": "Erebus",
+  "year": 2015,
+  "family": "analog-mono",
+  "voices": 2,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "bass",
+   "lead",
+   "pad"
+  ],
+  "character": {
+   "detune": 10,
+   "drive": 0.4,
+   "reso": 1.5
+  },
+  "note": "Duophonic/paraphonic semi-modular analog with two VCOs, a 2-pole low-pass filter and a built-in echo."
+ },
+ {
+  "id": "dreadbox-erebus-reissue",
+  "maker": "Dreadbox",
+  "model": "Erebus Reissue",
+  "year": 2022,
+  "family": "analog-mono",
+  "voices": 2,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "bass",
+   "lead",
+   "pad"
+  ],
+  "character": {
+   "detune": 10,
+   "drive": 0.4,
+   "reso": 1.5
+  },
+  "note": "Faithful reissue of the Erebus V1 in a USB-powered 42HP case: two VCOs, 2-pole low-pass filter, echo, patchbay."
+ },
+ {
+  "id": "dreadbox-lil-erebus",
+  "maker": "Dreadbox",
+  "model": "Lil' Erebus",
+  "year": 2018,
+  "family": "analog-mono",
+  "voices": 2,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "bass",
+   "lead",
+   "acid"
+  ],
+  "character": {
+   "detune": 8,
+   "drive": 0.35,
+   "reso": 1.5
+  },
+  "note": "DIY-kit paraphonic analog with a saw and a pulse VCO, 2-pole low-pass filter and built-in MIDI-to-CV."
+ },
+ {
+  "id": "dreadbox-hades",
+  "maker": "Dreadbox",
+  "model": "Hades",
+  "year": 2016,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "bass",
+   "acid",
+   "lead"
+  ],
+  "character": {
+   "mono": 1,
+   "sub": 0.7,
+   "drive": 0.5,
+   "reso": 1.2
+  },
+  "note": "Analog mono bass synth: one VCO with two sub-octaves, low-pass filter and drive; reissued in 2022."
+ },
+ {
+  "id": "dreadbox-abyss",
+  "maker": "Dreadbox",
+  "model": "Abyss",
+  "year": 2017,
+  "family": "analog-poly",
+  "voices": 4,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "pad",
+   "strings",
+   "bass",
+   "lead"
+  ],
+  "character": {
+   "detune": 9,
+   "chorus": 0.2,
+   "drive": 0.2
+  },
+  "note": "Four-voice analog desktop polysynth with one VCO per voice, a low-pass filter and built-in time effects."
+ },
+ {
+  "id": "dreadbox-nyx",
+  "maker": "Dreadbox",
+  "model": "Nyx",
+  "year": 2017,
+  "family": "analog-mono",
+  "voices": 2,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "bass",
+   "lead",
+   "pad"
+  ],
+  "character": {
+   "detune": 9,
+   "drive": 0.4,
+   "reso": 1.4
+  },
+  "note": "Paraphonic semi-modular analog with two VCOs and dual filters; V2 arrived in 2019."
+ },
+ {
+  "id": "dreadbox-murmux",
+  "maker": "Dreadbox",
+  "model": "Murmux",
+  "year": 2019,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "bass",
+   "lead",
+   "acid"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.4,
+   "reso": 1.5
+  },
+  "note": "Analog mono synth with a built-in sequencer, desktop and Eurorack (Murmux V2)."
+ },
+ {
+  "id": "dreadbox-typhon",
+  "maker": "Dreadbox",
+  "model": "Typhon",
+  "year": 2020,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "bass",
+   "lead",
+   "acid",
+   "pad"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.45,
+   "reso": 1.5,
+   "chorus": 0.2
+  },
+  "note": "Tiny analog mono synth (two VCOs, 4-pole low-pass) with a deep digital effects and modulation section."
+ },
+ {
+  "id": "dreadbox-nymphes",
+  "maker": "Dreadbox",
+  "model": "Nymphes",
+  "year": 2021,
+  "family": "analog-poly",
+  "voices": 6,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "pad",
+   "strings",
+   "keys",
+   "bass"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.3,
+   "reso": 1.2
+  },
+  "note": "Compact six-voice analog polysynth with one VCO plus sub and noise per voice, low-pass and high-pass filters and reverb."
+ },
+ {
+  "id": "polyend-medusa",
+  "maker": "Polyend",
+  "model": "Medusa",
+  "year": 2019,
+  "family": "analog-poly",
+  "voices": 6,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "pad",
+   "lead",
+   "bass",
+   "hybrid"
+  ],
+  "character": {
+   "detune": 9,
+   "drive": 0.3,
+   "reso": 1.4
+  },
+  "note": "Polyend/Dreadbox hybrid: analog VCOs plus digital wavetable oscillators, Dreadbox filter, 64-pad grid controller and sequencer."
+ },
+ {
+  "id": "analogue-solutions-treadstone",
+  "maker": "Analogue Solutions",
+  "model": "Treadstone",
+  "year": 2018,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ssm",
+  "types": [
+   "bass",
+   "lead",
+   "acid"
+  ],
+  "character": {
+   "mono": 1,
+   "sub": 0.5,
+   "drive": 0.4,
+   "reso": 1.8
+  },
+  "note": "Compact analog mono synth: one VCO with sub and noise into a reissued SSM2044-style 4-pole filter, with MIDI loop sequencer."
+ },
+ {
+  "id": "black-corporation-deckards-dream",
+  "maker": "Black Corporation",
+  "model": "Deckard's Dream",
+  "year": 2017,
+  "family": "analog-poly",
+  "voices": 8,
+  "osc": "vco",
+  "filter": "ssm",
+  "types": [
+   "brass",
+   "pad",
+   "strings",
+   "lead"
+  ],
+  "character": {
+   "detune": 12,
+   "chorus": 0.25,
+   "reso": 1.2
+  },
+  "note": "Eight-voice analog poly inspired by the CS-80: two VCO layers per voice with high-pass and low-pass filters and poly aftertouch."
+ },
+ {
+  "id": "black-corporation-deckards-dream-mk2",
+  "maker": "Black Corporation",
+  "model": "Deckard's Dream MK2",
+  "year": 2022,
+  "family": "analog-poly",
+  "voices": 8,
+  "osc": "vco",
+  "filter": "ssm",
+  "types": [
+   "brass",
+   "pad",
+   "strings",
+   "lead"
+  ],
+  "character": {
+   "detune": 12,
+   "chorus": 0.25,
+   "reso": 1.2
+  },
+  "note": "Revised Deckard's Dream: the same CS-80-inspired dual-layer analog voice with updated controls and memory."
+ },
+ {
+  "id": "black-corporation-kijimi",
+  "maker": "Black Corporation",
+  "model": "Kijimi",
+  "year": 2019,
+  "family": "analog-poly",
+  "voices": 8,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "brass",
+   "pad",
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "detune": 10,
+   "drive": 0.3,
+   "reso": 1.4
+  },
+  "note": "Eight-voice analog poly modelled on the RSF Kobol: two VCOs per voice with variable waveshapes and a multimode filter."
+ },
+ {
+  "id": "black-corporation-kijimi-mk2",
+  "maker": "Black Corporation",
+  "model": "Kijimi MK2",
+  "year": 2023,
+  "family": "analog-poly",
+  "voices": 8,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "brass",
+   "pad",
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "detune": 10,
+   "drive": 0.3,
+   "reso": 1.4
+  },
+  "note": "Updated Kijimi with the same Kobol-inspired eight-voice analog engine in a revised panel."
+ },
+ {
+  "id": "black-corporation-xerxes",
+  "maker": "Black Corporation",
+  "model": "Xerxes",
+  "year": 2019,
+  "family": "analog-poly",
+  "voices": 8,
+  "osc": "dco",
+  "filter": "svf",
+  "types": [
+   "brass",
+   "pad",
+   "strings",
+   "lead"
+  ],
+  "character": {
+   "detune": 6,
+   "chorus": 0.2,
+   "reso": 1.3
+  },
+  "note": "Eight-voice analog poly inspired by the Elka Synthex: two discrete-logic DCOs per voice, analog multimode filter, MPE."
+ },
+ {
+  "id": "udo-super-6",
+  "maker": "UDO",
+  "model": "Super 6",
+  "year": 2020,
+  "family": "analog-poly",
+  "voices": 12,
+  "osc": "dco",
+  "filter": "ota",
+  "types": [
+   "pad",
+   "strings",
+   "keys",
+   "brass"
+  ],
+  "character": {
+   "detune": 7,
+   "chorus": 0.3,
+   "reso": 1.0
+  },
+  "note": "Twelve-voice binaural hybrid: FPGA digital oscillators feeding an analog filter and VCA path, with true-stereo 'binaural' voice pairs."
+ },
+ {
+  "id": "udo-super-gemini",
+  "maker": "UDO",
+  "model": "Super Gemini",
+  "year": 2024,
+  "family": "analog-poly",
+  "voices": 20,
+  "osc": "dco",
+  "filter": "ota",
+  "types": [
+   "pad",
+   "strings",
+   "brass",
+   "lead"
+  ],
+  "character": {
+   "detune": 7,
+   "chorus": 0.3,
+   "reso": 1.1
+  },
+  "note": "Bi-timbral binaural hybrid: 20 voices of FPGA oscillators into an all-analog filter/VCA path, with poly aftertouch and ribbon."
+ },
+ {
+  "id": "groove-synthesis-3rd-wave",
+  "maker": "Groove Synthesis",
+  "model": "3rd Wave",
+  "year": 2021,
+  "family": "digital-poly",
+  "voices": 24,
+  "osc": "wavetable",
+  "filter": "ota",
+  "types": [
+   "pad",
+   "bell",
+   "lead",
+   "strings"
+  ],
+  "character": {
+   "detune": 6,
+   "chorus": 0.2,
+   "reso": 1.2,
+   "bits": 12
+  },
+  "note": "24-voice wavetable synth in the PPG tradition: digital wavetable oscillators (with user waves) into analog filters and VCAs."
+ },
+ {
+  "id": "groove-synthesis-3rd-wave-8m",
+  "maker": "Groove Synthesis",
+  "model": "3rd Wave 8M",
+  "year": 2024,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "wavetable",
+  "filter": "ota",
+  "types": [
+   "pad",
+   "bell",
+   "lead",
+   "strings"
+  ],
+  "character": {
+   "detune": 6,
+   "chorus": 0.2,
+   "reso": 1.2,
+   "bits": 12
+  },
+  "note": "Eight-voice desktop module version of the 3rd Wave with the same wavetable-into-analog-filter voice."
+ },
+ {
+  "id": "melbourne-instruments-nina",
+  "maker": "Melbourne Instruments",
+  "model": "Nina",
+  "year": 2022,
+  "family": "analog-poly",
+  "voices": 12,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "pad",
+   "lead",
+   "bass",
+   "hybrid"
+  ],
+  "character": {
+   "detune": 6,
+   "reso": 1.2,
+   "chorus": 0.15
+  },
+  "note": "Twelve-voice analog polysynth with wavetable layers and motorised knobs that move to every stored setting."
+ },
+ {
+  "id": "melbourne-instruments-delia",
+  "maker": "Melbourne Instruments",
+  "model": "Delia",
+  "year": 2024,
+  "family": "analog-poly",
+  "voices": 6,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "pad",
+   "lead",
+   "bass",
+   "keys"
+  ],
+  "character": {
+   "detune": 7,
+   "reso": 1.2,
+   "chorus": 0.15
+  },
+  "note": "Six-voice analog polysynth with motorised encoders, a smaller sibling of Nina."
+ },
+ {
+  "id": "expressive-e-osmose",
+  "maker": "Expressive E",
+  "model": "Osmose",
+  "year": 2022,
+  "family": "digital-poly",
+  "voices": 24,
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "strings",
+   "acoustic",
+   "lead"
+  ],
+  "character": {
+   "chorus": 0.1,
+   "bright": 0.5
+  },
+  "note": "MPE keyboard with an onboard EaganMatrix physical-modelling and modular synth engine driven by per-key pressure and wiggle."
+ },
+ {
+  "id": "tasty-chips-gr-1",
+  "maker": "Tasty Chips",
+  "model": "GR-1",
+  "year": 2018,
+  "family": "digital-poly",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "hybrid",
+   "lofi"
+  ],
+  "character": {
+   "chorus": 0.2,
+   "decay": 3
+  },
+  "note": "Granular synthesizer: plays clouds of grains from loaded samples, with per-voice grain controls and a digital filter."
+ },
+ {
+  "id": "soma-lyra-8",
+  "maker": "Soma",
+  "model": "Lyra-8",
+  "year": 2016,
+  "family": "analog-poly",
+  "voices": 8,
+  "osc": "vco",
+  "filter": "none",
+  "types": [
+   "pad",
+   "efm",
+   "lead"
+  ],
+  "character": {
+   "detune": 15,
+   "drive": 0.6,
+   "decay": 4
+  },
+  "note": "Eight-voice 'organismic' analog drone synth: touch-plate voices, cross-modulation (FM) and a distorting delay; no keyboard tuning grid.",
+  "midi": false
+ },
+ {
+  "id": "soma-terra",
+  "maker": "Soma",
+  "model": "Terra",
+  "year": 2023,
+  "family": "digital-poly",
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "efm",
+   "hybrid"
+  ],
+  "character": {
+   "chorus": 0.3,
+   "decay": 4
+  },
+  "note": "Touch-surface digital synth/instrument with many experimental engines, played by sensor pads rather than keys."
+ },
+ {
+  "id": "erica-synths-bassline-db-01",
+  "maker": "Erica Synths",
+  "model": "Bassline DB-01",
+  "year": 2019,
+  "family": "bass-machine",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "acid",
+   "bass",
+   "lead"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.6,
+   "reso": 2.2,
+   "sub": 0.3
+  },
+  "note": "Analog mono bass/acid synth with a resonant 24 dB low-pass, overdrive and a 303-style step sequencer with accent and slide."
+ },
+ {
+  "id": "erica-synths-syntrx",
+  "maker": "Erica Synths",
+  "model": "Syntrx",
+  "year": 2018,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "diode",
+  "types": [
+   "efm",
+   "lead",
+   "pad"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.5,
+   "reso": 1.8
+  },
+  "note": "EMS Synthi-inspired analog with a pin-matrix patchbay: three oscillators, noise, ring mod, diode-ladder filter and spring-style reverb."
+ },
+ {
+  "id": "erica-synths-syntrx-ii",
+  "maker": "Erica Synths",
+  "model": "Syntrx II",
+  "year": 2024,
+  "family": "analog-mono",
+  "voices": 2,
+  "osc": "vco",
+  "filter": "diode",
+  "types": [
+   "efm",
+   "lead",
+   "pad",
+   "bass"
+  ],
+  "character": {
+   "drive": 0.5,
+   "reso": 1.8,
+   "detune": 8
+  },
+  "note": "Second-generation Syntrx: duophonic EMS-style matrix synth with patch memory, digital effects and full MIDI."
+ },
+ {
+  "id": "erica-synths-steampipe",
+  "maker": "Erica Synths",
+  "model": "Steampipe",
+  "year": 2023,
+  "family": "digital-poly",
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "acoustic",
+   "pluck",
+   "lead",
+   "pad"
+  ],
+  "character": {
+   "decay": 2,
+   "bright": 0.5
+  },
+  "note": "Physical-modelling synth of resonating pipes with blown/struck excitation and a built-in sequencer."
+ },
+ {
+  "id": "twisted-electrons-megafm",
+  "maker": "Twisted Electrons",
+  "model": "MegaFM",
+  "year": 2019,
+  "family": "fm",
+  "voices": 12,
+  "osc": "fm",
+  "filter": "none",
+  "types": [
+   "bass",
+   "keys",
+   "bell",
+   "lead"
+  ],
+  "character": {
+   "bits": 9,
+   "bright": 0.6
+  },
+  "note": "Twelve-voice FM synth built on two Yamaha YM2612 (Mega Drive/Genesis) chips: four-operator FM with chip grit."
+ },
+ {
+  "id": "twisted-electrons-acid8-mkiii",
+  "maker": "Twisted Electrons",
+  "model": "Acid8 MKIII",
+  "year": 2020,
+  "family": "bass-machine",
+  "voices": 1,
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "acid",
+   "bass",
+   "lofi"
+  ],
+  "character": {
+   "mono": 1,
+   "bits": 8,
+   "reso": 2.0,
+   "drive": 0.5
+  },
+  "note": "Digital acid groove synth with 8-bit oscillators, resonant filter and a 303-style sequencer."
+ },
+ {
+  "id": "sonicware-liven-xfm",
+  "maker": "Sonicware",
+  "model": "Liven XFM",
+  "year": 2020,
+  "family": "fm",
+  "voices": 4,
+  "osc": "fm",
+  "filter": "none",
+  "types": [
+   "keys",
+   "bell",
+   "bass",
+   "lofi"
+  ],
+  "character": {
+   "bright": 0.6
+  },
+  "note": "Compact four-operator FM synth with 4 voices and a step sequencer, plus an auto-patch 'FM learning' mode."
+ },
+ {
+  "id": "sonicware-liven-8bit-warps",
+  "maker": "Sonicware",
+  "model": "Liven 8bit Warps",
+  "year": 2021,
+  "family": "digital-poly",
+  "voices": 4,
+  "osc": "wavetable",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "lead",
+   "pluck"
+  ],
+  "character": {
+   "bits": 8,
+   "bright": 0.6
+  },
+  "note": "8-bit wavetable synth with warpable waveforms, 4 voices and a step sequencer."
+ },
+ {
+  "id": "sonicware-liven-ambient-0",
+  "maker": "Sonicware",
+  "model": "Liven Ambient Ø",
+  "year": 2023,
+  "family": "digital-poly",
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "strings",
+   "lofi"
+  ],
+  "character": {
+   "chorus": 0.4,
+   "decay": 4
+  },
+  "note": "Ambient-oriented digital synth with drone/texture engines, long reverbs and a sequencer."
+ },
+ {
+  "id": "sonicware-elz-1",
+  "maker": "Sonicware",
+  "model": "ELZ_1",
+  "year": 2019,
+  "family": "digital-poly",
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "pad",
+   "lofi",
+   "bass"
+  ],
+  "character": {
+   "bits": 12,
+   "chorus": 0.2
+  },
+  "note": "Multi-engine digital synth (wavetable, FM, granular-style and more) with a sampler, sequencer and lofi effects."
+ },
+ {
+  "id": "sonicware-elz-1-play",
+  "maker": "Sonicware",
+  "model": "ELZ_1 play",
+  "year": 2022,
+  "family": "digital-poly",
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "pad",
+   "lofi",
+   "keys"
+  ],
+  "character": {
+   "bits": 12,
+   "chorus": 0.2
+  },
+  "note": "Keyboard version of the ELZ_1 multi-engine synth with built-in speaker and battery power."
+ },
+ {
+  "id": "supercritical-redshift-6",
+  "maker": "Supercritical",
+  "model": "Redshift 6",
+  "year": 2024,
+  "family": "analog-poly",
+  "voices": 6,
+  "osc": "dco",
+  "filter": "svf",
+  "types": [
+   "pad",
+   "strings",
+   "lead",
+   "brass"
+  ],
+  "character": {
+   "detune": 7,
+   "drive": 0.3,
+   "reso": 1.2
+  },
+  "note": "Six analog voices with DCOs (twin-osc, supersaw, phase-sync, organ engines) and a digitally steered 4-pole state-variable filter that emulates classic filters."
+ },
+ {
+  "id": "ik-multimedia-uno-synth",
+  "maker": "IK Multimedia",
+  "model": "UNO Synth",
+  "year": 2018,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "bass",
+   "lead",
+   "acid"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.4,
+   "reso": 1.6,
+   "detune": 6
+  },
+  "note": "Small two-VCO analog mono synth with a 2-pole multimode OTA filter, arpeggiator and step sequencer."
+ },
+ {
+  "id": "ik-multimedia-uno-synth-pro",
+  "maker": "IK Multimedia",
+  "model": "UNO Synth Pro",
+  "year": 2020,
+  "family": "analog-mono",
+  "voices": 3,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "bass",
+   "lead",
+   "pad",
+   "brass"
+  ],
+  "character": {
+   "detune": 8,
+   "drive": 0.4,
+   "reso": 1.6
+  },
+  "note": "Three-VCO paraphonic analog with two filters (OTA and Sallen-Key types) usable in series or parallel; desktop and Pro X versions share the voice."
+ },
+ {
+  "id": "modal-cobalt8",
+  "maker": "Modal",
+  "model": "Cobalt8",
+  "year": 2020,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "lead",
+   "bass",
+   "pluck"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.2
+  },
+  "note": "Eight-voice virtual-analog with Modal's extended algorithmic oscillators, digital filter and MPE."
+ },
+ {
+  "id": "modal-cobalt5s",
+  "maker": "Modal",
+  "model": "Cobalt5S",
+  "year": 2022,
+  "family": "digital-poly",
+  "voices": 5,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "lead",
+   "bass",
+   "pluck"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.2
+  },
+  "note": "Five-voice compact version of the Cobalt8 virtual-analog engine with speakers."
+ },
+ {
+  "id": "modal-skulpt",
+  "maker": "Modal",
+  "model": "Skulpt",
+  "year": 2018,
+  "family": "digital-poly",
+  "voices": 4,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "bass",
+   "lead",
+   "pad"
+  ],
+  "character": {
+   "detune": 8,
+   "drive": 0.3
+  },
+  "note": "Four-voice virtual-analog with two oscillators per voice (or eight-osc mono), morphing waves and a mod matrix."
+ },
+ {
+  "id": "modal-craft-synth-2",
+  "maker": "Modal",
+  "model": "Craftsynth 2.0",
+  "year": 2019,
+  "family": "digital-poly",
+  "voices": 1,
+  "osc": "wavetable",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "bass",
+   "pluck"
+  ],
+  "character": {
+   "mono": 1,
+   "bright": 0.6
+  },
+  "note": "Pocket wavetable synth with two oscillators, mod matrix and sequencer."
+ },
+ {
+  "id": "modal-002",
+  "maker": "Modal",
+  "model": "002",
+  "year": 2016,
+  "family": "analog-poly",
+  "voices": 12,
+  "osc": "digital",
+  "filter": "ladder",
+  "types": [
+   "pad",
+   "brass",
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "detune": 7,
+   "drive": 0.3,
+   "reso": 1.4
+  },
+  "note": "Twelve-voice hybrid poly: two digital oscillators per voice into an analog 4-pole ladder filter and VCAs."
+ },
+ {
+  "id": "modal-008",
+  "maker": "Modal",
+  "model": "008",
+  "year": 2015,
+  "family": "analog-poly",
+  "voices": 8,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "pad",
+   "brass",
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "detune": 9,
+   "drive": 0.3,
+   "reso": 1.4
+  },
+  "note": "Eight-voice analog poly with two VCOs per voice and a 4-pole ladder filter."
+ },
+ {
+  "id": "korg-kingkorg-neo",
+  "maker": "Korg",
+  "model": "KingKORG NEO",
+  "year": 2023,
+  "family": "digital-poly",
+  "voices": 24,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "pad",
+   "bass",
+   "brass"
+  ],
+  "character": {
+   "detune": 8,
+   "drive": 0.3,
+   "chorus": 0.2
+  },
+  "note": "Compact 37-key version of the KingKORG XMT virtual-analog engine (up to three oscillators per timbre, many filter models, vacuum-tube drive)."
+ },
+ {
+  "id": "korg-kingkorg",
+  "maker": "Korg",
+  "model": "KingKORG",
+  "year": 2013,
+  "family": "digital-poly",
+  "voices": 24,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "pad",
+   "bass",
+   "brass"
+  ],
+  "character": {
+   "detune": 8,
+   "drive": 0.35,
+   "chorus": 0.2
+  },
+  "note": "Virtual-analog performance synth with the XMT engine, 18 filter models and a vacuum-tube drive stage."
+ },
+ {
+  "id": "korg-microkorg-2",
+  "maker": "Korg",
+  "model": "microKORG 2",
+  "year": 2024,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "bass",
+   "pad",
+   "pluck"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.2
+  },
+  "note": "Second-generation microKORG: virtual-analog synth/vocoder with two timbres, new oscillator models and a built-in speaker."
+ },
+ {
+  "id": "korg-nts-1-mkii",
+  "maker": "Korg",
+  "model": "NTS-1 digital kit mkII",
+  "year": 2024,
+  "family": "digital-poly",
+  "voices": 4,
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "pluck",
+   "pad",
+   "bass"
+  ],
+  "character": {
+   "chorus": 0.2,
+   "bright": 0.6
+  },
+  "note": "Build-it-yourself digital synth with logue-SDK oscillators, multimode filter and effects, now with presets and a keyboard/arp upgrade over the original."
+ },
+ {
+  "id": "korg-nts-1",
+  "maker": "Korg",
+  "model": "NTS-1 digital kit",
+  "year": 2019,
+  "family": "digital-poly",
+  "voices": 1,
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "pluck",
+   "bass"
+  ],
+  "character": {
+   "mono": 1,
+   "bright": 0.6
+  },
+  "note": "Tiny build-it-yourself digital synth with logue-SDK user oscillators, multimode filter and three effects."
+ },
+ {
+  "id": "korg-volca-fm2",
+  "maker": "Korg",
+  "model": "volca fm2",
+  "year": 2022,
+  "family": "fm",
+  "voices": 6,
+  "osc": "fm",
+  "filter": "none",
+  "types": [
+   "keys",
+   "bell",
+   "bass",
+   "pluck"
+  ],
+  "character": {
+   "chorus": 0.2,
+   "bright": 0.6
+  },
+  "note": "Six-voice six-operator FM volca compatible with DX7 voices, with reverb, chorus and a sequencer."
+ },
+ {
+  "id": "korg-volca-nubass",
+  "maker": "Korg",
+  "model": "volca nubass",
+  "year": 2019,
+  "family": "bass-machine",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "acid",
+   "bass",
+   "lead"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.5,
+   "reso": 2.0
+  },
+  "note": "Acid bass volca using a Nutube vacuum-tube oscillator stage, a ladder-type low-pass and accent/slide sequencer."
+ },
+ {
+  "id": "korg-ms-20-mini",
+  "maker": "Korg",
+  "model": "MS-20 mini",
+  "year": 2013,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ms20",
+  "types": [
+   "lead",
+   "bass",
+   "acid"
+  ],
+  "character": {
+   "mono": 1,
+   "detune": 12,
+   "reso": 2.5,
+   "drive": 0.5
+  },
+  "note": "86% scale reissue of the MS-20 with its aggressive high-pass/low-pass filters and patch panel."
+ },
+ {
+  "id": "korg-multi-poly",
+  "maker": "Korg",
+  "model": "multi/poly",
+  "year": 2022,
+  "family": "analog-poly",
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "brass",
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.3,
+   "drive": 0.2
+  },
+  "note": "Mono/Poly-inspired modern poly: four layers of analog-modelled oscillators with wavetables, motion sequencing and kaoss-physics modulation."
+ },
+ {
+  "id": "korg-phase8",
+  "maker": "Korg",
+  "model": "phase8",
+  "year": 2026,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "electromech",
+  "filter": "none",
+  "types": [
+   "bell",
+   "pluck",
+   "acoustic"
+  ],
+  "character": {
+   "decay": 3,
+   "bright": 0.6
+  },
+  "note": "Acoustic synthesizer: eight electromagnetically driven, swappable steel resonators with a polymetric step sequencer."
+ },
+ {
+  "id": "roland-jd-xi",
+  "maker": "Roland",
+  "model": "JD-Xi",
+  "year": 2015,
+  "family": "digital-poly",
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "bass",
+   "pad",
+   "keys"
+  ],
+  "character": {
+   "detune": 6,
+   "chorus": 0.2
+  },
+  "note": "Mini-key crossover synth: two SuperNATURAL digital synth parts, an analog mono part, drums and a vocoder."
+ },
+ {
+  "id": "roland-jd-xa",
+  "maker": "Roland",
+  "model": "JD-XA",
+  "year": 2015,
+  "family": "analog-poly",
+  "voices": 4,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "lead",
+   "pad",
+   "bass",
+   "brass"
+  ],
+  "character": {
+   "detune": 8,
+   "drive": 0.3,
+   "reso": 1.3
+  },
+  "note": "Crossover synth with four analog voices (one VCO-based part each) plus a 64-voice SuperNATURAL digital engine."
+ },
+ {
+  "id": "roland-system-8",
+  "maker": "Roland",
+  "model": "SYSTEM-8",
+  "year": 2016,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "brass",
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "detune": 7,
+   "chorus": 0.25
+  },
+  "note": "Eight-voice ACB virtual-analog synth with three oscillators per voice and plug-out models of the Jupiter-8, Juno-106 and JX-3P."
+ },
+ {
+  "id": "roland-gaia-sh-01",
+  "maker": "Roland",
+  "model": "GAIA SH-01",
+  "year": 2010,
+  "family": "digital-poly",
+  "voices": 64,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "pad",
+   "bass",
+   "brass"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.2
+  },
+  "note": "Hands-on virtual-analog with three layered tones of osc/filter/amp each, arpeggiator and D-Beam."
+ },
+ {
+  "id": "roland-gaia-2",
+  "maker": "Roland",
+  "model": "GAIA 2",
+  "year": 2024,
+  "family": "digital-poly",
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "lead",
+   "bass",
+   "pluck"
+  ],
+  "character": {
+   "detune": 7,
+   "chorus": 0.2
+  },
+  "note": "Virtual-analog and wavetable synth with a hands-on panel, sequencer and effects, successor to GAIA."
+ },
+ {
+  "id": "roland-sh-4d",
+  "maker": "Roland",
+  "model": "SH-4d",
+  "year": 2023,
+  "family": "digital-poly",
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "bass",
+   "pad",
+   "pluck"
+  ],
+  "character": {
+   "detune": 6,
+   "chorus": 0.15
+  },
+  "note": "Four-track desktop synth with multiple ZEN-Core-derived oscillator models, sequencer and drum track."
+ },
+ {
+  "id": "roland-s-1",
+  "maker": "Roland",
+  "model": "S-1",
+  "year": 2022,
+  "family": "digital-poly",
+  "voices": 4,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "bass",
+   "acid",
+   "pluck"
+  ],
+  "character": {
+   "sub": 0.4,
+   "detune": 4
+  },
+  "note": "AIRA Compact tweak synth: ACB model of the SH-101 voice with four-voice poly and chord modes and a sequencer."
+ },
+ {
+  "id": "roland-j-6",
+  "maker": "Roland",
+  "model": "J-6",
+  "year": 2023,
+  "family": "digital-poly",
+  "voices": 4,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "strings",
+   "keys"
+  ],
+  "character": {
+   "chorus": 0.4,
+   "detune": 4
+  },
+  "note": "AIRA Compact chord synth built on the Juno-60 ACB sound with chord sets, phrase sequencer and effects."
+ },
+ {
+  "id": "roland-sh-01a",
+  "maker": "Roland",
+  "model": "SH-01A",
+  "year": 2016,
+  "family": "digital-poly",
+  "voices": 4,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "bass",
+   "lead",
+   "acid"
+  ],
+  "character": {
+   "sub": 0.5
+  },
+  "note": "Boutique ACB model of the SH-101 with a four-voice poly mode and step sequencer."
+ },
+ {
+  "id": "roland-jx-03",
+  "maker": "Roland",
+  "model": "JX-03",
+  "year": 2015,
+  "family": "digital-poly",
+  "voices": 4,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "brass",
+   "pad",
+   "keys"
+  ],
+  "character": {
+   "detune": 6,
+   "chorus": 0.3
+  },
+  "note": "Boutique ACB model of the JX-3P: two DCO-style oscillators, cross-mod and chorus."
+ },
+ {
+  "id": "roland-jx-08",
+  "maker": "Roland",
+  "model": "JX-08",
+  "year": 2022,
+  "family": "digital-poly",
+  "voices": 10,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "brass",
+   "strings",
+   "keys"
+  ],
+  "character": {
+   "detune": 6,
+   "chorus": 0.3
+  },
+  "note": "Boutique ACB model of the JX-8P with two-part multitimbrality and a polyphonic sequencer."
+ },
+ {
+  "id": "roland-jd-08",
+  "maker": "Roland",
+  "model": "JD-08",
+  "year": 2022,
+  "family": "digital-poly",
+  "voices": 16,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "bell",
+   "keys",
+   "lead"
+  ],
+  "character": {
+   "chorus": 0.3,
+   "bright": 0.7
+  },
+  "note": "Boutique recreation of the JD-800's sample-based PCM engine with its full slider-panel structure."
+ },
+ {
+  "id": "yamaha-reface-cs",
+  "maker": "Yamaha",
+  "model": "Reface CS",
+  "year": 2015,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "bass",
+   "pad",
+   "brass"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.2
+  },
+  "note": "Mini-key eight-voice virtual-analog with five oscillator types and a CS-style slider panel."
+ },
+ {
+  "id": "yamaha-reface-cp",
+  "maker": "Yamaha",
+  "model": "Reface CP",
+  "year": 2015,
+  "family": "electric-piano",
+  "voices": 128,
+  "osc": "tine",
+  "filter": "none",
+  "types": [
+   "keys",
+   "wurly",
+   "soft"
+  ],
+  "character": {
+   "trem": 0.3,
+   "chorus": 0.2
+  },
+  "note": "Mini-key electric piano with Rhodes, Wurlitzer, Clavinet, CP and toy-piano models plus vintage effects."
+ },
+ {
+  "id": "yamaha-reface-yc",
+  "maker": "Yamaha",
+  "model": "Reface YC",
+  "year": 2015,
+  "family": "organ",
+  "voices": 128,
+  "osc": "tonewheel",
+  "filter": "none",
+  "types": [
+   "keys",
+   "soft"
+  ],
+  "character": {
+   "chorus": 0.4,
+   "drive": 0.2
+  },
+  "note": "Mini-key combo/tonewheel organ with drawbars, five organ models, rotary speaker and distortion."
+ },
+ {
+  "id": "yamaha-modx",
+  "maker": "Yamaha",
+  "model": "MODX",
+  "year": 2018,
+  "family": "digital-poly",
+  "voices": 128,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "keys",
+   "pad",
+   "strings",
+   "brass"
+  ],
+  "character": {
+   "chorus": 0.2
+  },
+  "note": "Montage-derived workstation synth with AWM2 sample playback and an eight-operator FM-X engine under one Motion Control system."
+ },
+ {
+  "id": "yamaha-montage-m",
+  "maker": "Yamaha",
+  "model": "Montage M",
+  "year": 2023,
+  "family": "digital-poly",
+  "voices": 256,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "keys",
+   "pad",
+   "strings",
+   "brass"
+  ],
+  "character": {
+   "chorus": 0.2
+  },
+  "note": "Flagship synth combining AWM2 samples, FM-X and the AN-X analog-modelling engine."
+ },
+ {
+  "id": "novation-a-station",
+  "maker": "Novation",
+  "model": "A-Station",
+  "year": 2001,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "bass",
+   "pad",
+   "pluck"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.2
+  },
+  "note": "Eight-voice virtual-analog desktop: three oscillators, 12/24 dB filter, effects and arpeggiator in a 1U-high case."
+ },
+ {
+  "id": "novation-k-station",
+  "maker": "Novation",
+  "model": "K-Station",
+  "year": 2001,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "bass",
+   "pad"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.2
+  },
+  "note": "Keyboard version of the A-Station virtual-analog engine with a vocoder."
+ },
+ {
+  "id": "novation-mininova",
+  "maker": "Novation",
+  "model": "MiniNova",
+  "year": 2012,
+  "family": "digital-poly",
+  "voices": 18,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "pad",
+   "bass",
+   "pluck"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.2
+  },
+  "note": "Compact virtual-analog with the UltraNova engine, VocalTune and animate buttons."
+ },
+ {
+  "id": "novation-circuit-mono-station",
+  "maker": "Novation",
+  "model": "Circuit Mono Station",
+  "year": 2017,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "acid",
+   "lead"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.5,
+   "reso": 1.8,
+   "detune": 6
+  },
+  "note": "Paraphonic two-oscillator analog with the Bass Station-style filter, distortion and a two-track sequencer."
+ },
+ {
+  "id": "waldorf-kyra",
+  "maker": "Waldorf",
+  "model": "Kyra",
+  "year": 2019,
+  "family": "digital-poly",
+  "voices": 128,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "lead",
+   "bass",
+   "pluck"
+  ],
+  "character": {
+   "detune": 10,
+   "chorus": 0.3
+  },
+  "note": "FPGA virtual-analog with 128 voices across eight parts, wavetable/VA oscillators and dual filters."
+ },
+ {
+  "id": "waldorf-m",
+  "maker": "Waldorf",
+  "model": "M",
+  "year": 2021,
+  "family": "digital-poly",
+  "voices": 16,
+  "osc": "wavetable",
+  "filter": "cem",
+  "types": [
+   "pad",
+   "bell",
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "detune": 6,
+   "bits": 12,
+   "reso": 1.3
+  },
+  "note": "Microwave-style wavetable synth: classic 8-bit wavetables (or modern mode) into analog filters and VCAs."
+ },
+ {
+  "id": "waldorf-rocket",
+  "maker": "Waldorf",
+  "model": "Rocket",
+  "year": 2013,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "bass",
+   "lead",
+   "acid"
+  ],
+  "character": {
+   "mono": 1,
+   "detune": 10,
+   "drive": 0.4
+  },
+  "note": "Pocket virtual-analog mono synth with a supersaw-capable oscillator, resonant filter and arpeggiator."
+ },
+ {
+  "id": "waldorf-streichfett",
+  "maker": "Waldorf",
+  "model": "Streichfett",
+  "year": 2014,
+  "family": "string-machine",
+  "voices": 128,
+  "osc": "divide",
+  "filter": "none",
+  "types": [
+   "strings",
+   "pad"
+  ],
+  "character": {
+   "chorus": 0.6,
+   "detune": 4
+  },
+  "note": "String machine with a fully polyphonic strings section, a 16-voice solo section and ensemble/phaser/reverb."
+ },
+ {
+  "id": "waldorf-stvc",
+  "maker": "Waldorf",
+  "model": "STVC",
+  "year": 2016,
+  "family": "string-machine",
+  "voices": 128,
+  "osc": "divide",
+  "filter": "none",
+  "types": [
+   "strings",
+   "pad"
+  ],
+  "character": {
+   "chorus": 0.6,
+   "detune": 4
+  },
+  "note": "String synthesizer plus 20-band vocoder with keyboard and gooseneck mic input, based on Streichfett."
+ },
+ {
+  "id": "waldorf-microwave-xt",
+  "maker": "Waldorf",
+  "model": "Microwave XT",
+  "year": 1998,
+  "family": "digital-poly",
+  "voices": 10,
+  "osc": "wavetable",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "bell",
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "detune": 6,
+   "bits": 12
+  },
+  "note": "Wavetable synth with digital filters, successor to the Microwave II; ten voices expandable to thirty."
+ },
+ {
+  "id": "studiologic-sledge",
+  "maker": "Studiologic",
+  "model": "Sledge",
+  "year": 2013,
+  "family": "digital-poly",
+  "voices": 24,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "pad",
+   "bass",
+   "brass"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.2
+  },
+  "note": "Virtual-analog keyboard with a Waldorf-designed engine: three oscillators (wavetable on 2.0), filter and arpeggiator."
+ },
+ {
+  "id": "pioneer-toraiz-as-1",
+  "maker": "Pioneer",
+  "model": "Toraiz AS-1",
+  "year": 2017,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "cem",
+  "types": [
+   "bass",
+   "lead",
+   "acid"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.4,
+   "reso": 1.6
+  },
+  "note": "Monophonic analog co-developed with Dave Smith: Prophet-6-style voice with slider pads, effects and sequencer."
+ },
+ {
+  "id": "alesis-andromeda-a6",
+  "maker": "Alesis",
+  "model": "Andromeda A6",
+  "year": 2000,
+  "family": "analog-poly",
+  "voices": 16,
+  "osc": "vco",
+  "filter": "ssm",
+  "types": [
+   "pad",
+   "brass",
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "detune": 9,
+   "drive": 0.3,
+   "reso": 1.3,
+   "chorus": 0.2
+  },
+  "note": "Sixteen-voice analog poly with two VCOs per voice, 2-pole multimode and 4-pole low-pass filters, and a deep mod matrix."
+ },
+ {
+  "id": "audiothingies-micromonsta-2",
+  "maker": "Audiothingies",
+  "model": "MicroMonsta 2",
+  "year": 2020,
+  "family": "digital-poly",
+  "voices": 6,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "bass",
+   "pad",
+   "pluck"
+  ],
+  "character": {
+   "detune": 8,
+   "drive": 0.3
+  },
+  "note": "Tiny six-voice digital synth with two oscillators plus sub, multimode filter, three envelopes and effects."
+ },
+ {
+  "id": "kodamo-essencefm",
+  "maker": "Kodamo",
+  "model": "EssenceFM",
+  "year": 2021,
+  "family": "fm",
+  "voices": 64,
+  "osc": "fm",
+  "filter": "digital",
+  "types": [
+   "keys",
+   "bell",
+   "pad",
+   "bass"
+  ],
+  "character": {
+   "bright": 0.6,
+   "chorus": 0.1
+  },
+  "note": "Eight-operator FM synth with 64-voice polyphony and four-part multitimbrality in a desktop/rack case."
+ },
+ {
+  "id": "nonlinear-labs-c15",
+  "maker": "Nonlinear Labs",
+  "model": "C15",
+  "year": 2017,
+  "family": "digital-poly",
+  "voices": 24,
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "keys",
+   "pad",
+   "acoustic",
+   "lead"
+  ],
+  "character": {
+   "bright": 0.5
+  },
+  "note": "Performance synth with a hybrid phase-modulation/physical-modelling engine built for continuous expressive control."
+ },
+ {
+  "id": "vermona-perfourmer-mkii",
+  "maker": "Vermona",
+  "model": "PerFourMer MKII",
+  "year": 2016,
+  "family": "analog-poly",
+  "voices": 4,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "pad",
+   "bass",
+   "lead",
+   "brass"
+  ],
+  "character": {
+   "detune": 10,
+   "drive": 0.3,
+   "reso": 1.4
+  },
+  "note": "Four-voice analog with one VCO and filter per voice, playable as four monos or one poly, no memory."
+ },
+ {
+  "id": "vermona-mono-lancet",
+  "maker": "Vermona",
+  "model": "Mono Lancet",
+  "year": 2009,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "bass",
+   "lead",
+   "acid"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.5,
+   "reso": 1.6
+  },
+  "note": "Compact analog mono synth with one VCO, resonant multimode filter and no memory."
+ },
+ {
+  "id": "critter-and-guitari-organelle-m",
+  "maker": "Critter & Guitari",
+  "model": "Organelle M",
+  "year": 2019,
+  "family": "digital-poly",
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "keys",
+   "pad",
+   "lofi",
+   "hybrid"
+  ],
+  "character": {
+   "chorus": 0.2
+  },
+  "note": "Pure Data computer instrument whose sound depends on the loaded patch (synths, samplers, effects), with wooden keys and speaker."
+ },
+ {
+  "id": "abstrakt-instruments-avalon",
+  "maker": "Abstrakt Instruments",
+  "model": "Avalon",
+  "year": 2021,
+  "family": "bass-machine",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "diode",
+  "types": [
+   "acid",
+   "bass"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.6,
+   "reso": 2.4
+  },
+  "note": "Analog 303-style acid bass with an extended sequencer and modern modulation."
+ },
+ {
+  "id": "cyclone-analogic-tt-303",
+  "maker": "Cyclone Analogic",
+  "model": "TT-303 Bass Bot",
+  "year": 2014,
+  "family": "bass-machine",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "diode",
+  "types": [
+   "acid",
+   "bass"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.4,
+   "reso": 2.4
+  },
+  "note": "Analog TB-303 clone with the classic sequencer and added MIDI features."
+ },
+ {
+  "id": "arturia-polybrute-12",
+  "maker": "Arturia",
+  "model": "PolyBrute 12",
+  "year": 2023,
+  "family": "analog-poly",
+  "voices": 12,
+  "osc": "vco",
+  "filter": "steiner",
+  "types": [
+   "pad",
+   "brass",
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "detune": 9,
+   "drive": 0.35,
+   "reso": 1.4,
+   "chorus": 0.2
+  },
+  "note": "Twelve-voice analog with two VCOs per voice, Steiner-Parker and ladder filters, morphing between two sounds and FullTouch poly-pressure keys."
+ },
+ {
+  "id": "arturia-astrolab",
+  "maker": "Arturia",
+  "model": "AstroLab",
+  "year": 2024,
+  "family": "digital-poly",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "keys",
+   "pad",
+   "strings",
+   "brass"
+  ],
+  "character": {
+   "chorus": 0.2
+  },
+  "note": "Stage keyboard running Arturia's Analog Lab instrument engines (virtual-analog, sample, FM, piano and organ models) standalone."
+ },
+ {
+  "id": "arturia-minibrute-2s",
+  "maker": "Arturia",
+  "model": "MiniBrute 2S",
+  "year": 2018,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "steiner",
+  "types": [
+   "bass",
+   "lead",
+   "acid"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.5,
+   "reso": 1.8
+  },
+  "note": "Desktop MiniBrute 2 voice (Steiner-Parker filter, Brute Factor) with a pad-based sequencer."
+ },
+ {
+  "id": "asm-hydrasynth-deluxe",
+  "maker": "ASM",
+  "model": "Hydrasynth Deluxe",
+  "year": 2021,
+  "family": "digital-poly",
+  "voices": 16,
+  "osc": "wavetable",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "lead",
+   "bass",
+   "bell"
+  ],
+  "character": {
+   "detune": 6,
+   "chorus": 0.1
+  },
+  "note": "Sixteen-voice, multitimbral (up to four parts) version of the Hydrasynth wavetable engine with poly aftertouch keys."
+ },
+ {
+  "id": "elektron-digitone-ii",
+  "maker": "Elektron",
+  "model": "Digitone II",
+  "year": 2024,
+  "family": "fm",
+  "voices": 16,
+  "osc": "fm",
+  "filter": "digital",
+  "types": [
+   "bass",
+   "keys",
+   "bell",
+   "pad"
+  ],
+  "character": {
+   "bright": 0.6,
+   "chorus": 0.1
+  },
+  "note": "Sixteen-track successor to Digitone with FM and additional machines (wavetone, swarm, etc.), multimode filters and sequencer."
+ },
+ {
+  "id": "elektron-digitone-keys",
+  "maker": "Elektron",
+  "model": "Digitone Keys",
+  "year": 2020,
+  "family": "fm",
+  "voices": 8,
+  "osc": "fm",
+  "filter": "digital",
+  "types": [
+   "bass",
+   "keys",
+   "bell",
+   "pad"
+  ],
+  "character": {
+   "bright": 0.6,
+   "chorus": 0.1
+  },
+  "note": "Keyboard Digitone: the same 8-voice four-operator FM engine with multimode filters and a four-track sequencer."
+ },
+ {
+  "id": "gamechanger-audio-motor-synth",
+  "maker": "Gamechanger Audio",
+  "model": "Motor Synth",
+  "year": 2020,
+  "family": "analog-poly",
+  "voices": 4,
+  "osc": "electromech",
+  "filter": "ota",
+  "types": [
+   "lead",
+   "pad",
+   "efm",
+   "bass"
+  ],
+  "character": {
+   "detune": 12,
+   "drive": 0.4,
+   "reso": 1.2
+  },
+  "note": "Electromechanical synth: eight spinning electric motors read by pickups act as oscillators (two per voice), into analog filters."
+ },
+ {
+  "id": "gamechanger-audio-motor-synth-mkii",
+  "maker": "Gamechanger Audio",
+  "model": "Motor Synth MKII",
+  "year": 2022,
+  "family": "analog-poly",
+  "voices": 4,
+  "osc": "electromech",
+  "filter": "ota",
+  "types": [
+   "lead",
+   "pad",
+   "efm",
+   "bass"
+  ],
+  "character": {
+   "detune": 12,
+   "drive": 0.4,
+   "reso": 1.2
+  },
+  "note": "Electromechanical synth: eight spinning electric motors read by pickups act as oscillators (two per voice), into analog filters."
+ },
+ {
+  "id": "polyend-synth",
+  "maker": "Polyend",
+  "model": "Synth",
+  "year": 2023,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "lead",
+   "bass",
+   "pluck"
+  ],
+  "character": {
+   "detune": 6,
+   "chorus": 0.2
+  },
+  "note": "Three-part multi-engine digital synth (VA, wavetable, FM, physical modelling and more) with a grid keyboard."
+ },
+ {
+  "id": "1010music-lemondrop",
+  "maker": "1010music",
+  "model": "Lemondrop",
+  "year": 2021,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "hybrid",
+   "lofi"
+  ],
+  "character": {
+   "chorus": 0.2
+  },
+  "note": "Granular synth in the nanobox format: grains from loaded samples, two LFOs, filter and effects, touchscreen."
+ },
+ {
+  "id": "1010music-fireball",
+  "maker": "1010music",
+  "model": "Fireball",
+  "year": 2022,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "wavetable",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "lead",
+   "bass",
+   "bell"
+  ],
+  "character": {
+   "chorus": 0.2
+  },
+  "note": "Wavetable/sample synth in the nanobox format with touchscreen, filter and effects."
+ },
+ {
+  "id": "make-noise-strega",
+  "maker": "Make Noise",
+  "model": "Strega",
+  "year": 2021,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "none",
+  "types": [
+   "pad",
+   "efm",
+   "lofi"
+  ],
+  "character": {
+   "drive": 0.5,
+   "decay": 5
+  },
+  "note": "Experimental tone-and-texture instrument: an analog oscillator and filter into a 'Time Mangler' delay with patchable chaos.",
+  "midi": false
+ },
+ {
+  "id": "bastl-instruments-kastle-2",
+  "maker": "Bastl Instruments",
+  "model": "Kastle 2",
+  "year": 2023,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "digital",
+  "filter": "svf",
+  "types": [
+   "lofi",
+   "efm",
+   "lead"
+  ],
+  "character": {
+   "bits": 8,
+   "drive": 0.4
+  },
+  "note": "Pocket mini-modular with digital oscillator/wavefolding modes and patch points, battery powered.",
+  "midi": false
+ },
+ {
+  "id": "bastl-instruments-softpop-sp2",
+  "maker": "Bastl Instruments",
+  "model": "Softpop SP2",
+  "year": 2019,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "svf",
+  "types": [
+   "lofi",
+   "efm",
+   "lead"
+  ],
+  "character": {
+   "drive": 0.6,
+   "reso": 2.0
+  },
+  "note": "Patchable analog noise/drone synth with a chaotic oscillator, aggressive filter and sequencer.",
+  "midi": false
+ },
+ {
+  "id": "pittsburgh-modular-taiga",
+  "maker": "Pittsburgh Modular",
+  "model": "Taiga",
+  "year": 2023,
+  "family": "analog-mono",
+  "voices": 3,
+  "osc": "vco",
+  "filter": "svf",
+  "types": [
+   "bass",
+   "lead",
+   "efm"
+  ],
+  "character": {
+   "drive": 0.4,
+   "reso": 1.4
+  },
+  "note": "Three-oscillator paraphonic semi-modular analog with Pittsburgh's filter and Dynamics Controller (low-pass gate mode) and MIDI-to-CV."
+ },
+ {
+  "id": "pittsburgh-modular-microvolt-3900",
+  "maker": "Pittsburgh Modular",
+  "model": "Microvolt 3900",
+  "year": 2020,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "svf",
+  "types": [
+   "bass",
+   "lead",
+   "efm"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.4,
+   "reso": 1.4
+  },
+  "note": "Compact semi-modular analog mono with a complex oscillator, multimode filter and MIDI."
+ },
+ {
+  "id": "pittsburgh-modular-lifeforms-sv-1",
+  "maker": "Pittsburgh Modular",
+  "model": "Lifeforms SV-1",
+  "year": 2017,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "svf",
+  "types": [
+   "bass",
+   "lead",
+   "efm"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.4,
+   "reso": 1.4
+  },
+  "note": "Semi-modular analog mono with dual oscillators, multimode filter and built-in MIDI-to-CV."
+ },
+ {
+  "id": "clavia-nord-wave-2",
+  "maker": "Clavia",
+  "model": "Nord Wave 2",
+  "year": 2020,
+  "family": "digital-poly",
+  "voices": 48,
+  "osc": "wavetable",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "keys",
+   "lead",
+   "strings"
+  ],
+  "character": {
+   "detune": 6,
+   "chorus": 0.25
+  },
+  "note": "Performance synth with four layers combining virtual-analog, wavetable, FM and sample oscillators."
+ },
+ {
+  "id": "clavia-nord-lead-3",
+  "maker": "Clavia",
+  "model": "Nord Lead 3",
+  "year": 2001,
+  "family": "digital-poly",
+  "voices": 24,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "lead",
+   "pad",
+   "bass",
+   "pluck"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.2
+  },
+  "note": "Virtual-analog with four slots, LED-ring encoders and FM/sync-capable oscillators."
+ }
+]

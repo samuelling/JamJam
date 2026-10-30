@@ -1,0 +1,1178 @@
+[
+ {
+  "id": "sequential-prophet-5-rev4",
+  "maker": "Sequential",
+  "model": "Prophet-5 Rev4",
+  "year": 2020,
+  "family": "analog-poly",
+  "voices": 5,
+  "osc": "vco",
+  "filter": "cem",
+  "types": [
+   "brass",
+   "pad",
+   "keys",
+   "lead"
+  ],
+  "character": {
+   "detune": 8,
+   "reso": 1.2,
+   "bright": 0.6,
+   "drive": 0.15
+  },
+  "note": "Reissue with a Vintage knob and a switch between Rev1/2 (SSM) and Rev3 (Curtis) filters; desktop module folded in."
+ },
+ {
+  "id": "sequential-prophet-10-rev4",
+  "maker": "Sequential",
+  "model": "Prophet-10 Rev4",
+  "year": 2020,
+  "family": "analog-poly",
+  "voices": 10,
+  "osc": "vco",
+  "filter": "cem",
+  "types": [
+   "pad",
+   "brass",
+   "strings",
+   "keys"
+  ],
+  "character": {
+   "detune": 8,
+   "reso": 1.2,
+   "bright": 0.6,
+   "chorus": 0.1
+  },
+  "note": "Ten-voice Prophet-5 Rev4 with the same Rev1/2-Rev3 filter switch; desktop module folded in."
+ },
+ {
+  "id": "sequential-trigon-6",
+  "maker": "Sequential",
+  "model": "Trigon-6",
+  "year": 2022,
+  "family": "analog-poly",
+  "voices": 6,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "brass",
+   "bass",
+   "lead",
+   "pad"
+  ],
+  "character": {
+   "detune": 8,
+   "drive": 0.4,
+   "reso": 1.6
+  },
+  "note": "Three VCOs per voice into a 4-pole transistor ladder filter; desktop module folded in."
+ },
+ {
+  "id": "sequential-fourm",
+  "maker": "Sequential",
+  "model": "Fourm",
+  "year": 2025,
+  "family": "analog-poly",
+  "voices": 4,
+  "osc": "vco",
+  "filter": "cem",
+  "types": [
+   "bass",
+   "lead",
+   "brass",
+   "pluck"
+  ],
+  "character": {
+   "detune": 7,
+   "drive": 0.3,
+   "reso": 1.4
+  },
+  "note": "Compact four-voice poly drawing on the Pro-One, two VCOs per voice and a polyphonic-aftertouch keybed."
+ },
+ {
+  "id": "dave-smith-instruments-prophet-08",
+  "maker": "Dave Smith Instruments",
+  "model": "Prophet '08",
+  "year": 2007,
+  "family": "analog-poly",
+  "voices": 8,
+  "osc": "dco",
+  "filter": "cem",
+  "types": [
+   "pad",
+   "brass",
+   "strings",
+   "keys"
+  ],
+  "character": {
+   "detune": 6,
+   "reso": 1.2,
+   "chorus": 0.1
+  },
+  "note": "Eight-voice bi-timbral poly with Curtis 2/4-pole low-pass filters; desktop module and Special Edition folded in."
+ },
+ {
+  "id": "dave-smith-instruments-mopho-keyboard",
+  "maker": "Dave Smith Instruments",
+  "model": "Mopho Keyboard",
+  "year": 2010,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "dco",
+  "filter": "cem",
+  "types": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "character": {
+   "sub": 0.4,
+   "drive": 0.3,
+   "reso": 1.4
+  },
+  "note": "Keyboard Mopho with two sub-oscillators and a Curtis low-pass; Mopho SE (same engine, more knobs) folded in."
+ },
+ {
+  "id": "dave-smith-instruments-mopho-x4",
+  "maker": "Dave Smith Instruments",
+  "model": "Mopho x4",
+  "year": 2011,
+  "family": "analog-poly",
+  "voices": 4,
+  "osc": "dco",
+  "filter": "cem",
+  "types": [
+   "pad",
+   "keys",
+   "bass",
+   "lead"
+  ],
+  "character": {
+   "detune": 6,
+   "sub": 0.3,
+   "drive": 0.2
+  },
+  "note": "Four-voice keyboard poly built from Mopho voices with Curtis low-pass filters."
+ },
+ {
+  "id": "dave-smith-instruments-poly-evolver",
+  "maker": "Dave Smith Instruments",
+  "model": "Poly Evolver",
+  "year": 2004,
+  "family": "analog-poly",
+  "voices": 4,
+  "osc": "dco",
+  "filter": "cem",
+  "types": [
+   "pad",
+   "lead",
+   "bass",
+   "lofi"
+  ],
+  "character": {
+   "detune": 5,
+   "drive": 0.4,
+   "reso": 1.5
+  },
+  "note": "Four Evolver voices (analog and digital oscillators, Curtis-style low-pass); rack (2004) and Poly Evolver Keyboard (2005) folded together."
+ },
+ {
+  "id": "dave-smith-instruments-mono-evolver-keyboard",
+  "maker": "Dave Smith Instruments",
+  "model": "Mono Evolver Keyboard",
+  "year": 2005,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "dco",
+  "filter": "cem",
+  "types": [
+   "lead",
+   "bass",
+   "pad"
+  ],
+  "character": {
+   "drive": 0.4,
+   "reso": 1.5,
+   "detune": 4
+  },
+  "note": "Keyboard version of the mono Evolver (analog plus digital oscillators, stereo Curtis-style filter, sequencer)."
+ },
+ {
+  "id": "dave-smith-instruments-prophet-12",
+  "maker": "Dave Smith Instruments",
+  "model": "Prophet 12",
+  "year": 2013,
+  "family": "digital-poly",
+  "voices": 12,
+  "osc": "wavetable",
+  "filter": "ssm",
+  "types": [
+   "pad",
+   "keys",
+   "bell",
+   "strings"
+  ],
+  "character": {
+   "detune": 5,
+   "chorus": 0.2,
+   "reso": 1.3,
+   "bright": 0.6
+  },
+  "note": "Digital wavetable oscillators into analog SSM-style 4-pole low-pass and 2-pole high-pass filters; desktop module (2014) folded in."
+ },
+ {
+  "id": "dave-smith-instruments-pro-2",
+  "maker": "Dave Smith Instruments",
+  "model": "Pro 2",
+  "year": 2014,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "digital",
+  "filter": "ssm",
+  "types": [
+   "bass",
+   "lead",
+   "pluck",
+   "brass"
+  ],
+  "character": {
+   "drive": 0.4,
+   "sub": 0.3,
+   "reso": 1.5
+  },
+  "note": "Mono hybrid: four digital oscillators into SSM-style 4-pole and Sallen-Key 2-pole analog filters, with a paraphonic mode."
+ },
+ {
+  "id": "dave-smith-instruments-tempest",
+  "maker": "Dave Smith Instruments",
+  "model": "Tempest",
+  "year": 2011,
+  "family": "drum-machine",
+  "osc": "hybrid-drum",
+  "filter": "none",
+  "types": [
+   "hybrid",
+   "808",
+   "lofi"
+  ],
+  "character": {
+   "kick.decay": 0.5,
+   "snare.snap": 0.6
+  },
+  "note": "Analog drum machine co-designed with Roger Linn: six analog voices with analog and digital oscillators and Curtis filters."
+ },
+ {
+  "id": "sequential-prophet-vs",
+  "maker": "Sequential",
+  "model": "Prophet VS",
+  "year": 1986,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "wavetable",
+  "filter": "cem",
+  "types": [
+   "pad",
+   "bell",
+   "strings",
+   "keys"
+  ],
+  "character": {
+   "bits": 12,
+   "detune": 4,
+   "reso": 1,
+   "bright": 0.5
+  },
+  "note": "Vector synthesis: joystick mixes four digital waves per voice into analog Curtis filters; VS Rack folded in."
+ },
+ {
+  "id": "sequential-prophet-t8",
+  "maker": "Sequential",
+  "model": "Prophet T8",
+  "year": 1983,
+  "family": "analog-poly",
+  "voices": 8,
+  "osc": "vco",
+  "filter": "cem",
+  "types": [
+   "pad",
+   "brass",
+   "strings",
+   "keys"
+  ],
+  "character": {
+   "detune": 7,
+   "reso": 1.1,
+   "chorus": 0.1
+  },
+  "note": "Flagship 76-key poly with weighted, velocity- and pressure-sensitive keys, two VCOs per voice."
+ },
+ {
+  "id": "sequential-max",
+  "maker": "Sequential",
+  "model": "Max",
+  "year": 1984,
+  "family": "analog-poly",
+  "voices": 6,
+  "osc": "vco",
+  "filter": "cem",
+  "types": [
+   "keys",
+   "brass",
+   "bass",
+   "pad"
+  ],
+  "character": {
+   "detune": 6,
+   "reso": 1,
+   "bright": 0.5
+  },
+  "note": "Low-cost six-voice sibling of the Six-Trak with preset sounds; editing needs an external MIDI programmer."
+ },
+ {
+  "id": "sequential-multi-trak",
+  "maker": "Sequential",
+  "model": "Multi-Trak",
+  "year": 1985,
+  "family": "analog-poly",
+  "voices": 6,
+  "osc": "vco",
+  "filter": "cem",
+  "types": [
+   "keys",
+   "brass",
+   "bass",
+   "pad"
+  ],
+  "character": {
+   "detune": 6,
+   "reso": 1,
+   "bright": 0.5
+  },
+  "note": "Six-Trak successor with velocity keys, multitimbral voices and a built-in sequencer."
+ },
+ {
+  "id": "sequential-split-eight",
+  "maker": "Sequential",
+  "model": "Split-Eight",
+  "year": 1985,
+  "family": "analog-poly",
+  "voices": 8,
+  "osc": "vco",
+  "filter": "cem",
+  "types": [
+   "keys",
+   "brass",
+   "bass",
+   "pad"
+  ],
+  "character": {
+   "detune": 6,
+   "reso": 1,
+   "bright": 0.5
+  },
+  "note": "Eight-voice budget poly with split and stack modes, sold alongside the Six-Trak line."
+ },
+ {
+  "id": "sequential-prophet-2000",
+  "maker": "Sequential",
+  "model": "Prophet 2000",
+  "year": 1985,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "sample",
+  "filter": "cem",
+  "types": [
+   "keys",
+   "strings",
+   "pad",
+   "lofi"
+  ],
+  "character": {
+   "bits": 12,
+   "reso": 0.8
+  },
+  "note": "Eight-voice 12-bit sampler with analog Curtis filters; Prophet 2002 rack folded in."
+ },
+ {
+  "id": "sequential-studio-440",
+  "maker": "Sequential",
+  "model": "Studio 440",
+  "year": 1987,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "lofi",
+   "hybrid"
+  ],
+  "character": {
+   "bits": 12
+  },
+  "note": "Sampling drum machine and sequencer with 12-bit sampling; the twin plays synthesized drums."
+ },
+ {
+  "id": "oberheim-teo-5",
+  "maker": "Oberheim",
+  "model": "TEO-5",
+  "year": 2024,
+  "family": "analog-poly",
+  "voices": 5,
+  "osc": "vco",
+  "filter": "sem",
+  "types": [
+   "brass",
+   "pad",
+   "lead",
+   "strings"
+  ],
+  "character": {
+   "detune": 9,
+   "chorus": 0.2,
+   "reso": 1.2
+  },
+  "note": "Five-voice compact Oberheim with two VCOs and a 2-pole SEM state-variable filter; desktop module (2025) folded in."
+ },
+ {
+  "id": "oberheim-matrix-6",
+  "maker": "Oberheim",
+  "model": "Matrix-6",
+  "year": 1986,
+  "family": "analog-poly",
+  "voices": 6,
+  "osc": "dco",
+  "filter": "cem",
+  "types": [
+   "pad",
+   "brass",
+   "strings",
+   "bass"
+  ],
+  "character": {
+   "detune": 5,
+   "chorus": 0.2,
+   "reso": 1
+  },
+  "note": "Six-voice CEM3396-based poly with matrix modulation; Matrix-6R rack folded in."
+ },
+ {
+  "id": "oberheim-eight-voice",
+  "maker": "Oberheim",
+  "model": "Eight Voice",
+  "year": 1977,
+  "family": "analog-poly",
+  "voices": 8,
+  "osc": "vco",
+  "filter": "sem",
+  "types": [
+   "brass",
+   "pad",
+   "strings",
+   "lead"
+  ],
+  "character": {
+   "detune": 14,
+   "reso": 1.2
+  },
+  "note": "Eight SEM modules under a polyphonic keyboard controller, each voice set by hand.",
+  "midi": false
+ },
+ {
+  "id": "oberheim-ob-1",
+  "maker": "Oberheim",
+  "model": "OB-1",
+  "year": 1978,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "sem",
+  "types": [
+   "lead",
+   "bass",
+   "brass"
+  ],
+  "character": {
+   "detune": 6,
+   "reso": 1.2
+  },
+  "note": "Early fully programmable monosynth with two VCOs and a 2-pole SEM-style filter.",
+  "midi": false
+ },
+ {
+  "id": "oberheim-ob-sx",
+  "maker": "Oberheim",
+  "model": "OB-SX",
+  "year": 1980,
+  "family": "analog-poly",
+  "voices": 6,
+  "osc": "vco",
+  "filter": "sem",
+  "types": [
+   "brass",
+   "pad",
+   "strings"
+  ],
+  "character": {
+   "detune": 10,
+   "chorus": 0.1,
+   "reso": 1
+  },
+  "note": "Preset-based stage poly using OB-X voice cards, sold in 4- and 6-voice versions.",
+  "midi": false
+ },
+ {
+  "id": "oberheim-ob-mx",
+  "maker": "Oberheim",
+  "model": "OB-Mx",
+  "year": 1994,
+  "family": "analog-poly",
+  "voices": 12,
+  "osc": "vco",
+  "filter": "sem",
+  "types": [
+   "bass",
+   "lead",
+   "brass",
+   "pad"
+  ],
+  "character": {
+   "detune": 8,
+   "drive": 0.3,
+   "reso": 1.4
+  },
+  "note": "Gibson-era analog designed with Don Buchla and Marion Systems: 2 to 12 voice cards, each with a 4-pole and a 2-pole multimode filter."
+ },
+ {
+  "id": "oberheim-ob-12",
+  "maker": "Oberheim",
+  "model": "OB-12",
+  "year": 2000,
+  "family": "digital-poly",
+  "voices": 12,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "pad",
+   "brass",
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.3,
+   "reso": 1
+  },
+  "note": "Virtual-analog made by Viscount under the Oberheim name, with a knob-per-function panel."
+ },
+ {
+  "id": "oberheim-ob3-2",
+  "maker": "Oberheim",
+  "model": "OB3²",
+  "year": 1999,
+  "family": "organ",
+  "osc": "tonewheel",
+  "filter": "none",
+  "types": [
+   "keys",
+   "lead"
+  ],
+  "character": {
+   "trem": 0.6,
+   "drive": 0.3
+  },
+  "note": "Viscount-built digital tonewheel organ module with drawbars and rotary simulation."
+ },
+ {
+  "id": "oberheim-two-voice-pro",
+  "maker": "Oberheim",
+  "model": "Two Voice Pro",
+  "year": 2015,
+  "family": "analog-poly",
+  "voices": 2,
+  "osc": "vco",
+  "filter": "sem",
+  "types": [
+   "brass",
+   "bass",
+   "lead"
+  ],
+  "character": {
+   "detune": 12,
+   "reso": 1.3
+  },
+  "note": "Tom Oberheim's reissue of the Two Voice: two SEM voices with MIDI and a step sequencer; the SEM reissue folds into the SEM entry."
+ },
+ {
+  "id": "moog-minimoog-voyager",
+  "maker": "Moog",
+  "model": "Minimoog Voyager",
+  "year": 2002,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "brass"
+  ],
+  "character": {
+   "drive": 0.5,
+   "reso": 1.8
+  },
+  "note": "Three-VCO Minimoog successor with dual ladder filters, presets and a touch surface; Performer, Select, Electric Blue, Signature and Rack (RME) editions folded in."
+ },
+ {
+  "id": "moog-minimoog-voyager-xl",
+  "maker": "Moog",
+  "model": "Minimoog Voyager XL",
+  "year": 2010,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "lead",
+   "bass",
+   "brass"
+  ],
+  "character": {
+   "drive": 0.5,
+   "reso": 1.8
+  },
+  "note": "61-key Voyager with a ribbon controller and a large patch bay of CV/mod jacks."
+ },
+ {
+  "id": "moog-minimoog-voyager-old-school",
+  "maker": "Moog",
+  "model": "Minimoog Voyager Old School",
+  "year": 2009,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "brass"
+  ],
+  "character": {
+   "drive": 0.5,
+   "reso": 1.8
+  },
+  "note": "Voyager sound engine without presets, LCD, touch surface or MIDI control.",
+  "midi": false
+ },
+ {
+  "id": "moog-little-phatty",
+  "maker": "Moog",
+  "model": "Little Phatty",
+  "year": 2006,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "character": {
+   "drive": 0.5,
+   "reso": 1.6
+  },
+  "note": "Two-VCO ladder mono with 100 presets, Bob Moog's last design; Tribute and Stage II (USB, 2010) editions folded in."
+ },
+ {
+  "id": "moog-slim-phatty",
+  "maker": "Moog",
+  "model": "Slim Phatty",
+  "year": 2010,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "character": {
+   "drive": 0.5,
+   "reso": 1.6
+  },
+  "note": "Rack/desktop Little Phatty with 100 presets and USB."
+ },
+ {
+  "id": "moog-sub-phatty",
+  "maker": "Moog",
+  "model": "Sub Phatty",
+  "year": 2013,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "character": {
+   "drive": 0.6,
+   "sub": 0.6,
+   "reso": 1.5
+  },
+  "note": "Two VCOs plus a sub oscillator into a multidrive ladder filter, 16 presets."
+ },
+ {
+  "id": "moog-sub-37",
+  "maker": "Moog",
+  "model": "Sub 37",
+  "year": 2014,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "brass",
+   "pluck"
+  ],
+  "character": {
+   "drive": 0.55,
+   "sub": 0.5,
+   "reso": 1.6
+  },
+  "note": "Paraphonic-capable two-VCO ladder mono with 256 presets; Tribute Edition folded in; predecessor of the Subsequent 37."
+ },
+ {
+  "id": "moog-sirin",
+  "maker": "Moog",
+  "model": "Sirin",
+  "year": 2019,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead"
+  ],
+  "character": {
+   "drive": 0.5,
+   "reso": 1.5
+  },
+  "note": "Desktop analog based on the Minitaur's two-VCO ladder engine, with 128 presets stored via Moog's editor."
+ },
+ {
+  "id": "moog-taurus-3",
+  "maker": "Moog",
+  "model": "Taurus 3",
+  "year": 2010,
+  "family": "bass-machine",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass"
+  ],
+  "character": {
+   "drive": 0.4,
+   "sub": 0.5,
+   "reso": 1.2
+  },
+  "note": "Reissue of the Taurus bass pedals with two VCOs, ladder filter, presets, MIDI and USB."
+ },
+ {
+  "id": "moog-taurus-ii",
+  "maker": "Moog",
+  "model": "Taurus II",
+  "year": 1981,
+  "family": "bass-machine",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass"
+  ],
+  "character": {
+   "drive": 0.4,
+   "reso": 1.2
+  },
+  "note": "Rogue-based 18-pedal bass synth that replaced the original Taurus.",
+  "midi": false
+ },
+ {
+  "id": "moog-werkstatt-01",
+  "maker": "Moog",
+  "model": "Werkstatt-01",
+  "year": 2014,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "acid"
+  ],
+  "character": {
+   "reso": 1.8,
+   "drive": 0.3
+  },
+  "note": "Build-it-yourself one-VCO patchable mono with a ladder filter, first given out at Moogfest.",
+  "midi": false
+ },
+ {
+  "id": "moog-mavis",
+  "maker": "Moog",
+  "model": "Mavis",
+  "year": 2023,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "acid"
+  ],
+  "character": {
+   "reso": 1.6,
+   "drive": 0.3
+  },
+  "note": "Build-it-yourself 44HP semi-modular with one VCO and a 4-pole ladder filter.",
+  "midi": false
+ },
+ {
+  "id": "moog-subharmonicon",
+  "maker": "Moog",
+  "model": "Subharmonicon",
+  "year": 2020,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "pad",
+   "pluck"
+  ],
+  "character": {
+   "drive": 0.4,
+   "reso": 1.2
+  },
+  "note": "Polyrhythmic semi-modular: two VCOs each with two subharmonic oscillators into one ladder filter."
+ },
+ {
+  "id": "moog-labyrinth",
+  "maker": "Moog",
+  "model": "Labyrinth",
+  "year": 2024,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "svf",
+  "types": [
+   "pluck",
+   "bass",
+   "lead"
+  ],
+  "character": {
+   "drive": 0.3,
+   "reso": 0.8
+  },
+  "note": "Generative dual-sequencer semi-modular with two VCOs, a wavefolder and a state-variable filter."
+ },
+ {
+  "id": "moog-spectravox",
+  "maker": "Moog",
+  "model": "Spectravox",
+  "year": 2024,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "svf",
+  "types": [
+   "pad",
+   "lead",
+   "lofi"
+  ],
+  "character": {
+   "reso": 1,
+   "bright": 0.6
+  },
+  "note": "Semi-modular analog vocoder and spectral filter bank with its own oscillator and noise source."
+ },
+ {
+  "id": "moog-messenger",
+  "maker": "Moog",
+  "model": "Messenger",
+  "year": 2025,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "pluck",
+   "acid"
+  ],
+  "character": {
+   "drive": 0.4,
+   "sub": 0.4,
+   "reso": 1.6
+  },
+  "note": "32-key mono with two wavefolding VCOs, a sub oscillator, a multimode ladder filter and 256 presets."
+ },
+ {
+  "id": "moog-sonic-six",
+  "maker": "Moog",
+  "model": "Sonic Six",
+  "year": 1972,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "drive": 0.3,
+   "reso": 1.4
+  },
+  "note": "Portable duophonic briefcase synth from the Musonics design, sold by Moog.",
+  "midi": false
+ },
+ {
+  "id": "moog-satellite",
+  "maker": "Moog",
+  "model": "Satellite",
+  "year": 1974,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "lead",
+   "bass",
+   "brass"
+  ],
+  "character": {
+   "reso": 1
+  },
+  "note": "Preset-tab monosynth built to sit on top of a home organ.",
+  "midi": false
+ },
+ {
+  "id": "moog-micromoog",
+  "maker": "Moog",
+  "model": "Micromoog",
+  "year": 1975,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead"
+  ],
+  "character": {
+   "sub": 0.5,
+   "drive": 0.3,
+   "reso": 1.5
+  },
+  "note": "Single-VCO mono with a sub-octave and ribbon controller.",
+  "midi": false
+ },
+ {
+  "id": "moog-minitmoog",
+  "maker": "Moog",
+  "model": "Minitmoog",
+  "year": 1975,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "reso": 1.2
+  },
+  "note": "Budget preset mono with a few adjustable controls.",
+  "midi": false
+ },
+ {
+  "id": "moog-multimoog",
+  "maker": "Moog",
+  "model": "Multimoog",
+  "year": 1978,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "lead",
+   "bass",
+   "brass"
+  ],
+  "character": {
+   "drive": 0.4,
+   "reso": 1.6
+  },
+  "note": "Two-VCO mono with an aftertouch keyboard, a step up from the Micromoog.",
+  "midi": false
+ },
+ {
+  "id": "moog-opus-3",
+  "maker": "Moog",
+  "model": "Opus 3",
+  "year": 1980,
+  "family": "string-machine",
+  "osc": "divide",
+  "filter": "ladder",
+  "types": [
+   "strings",
+   "pad",
+   "brass"
+  ],
+  "character": {
+   "chorus": 0.4
+  },
+  "note": "Divide-down string/organ/brass ensemble with a shared ladder filter and envelope.",
+  "midi": false
+ },
+ {
+  "id": "moog-liberation",
+  "maker": "Moog",
+  "model": "Liberation",
+  "year": 1980,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "drive": 0.3,
+   "reso": 1.4
+  },
+  "note": "Shoulder-strap keytar with two VCOs and a polyphonic organ section on a cable to a ground unit.",
+  "midi": false
+ },
+ {
+  "id": "moog-concertmate-mg-1",
+  "maker": "Moog",
+  "model": "Concertmate MG-1",
+  "year": 1981,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "keys"
+  ],
+  "character": {
+   "drive": 0.3,
+   "reso": 1.3
+  },
+  "note": "Rogue-based mono plus a divide-down polyphonic section, sold by RadioShack under the Realistic name.",
+  "midi": false
+ },
+ {
+  "id": "moog-system-35",
+  "maker": "Moog",
+  "model": "System 35",
+  "year": 2014,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "brass"
+  ],
+  "character": {
+   "drive": 0.5,
+   "detune": 6,
+   "reso": 1.6
+  },
+  "note": "2014 hand-built reissue of the 1970s System 35 modular, sold as a complete instrument.",
+  "midi": false
+ },
+ {
+  "id": "moog-model-55",
+  "maker": "Moog",
+  "model": "Model 55",
+  "year": 2014,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "brass"
+  ],
+  "character": {
+   "drive": 0.5,
+   "detune": 6,
+   "reso": 1.6
+  },
+  "note": "2014 hand-built reissue of the largest 1970s Moog modular, sold as a complete instrument.",
+  "midi": false
+ },
+ {
+  "id": "moog-model-15",
+  "maker": "Moog",
+  "model": "Model 15",
+  "year": 2015,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "brass"
+  ],
+  "character": {
+   "drive": 0.5,
+   "detune": 6,
+   "reso": 1.6
+  },
+  "note": "2015 hand-built reissue of the compact Model 15 modular, sold as a complete instrument.",
+  "midi": false
+ },
+ {
+  "id": "moog-model-10",
+  "maker": "Moog",
+  "model": "Model 10",
+  "year": 2017,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "brass"
+  ],
+  "character": {
+   "drive": 0.5,
+   "detune": 6,
+   "reso": 1.6
+  },
+  "note": "2017 reissue of the compact 1971 Model 10 modular, sold as a complete instrument.",
+  "midi": false
+ }
+]

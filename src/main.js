@@ -2120,6 +2120,7 @@ function renderHardware() {
   });
   $('#hwFilters').replaceChildren(...HW_FILTERS.map(([id, label]) => h('button', { class: 'page' + ((S.hwFilter || 'all') === id ? ' on' : ''), onclick: () => { S.hwFilter = id; renderHardware(); } }, label)));
   setText($('#hwCount'), `${units.length} of ${engine.hardware.hardware.length}`);
+  setText($('#hwHead'), `All ${engine.hardware.hardware.length} units: find yours, see its twins`);
   gear.render($('#gearMine'));
   $('#hwList').replaceChildren(...units.map((u) => h('button', { class: u.id === hwPick ? 'on' : '', onclick: () => { hwPick = u.id; renderHardware(); } },
     u.model, S.owned.has(u.id) ? h('span', { class: 'mine', title: 'You have one' }, ' ●') : null,

@@ -1,0 +1,1034 @@
+{
+ "teenage-engineering-ep-133": {
+  "steps": [
+   "In the EP-133's system settings choose MIDI channel 111-126 (ch.1-16), or 110 to receive all and send on ch.1.",
+   "Set MIDI clock: 102 (out) if it leads the band, 101 (in) to follow the app, 100 for off.",
+   "Connect by USB-C or the 3.5 mm MIDI jacks (with a TRS adaptor).",
+   "Only the FX knobs and a few controls send CC; most sound edits aren't mirrored.",
+   "Samples aren't sent over MIDI: load the same sounds with TE's sample tool on both units."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/guides/ep-133/system"
+  ]
+ },
+ "teenage-engineering-ep-1320": {
+  "steps": [
+   "In the EP-1320's system settings choose MIDI channel 111-126 (ch.1-16), or 110 to receive all and send on ch.1.",
+   "Set MIDI clock: 102 (out) if it leads the band, 101 (in) to follow the app, 100 for off.",
+   "Connect by USB-C or the 3.5 mm MIDI jacks (with a TRS adaptor).",
+   "Only the FX knobs and a few controls send CC; most sound edits aren't mirrored.",
+   "Samples aren't sent over MIDI: load the same sounds with TE's sample tool on both units."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://teenage.engineering/guides/ep-133/system"
+  ]
+ },
+ "teenage-engineering-ep-40": {
+  "steps": [
+   "In the EP-40's system settings choose MIDI channel 111-126 (ch.1-16), or 110 to receive all and send on ch.1.",
+   "Set MIDI clock: 102 (out) if it leads the band, 101 (in) to follow the app, 100 for off.",
+   "Connect by USB-C or the 3.5 mm MIDI jacks (with a TRS adaptor).",
+   "Only the FX knobs and a few controls send CC; most sound edits aren't mirrored.",
+   "Samples aren't sent over MIDI: load the same sounds with TE's sample tool on both units."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://teenage.engineering/guides/ep-133/system"
+  ]
+ },
+ "teenage-engineering-po-12-rhythm": {
+  "steps": [
+   "Pocket Operators have no MIDI, so the app can't hear or control them directly.",
+   "Plug the PO's headphone output into your audio interface so bandmates hear it.",
+   "To sync, pick a sync mode (SY0-SY5: hold the key your PO guide names, then press bpm repeatedly): the pulse rides the left audio channel.",
+   "Bandmates hear a drum twin; there is nothing to share over MIDI."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/guides/po-24/en"
+  ]
+ },
+ "teenage-engineering-po-32-tonic": {
+  "steps": [
+   "Pocket Operators have no MIDI, so the app can't hear or control them directly.",
+   "Plug the PO's headphone output into your audio interface so bandmates hear it.",
+   "To sync, pick a sync mode (SY0-SY5: hold the key your PO guide names, then press bpm repeatedly): the pulse rides the left audio channel.",
+   "Bandmates hear a drum twin; there is nothing to share over MIDI."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/guides/po-24/en"
+  ]
+ },
+ "teenage-engineering-po-33-ko": {
+  "steps": [
+   "Pocket Operators have no MIDI, so the app can't hear or control them directly.",
+   "Plug the PO's headphone output into your audio interface so bandmates hear it.",
+   "To sync, pick a sync mode (SY0-SY5: hold the key your PO guide names, then press bpm repeatedly): the pulse rides the left audio channel.",
+   "Bandmates hear a drum twin; there is nothing to share over MIDI."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/guides/po-24/en"
+  ]
+ },
+ "elektron-digitakt-ii": {
+  "steps": [
+   "Press [SETTINGS], open MIDI CONFIG > CHANNELS and set AUTO CHANNEL and the TRACK 1-16 CHANNEL values.",
+   "In MIDI CONFIG > PORT CONFIG set PARAM OUTPUT to NRPN, ENCODER DEST to INT + EXT, and turn RECEIVE CC/NRPN on.",
+   "Set INPUT FROM and OUTPUT TO to USB for a USB cable, or MIDI for 5-pin cables.",
+   "If it leads the band, turn CLOCK SEND and TRANSPORT SEND on in MIDI CONFIG > SYNC; otherwise turn CLOCK RECEIVE on.",
+   "Samples are not sent over MIDI: copy the same samples to both units with Elektron Transfer first."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://elektron.se/wp-content/uploads/2026/10/Digitakt-2-User-Manual_ENG_OS1.17_260930.pdf"
+  ]
+ },
+ "elektron-analog-rytm-mkii": {
+  "steps": [
+   "Press [GLOBAL SETTINGS], open MIDI CONFIG > CHANNELS and set AUTO CHANNEL (and TRACK 1-12 channels if you want them).",
+   "In MIDI CONFIG > PORT CONFIG set PARAM OUTPUT to NRPN, ENCODER DEST to INT + EXT, and turn RECEIVE CC/NRPN on.",
+   "Set INPUT FROM and OUTPUT TO to USB if you connect by USB, or MIDI for 5-pin cables.",
+   "It is usually the clock master: in MIDI CONFIG > SYNC turn CLOCK SEND and TRANSPORT SEND on, or CLOCK RECEIVE if the app leads.",
+   "Load the same samples into the same slots on both units: kits only point at samples."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://elektron.se/wp-content/uploads/2024/09/AnalogRytmMKIIUserManual_ENG_OS1.70_231122.pdf"
+  ]
+ },
+ "elektron-tonverk": {
+  "steps": [
+   "Press [SETTINGS], open MIDI CONFIG > CHANNELS and set AUTO CHANNEL; tracks 1-16 use channels matching their numbers.",
+   "In MIDI CONFIG > PORT CONFIG turn RECEIVE NOTES and RECEIVE CC on.",
+   "Set INPUT FROM and OUTPUT TO to USB for a USB cable, or MIDI for 5-pin cables.",
+   "If it leads, turn CLOCK SEND and TRANSPORT SEND on in MIDI CONFIG > SYNC; otherwise CLOCK RECEIVE.",
+   "Presets play your own samples: both players load the same sample packs before the jam."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://kmraudio.com/cdn/shop/files/Tonverk-User-Manual_ENG_OS1.0.0_250915.pdf"
+  ]
+ },
+ "erica-synths-perkons-hd-01": {
+  "steps": [
+   "Set the Perkons' MIDI channel(s) in its settings menu.",
+   "Turn on CC send and receive so knob moves are mirrored.",
+   "Use USB or the 5-pin MIDI jacks on both ends.",
+   "Choose whether it sends clock or follows the app."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "erica-synths-lxr-02": {
+  "steps": [
+   "Set the global and per-voice MIDI channels in the LXR-02's MIDI settings.",
+   "Turn on parameter send/receive so knob moves are mirrored.",
+   "Use USB or the 5-pin MIDI jacks on both ends.",
+   "Choose whether it sends clock or follows the app.",
+   "Both players load the same kit from SD card."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "erica-synths-hexdrums": {
+  "steps": [
+   "Set its MIDI channel in its settings.",
+   "Use the MIDI port you have on both ends.",
+   "Choose whether it sends clock or follows the app.",
+   "Bandmates hear an analog-drum twin; there is nothing to share."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sonicware-liven-lofi-12": {
+  "steps": [
+   "Open the Lofi-12's system/MIDI settings and set the MIDI channel.",
+   "Turn MIDI CC receive and send on so knob moves are mirrored.",
+   "Choose clock: internal if it leads, or external MIDI clock to follow the app.",
+   "Use the MIDI jacks (with the supplied adaptor if needed) on both ends."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sonicware-liven-bass-and-beats": {
+  "steps": [
+   "Open the Bass & Beats's system/MIDI settings and set the MIDI channel.",
+   "Turn MIDI CC receive and send on so knob moves are mirrored.",
+   "Choose clock: internal if it leads, or external MIDI clock to follow the app.",
+   "Use the MIDI jacks (with the supplied adaptor if needed) on both ends."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sonicware-smpltrek": {
+  "steps": [
+   "Open the SmplTrek's system/MIDI settings and set the MIDI channel.",
+   "Turn MIDI CC receive and send on so knob moves are mirrored.",
+   "Choose clock: internal if it leads, or external MIDI clock to follow the app.",
+   "Use the MIDI jacks (with the supplied adaptor if needed) on both ends."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sonicware-cydrums": {
+  "steps": [
+   "Open the CyDrums's system/MIDI settings and set the MIDI channel.",
+   "Turn MIDI CC receive and send on so knob moves are mirrored.",
+   "Choose clock: internal if it leads, or external MIDI clock to follow the app.",
+   "Use the MIDI jacks (with the supplied adaptor if needed) on both ends."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "polyend-play": {
+  "steps": [
+   "Open the Play's settings and set the MIDI channels for its sample tracks.",
+   "Set clock in or out: send if the Play leads, receive to follow the app.",
+   "Use USB-C or the TRS MIDI jacks (with the right adaptor) on both ends.",
+   "Samples aren't sent over MIDI: copy the same project to both microSD cards."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "polyend-play-plus": {
+  "steps": [
+   "Open the Play+'s settings and set the MIDI channels for its sample tracks.",
+   "Set clock in or out: send if the Play+ leads, receive to follow the app.",
+   "Use USB-C or the TRS MIDI jacks (with the right adaptor) on both ends.",
+   "Samples aren't sent over MIDI: copy the same project to both microSD cards."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "polyend-tracker-plus": {
+  "steps": [
+   "In the Tracker+'s MIDI settings set clock in or out and the channels you want.",
+   "Turn on receiving notes and CC if the app should play it.",
+   "Use USB-C or the TRS MIDI jacks on both ends.",
+   "Samples aren't sent over MIDI: copy the same project to both microSD cards."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "polyend-tracker-mini": {
+  "steps": [
+   "In the Tracker Mini's MIDI settings set clock in or out and the channels you want.",
+   "Turn on receiving notes and CC if the app should play it.",
+   "Use USB-C or the TRS MIDI jacks on both ends.",
+   "Samples aren't sent over MIDI: copy the same project to both microSD cards."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "1010music-blackbox": {
+  "steps": [
+   "In the Blackbox settings set MIDI channels for the pads you want mirrored.",
+   "Set clock: send if it leads, or receive MIDI clock to follow the app.",
+   "Use USB-C or the TRS MIDI jacks on both ends.",
+   "Samples aren't sent over MIDI: copy the same preset folder to both SD cards."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "1010music-nanobox-razzmatazz": {
+  "steps": [
+   "Set its MIDI channel and clock source in the system settings.",
+   "Use USB-C or the TRS MIDI jacks on both ends.",
+   "Both players load the same kit file before the jam."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "1010music-bento": {
+  "steps": [
+   "Set each track's MIDI channel in Bento's settings.",
+   "Set clock: send if it leads, or follow the app's clock.",
+   "Use USB-C or the TRS MIDI jacks on both ends.",
+   "Samples aren't sent over MIDI: copy the same project to both SD cards."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "torso-s-4": {
+  "steps": [
+   "Set each track's MIDI channel in the S-4's settings.",
+   "Set clock: send if it leads, or receive to follow the app.",
+   "Use USB-C or the TRS MIDI jacks on both ends.",
+   "Its sound depends on the audio you feed it and its samples: bandmates hear a twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-tr-1000": {
+  "steps": [
+   "Press [MENU], open SYSTEM > MIDI and set Pattern Ch (default 10) and Kit Ch (default 1).",
+   "In the same MIDI menu turn Tx Edit Data and Rx Edit Data ON so knob moves go out and come in as CC.",
+   "Turn Tx and RX Program Change ON if you want kit and pattern changes to follow.",
+   "Set Tempo Sync to INT if the TR-1000 leads the band, or Auto/MIDI/USB to follow the app's clock.",
+   "No SysEx: both players load the same kit (and samples) before jamming."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://files.kraftmusic.com/media/ownersmanual/Roland_TR-1000_Reference_Manual.pdf"
+  ]
+ },
+ "roland-tr-06": {
+  "steps": [
+   "Set the TR-06's MIDI channel to the one your app uses (see the owner's manual).",
+   "Knob moves go out and come in as CC messages; turn each knob once at the start to sync.",
+   "Pick one connection, USB (micro-B) or 5-pin MIDI, and use it on both ends.",
+   "If it leads the band, set it to send clock; otherwise let it follow incoming MIDI clock.",
+   "No SysEx, so kits can't be sent as a patch."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/TR-06_MIDI_Imple_Chart_eng01_W.pdf"
+  ]
+ },
+ "roland-tr-505": {
+  "steps": [
+   "Set the TR-505's MIDI channel to the app's channel (see the owner's manual).",
+   "Connect with 5-pin MIDI cables.",
+   "Choose whether it sends MIDI clock (as master) or follows the app's clock.",
+   "Sounds are fixed ROM samples: bandmates hear a lo-fi drum twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-cr-8000": {
+  "steps": [
+   "The CR-8000 has no MIDI, so the app can't hear or control it.",
+   "Plug its audio outputs into your audio interface.",
+   "Start it by hand in time with the band, or sync it with a trigger converter if you have one.",
+   "Bandmates hear an analog-drum twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-mc-101": {
+  "steps": [
+   "Hold [SHIFT] and press [FILTER], choose SYSTEM, then MIDI: set Track1-4 Ch to the channels the app uses.",
+   "In the same MIDI page set Sync Src to INT if it leads, or AUTO/MIDI/USB to follow the app.",
+   "Turn Sync Out (MIDI) or SyncOut USB on if it should send clock, start and stop.",
+   "Use USB or the TRS MIDI jacks on both ends; knob moves go out as CC.",
+   "No SysEx: share projects by copying them via SD card."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/MC-101_Reference_eng01_W.pdf"
+  ]
+ },
+ "roland-mv-1-verselab": {
+  "steps": [
+   "Open the system MIDI settings (see the parameter guide) and set each track's MIDI channel.",
+   "Choose the clock source: internal if the MV-1 leads, or follow MIDI/USB clock from the app.",
+   "Use USB or the 5-pin MIDI jacks, the same on both ends; knob moves go out as CC.",
+   "No SysEx: share songs and samples via SD card."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/MV-1_parameter_eng02_W.pdf"
+  ]
+ },
+ "roland-p-6": {
+  "steps": [
+   "Set the P-6's MIDI channel in its system settings (see the owner's manual).",
+   "Use USB-C or the TRS MIDI jacks with the right adaptor cable.",
+   "Set its MIDI Clock Sync so it either leads or follows the app; a cable in SYNC IN overrides MIDI clock.",
+   "Samples aren't sent over MIDI: copy the same samples to both units."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/P-6_eng01_W.pdf"
+  ]
+ },
+ "roland-t-8": {
+  "steps": [
+   "Set the T-8's rhythm and bass MIDI channels in its settings (see the owner's manual).",
+   "Use USB-C or the TRS MIDI jacks with the right adaptor cable.",
+   "Set its MIDI Clock Sync so it leads or follows; a cable in SYNC IN overrides MIDI clock.",
+   "Knob moves go out as CC; there is no sound memory to send."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/T-8_eng01_W.pdf"
+  ]
+ },
+ "roland-mc-909": {
+  "steps": [
+   "Set each part's MIDI channel in the MC-909's system MIDI settings (see the owner's manual).",
+   "Turn control change send and receive on so knob moves are mirrored.",
+   "Leave the device ID at 17 (the default) for SysEx.",
+   "Use the 5-pin MIDI jacks or USB on both ends; choose whether it sends clock or follows.",
+   "Samples aren't sent: both players need the same samples and patterns loaded."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/MC-909_MI.pdf"
+  ]
+ },
+ "boss-sp-202": {
+  "steps": [
+   "Power off. To pick channel 1-8, hold pad 1-8 while powering on; for 9-16 also hold HOLD.",
+   "Connect the app's MIDI out to the SP-202's MIDI IN (5-pin); it has no MIDI OUT.",
+   "Notes from the app trigger its pads; it can't send anything back.",
+   "Samples aren't sent over MIDI: both players need the same samples."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://support.roland.com/hc/en-us/articles/201923749-SP-303-SP-202-Setting-the-Receive-MIDI-Channel"
+  ]
+ },
+ "boss-sp-303": {
+  "steps": [
+   "Set its receive MIDI channel (Owner's Manual, 'How to Change the MIDI Channel').",
+   "Connect the app's MIDI out to the SP-303's MIDI IN; it has no MIDI OUT.",
+   "Set MIDI Sync to AUTO SYNC or TEMPO SYNC if it should follow the app's tempo.",
+   "Samples aren't sent over MIDI: both players need the same samples."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://manualmachine.com/rolandcorporation/sp303/6486501-users-manual"
+  ]
+ },
+ "boss-dr-660": {
+  "steps": [
+   "Set the DR-660's MIDI channel to the app's channel (see the owner's manual).",
+   "Connect with 5-pin MIDI cables.",
+   "Choose whether it sends MIDI clock or follows the app's clock.",
+   "Kits are presets plus edits: bandmates hear a drum twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "boss-dr-202": {
+  "steps": [
+   "Set the drum and bass part MIDI channels (see the owner's manual).",
+   "Turn control change send/receive on so knob moves are mirrored.",
+   "Connect with 5-pin MIDI cables (no USB).",
+   "Choose whether it sends MIDI clock or follows the app's clock."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "boss-dr-880": {
+  "steps": [
+   "Set the DR-880's MIDI channels for drums and bass (see the owner's manual).",
+   "Use USB or the 5-pin MIDI jacks, the same on both ends.",
+   "Choose whether it sends MIDI clock or follows the app's clock.",
+   "Kits are presets plus edits: both players pick the same kit, bandmates hear a twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "korg-volca-sample-2": {
+  "steps": [
+   "Hold FUNC while turning the volca sample on to enter the global settings.",
+   "Step 10 sets MIDI channels: Multi (one channel per part) or Single (pick the channel with the SAMPLE encoder).",
+   "Make sure step 7 'MIDI RX ShortMessage' is lit (On), then press REC to save.",
+   "The 5-pin jack is MIDI IN only; use the USB port if the app should hear the volca or ask for its sequence.",
+   "Samples aren't sent over MIDI: load the same samples into the same numbers on both units."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://cdn.korg.com/us/support/download/files/f1a4d55aaf79955cf400a28da7080a7f.pdf"
+  ]
+ },
+ "korg-volca-kick": {
+  "steps": [
+   "Hold MEMORY while turning the volca kick on, then press step button 1-16 for your MIDI channel.",
+   "Hold FUNC while turning it on, check step 7 'MIDI RX ShortMessage' is lit (On) and press REC to save.",
+   "In the same FUNC menu, step 6 'MIDI Clock Src' Auto follows incoming MIDI clock; Internal ignores it.",
+   "Connect a 5-pin MIDI cable to MIDI IN; it can't send its knob moves back."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://cdn.korg.com/us/support/download/files/8a661f5232cc2c13780c706191ff8356.pdf"
+  ]
+ },
+ "korg-electribe-sampler": {
+  "steps": [
+   "Press Menu/Enter, go to the global parameters and set GLOBAL MIDI CH the same as the app.",
+   "Set MIDI RECEIVE FILTER and MIDI SEND FILTER to Off so notes, knob moves (CC) and SysEx get through.",
+   "Use USB or the 5-pin MIDI jacks; set CLOCK MODE to Internal if it leads, or Auto/External USB/External MIDI to follow.",
+   "Press Write while editing global parameters to save them.",
+   "A received pattern lands in the edit buffer; both players need the same samples at the same numbers."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://cdn.korg.com/us/support/download/files/39d238e0f840ee25e68f1618517b4731.pdf"
+  ]
+ },
+ "korg-electribe-esx-1": {
+  "steps": [
+   "In Global mode set 'MIDI Ch' to the app's channel; dumps also use this channel.",
+   "Set the MIDI Filter so control changes and program changes are sent and received.",
+   "Connect with 5-pin MIDI cables (no USB).",
+   "Turn Global 'Protect' off if you want to receive dumps outside Global mode.",
+   "Samples live on the SmartMedia/SD card: both players need the same samples."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://www.manualslib.com/manual/90188/Korg-Esx-1.html?page=92"
+  ]
+ },
+ "korg-electribe-emx-1": {
+  "steps": [
+   "In Global mode set 'MIDI Ch' to the app's channel.",
+   "Set the MIDI Filter so control changes and program changes are sent and received.",
+   "Connect with 5-pin MIDI cables (no USB).",
+   "To share a pattern, send it from Global > MIDI UTILITY > Dump while the app is listening."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://www.manualsdir.com/manuals/157943/korg-emx-1.html?page=82"
+  ]
+ },
+ "korg-electribe-es-1": {
+  "steps": [
+   "In Global mode set the MIDI channel to the one the app uses (see the owner's manual).",
+   "Turn on sending and receiving of control changes (NRPN) in the MIDI filter setting so knob moves are mirrored.",
+   "Connect with 5-pin MIDI cables (no USB).",
+   "Stop the sequencer before sharing a pattern: it only takes SysEx while stopped.",
+   "Samples aren't sent: both players need the same samples at the same numbers."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://synthmania.com/wp-content/uploads/2020/06/es1mdimp.pdf"
+  ]
+ },
+ "korg-kpr-77": {
+  "steps": [
+   "The KPR-77 has no MIDI, so the app can't hear or control it directly.",
+   "Plug its audio output into your audio interface so bandmates hear the real thing.",
+   "Start it by hand in time with the band, or use a MIDI-to-sync converter if you have one.",
+   "Bandmates hear an analog-drum twin; there is nothing to share."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "korg-microsampler": {
+  "steps": [
+   "Set the microSAMPLER's Global MIDI Channel to the app's channel.",
+   "Set MIDI Routing to USB+MIDI (or the port you're using).",
+   "Don't let it be the clock master: it sends clock without proper Start/Stop.",
+   "Expect a MIDI Start from the app to start its pattern sequencer.",
+   "Samples aren't sent over MIDI: both players need the same samples."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/eclab/edisyn/blob/master/edisyn/synth/korgmicrosampler/KorgMicrosampler.html"
+  ]
+ },
+ "akai-mpc-one": {
+  "steps": [
+   "Press Menu, open Settings (gear icon) and the Sync tab: turn MIDI Clock send on if the MPC One leads, or receive on to follow the app.",
+   "Choose the MIDI port you're using: USB or the 5-pin MIDI ports.",
+   "On the track you want mirrored, set its MIDI input to the app's port and channel, and its MIDI output if you want the app to hear it.",
+   "Assign Q-Link knobs to send CC so knob moves are relayed.",
+   "Samples aren't sent over MIDI: share the project or kit as a file before the jam."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live"
+  ]
+ },
+ "akai-mpc-one-plus": {
+  "steps": [
+   "Press Menu, open Settings (gear icon) and the Sync tab: turn MIDI Clock send on if the MPC One+ leads, or receive on to follow the app.",
+   "Choose the MIDI port you're using: USB or the 5-pin MIDI ports.",
+   "On the track you want mirrored, set its MIDI input to the app's port and channel, and its MIDI output if you want the app to hear it.",
+   "Assign Q-Link knobs to send CC so knob moves are relayed.",
+   "Samples aren't sent over MIDI: share the project or kit as a file before the jam."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live"
+  ]
+ },
+ "akai-mpc-live-ii": {
+  "steps": [
+   "Press Menu, open Settings (gear icon) and the Sync tab: turn MIDI Clock send on if the MPC Live II leads, or receive on to follow the app.",
+   "Choose the MIDI port you're using: USB or the 5-pin MIDI ports.",
+   "On the track you want mirrored, set its MIDI input to the app's port and channel, and its MIDI output if you want the app to hear it.",
+   "Assign Q-Link knobs to send CC so knob moves are relayed.",
+   "Samples aren't sent over MIDI: share the project or kit as a file before the jam."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live"
+  ]
+ },
+ "akai-mpc-live-iii": {
+  "steps": [
+   "Press Menu, open Settings (gear icon) and the Sync tab: turn MIDI Clock send on if the MPC Live III leads, or receive on to follow the app.",
+   "Choose the MIDI port you're using: USB or the 5-pin MIDI ports.",
+   "On the track you want mirrored, set its MIDI input to the app's port and channel, and its MIDI output if you want the app to hear it.",
+   "Assign Q-Link knobs to send CC so knob moves are relayed.",
+   "Samples aren't sent over MIDI: share the project or kit as a file before the jam."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live"
+  ]
+ },
+ "akai-mpc-x": {
+  "steps": [
+   "Press Menu, open Settings (gear icon) and the Sync tab: turn MIDI Clock send on if the MPC X leads, or receive on to follow the app.",
+   "Choose the MIDI port you're using: USB or the 5-pin MIDI ports.",
+   "On the track you want mirrored, set its MIDI input to the app's port and channel, and its MIDI output if you want the app to hear it.",
+   "Assign Q-Link knobs to send CC so knob moves are relayed.",
+   "Samples aren't sent over MIDI: share the project or kit as a file before the jam."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live"
+  ]
+ },
+ "akai-mpc-xl": {
+  "steps": [
+   "Press Menu, open Settings (gear icon) and the Sync tab: turn MIDI Clock send on if the MPC XL leads, or receive on to follow the app.",
+   "Choose the MIDI port you're using: USB or the 5-pin MIDI ports.",
+   "On the track you want mirrored, set its MIDI input to the app's port and channel, and its MIDI output if you want the app to hear it.",
+   "Assign Q-Link knobs to send CC so knob moves are relayed.",
+   "Samples aren't sent over MIDI: share the project or kit as a file before the jam."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live"
+  ]
+ },
+ "akai-mpc-key-61": {
+  "steps": [
+   "Press Menu, open Settings (gear icon) and the Sync tab: turn MIDI Clock send on if the MPC Key 61 leads, or receive on to follow the app.",
+   "Choose the MIDI port you're using: USB or the 5-pin MIDI ports.",
+   "On the track you want mirrored, set its MIDI input to the app's port and channel, and its MIDI output if you want the app to hear it.",
+   "Assign Q-Link knobs to send CC so knob moves are relayed.",
+   "Samples aren't sent over MIDI: share the project or kit as a file before the jam."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live"
+  ]
+ },
+ "akai-mpc-key-37": {
+  "steps": [
+   "Press Menu, open Settings (gear icon) and the Sync tab: turn MIDI Clock send on if the MPC Key 37 leads, or receive on to follow the app.",
+   "Choose the MIDI port you're using: USB or the 5-pin MIDI ports.",
+   "On the track you want mirrored, set its MIDI input to the app's port and channel, and its MIDI output if you want the app to hear it.",
+   "Assign Q-Link knobs to send CC so knob moves are relayed.",
+   "Samples aren't sent over MIDI: share the project or kit as a file before the jam."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live"
+  ]
+ },
+ "akai-mpc-sample": {
+  "steps": [
+   "Set its MIDI channel and port (USB or TRS/5-pin) in its MIDI settings (see the user guide).",
+   "Choose whether it sends MIDI clock or follows the app's clock.",
+   "Set knobs to send CC if the option is offered, so moves are relayed.",
+   "Samples aren't sent over MIDI: copy the same kit to both units first."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "akai-mpc1000": {
+  "steps": [
+   "Open the MIDI/SYNC settings (see the owner's manual) and set the receive channel and sync mode.",
+   "Set it to send MIDI clock if it leads the band, or to follow the app's clock.",
+   "Connect with 5-pin MIDI cables (USB on the MPC1000 is storage only).",
+   "Samples aren't sent over MIDI: copy the same programs on CF cards."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "akai-force": {
+  "steps": [
+   "Press Menu, open Settings (gear icon) and the Sync tab: turn MIDI Clock send on if the Force leads, or receive on to follow the app.",
+   "Choose the MIDI port you're using: USB or the 5-pin MIDI ports.",
+   "On the track you want mirrored, set its MIDI input to the app's port and channel, and its MIDI output if you want the app to hear it.",
+   "Assign Q-Link knobs to send CC so knob moves are relayed.",
+   "Samples aren't sent over MIDI: share the project or kit as a file before the jam."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://support.akaipro.com/en/support/solutions/articles/69000809463-akai-pro-mpc-live-syncing-a-midi-controller-with-an-mpc-live"
+  ]
+ },
+ "akai-s950": {
+  "steps": [
+   "Set the S950's basic MIDI channel (see the owner's manual).",
+   "Connect with 5-pin MIDI cables.",
+   "Use program change from the app to pick programs.",
+   "Load the same disks on both samplers before the jam."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "akai-rhythm-wolf": {
+  "steps": [
+   "Set the drum and bass MIDI channels (see the owner's manual).",
+   "Use USB or the 5-pin MIDI jacks, the same on both ends.",
+   "Choose whether it sends clock or follows the app.",
+   "There's no sound memory to share: bandmates hear an analog-drum twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "native-instruments-maschine-plus": {
+  "steps": [
+   "Open Settings on the Maschine+ and set MIDI input/output and clock (send if it leads, receive to follow).",
+   "Set each group's MIDI channel so the app knows which sounds it hears.",
+   "Use the 5-pin MIDI ports or a USB MIDI interface on its USB host port.",
+   "Samples aren't sent over MIDI: copy the same kit to both units first."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "jomox-alpha-base": {
+  "steps": [
+   "Press BPM/MIDI. On the first page set ClkSync on to follow the app's clock, or TxClk on if the Alpha Base leads.",
+   "On MIDI page 2 turn TxCC on so knob moves go out, and RxTrig on so the app can play it.",
+   "Channels are fixed: kick 1, MBrane 2, samples 3-10, FM 11, globals 16. Point the app at those.",
+   "Use the 5-pin MIDI jacks or USB; use only one clock source to avoid double sync.",
+   "To share a kit, go to MIDI page 3, select DumpKit and press Enter while the app is listening."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://jomox.de/upload/manuals/AlphaBase_E.pdf"
+  ]
+ },
+ "jomox-mbase-11": {
+  "steps": [
+   "Set the MBase's MIDI channel in its MIDI menu.",
+   "Turn CC send/receive on so knob moves are mirrored.",
+   "Use the 5-pin MIDI jacks (or USB where fitted) on both ends.",
+   "Choose whether it follows the app's clock or sends its own."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "jomox-xbase-09": {
+  "steps": [
+   "Set the XBase 09's MIDI channel (see the owner's manual).",
+   "Turn controller send/receive on so knob moves are mirrored.",
+   "Connect with 5-pin MIDI cables.",
+   "Choose whether it follows the app's clock or sends its own."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "jomox-xbase-999": {
+  "steps": [
+   "Set the XBase 999's MIDI channel (see the owner's manual).",
+   "Turn controller send/receive on so knob moves are mirrored.",
+   "Connect with 5-pin MIDI cables or USB.",
+   "Choose whether it follows the app's clock or sends its own."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "mfb-tanzbar": {
+  "steps": [
+   "Set the Tanzbär's MIDI channel(s) in its global settings (see the manual).",
+   "Turn CC send/receive on so knob moves are mirrored.",
+   "Connect with 5-pin MIDI cables.",
+   "Choose whether it follows the app's clock or sends its own."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "mfb-522": {
+  "steps": [
+   "Set its MIDI channel (see the manual).",
+   "Connect the app's MIDI out to its MIDI IN.",
+   "It follows MIDI clock and plays from notes; it can't send anything back.",
+   "Bandmates hear an analog-drum twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sonic-potions-lxr": {
+  "steps": [
+   "Set the LXR's global and per-voice MIDI channels in its MIDI config menu.",
+   "Turn on MIDI parameter send/receive so knob moves are mirrored as CC/NRPN.",
+   "Connect with 5-pin MIDI cables (USB MIDI is also available).",
+   "Choose whether it sends clock or follows the app.",
+   "No SysEx: both players load the same kit from SD card."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/rudeog/LXR/blob/master/mainboard/firmware/DrumSynth_FPU/src/MIDI/MidiParser.c"
+  ]
+ },
+ "soma-pulsar-23": {
+  "steps": [
+   "Connect the app's MIDI out to the Pulsar-23's MIDI IN if you want it to follow the band's clock.",
+   "Plug its audio outputs into your audio interface.",
+   "Knob and patch settings can't be sent: bandmates hear a twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "novation-circuit": {
+  "steps": [
+   "Synth 1 listens on MIDI channel 1, Synth 2 on channel 2, drums on channel 10 (defaults).",
+   "Hold Shift and press Save to open Setup view, and turn MIDI Tx and Rx on for notes, CC, program change and clock.",
+   "Connect with USB: Circuit only answers sound requests over USB.",
+   "Knob moves go out as CC and NRPN; leave a short gap between sound requests (20 ms or more).",
+   "Synth 1 and Synth 2 are shared separately; drum samples aren't included."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://fael-downloads-prod.focusrite.com/customer/prod/downloads/Circuit%20Programmer's%20Reference%20Guide%201.3_2.pdf"
+  ]
+ },
+ "novation-circuit-rhythm": {
+  "steps": [
+   "Hold Shift and press Save to open Setup view.",
+   "Tracks 1-8 use MIDI channels 1-8 by default; change a track's channel with the channel pads there.",
+   "Turn Rx and Tx on for MIDI Note, CC, Program Change and Clock data.",
+   "Use USB or the TRS MIDI jacks (with the supplied adaptors).",
+   "Samples aren't sent over MIDI: load the same sample pack in Components on both units."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://fael-downloads-prod.focusrite.com/customer/prod/downloads/circuit_rhythm_programmer_s_reference_guide_v5_2.pdf"
+  ]
+ },
+ "novation-drum-station": {
+  "steps": [
+   "Select PROGRAM mode and set the MIDI receive channel to the app's channel.",
+   "Set the rear Write switch to PROTECT so a shared patch lands in working memory without overwriting anything.",
+   "Connect with 5-pin MIDI cables.",
+   "To share your kit: MODE 5 ('Save'), choose 'SS' and press '+' while the app is listening.",
+   "Only some knobs are mirrored live as CC; send the patch for everything else."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://github.com/eclab/edisyn/blob/master/edisyn/synth/novationdstation/NovationDStation.html"
+  ]
+ },
+ "synthstrom-deluge": {
+  "steps": [
+   "In the Deluge's MIDI settings set clock in and out (send if it leads).",
+   "Use MIDI learn to link the app's channel to the tracks you want mirrored.",
+   "Use the 5-pin MIDI jacks or USB on both ends.",
+   "Copy the same kit or synth files to both SD cards before the jam."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "dirtywave-m8": {
+  "steps": [
+   "In the M8's MIDI settings set sync in/out (send if it leads) and the receive channel.",
+   "Map the controls you want mirrored to CCs in its control map.",
+   "Use USB or the TRS MIDI jacks on both ends.",
+   "Copy the same song and samples to both units."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "yamaha-seqtrak": {
+  "steps": [
+   "Set the MIDI channels and clock (send or receive) in the SEQTRAK app's settings.",
+   "Use USB-C, or the MIDI port with the included converter cable (Bluetooth MIDI also works).",
+   "Knob moves go out as CC on the selected track's channel.",
+   "Both players load the same project in the SEQTRAK app."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://usa.yamaha.com/products/music_production/music-production-studios/seqtrak/specs.html"
+  ]
+ },
+ "yamaha-rx21": {
+  "steps": [
+   "Set the RX21's MIDI channel (see the owner's manual).",
+   "Connect with 5-pin MIDI cables.",
+   "Choose whether it sends clock or follows the app.",
+   "Sounds are fixed: bandmates hear a lo-fi drum twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "yamaha-rx7": {
+  "steps": [
+   "Set the RX7's MIDI channel (see the owner's manual).",
+   "Connect with 5-pin MIDI cables.",
+   "Choose whether it sends clock or follows the app.",
+   "Both players pick the same kit; bandmates hear a drum twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "yamaha-ry30": {
+  "steps": [
+   "Set the RY30's MIDI channel (see the owner's manual).",
+   "Connect with 5-pin MIDI cables.",
+   "Choose whether it sends clock or follows the app.",
+   "Both players pick the same kit; bandmates hear a drum twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "yamaha-rm1x": {
+  "steps": [
+   "Set each part's MIDI channel and turn control change send on (see the owner's manual).",
+   "Connect with 5-pin MIDI cables (TO HOST is a serial port, not USB MIDI).",
+   "Choose whether it sends clock or follows the app.",
+   "Both players load the same pattern data."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "alesis-d4": {
+  "steps": [
+   "Set the D4's MIDI channel (drums usually on 10) to match the app.",
+   "Turn program change receive on so drum-set changes follow.",
+   "Connect both 5-pin MIDI cables (IN and OUT): the app asks for the drum set and the D4 answers on OUT.",
+   "It is a sound module with no sequencer: play it from pads or the app; it has no clock to set."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/eclab/edisyn/blob/master/edisyn/synth/alesisd4/AlesisD4.java"
+  ]
+ },
+ "alesis-sr-18": {
+  "steps": [
+   "Set the SR-18's MIDI channels for drums and bass (see the owner's manual).",
+   "Pick whether it sends MIDI clock (as master) or follows the app's clock.",
+   "Connect with 5-pin MIDI cables.",
+   "There is nothing to share: bandmates hear a drum twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "casio-rz-1": {
+  "steps": [
+   "Set the RZ-1's MIDI channel (see the owner's manual).",
+   "Connect with 5-pin MIDI cables.",
+   "Choose whether it sends clock or follows the app.",
+   "User samples aren't sent: bandmates hear a lo-fi drum twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "casio-sk-1": {
+  "steps": [
+   "The SK-1 has no MIDI, so the app can't hear or control it directly.",
+   "Plug its audio output into your audio interface so bandmates hear it.",
+   "Play it in time with the band by ear.",
+   "Bandmates hear a drum twin; there is nothing to share."
+  ],
+  "confidence": "secondary",
+  "sources": []
+ },
+ "ensoniq-asr-10": {
+  "steps": [
+   "Set the ASR-10's MIDI channel and MIDI mode in its system settings (see the manual).",
+   "Connect with 5-pin MIDI cables.",
+   "Choose whether its sequencer sends clock or follows the app.",
+   "Load the same disk on both samplers before the jam."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "bastl-microgranny-2": {
+  "steps": [
+   "Set its MIDI channel (see the manual).",
+   "Connect the app's MIDI out to its MIDI IN.",
+   "It can follow MIDI clock; it can't send anything back.",
+   "Copy the same samples to both microSD cards."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "bastl-kastle-drum": {
+  "steps": [
+   "The Kastle Drum has no MIDI, so the app can't hear or control it directly.",
+   "Plug its audio output into your audio interface so bandmates hear it.",
+   "To sync, feed a clock pulse into its patch bay from a MIDI-to-CV interface if you have one.",
+   "Bandmates hear a drum twin; there is nothing to share."
+  ],
+  "confidence": "secondary",
+  "sources": []
+ },
+ "acidlab-miami": {
+  "steps": [
+   "Set the Miami's MIDI channel (see the manual).",
+   "Connect with 5-pin MIDI cables.",
+   "Choose whether it sends clock or follows the app.",
+   "Knobs aren't on MIDI: bandmates hear an 808-style twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "clavia-nord-drum-3p": {
+  "steps": [
+   "Set the Nord Drum 3P's global MIDI channel(s) (see the manual).",
+   "Turn CC send and receive on so knob moves are mirrored.",
+   "Use the 5-pin MIDI jacks or USB on both ends.",
+   "Both players pick the same program, or share it with Nord Sound Manager."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "ik-multimedia-uno-drum": {
+  "steps": [
+   "Set the UNO Drum's MIDI channel (see the manual).",
+   "Use USB or the TRS MIDI jacks with the supplied adaptor.",
+   "Choose whether it sends clock or follows the app.",
+   "Knob moves go out as CC; both players pick the same kit."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "pioneer-dj-toraiz-sp-16": {
+  "steps": [
+   "Set the SP-16's MIDI channels and clock in its utility settings (see the manual).",
+   "Use the 5-pin MIDI jacks on both ends.",
+   "Choose whether it sends clock or follows the app.",
+   "Copy the same project to both units by USB drive."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "isla-instruments-s2400": {
+  "steps": [
+   "Set the S2400's MIDI channels and clock in its MIDI settings (see the manual).",
+   "Use the 5-pin MIDI jacks or USB on both ends.",
+   "Choose whether it sends clock or follows the app.",
+   "Copy the same samples and project to both units."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "modor-dr-2": {
+  "steps": [
+   "Set the DR-2's MIDI channels in its settings (see the manual).",
+   "Turn CC send/receive on so knob moves are mirrored.",
+   "Use the 5-pin MIDI jacks or USB on both ends.",
+   "Choose whether it sends clock or follows the app."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "cre8audio-boom-chick": {
+  "steps": [
+   "Press [Midi Ch] and use the step buttons to set the drum channels (all default to 10).",
+   "Pick the clock in the Edit screen: [Int Clock] if it leads, [Midi Clock] to follow the app.",
+   "Connect with Type A TRS-to-5-pin MIDI adaptors on MIDI In and Out.",
+   "Knobs aren't sent over MIDI: bandmates hear an analog-drum twin."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://analoguehaven.com/cre8audio/boom-chick/manual.pdf"
+  ]
+ }
+}

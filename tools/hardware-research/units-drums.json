@@ -1,0 +1,1556 @@
+[
+ {
+  "id": "teenage-engineering-ep-133",
+  "maker": "Teenage Engineering",
+  "model": "EP-133 K.O. II",
+  "year": 2023,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid",
+   "acoustic"
+  ],
+  "character": {
+   "bits": 12
+  },
+  "note": "Pocket sampler and sequencer with a 64 MB sample memory and punch-in FX."
+ },
+ {
+  "id": "teenage-engineering-ep-1320",
+  "maker": "Teenage Engineering",
+  "model": "EP-1320 Medieval",
+  "year": 2024,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "acoustic",
+   "lofi"
+  ],
+  "character": {},
+  "note": "EP-133 hardware loaded with medieval instruments and percussion."
+ },
+ {
+  "id": "teenage-engineering-ep-40",
+  "maker": "Teenage Engineering",
+  "model": "EP-40 Riddim",
+  "year": 2025,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid",
+   "808"
+  ],
+  "character": {
+   "drive": 0.2
+  },
+  "note": "EP-series sampler voiced for reggae, dancehall and sound-system bass."
+ },
+ {
+  "id": "teenage-engineering-po-12-rhythm",
+  "maker": "Teenage Engineering",
+  "model": "PO-12 rhythm",
+  "year": 2015,
+  "family": "drum-machine",
+  "osc": "digital",
+  "filter": "none",
+  "types": [
+   "lofi",
+   "808"
+  ],
+  "character": {
+   "bits": 8
+  },
+  "note": "Pocket Operator drum synth; stands in for the other synth-drum POs too.",
+  "midi": false
+ },
+ {
+  "id": "teenage-engineering-po-32-tonic",
+  "maker": "Teenage Engineering",
+  "model": "PO-32 tonic",
+  "year": 2017,
+  "family": "drum-machine",
+  "osc": "digital",
+  "filter": "none",
+  "types": [
+   "hybrid",
+   "efm",
+   "lofi"
+  ],
+  "character": {},
+  "note": "Pocket Operator running Sonic Charge Microtonic drum synthesis.",
+  "midi": false
+ },
+ {
+  "id": "teenage-engineering-po-33-ko",
+  "maker": "Teenage Engineering",
+  "model": "PO-33 K.O!",
+  "year": 2017,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "lofi",
+   "hybrid"
+  ],
+  "character": {
+   "bits": 8
+  },
+  "note": "Pocket Operator sampler with a built-in mic; stands in for PO-133 and PO-137 too.",
+  "midi": false
+ },
+ {
+  "id": "elektron-digitakt-ii",
+  "maker": "Elektron",
+  "model": "Digitakt II",
+  "year": 2024,
+  "family": "drum-machine",
+  "voices": 16,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "lofi",
+   "909"
+  ],
+  "character": {},
+  "note": "Stereo 16-track sampler; the twin plays synthesized drums."
+ },
+ {
+  "id": "elektron-analog-rytm-mkii",
+  "maker": "Elektron",
+  "model": "Analog Rytm MKII",
+  "year": 2017,
+  "family": "drum-machine",
+  "voices": 12,
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "909",
+   "808",
+   "hybrid"
+  ],
+  "character": {
+   "drive": 0.25
+  },
+  "note": "Eight analog voices plus samples, with performance pads."
+ },
+ {
+  "id": "elektron-tonverk",
+  "maker": "Elektron",
+  "model": "Tonverk",
+  "year": 2025,
+  "family": "groovebox",
+  "voices": 8,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "lofi",
+   "acoustic"
+  ],
+  "character": {},
+  "note": "Polyphonic stereo multisampler with eight audio tracks plus bus and send tracks."
+ },
+ {
+  "id": "erica-synths-perkons-hd-01",
+  "maker": "Erica Synths",
+  "model": "Perkons HD-01",
+  "year": 2022,
+  "family": "drum-machine",
+  "voices": 4,
+  "osc": "hybrid-drum",
+  "filter": "none",
+  "types": [
+   "hybrid",
+   "efm",
+   "909"
+  ],
+  "character": {
+   "drive": 0.5
+  },
+  "note": "Four multi-mode drum voices with analog distortion and filters."
+ },
+ {
+  "id": "erica-synths-lxr-02",
+  "maker": "Erica Synths",
+  "model": "LXR-02",
+  "year": 2022,
+  "family": "drum-machine",
+  "voices": 6,
+  "osc": "digital",
+  "filter": "svf",
+  "types": [
+   "hybrid",
+   "909",
+   "efm"
+  ],
+  "character": {
+   "drive": 0.3
+  },
+  "note": "Digital drum synth from Sonic Potions' LXR design; firmware now open source."
+ },
+ {
+  "id": "erica-synths-hexdrums",
+  "maker": "Erica Synths",
+  "model": "HexDrums",
+  "year": 2025,
+  "family": "drum-machine",
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "808",
+   "909",
+   "hybrid"
+  ],
+  "character": {},
+  "note": "Analog drum machine designed with Hexinverter."
+ },
+ {
+  "id": "sonicware-liven-lofi-12",
+  "maker": "Sonicware",
+  "model": "Liven Lofi-12",
+  "year": 2021,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid"
+  ],
+  "character": {
+   "bits": 12
+  },
+  "note": "12-bit sampler modelled on vintage samplers; XT version adds stereo and more memory."
+ },
+ {
+  "id": "sonicware-liven-bass-and-beats",
+  "maker": "Sonicware",
+  "model": "Liven Bass & Beats",
+  "year": 2022,
+  "family": "groovebox",
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "808",
+   "909",
+   "bass"
+  ],
+  "character": {},
+  "note": "Drum and bass groovebox with a 4-op FM bass part."
+ },
+ {
+  "id": "sonicware-smpltrek",
+  "maker": "Sonicware",
+  "model": "SmplTrek",
+  "year": 2023,
+  "family": "groovebox",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid",
+   "acoustic"
+  ],
+  "character": {},
+  "note": "Portable sampler workstation with eight tracks."
+ },
+ {
+  "id": "sonicware-cydrums",
+  "maker": "Sonicware",
+  "model": "CyDrums",
+  "year": 2025,
+  "family": "drum-machine",
+  "osc": "wavetable",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "efm",
+   "909"
+  ],
+  "character": {},
+  "note": "Wavetable drum synthesizer."
+ },
+ {
+  "id": "polyend-play",
+  "maker": "Polyend",
+  "model": "Play",
+  "year": 2022,
+  "family": "groovebox",
+  "voices": 8,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "lofi",
+   "acoustic"
+  ],
+  "character": {},
+  "note": "Sample groovebox with a generative pattern sequencer."
+ },
+ {
+  "id": "polyend-play-plus",
+  "maker": "Polyend",
+  "model": "Play+",
+  "year": 2024,
+  "family": "groovebox",
+  "voices": 8,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "lofi",
+   "acoustic"
+  ],
+  "character": {},
+  "note": "Play with added synth engines and stereo sampling."
+ },
+ {
+  "id": "polyend-tracker-plus",
+  "maker": "Polyend",
+  "model": "Tracker+",
+  "year": 2024,
+  "family": "groovebox",
+  "voices": 8,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid"
+  ],
+  "character": {
+   "bits": 12
+  },
+  "note": "Tracker sampler with added synth engines and stereo sampling."
+ },
+ {
+  "id": "polyend-tracker-mini",
+  "maker": "Polyend",
+  "model": "Tracker Mini",
+  "year": 2023,
+  "family": "groovebox",
+  "voices": 8,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid"
+  ],
+  "character": {
+   "bits": 12
+  },
+  "note": "Battery-powered Tracker with synth engines."
+ },
+ {
+  "id": "1010music-blackbox",
+  "maker": "1010music",
+  "model": "Blackbox",
+  "year": 2019,
+  "family": "drum-machine",
+  "voices": 16,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "acoustic",
+   "lofi"
+  ],
+  "character": {},
+  "note": "Touchscreen sampler and sequencer; sounds live on its SD card."
+ },
+ {
+  "id": "1010music-nanobox-razzmatazz",
+  "maker": "1010music",
+  "model": "Nanobox Razzmatazz",
+  "year": 2020,
+  "family": "drum-machine",
+  "osc": "fm",
+  "filter": "digital",
+  "types": [
+   "efm",
+   "hybrid",
+   "lofi"
+  ],
+  "character": {},
+  "note": "Small touchscreen drum machine mixing samples and FM voices."
+ },
+ {
+  "id": "1010music-bento",
+  "maker": "1010music",
+  "model": "Bento",
+  "year": 2025,
+  "family": "groovebox",
+  "voices": 8,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "lofi",
+   "acoustic"
+  ],
+  "character": {},
+  "note": "Eight-track touchscreen sampler and groovebox."
+ },
+ {
+  "id": "torso-s-4",
+  "maker": "Torso Electronics",
+  "model": "S-4",
+  "year": 2024,
+  "family": "groovebox",
+  "voices": 4,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid",
+   "pad"
+  ],
+  "character": {},
+  "note": "Four-track sculpting sampler that resamples and mangles live audio."
+ },
+ {
+  "id": "roland-tr-1000",
+  "maker": "Roland",
+  "model": "TR-1000",
+  "year": 2025,
+  "family": "drum-machine",
+  "osc": "hybrid-drum",
+  "filter": "none",
+  "types": [
+   "909",
+   "808",
+   "hybrid"
+  ],
+  "character": {
+   "drive": 0.2
+  },
+  "note": "Flagship with new analog circuits plus ACB, FM and sample voices."
+ },
+ {
+  "id": "roland-tr-06",
+  "maker": "Roland",
+  "model": "TR-06",
+  "year": 2020,
+  "family": "drum-machine",
+  "voices": 7,
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "808"
+  ],
+  "character": {
+   "kick.decay": 0.5,
+   "kick.pitch": 4,
+   "snare.snap": 0.85,
+   "snare.pitch": 3,
+   "chh.decay": 0.7
+  },
+  "note": "Boutique model of the TR-606."
+ },
+ {
+  "id": "roland-tr-505",
+  "maker": "Roland",
+  "model": "TR-505",
+  "year": 1986,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "lofi",
+   "acoustic",
+   "909"
+  ],
+  "character": {
+   "bits": 8
+  },
+  "note": "Budget PCM drum machine with a Latin kit."
+ },
+ {
+  "id": "roland-cr-8000",
+  "maker": "Roland",
+  "model": "CR-8000",
+  "year": 1981,
+  "family": "drum-machine",
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "808",
+   "lofi"
+  ],
+  "character": {
+   "kick.decay": 0.7
+  },
+  "note": "Programmable CompuRhythm with 808-era analog voices.",
+  "midi": false
+ },
+ {
+  "id": "roland-mc-101",
+  "maker": "Roland",
+  "model": "MC-101",
+  "year": 2019,
+  "family": "groovebox",
+  "voices": 4,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "909",
+   "808",
+   "hybrid"
+  ],
+  "character": {},
+  "note": "Four-track battery groovebox with ZEN-Core sounds."
+ },
+ {
+  "id": "roland-mv-1-verselab",
+  "maker": "Roland",
+  "model": "Verselab MV-1",
+  "year": 2021,
+  "family": "groovebox",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "808",
+   "acoustic"
+  ],
+  "character": {},
+  "note": "Song-production groovebox with vocal mic input and ZEN-Core sounds."
+ },
+ {
+  "id": "roland-p-6",
+  "maker": "Roland",
+  "model": "P-6",
+  "year": 2021,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid"
+  ],
+  "character": {},
+  "note": "AIRA Compact pocket sampler with granular engine."
+ },
+ {
+  "id": "roland-t-8",
+  "maker": "Roland",
+  "model": "T-8",
+  "year": 2021,
+  "family": "drum-machine",
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "808",
+   "909",
+   "acid"
+  ],
+  "character": {},
+  "note": "AIRA Compact ACB drum machine plus TB-303-style bass track."
+ },
+ {
+  "id": "roland-mc-909",
+  "maker": "Roland",
+  "model": "MC-909",
+  "year": 2002,
+  "family": "groovebox",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "909",
+   "808",
+   "hybrid"
+  ],
+  "character": {},
+  "note": "Flagship Groovebox with sampling and an XV-era PCM synth engine."
+ },
+ {
+  "id": "boss-sp-202",
+  "maker": "Boss",
+  "model": "SP-202",
+  "year": 1998,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid"
+  ],
+  "character": {
+   "bits": 12
+  },
+  "note": "Dr. Sample phrase sampler, the first of the SP line."
+ },
+ {
+  "id": "boss-sp-303",
+  "maker": "Boss",
+  "model": "SP-303",
+  "year": 2001,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid"
+  ],
+  "character": {
+   "bits": 12
+  },
+  "note": "Dr. Sample with the vinyl-sim and compressor beat-tape sound."
+ },
+ {
+  "id": "boss-dr-660",
+  "maker": "Boss",
+  "model": "DR-660",
+  "year": 1992,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "acoustic",
+   "909",
+   "808"
+  ],
+  "character": {},
+  "note": "Dr. Rhythm with 255 PCM sounds; staple of 90s demos."
+ },
+ {
+  "id": "boss-dr-202",
+  "maker": "Boss",
+  "model": "DR-202",
+  "year": 1998,
+  "family": "groovebox",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "909",
+   "808",
+   "bass"
+  ],
+  "character": {},
+  "note": "Dr. Groove: drums plus a resonant bass part."
+ },
+ {
+  "id": "boss-dr-880",
+  "maker": "Boss",
+  "model": "DR-880",
+  "year": 2006,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "acoustic",
+   "hybrid"
+  ],
+  "character": {},
+  "note": "Dr. Rhythm with bass and guitar-oriented patterns."
+ },
+ {
+  "id": "korg-volca-sample-2",
+  "maker": "Korg",
+  "model": "Volca Sample 2",
+  "year": 2019,
+  "family": "drum-machine",
+  "voices": 10,
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "lofi",
+   "hybrid"
+  ],
+  "character": {
+   "bits": 12
+  },
+  "note": "Volca Sample with more memory, USB and per-part MIDI."
+ },
+ {
+  "id": "korg-volca-kick",
+  "maker": "Korg",
+  "model": "Volca Kick",
+  "year": 2019,
+  "family": "drum-machine",
+  "voices": 1,
+  "osc": "analog-drum",
+  "filter": "ms20",
+  "types": [
+   "808",
+   "bass",
+   "909"
+  ],
+  "character": {
+   "kick.decay": 1.5,
+   "drive": 0.4
+  },
+  "note": "Analog kick generator built around the MS-20 filter."
+ },
+ {
+  "id": "korg-electribe-sampler",
+  "maker": "Korg",
+  "model": "Electribe Sampler",
+  "year": 2015,
+  "family": "groovebox",
+  "voices": 16,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "lofi",
+   "909"
+  ],
+  "character": {},
+  "note": "Sample version of the Electribe 2."
+ },
+ {
+  "id": "korg-electribe-esx-1",
+  "maker": "Korg",
+  "model": "Electribe ESX-1",
+  "year": 2003,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid",
+   "909"
+  ],
+  "character": {
+   "drive": 0.3
+  },
+  "note": "Sampling Electribe with a vacuum-tube output stage."
+ },
+ {
+  "id": "korg-electribe-emx-1",
+  "maker": "Korg",
+  "model": "Electribe EMX-1",
+  "year": 2003,
+  "family": "groovebox",
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "909",
+   "808",
+   "hybrid"
+  ],
+  "character": {
+   "drive": 0.3
+  },
+  "note": "Synth and drum Electribe with vacuum-tube output."
+ },
+ {
+  "id": "korg-electribe-es-1",
+  "maker": "Korg",
+  "model": "Electribe ES-1",
+  "year": 2000,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "lofi",
+   "hybrid"
+  ],
+  "character": {
+   "bits": 12
+  },
+  "note": "First sampling Electribe."
+ },
+ {
+  "id": "korg-kpr-77",
+  "maker": "Korg",
+  "model": "KPR-77",
+  "year": 1983,
+  "family": "drum-machine",
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "808",
+   "lofi"
+  ],
+  "character": {},
+  "note": "Programmable analog rhythm with Korg's 80s voices.",
+  "midi": false
+ },
+ {
+  "id": "korg-microsampler",
+  "maker": "Korg",
+  "model": "microSAMPLER",
+  "year": 2009,
+  "family": "drum-machine",
+  "voices": 8,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid"
+  ],
+  "character": {},
+  "note": "37-key sampler keyboard with a pattern sequencer."
+ },
+ {
+  "id": "akai-mpc-one",
+  "maker": "Akai",
+  "model": "MPC One",
+  "year": 2020,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "acoustic",
+   "808"
+  ],
+  "character": {},
+  "note": "Compact standalone MPC."
+ },
+ {
+  "id": "akai-mpc-one-plus",
+  "maker": "Akai",
+  "model": "MPC One+",
+  "year": 2022,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "acoustic",
+   "808"
+  ],
+  "character": {},
+  "note": "MPC One with Wi-Fi, Bluetooth and more memory."
+ },
+ {
+  "id": "akai-mpc-live-ii",
+  "maker": "Akai",
+  "model": "MPC Live II",
+  "year": 2020,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "acoustic",
+   "808"
+  ],
+  "character": {},
+  "note": "Battery MPC with built-in speakers."
+ },
+ {
+  "id": "akai-mpc-live-iii",
+  "maker": "Akai",
+  "model": "MPC Live III",
+  "year": 2025,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "acoustic",
+   "808"
+  ],
+  "character": {},
+  "note": "Battery MPC with a faster processor and step-sequencer row."
+ },
+ {
+  "id": "akai-mpc-x",
+  "maker": "Akai",
+  "model": "MPC X",
+  "year": 2017,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "acoustic",
+   "808"
+  ],
+  "character": {},
+  "note": "Large-format standalone MPC."
+ },
+ {
+  "id": "akai-mpc-xl",
+  "maker": "Akai",
+  "model": "MPC XL",
+  "year": 2026,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "acoustic",
+   "808"
+  ],
+  "character": {},
+  "note": "Flagship standalone MPC succeeding the MPC X."
+ },
+ {
+  "id": "akai-mpc-key-61",
+  "maker": "Akai",
+  "model": "MPC Key 61",
+  "year": 2021,
+  "family": "groovebox",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "keys",
+   "hybrid",
+   "808"
+  ],
+  "character": {},
+  "note": "Standalone MPC in a 61-key keyboard."
+ },
+ {
+  "id": "akai-mpc-key-37",
+  "maker": "Akai",
+  "model": "MPC Key 37",
+  "year": 2023,
+  "family": "groovebox",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "keys",
+   "hybrid",
+   "808"
+  ],
+  "character": {},
+  "note": "Standalone MPC in a 37-key keyboard."
+ },
+ {
+  "id": "akai-mpc-sample",
+  "maker": "Akai",
+  "model": "MPC Sample",
+  "year": 2026,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid",
+   "acoustic"
+  ],
+  "character": {},
+  "note": "Portable battery sampler in the MPC line."
+ },
+ {
+  "id": "akai-mpc1000",
+  "maker": "Akai",
+  "model": "MPC1000",
+  "year": 2003,
+  "family": "drum-machine",
+  "voices": 32,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "acoustic",
+   "lofi",
+   "hybrid"
+  ],
+  "character": {},
+  "note": "Compact MPC, widely run with JJOS."
+ },
+ {
+  "id": "akai-force",
+  "maker": "Akai",
+  "model": "Force",
+  "year": 2019,
+  "family": "groovebox",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "808",
+   "acoustic"
+  ],
+  "character": {},
+  "note": "Clip-launching standalone groovebox on the MPC platform."
+ },
+ {
+  "id": "akai-s950",
+  "maker": "Akai",
+  "model": "S950",
+  "year": 1986,
+  "family": "drum-machine",
+  "voices": 8,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "acoustic"
+  ],
+  "character": {
+   "bits": 12
+  },
+  "note": "12-bit rack sampler with variable sample rate; classic hip-hop crunch."
+ },
+ {
+  "id": "akai-rhythm-wolf",
+  "maker": "Akai",
+  "model": "Rhythm Wolf",
+  "year": 2014,
+  "family": "drum-machine",
+  "osc": "analog-drum",
+  "filter": "ota",
+  "types": [
+   "808",
+   "bass",
+   "lofi"
+  ],
+  "character": {
+   "drive": 0.4
+  },
+  "note": "Budget analog drum machine with a bass synth voice."
+ },
+ {
+  "id": "native-instruments-maschine-plus",
+  "maker": "Native Instruments",
+  "model": "Maschine+",
+  "year": 2020,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "808",
+   "acoustic"
+  ],
+  "character": {},
+  "note": "Standalone Maschine running NI's sampler and synths."
+ },
+ {
+  "id": "jomox-alpha-base",
+  "maker": "Jomox",
+  "model": "Alpha Base",
+  "year": 2016,
+  "family": "drum-machine",
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "909",
+   "808",
+   "hybrid"
+  ],
+  "character": {
+   "drive": 0.35,
+   "kick.decay": 1.3
+  },
+  "note": "Analog voices plus sample slots; the MKII keeps the layout."
+ },
+ {
+  "id": "jomox-mbase-11",
+  "maker": "Jomox",
+  "model": "MBase 11",
+  "year": 2011,
+  "family": "drum-machine",
+  "voices": 1,
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "909",
+   "808"
+  ],
+  "character": {
+   "kick.decay": 1.5,
+   "drive": 0.45
+  },
+  "note": "Analog kick drum generator with sequencer."
+ },
+ {
+  "id": "jomox-xbase-09",
+  "maker": "Jomox",
+  "model": "XBase 09",
+  "year": 2001,
+  "family": "drum-machine",
+  "osc": "hybrid-drum",
+  "filter": "none",
+  "types": [
+   "909",
+   "808"
+  ],
+  "character": {
+   "drive": 0.3
+  },
+  "note": "909-style analog drums with sampled cymbals."
+ },
+ {
+  "id": "jomox-xbase-999",
+  "maker": "Jomox",
+  "model": "XBase 999",
+  "year": 2009,
+  "family": "drum-machine",
+  "osc": "hybrid-drum",
+  "filter": "none",
+  "types": [
+   "909",
+   "808"
+  ],
+  "character": {
+   "drive": 0.3
+  },
+  "note": "Updated 909-style machine with editable analog voices."
+ },
+ {
+  "id": "mfb-tanzbar",
+  "maker": "MFB",
+  "model": "Tanzbär",
+  "year": 2011,
+  "family": "drum-machine",
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "808",
+   "909",
+   "hybrid"
+  ],
+  "character": {},
+  "note": "Analog drum machine with a sequenced synth voice."
+ },
+ {
+  "id": "mfb-522",
+  "maker": "MFB",
+  "model": "MFB-522",
+  "year": 2008,
+  "family": "drum-machine",
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "808",
+   "lofi"
+  ],
+  "character": {},
+  "note": "Small, cheap 808-flavoured analog drum box."
+ },
+ {
+  "id": "sonic-potions-lxr",
+  "maker": "Sonic Potions",
+  "model": "LXR",
+  "year": 2013,
+  "family": "drum-machine",
+  "voices": 6,
+  "osc": "digital",
+  "filter": "svf",
+  "types": [
+   "hybrid",
+   "909",
+   "efm"
+  ],
+  "character": {
+   "drive": 0.3
+  },
+  "note": "DIY-kit digital drum synth with open-source firmware."
+ },
+ {
+  "id": "soma-pulsar-23",
+  "maker": "Soma",
+  "model": "Pulsar-23",
+  "year": 2019,
+  "family": "drum-machine",
+  "voices": 4,
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "hybrid",
+   "efm",
+   "808"
+  ],
+  "character": {
+   "drive": 0.6
+  },
+  "note": "Semi-modular analog drum synth with looping shift registers."
+ },
+ {
+  "id": "novation-circuit",
+  "maker": "Novation",
+  "model": "Circuit",
+  "year": 2015,
+  "family": "groovebox",
+  "voices": 6,
+  "osc": "va",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "808",
+   "909"
+  ],
+  "character": {},
+  "note": "Original Circuit: two synths plus four sample drum tracks."
+ },
+ {
+  "id": "novation-circuit-rhythm",
+  "maker": "Novation",
+  "model": "Circuit Rhythm",
+  "year": 2021,
+  "family": "groovebox",
+  "voices": 8,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "lofi",
+   "808"
+  ],
+  "character": {},
+  "note": "Eight-track sampler groovebox."
+ },
+ {
+  "id": "novation-drum-station",
+  "maker": "Novation",
+  "model": "Drum Station",
+  "year": 1995,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "808",
+   "909"
+  ],
+  "character": {},
+  "note": "Rack module modelling the TR-808 and TR-909."
+ },
+ {
+  "id": "synthstrom-deluge",
+  "maker": "Synthstrom Audible",
+  "model": "Deluge",
+  "year": 2016,
+  "family": "groovebox",
+  "osc": "sample",
+  "filter": "svf",
+  "types": [
+   "hybrid",
+   "lofi",
+   "bass"
+  ],
+  "character": {},
+  "note": "Grid groovebox with samplers, subtractive and FM synths."
+ },
+ {
+  "id": "dirtywave-m8",
+  "maker": "Dirtywave",
+  "model": "M8",
+  "year": 2021,
+  "family": "groovebox",
+  "voices": 8,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "hybrid",
+   "efm"
+  ],
+  "character": {},
+  "note": "Handheld tracker with sampler, FM and wavetable engines."
+ },
+ {
+  "id": "yamaha-seqtrak",
+  "maker": "Yamaha",
+  "model": "SEQTRAK",
+  "year": 2023,
+  "family": "groovebox",
+  "voices": 11,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "hybrid",
+   "808",
+   "acoustic"
+  ],
+  "character": {},
+  "note": "Battery groovebox with AWM2 drums, FM synth and sampler."
+ },
+ {
+  "id": "yamaha-rx21",
+  "maker": "Yamaha",
+  "model": "RX21",
+  "year": 1985,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "acoustic",
+   "lofi"
+  ],
+  "character": {
+   "bits": 8
+  },
+  "note": "Budget sibling of the RX11."
+ },
+ {
+  "id": "yamaha-rx7",
+  "maker": "Yamaha",
+  "model": "RX7",
+  "year": 1988,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "acoustic",
+   "lofi"
+  ],
+  "character": {
+   "bits": 12
+  },
+  "note": "100-sound PCM drum machine."
+ },
+ {
+  "id": "yamaha-ry30",
+  "maker": "Yamaha",
+  "model": "RY30",
+  "year": 1991,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "acoustic",
+   "909"
+  ],
+  "character": {},
+  "note": "PCM drums with filter and pitch envelopes."
+ },
+ {
+  "id": "yamaha-rm1x",
+  "maker": "Yamaha",
+  "model": "RM1x",
+  "year": 1999,
+  "family": "groovebox",
+  "voices": 32,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "909",
+   "808",
+   "hybrid"
+  ],
+  "character": {},
+  "note": "Yamaha's 1999 sequence remixer with a full GM-style tone generator."
+ },
+ {
+  "id": "alesis-d4",
+  "maker": "Alesis",
+  "model": "D4",
+  "year": 1991,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "acoustic",
+   "909"
+  ],
+  "character": {},
+  "note": "Rack drum module with 500 sounds; the DM5 is its bigger sibling."
+ },
+ {
+  "id": "alesis-sr-18",
+  "maker": "Alesis",
+  "model": "SR-18",
+  "year": 2008,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "acoustic",
+   "hybrid"
+  ],
+  "character": {},
+  "note": "Successor of the SR-16 with bass sounds."
+ },
+ {
+  "id": "casio-rz-1",
+  "maker": "Casio",
+  "model": "RZ-1",
+  "year": 1986,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "lofi",
+   "acoustic"
+  ],
+  "character": {
+   "bits": 8
+  },
+  "note": "Drum machine with four user sample pads."
+ },
+ {
+  "id": "casio-sk-1",
+  "maker": "Casio",
+  "model": "SK-1",
+  "year": 1985,
+  "family": "drum-machine",
+  "voices": 4,
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "lofi"
+  ],
+  "character": {
+   "bits": 8
+  },
+  "note": "Toy sampling keyboard loved for its crunch.",
+  "midi": false
+ },
+ {
+  "id": "ensoniq-asr-10",
+  "maker": "Ensoniq",
+  "model": "ASR-10",
+  "year": 1992,
+  "family": "drum-machine",
+  "voices": 31,
+  "osc": "sample",
+  "filter": "digital",
+  "types": [
+   "lofi",
+   "acoustic",
+   "hybrid"
+  ],
+  "character": {},
+  "note": "Keyboard sampler behind much 90s hip-hop."
+ },
+ {
+  "id": "bastl-microgranny-2",
+  "maker": "Bastl Instruments",
+  "model": "microGranny 2",
+  "year": 2014,
+  "family": "drum-machine",
+  "voices": 1,
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "lofi"
+  ],
+  "character": {
+   "bits": 8
+  },
+  "note": "Monophonic granular lo-fi sampler."
+ },
+ {
+  "id": "bastl-kastle-drum",
+  "maker": "Bastl Instruments",
+  "model": "Kastle Drum",
+  "year": 2020,
+  "family": "drum-machine",
+  "osc": "digital",
+  "filter": "none",
+  "types": [
+   "lofi",
+   "efm"
+  ],
+  "character": {
+   "bits": 8,
+   "drive": 0.4
+  },
+  "note": "Tiny patchable glitch drum synth.",
+  "midi": false
+ },
+ {
+  "id": "acidlab-miami",
+  "maker": "Acidlab",
+  "model": "Miami",
+  "year": 2013,
+  "family": "drum-machine",
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "808"
+  ],
+  "character": {},
+  "note": "Boutique analog recreation of the TR-808."
+ },
+ {
+  "id": "clavia-nord-drum-3p",
+  "maker": "Clavia",
+  "model": "Nord Drum 3P",
+  "year": 2017,
+  "family": "drum-machine",
+  "voices": 6,
+  "osc": "hybrid-drum",
+  "filter": "none",
+  "types": [
+   "acoustic",
+   "hybrid",
+   "efm"
+  ],
+  "character": {},
+  "note": "Modelling percussion synth with six pads."
+ },
+ {
+  "id": "ik-multimedia-uno-drum",
+  "maker": "IK Multimedia",
+  "model": "UNO Drum",
+  "year": 2020,
+  "family": "drum-machine",
+  "osc": "hybrid-drum",
+  "filter": "none",
+  "types": [
+   "808",
+   "909",
+   "hybrid"
+  ],
+  "character": {},
+  "note": "Small drum machine with analog voices and PCM samples."
+ },
+ {
+  "id": "pioneer-dj-toraiz-sp-16",
+  "maker": "Pioneer DJ",
+  "model": "Toraiz SP-16",
+  "year": 2016,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "ssm",
+  "types": [
+   "hybrid",
+   "lofi"
+  ],
+  "character": {
+   "drive": 0.2
+  },
+  "note": "Sampler with Dave Smith analog filters."
+ },
+ {
+  "id": "isla-instruments-s2400",
+  "maker": "Isla Instruments",
+  "model": "S2400",
+  "year": 2021,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "ssm",
+  "types": [
+   "lofi",
+   "acoustic"
+  ],
+  "character": {
+   "bits": 12
+  },
+  "note": "Sampler with SP-1200-style 12-bit modes and analog filters."
+ },
+ {
+  "id": "modor-dr-2",
+  "maker": "Modor",
+  "model": "DR-2",
+  "year": 2021,
+  "family": "drum-machine",
+  "osc": "digital",
+  "filter": "digital",
+  "types": [
+   "efm",
+   "hybrid",
+   "909"
+  ],
+  "character": {},
+  "note": "Digital drum synth with 4-op FM and modular-style modulation."
+ },
+ {
+  "id": "cre8audio-boom-chick",
+  "maker": "Cre8audio",
+  "model": "Boom Chick",
+  "year": 2025,
+  "family": "drum-machine",
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "808",
+   "lofi"
+  ],
+  "character": {},
+  "note": "Compact analog drum machine."
+ }
+]

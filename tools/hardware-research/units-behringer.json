@@ -1,0 +1,597 @@
+[
+ {
+  "id": "behringer-ms-5",
+  "maker": "Behringer",
+  "model": "MS-5",
+  "year": 2024,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "svf",
+  "types": [
+   "lead",
+   "bass",
+   "pluck"
+  ],
+  "character": {
+   "mono": 1,
+   "detune": 6,
+   "reso": 1.2
+  },
+  "note": "Based on the Roland SH-5."
+ },
+ {
+  "id": "behringer-proton",
+  "maker": "Behringer",
+  "model": "Proton",
+  "year": 2023,
+  "family": "analog-mono",
+  "voices": 2,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "bass",
+   "lead",
+   "acid"
+  ],
+  "character": {
+   "detune": 9,
+   "drive": 0.55,
+   "reso": 1.5
+  },
+  "note": "Paraphonic semi-modular, a successor to the Neutron."
+ },
+ {
+  "id": "behringer-kobol-expander",
+  "maker": "Behringer",
+  "model": "Kobol Expander",
+  "year": 2022,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "svf",
+  "types": [
+   "lead",
+   "bass",
+   "brass"
+  ],
+  "character": {
+   "mono": 1,
+   "detune": 6,
+   "drive": 0.3
+  },
+  "note": "Based on the RSF Kobol Expander."
+ },
+ {
+  "id": "behringer-wasp-deluxe",
+  "maker": "Behringer",
+  "model": "Wasp Deluxe",
+  "year": 2020,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "digital",
+  "filter": "svf",
+  "types": [
+   "bass",
+   "lead",
+   "lofi"
+  ],
+  "character": {
+   "mono": 1,
+   "drive": 0.45,
+   "bright": 0.7
+  },
+  "note": "Based on the EDP Wasp: digital oscillators into a CMOS multimode filter."
+ },
+ {
+  "id": "behringer-cat",
+  "maker": "Behringer",
+  "model": "Cat",
+  "year": 2020,
+  "family": "analog-mono",
+  "voices": 2,
+  "osc": "vco",
+  "filter": "ssm",
+  "types": [
+   "lead",
+   "bass",
+   "brass"
+  ],
+  "character": {
+   "detune": 8,
+   "drive": 0.3,
+   "reso": 1.2
+  },
+  "note": "Based on the Octave Cat duophonic synth."
+ },
+ {
+  "id": "behringer-model-15",
+  "maker": "Behringer",
+  "model": "Model 15",
+  "year": 2020,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "brass"
+  ],
+  "character": {
+   "mono": 1,
+   "detune": 5,
+   "drive": 0.4
+  },
+  "note": "Based on the Moog Model 15 modular."
+ },
+ {
+  "id": "behringer-toro",
+  "maker": "Behringer",
+  "model": "Toro",
+  "year": 2023,
+  "family": "bass-machine",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead"
+  ],
+  "character": {
+   "mono": 1,
+   "sub": 0.3,
+   "drive": 0.45
+  },
+  "note": "Based on the Moog Taurus bass pedal synth."
+ },
+ {
+  "id": "behringer-d-mini",
+  "maker": "Behringer",
+  "model": "D Mini",
+  "year": 2026,
+  "family": "analog-mono",
+  "voices": 3,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "brass"
+  ],
+  "character": {
+   "detune": 7,
+   "drive": 0.4
+  },
+  "note": "Minimoog Model D-based mini synth; three VCOs can play paraphonically."
+ },
+ {
+  "id": "behringer-ub-1-micro",
+  "maker": "Behringer",
+  "model": "UB-1 Micro",
+  "year": 2026,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "dco",
+  "filter": "cem",
+  "types": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "character": {
+   "mono": 1,
+   "sub": 0.4,
+   "drive": 0.3
+  },
+  "note": "Inspired by the Oberheim Matrix-6/1000 voice."
+ },
+ {
+  "id": "behringer-jt-2",
+  "maker": "Behringer",
+  "model": "JT-2",
+  "year": 2026,
+  "family": "analog-mono",
+  "voices": 2,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "lead",
+   "bass",
+   "brass"
+  ],
+  "character": {
+   "detune": 8,
+   "drive": 0.25
+  },
+  "note": "Jupiter-8-style paraphonic voice in Eurorack format."
+ },
+ {
+  "id": "behringer-spice",
+  "maker": "Behringer",
+  "model": "Spice",
+  "year": 2023,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "vco",
+  "filter": "ladder",
+  "types": [
+   "bass",
+   "lead",
+   "pluck"
+  ],
+  "character": {
+   "detune": 10,
+   "sub": 0.5,
+   "drive": 0.35
+  },
+  "note": "Inspired by the Moog Subharmonicon."
+ },
+ {
+  "id": "behringer-grind",
+  "maker": "Behringer",
+  "model": "Grind",
+  "year": 2025,
+  "family": "analog-mono",
+  "voices": 1,
+  "osc": "digital",
+  "filter": "ladder",
+  "types": [
+   "lead",
+   "bass",
+   "pluck"
+  ],
+  "character": {
+   "drive": 0.35,
+   "bright": 0.6
+  },
+  "note": "Hybrid: 24 digital oscillator engines into an analog ladder filter, with a 32-step sequencer."
+ },
+ {
+  "id": "behringer-2-xm",
+  "maker": "Behringer",
+  "model": "2-XM",
+  "year": 2025,
+  "family": "analog-poly",
+  "voices": 2,
+  "osc": "vco",
+  "filter": "sem",
+  "types": [
+   "brass",
+   "lead",
+   "bass",
+   "pad"
+  ],
+  "character": {
+   "detune": 10,
+   "drive": 0.25,
+   "reso": 1.3
+  },
+  "note": "Based on the Oberheim Two Voice (two SEM-style voices)."
+ },
+ {
+  "id": "behringer-monopoly",
+  "maker": "Behringer",
+  "model": "MonoPoly",
+  "year": 2022,
+  "family": "analog-poly",
+  "voices": 4,
+  "osc": "vco",
+  "filter": "ssm",
+  "types": [
+   "bass",
+   "lead",
+   "pad",
+   "brass"
+  ],
+  "character": {
+   "detune": 9,
+   "drive": 0.3
+  },
+  "note": "Based on the Korg Mono/Poly."
+ },
+ {
+  "id": "behringer-ub-xa-d",
+  "maker": "Behringer",
+  "model": "UB-Xa D",
+  "year": 2024,
+  "family": "analog-poly",
+  "voices": 16,
+  "osc": "vco",
+  "filter": "cem",
+  "types": [
+   "brass",
+   "pad",
+   "strings",
+   "lead"
+  ],
+  "character": {
+   "detune": 11,
+   "chorus": 0.15,
+   "drive": 0.25
+  },
+  "note": "Desktop version of the UB-Xa, based on the OB-Xa."
+ },
+ {
+  "id": "behringer-jt-mini",
+  "maker": "Behringer",
+  "model": "JT Mini",
+  "year": 2023,
+  "family": "analog-poly",
+  "voices": 3,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "pad",
+   "brass",
+   "lead",
+   "bass"
+  ],
+  "character": {
+   "detune": 8,
+   "chorus": 0.2
+  },
+  "note": "Jupiter-8-inspired mini; three VCOs play poly (paraphonic) or unison."
+ },
+ {
+  "id": "behringer-ub-xa-mini",
+  "maker": "Behringer",
+  "model": "UB-Xa Mini",
+  "year": 2025,
+  "family": "analog-poly",
+  "voices": 3,
+  "osc": "vco",
+  "filter": "cem",
+  "types": [
+   "brass",
+   "pad",
+   "lead"
+  ],
+  "character": {
+   "detune": 10,
+   "drive": 0.2
+  },
+  "note": "OB-Xa-inspired mini synth; three VCOs, paraphonic."
+ },
+ {
+  "id": "behringer-phara-o-mini",
+  "maker": "Behringer",
+  "model": "Phara-O Mini",
+  "year": 2025,
+  "family": "analog-poly",
+  "voices": 3,
+  "osc": "vco",
+  "filter": "ota",
+  "types": [
+   "lead",
+   "bass",
+   "pad"
+  ],
+  "character": {
+   "detune": 8,
+   "drive": 0.2
+  },
+  "note": "Based on the Korg Volca Keys, with a miniKorg 700S-style filter."
+ },
+ {
+  "id": "behringer-jn-80",
+  "maker": "Behringer",
+  "model": "JN-80",
+  "year": 2026,
+  "family": "analog-poly",
+  "voices": 8,
+  "osc": "dco",
+  "filter": "ota",
+  "types": [
+   "pad",
+   "strings",
+   "brass",
+   "bass"
+  ],
+  "character": {
+   "chorus": 1
+  },
+  "note": "Based on the Roland Juno-60, with 8 voices and patch memory.",
+  "twin": "juniper"
+ },
+ {
+  "id": "behringer-wave",
+  "maker": "Behringer",
+  "model": "Wave",
+  "year": 2025,
+  "family": "digital-poly",
+  "voices": 8,
+  "osc": "wavetable",
+  "filter": "ssm",
+  "types": [
+   "pad",
+   "bell",
+   "keys",
+   "lead"
+  ],
+  "character": {
+   "bright": 0.7,
+   "detune": 4
+  },
+  "note": "Based on the PPG Wave 2.2/2.3 wavetable synth."
+ },
+ {
+  "id": "behringer-jt-4000-micro",
+  "maker": "Behringer",
+  "model": "JT-4000 Micro",
+  "year": 2023,
+  "family": "digital-poly",
+  "voices": 4,
+  "osc": "va",
+  "filter": "ota",
+  "types": [
+   "lead",
+   "pad",
+   "bass",
+   "pluck"
+  ],
+  "character": {
+   "detune": 10,
+   "chorus": 0.2
+  },
+  "note": "Inspired by the Roland JP-8000; modelled oscillators into an analog filter. Also sold as the JT-4000M module."
+ },
+ {
+  "id": "behringer-pro-vs-mini",
+  "maker": "Behringer",
+  "model": "Pro VS Mini",
+  "year": 2022,
+  "family": "digital-poly",
+  "voices": 5,
+  "osc": "digital",
+  "filter": "cem",
+  "types": [
+   "pad",
+   "bell",
+   "keys",
+   "lead"
+  ],
+  "character": {
+   "detune": 6,
+   "chorus": 0.3
+  },
+  "note": "Inspired by the Sequential Prophet VS vector synth."
+ },
+ {
+  "id": "behringer-cz-1-mini",
+  "maker": "Behringer",
+  "model": "CZ-1 Mini",
+  "year": 2025,
+  "family": "digital-poly",
+  "voices": 3,
+  "osc": "pd",
+  "filter": "ota",
+  "types": [
+   "keys",
+   "bass",
+   "bell",
+   "lead"
+  ],
+  "character": {
+   "bright": 0.6,
+   "chorus": 0.1
+  },
+  "note": "Inspired by the Casio CZ-1 phase distortion synth, plus an analog low-pass filter."
+ },
+ {
+  "id": "behringer-solina-string-ensemble",
+  "maker": "Behringer",
+  "model": "Solina String Ensemble",
+  "year": 2021,
+  "family": "string-machine",
+  "osc": "divide",
+  "filter": "none",
+  "types": [
+   "strings",
+   "pad"
+  ],
+  "character": {
+   "chorus": 1
+  },
+  "note": "Based on the ARP/Eminent Solina String Ensemble."
+ },
+ {
+  "id": "behringer-vocoder-vc340",
+  "maker": "Behringer",
+  "model": "Vocoder VC340",
+  "year": 2020,
+  "family": "string-machine",
+  "osc": "divide",
+  "filter": "none",
+  "types": [
+   "strings",
+   "pad"
+  ],
+  "character": {
+   "chorus": 0.8
+  },
+  "note": "Based on the Roland VP-330 Vocoder Plus (strings, voice and vocoder)."
+ },
+ {
+  "id": "behringer-rd-78",
+  "maker": "Behringer",
+  "model": "RD-78",
+  "year": 2025,
+  "family": "drum-machine",
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "808",
+   "soft"
+  ],
+  "character": {
+   "kick.decay": 0.35,
+   "snare.snap": 0.3
+  },
+  "note": "Based on the Roland CR-78."
+ },
+ {
+  "id": "behringer-lm-drum",
+  "maker": "Behringer",
+  "model": "LM Drum",
+  "year": 2025,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "lofi",
+   "hybrid"
+  ],
+  "character": {
+   "bits": 8
+  },
+  "note": "Based on the LinnDrum, with sampling."
+ },
+ {
+  "id": "behringer-bmx",
+  "maker": "Behringer",
+  "model": "BMX",
+  "year": 2026,
+  "family": "drum-machine",
+  "osc": "sample",
+  "filter": "none",
+  "types": [
+   "lofi",
+   "hybrid"
+  ],
+  "character": {
+   "bits": 8
+  },
+  "note": "Based on the Oberheim DMX, with sampling."
+ },
+ {
+  "id": "behringer-edge",
+  "maker": "Behringer",
+  "model": "Edge",
+  "year": 2022,
+  "family": "drum-machine",
+  "osc": "analog-drum",
+  "filter": "svf",
+  "types": [
+   "hybrid",
+   "808"
+  ],
+  "character": {},
+  "note": "Inspired by the Moog DFAM percussion synth."
+ },
+ {
+  "id": "behringer-syncussion-sy-1",
+  "maker": "Behringer",
+  "model": "Syncussion SY-1",
+  "year": 2021,
+  "family": "drum-machine",
+  "osc": "analog-drum",
+  "filter": "none",
+  "types": [
+   "hybrid",
+   "808"
+  ],
+  "character": {},
+  "note": "Based on the Pearl Syncussion SY-1 two-channel drum synth."
+ }
+]

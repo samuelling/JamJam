@@ -1,0 +1,723 @@
+{
+  "sequential-ob-6": {
+    "steps": [
+      "Press GLOBALS once (red LED, top row), press program button 2 (MIDI Channel) and pick 1-16 with the BANK/decrement and TENS/increment buttons.",
+      "Still on the top row, press 8 (MIDI SysEx) and choose the port you're plugged into: MID for the 5-pin MIDI sockets, USB for USB. There's no separate on/off.",
+      "Press 5 (Param Xmit) and set it to NR, then press 6 (Param Rcv) and set it to NR, so knob moves travel as NRPN.",
+      "Press 9 (MIDI Out) and pick the same port (MID or USB) so notes and knob moves leave where the app listens.",
+      "Don't use Pgm Dump (GLOBALS bottom row, 8) to share sounds: dumped programs load back into a stored program slot. The app asks for the current sound instead."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://www.davesmithinstruments.com/wp-content/uploads/2016/03/OB-6-Operation-Manual.pdf"
+    ]
+  },
+  "sequential-prophet-6": {
+    "steps": [
+      "Press GLOBALS once (red LED, top row), press program button 2 (MIDI Channel) and pick 1-16 with the BANK/decrement and TENS/increment buttons.",
+      "Still on the top row, press 8 (MIDI SysEx) and choose the port you're plugged into: MID for the 5-pin MIDI sockets, USB for USB. There's no separate on/off.",
+      "Press 5 (Param Xmit) and set it to NR, then press 6 (Param Rcv) and set it to NR, so knob moves travel as NRPN.",
+      "Press 9 (MIDI Out) and pick the same port (MID or USB) so notes and knob moves leave where the app listens.",
+      "Don't use Pgm Dump (GLOBALS bottom row, 8) to share sounds: dumped programs load back into a stored program slot. The app asks for the current sound instead."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://analoguehaven.com/sequential/prophet-6/manual.pdf"
+    ]
+  },
+  "sequential-prophet-rev2": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Turn on MIDI SysEx in its global settings and pick the port you're using (USB or MIDI).",
+      "In its global settings, set parameter send and receive to NRPN.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Update to current firmware: firmware 1.1 sent the current sound 3 bytes short."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/sequential/GenericSequential.py",
+      "https://github.com/christofmuc/KnobKraft-orm/tree/master/synths/sequential-rev2"
+    ]
+  },
+  "sequential-take-5": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+      "In its global settings, set parameter send and receive to NRPN.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Both players should be on the same OS version (OS 2 changed the banks)."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/sequential/GenericSequential.py"
+    ]
+  },
+  "sequential-prophet-x": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+      "In its global settings, set parameter send and receive to NRPN.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Load the same sample library on both instruments; a sound only names its samples."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/sequential/GenericSequential.py"
+    ]
+  },
+  "sequential-pro-3": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+      "In its global settings, set parameter send and receive to NRPN.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "If transfers stall, leave a short pause between messages (about 50 ms)."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/sequential/GenericSequential.py"
+    ]
+  },
+  "oberheim-ob-x8": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+      "In its global settings, set parameter send and receive to NRPN.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Both players should be on the same OB-X8 firmware."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/sequential/GenericSequential.py"
+    ]
+  },
+  "dave-smith-instruments-tetra": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+      "In its global settings, set parameter send and receive to NRPN.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Use single-program mode, not Combo mode: only one part's sound is shared."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/sequential/GenericSequential.py"
+    ]
+  },
+  "dave-smith-instruments-mopho": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+      "In its global settings, set parameter send and receive to NRPN.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Mopho desktop, Keyboard, SE and x4 can share sounds with each other."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/sequential/GenericSequential.py"
+    ]
+  },
+  "dave-smith-instruments-evolver": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Turn on MIDI SysEx in its global settings (pick USB or MIDI if it asks for a port).",
+      "In its global settings, set parameter send and receive to NRPN.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "If the sound uses user waveshapes, both units need the same waveshapes; patch names aren't sent."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/sequential/GenericSequential.py"
+    ]
+  },
+  "oberheim-matrix-1000": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Use the 5-pin MIDI In and Out sockets (it has no USB).",
+      "Turn on SysEx receive in its MIDI settings if your firmware has that option.",
+      "Nothing to set for knob moves: it has no panel knobs, edits arrive as SysEx."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/synths/oberheim-matrix1000/Matrix1000.cpp"
+    ]
+  },
+  "behringer-deepmind-12": {
+    "steps": [
+      "Press GLOBAL until the GLOBAL menu shows, open CONNECTIVITY, then MIDI SETTINGS, and set RX-CHANNEL and TX-CHANNEL.",
+      "On the CONNECTIVITY page, leave DEVICE ID at 1 (or match what the app expects).",
+      "On the settings page for the connection you're using (MIDI, USB or WiFi), set MIDI CTRL to NRPN.",
+      "Use the same connection (USB, 5-pin MIDI or WiFi) for the app; each has its own settings.",
+      "If sharing doesn't respond, check SysEx is allowed on that connection in the CONNECTIVITY menu."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://manualowl.com/m/Behringer/DEEPMIND-12/Manual/613573?page=79",
+      "https://manualowl.com/m/Behringer/DEEPMIND-12/Manual/613573?page=81",
+      "https://cdn.jsdelivr.net/npm/patchwork-deepmind@0.3.0/skills/deepmind-parameter-guide/sections/global-settings.md"
+    ]
+  },
+  "behringer-deepmind-6": {
+    "steps": [
+      "Press GLOBAL until the GLOBAL menu shows, open CONNECTIVITY, then MIDI SETTINGS, and set RX-CHANNEL and TX-CHANNEL.",
+      "On the CONNECTIVITY page, leave DEVICE ID at 1 (or match what the app expects).",
+      "On the settings page for the connection you're using (MIDI, USB or WiFi), set MIDI CTRL to NRPN.",
+      "Use the same connection (USB, 5-pin MIDI or WiFi) for the app; each has its own settings.",
+      "If sharing doesn't respond, check SysEx is allowed on that connection in the CONNECTIVITY menu."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://manualowl.com/m/Behringer/DEEPMIND-12/Manual/613573?page=79",
+      "https://manualowl.com/m/Behringer/DEEPMIND-12/Manual/613573?page=81",
+      "https://cdn.jsdelivr.net/npm/patchwork-deepmind@0.3.0/skills/deepmind-parameter-guide/sections/global-settings.md"
+    ]
+  },
+  "behringer-pro-800": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no 'send current sound' command: save your sound first, then the app copies that stored slot into a spare slot on your bandmate's Pro-800.",
+      "Both players should be on similar firmware; the preset layout changed between versions."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://cdn.mediavalet.com/aunsw/musictribe/q3-BVIpZck-zi_hAUX2V2Q/McqR_H7pVkW5V21CKYq9Pg/Original/Preset-Structure-Document_BE_0718-ABF_PRO800.pdf"
+    ]
+  },
+  "behringer-ub-xa": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In Global MIDI settings, turn on Rx PC (receive program change).",
+      "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+      "Sound sharing isn't supported for this model yet; only live knob moves are relayed."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Behringer_UB-Xa.py"
+    ]
+  },
+  "moog-moog-one": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "moog-muse": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "moog-minitaur": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Knob moves are relayed live; it has no sound memory to share."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "moog-subsequent-37": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "moog-subsequent-25": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "arturia-polybrute": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "arturia-matrixbrute": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "arturia-minifreak": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "arturia-microfreak": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "novation-peak": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "novation-summit": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Turn on SysEx send and receive in its global MIDI settings.",
+      "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Use a single patch: in Multi mode only one part is shared."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Novation_Summit.py"
+    ]
+  },
+  "novation-bass-station": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "Use the 5-pin MIDI sockets.",
+      "Knob moves are relayed live; sound sharing isn't supported."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "novation-bass-station-ii": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+      "Connect by USB or 5-pin MIDI.",
+      "Both players should run firmware 2.5 or later so sounds match."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Novation_Bass_Station_II.py"
+    ]
+  },
+  "novation-ultranova": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Turn on SysEx send and receive in its global MIDI settings.",
+      "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Novation_UltraNova.py"
+    ]
+  },
+  "novation-circuit-tracks": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+      "Connect with a USB cable: it only answers sound requests over USB, not the 5-pin sockets.",
+      "Synth 1 and Synth 2 are shared separately; drum tracks aren't included."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://manualsnet.com/novation/circuit-tracks"
+    ]
+  },
+  "waldorf-pulse-2": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Turn on SysEx send and receive in its global MIDI settings.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "Leave its Device ID at the default (0).",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/eclab/edisyn/tree/master/edisyn/synth/waldorfpulse2"
+    ]
+  },
+  "waldorf-microwave": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Leave its Device ID at the default (0).",
+      "Use the 5-pin MIDI In and Out sockets.",
+      "Edits are sent as SysEx; no CC setting is needed."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Waldorf_MicroWave.py"
+    ]
+  },
+  "waldorf-blofeld": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global settings, set controller send to CC and turn controller receive on.",
+      "Leave its Device ID at the default.",
+      "Use Sound mode: in Multi mode each part has its own sound.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://www.deepsonic.ch/deep/docs_manuals/waldorf_blofeld_sysex_documentation_v.1.04.txt"
+    ]
+  },
+  "waldorf-iridium": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "waldorf-quantum": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "access-virus-ti": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "access-virus-c": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Leave its Device ID at Omni (the default) so it answers sound requests.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "Use Single mode: in Multi mode each part has its own sound.",
+      "Use the 5-pin MIDI sockets."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/synths/access-virus/Virus.cpp"
+    ]
+  },
+  "clavia-nord-lead-2": {
+    "steps": [
+      "Set the Global MIDI channel; sound sharing uses this same channel.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "Use the 5-pin MIDI sockets.",
+      "Use a normal synth sound in slot A, not a drum kit."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Clavia_Nord_Lead.py"
+    ]
+  },
+  "clavia-nord-lead-4": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "clavia-nord-lead-a1": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "asm-hydrasynth": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Sound sharing isn't supported for this model yet; only live knob moves are relayed."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/eclab/edisyn/tree/master/edisyn/synth/asmhydrasynth"
+    ]
+  },
+  "modal-argon8": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, set parameter send and receive to NRPN (use CC if NRPN isn't offered).",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "ensoniq-esq-1": {
+    "steps": [
+      "Set its base MIDI channel on the MIDI page.",
+      "On the MIDI page, open MIDI ENABLE and set SX to on.",
+      "Use the 5-pin MIDI In and Out sockets.",
+      "Knob moves aren't sent live; share the sound after editing."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Ensoniqesq1.py"
+    ]
+  },
+  "casio-cz-101": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Connect both MIDI In and MIDI Out: sharing a sound needs two-way talk.",
+      "Use the 5-pin MIDI sockets.",
+      "Knob moves aren't sent live; share the sound after editing."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Casio%20CZ-101.py"
+    ]
+  },
+  "casio-cz-1000": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Connect both MIDI In and MIDI Out: sharing a sound needs two-way talk.",
+      "Use the 5-pin MIDI sockets.",
+      "Knob moves aren't sent live; share the sound after editing."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Casio%20CZ-101.py"
+    ]
+  },
+  "teenage-engineering-op-1": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "Connect by USB.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "teenage-engineering-op-z": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "Connect by USB.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "polyend-tracker": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "akai-mpc-live": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "Assign the Q-Link knobs to send CC.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "There's no command to fetch the current sound; share it as a file or recreate it, and use live knob relay."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "elektron-analog-rytm": {
+    "steps": [
+      "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+      "In its MIDI settings, turn on CC/NRPN send and receive.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Load the same samples into the same slots on both units: kits only name their samples.",
+      "Leave its device ID at the default."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/bsp2/libanalogrytm/blob/master/sysex.c"
+    ]
+  },
+  "elektron-analog-four": {
+    "steps": [
+      "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+      "In its MIDI settings, turn on CC/NRPN send and receive.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "To share a sound, send it from the SysEx dump menu while the app is listening, and set your bandmate's unit to receive."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "elektron-analog-keys": {
+    "steps": [
+      "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+      "In its MIDI settings, turn on CC/NRPN send and receive.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "To share a sound, send it from the SysEx dump menu while the app is listening, and set your bandmate's unit to receive."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "elektron-digitone": {
+    "steps": [
+      "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+      "In its MIDI settings, turn on CC/NRPN send and receive.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "To share a sound, send it from the SysEx dump menu while the app is listening, and set your bandmate's unit to receive."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "elektron-monomachine": {
+    "steps": [
+      "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+      "In its MIDI settings, turn on CC/NRPN send and receive.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "To share a sound, send it from the SysEx dump menu while the app is listening, and set your bandmate's unit to receive."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "elektron-machinedrum": {
+    "steps": [
+      "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+      "In its MIDI settings, turn on CC/NRPN send and receive.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "To share a sound, send it from the SysEx dump menu while the app is listening, and set your bandmate's unit to receive."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "elektron-digitakt": {
+    "steps": [
+      "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+      "In its MIDI settings, turn on CC/NRPN send and receive.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Knob moves are relayed live; sound sharing isn't supported (use Elektron Transfer for sounds)."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "elektron-syntakt": {
+    "steps": [
+      "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+      "In its MIDI settings, turn on CC/NRPN send and receive.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Knob moves are relayed live; sound sharing isn't supported (use Elektron Transfer for sounds)."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "elektron-model-cycles": {
+    "steps": [
+      "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+      "In its MIDI settings, turn on CC/NRPN send and receive.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Knob moves are relayed live; sound sharing isn't supported (use Elektron Transfer for sounds)."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "elektron-model-samples": {
+    "steps": [
+      "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+      "In its MIDI settings, turn on CC/NRPN send and receive.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Knob moves are relayed live; sound sharing isn't supported (use Elektron Transfer for sounds)."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "elektron-octatrack": {
+    "steps": [
+      "Set its MIDI channels (auto and track channels) in its MIDI settings.",
+      "In its MIDI settings, turn on CC/NRPN send and receive.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Knob moves are relayed live; sound sharing isn't supported (use Elektron Transfer for sounds)."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "behringer-rd-8": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Knob moves are relayed live; there's no sound memory to share."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "behringer-rd-9": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Knob moves are relayed live; there's no sound memory to share."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "jomox-airbase-99": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Knob moves are relayed live; there's no sound memory to share."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "vermona-drm1": {
+    "steps": [
+      "Set its MIDI channel in its global MIDI settings so it matches the channel the app uses.",
+      "In its global MIDI settings, turn on CC send and receive for the panel controls.",
+      "If it has a MIDI port setting, choose the connection you're using: USB or the 5-pin MIDI sockets.",
+      "Knob moves are relayed live; there's no sound memory to share."
+    ],
+    "confidence": "guess",
+    "sources": []
+  }
+}

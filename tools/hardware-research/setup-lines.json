@@ -1,0 +1,594 @@
+{
+ "sequential-prophet-5-rev4": {
+  "steps": [
+   "Press GLOBALS once (top row), press program button 2 (MIDI Channel) and pick the channel with the Group/Bank buttons.",
+   "Press program button 6 (MIDI SysEx) and choose the port you're plugged into: Mdi for the 5-pin sockets, USB for USB.",
+   "Press 3 (Param Xmit) and set NRn, then 4 (Param Rcv) and set NRn, so knob moves travel as NRPN.",
+   "Press 7 (MIDI Out) and pick the same port (or ALL), then press GLOBALS to exit.",
+   "Don't use the front-panel program dump to share: it writes into a stored slot. The app asks for the current sound instead."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/wp-content/uploads/2021/02/Prophet-5-Users-Guide-1.3.pdf",
+   "https://sequential.com/wp-content/uploads/2025/03/Prophet-510-Factory-Programs-ReadMe1.03.zip"
+  ]
+ },
+ "sequential-prophet-10-rev4": {
+  "steps": [
+   "Press GLOBALS once (top row), press program button 2 (MIDI Channel) and pick the channel with the Group/Bank buttons.",
+   "Press program button 6 (MIDI SysEx) and choose Mdi for the 5-pin sockets or USB for USB.",
+   "Press 3 (Param Xmit) and set NRn, then 4 (Param Rcv) and set NRn.",
+   "Press 7 (MIDI Out) and pick the same port (or ALL), then press GLOBALS to exit.",
+   "A Prophet-10 can share sounds with a Prophet-5 Rev4 as well as another Prophet-10."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/wp-content/uploads/2021/02/Prophet-10-Users-Guide-1.4.pdf",
+   "https://sequential.com/wp-content/uploads/2025/03/Prophet-510-Factory-Programs-ReadMe1.03.zip"
+  ]
+ },
+ "sequential-trigon-6": {
+  "steps": [
+   "Press GLOBALS (top row), press program button 2 (MIDI Channel) and choose the channel.",
+   "Press 8 (MIDI Sysex) and choose MID for the 5-pin sockets or USB for USB.",
+   "Press 5 (Param Xmit) and set NR, then 6 (Param Rcv) and set NR, so knob moves go as NRPN.",
+   "Set MIDI Out to the same port you use, then press GLOBALS to leave."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/wp-content/uploads/2022/12/Trigon-6-Users-Guide-1.1.pdf"
+  ]
+ },
+ "sequential-fourm": {
+  "steps": [
+   "In the global settings, set MIDI Channel to the channel the app uses.",
+   "Set MIDI SysX to On and MIDI SysX Port to the connection you use (MIDI or USB).",
+   "Set MIDI Param Out to NRPN and MIDI Param In to NRPN so knob moves travel at full resolution.",
+   "Set MIDI Out Port to the same connection (or All).",
+   "Sounds are large (about 4.7 KB); USB is faster and more reliable than 5-pin MIDI."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/wp-content/uploads/2025/12/Fourm-MIDI-Implementation-Document_V1.1.pdf"
+  ]
+ },
+ "dave-smith-instruments-prophet-08": {
+  "steps": [
+   "Press GLOBAL and set MIDI Channel to the app's channel.",
+   "On global page 4, set MParam Send to NRPN and M Param Rec to NRPN (or All).",
+   "On global page 6, set MIDI SysEx to On.",
+   "It has only 5-pin MIDI sockets (no USB): connect MIDI In and MIDI Out to your interface.",
+   "MIDI Program (page 5) On lets the app follow program changes."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/downloads/prophet_keyboard/doc/Prophet_08_Manual_v1.3.pdf"
+  ]
+ },
+ "dave-smith-instruments-mopho-keyboard": {
+  "steps": [
+   "In the Global menu, set MIDI Channel to the app's channel.",
+   "Set MIDI Parameter Send to NRPN and MIDI Parameter Receive to NRPN (or All).",
+   "Set MIDI SysEx to On.",
+   "Use either USB or the 5-pin MIDI sockets; leave MIDI Out Select on Out, not Thru."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/downloads/mopho_keyboard/doc/MophoKey_Manual_v.1.1.pdf",
+   "https://sequential.com/wp-content/uploads/2014/12/DSI-504R-Mopho-SE-Manual-v.1.1.pdf"
+  ]
+ },
+ "dave-smith-instruments-mopho-x4": {
+  "steps": [
+   "In the Global menu, set MIDI Channel to the app's channel.",
+   "Set MIDI Parameter Send to NRPN and MIDI Parameter Receive to NRPN (or All).",
+   "Set MIDI SysEx to On.",
+   "Use USB or the 5-pin MIDI sockets; leave MIDI Out Select on Out and Poly Chain Off."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/downloads/mophox4/doc/Mopho_x4_Operation_Manual_v.1.0.pdf"
+  ]
+ },
+ "dave-smith-instruments-poly-evolver": {
+  "steps": [
+   "In the Global menu, set MIDI Channel to the app's channel.",
+   "On the keyboard, set MIDI SysEx to On (knob moves are then sent as SysEx).",
+   "Use the 5-pin MIDI In and Out sockets; it has no USB.",
+   "Set Poly Chain to Off unless you are chaining Evolvers.",
+   "Share sounds from Program mode, not Combo mode."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://sequential.com/downloads/poly_evolver/doc/Poly_rack_manual_2.2.pdf",
+   "https://sequential.com/downloads/poly_evolver_key/doc/Poly_Evo_Key_Manual_1.4.pdf"
+  ]
+ },
+ "dave-smith-instruments-mono-evolver-keyboard": {
+  "steps": [
+   "In the Global menu, set MIDI Channel to the app's channel.",
+   "On global page 6, set MIDI SysEx to On; knob moves are then sent as SysEx.",
+   "On global page 5, set MIDI Program to On.",
+   "Use the 5-pin MIDI In and Out sockets; it has no USB."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/downloads/evolver_keyboard/doc/Evo_Key_Manual_1.3.pdf"
+  ]
+ },
+ "dave-smith-instruments-prophet-12": {
+  "steps": [
+   "Press GLOBALS and set MIDI Channel to the app's channel.",
+   "Set MIDI Param Send to NRPN and MIDI Param Receive to NRPN.",
+   "Set MIDI Sysex Enable to On and MIDI Sysex Cable to the port you use (MIDI Port or USB).",
+   "Set MIDI Out Select to the same port (or MIDI+USB).",
+   "Don't plug in both USB and 5-pin MIDI In at once on the module: its manual warns the inputs merge unpredictably."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/downloads/prophet_12/doc/Prophet_12_Operation_Manual_v.1.0.pdf",
+   "https://sequential.com/wp-content/uploads/2021/02/Prophet_12_Module-Op_Man_v1.2.pdf"
+  ]
+ },
+ "dave-smith-instruments-pro-2": {
+  "steps": [
+   "Press GLOBALS and set MIDI Channel to the app's channel.",
+   "Set MIDI Param Send to NRPN and MIDI Param Receive to NRPN.",
+   "Set MIDI Sysex Enable to On and MIDI Sysex Cable to the port you use (MIDI Port or USB).",
+   "Set MIDI Out Select to the same port; item 12 (MIDI Port 2 Thru/Out) can stay as it is."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/wp-content/uploads/2017/04/Pro-2-Operation-Manual-1.2.pdf"
+  ]
+ },
+ "dave-smith-instruments-tempest": {
+  "steps": [
+   "In System settings, set MIDI: Sysex IN-OUT Cable to the port you use (MIDI Port or USB).",
+   "To share a drum sound, tap its pad in 16 Sounds mode, then Save/Load > Export Sound in RAM over MIDI > Export Now.",
+   "On the receiving Tempest, the imported Sound replaces the current one in RAM: save it if you want to keep it.",
+   "Leave at least a second between SysEx transfers or the flash system errors."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://sequential.com/wp-content/uploads/2015/02/Tempest-Operation-Manual-v.1.4.pdf"
+  ]
+ },
+ "sequential-prophet-vs": {
+  "steps": [
+   "Set its MIDI channel in the MIDI menu so it matches the app.",
+   "After every power-up, enable Parameters in the MIDI menu, or knob moves are ignored.",
+   "Also enable Program Change in the MIDI menu.",
+   "Use the 5-pin MIDI sockets; it has no USB."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://cdn.shopify.com/s/files/1/0024/2352/1341/files/Stereoping_ProVessorS_Manual_Addendum_SCI_Prophet_VS.pdf"
+  ]
+ },
+ "sequential-prophet-t8": {
+  "steps": [
+   "Set its MIDI channel so it matches the app.",
+   "Use the 5-pin MIDI sockets; it has no USB.",
+   "Knob moves aren't sent over MIDI; only notes and program changes reach bandmates."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sequential-max": {
+  "steps": [
+   "Set its MIDI channel so it matches the app.",
+   "Use the 5-pin MIDI sockets; it has no USB.",
+   "Turn it to a single-sound mode (not multitimbral) so the app's channel plays one sound.",
+   "Knob moves aren't sent as CC; sound sharing isn't supported yet."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sequential-multi-trak": {
+  "steps": [
+   "Set its MIDI channel so it matches the app.",
+   "Use the 5-pin MIDI sockets; it has no USB.",
+   "Turn it to a single-sound mode (not multitimbral) so the app's channel plays one sound.",
+   "Knob moves aren't sent as CC; sound sharing isn't supported yet."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sequential-split-eight": {
+  "steps": [
+   "Set its MIDI channel so it matches the app.",
+   "Use the 5-pin MIDI sockets; it has no USB.",
+   "Turn it to a single-sound mode (not multitimbral) so the app's channel plays one sound.",
+   "Knob moves aren't sent as CC; sound sharing isn't supported yet."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sequential-prophet-2000": {
+  "steps": [
+   "Set its MIDI channel so it matches the app.",
+   "Use the 5-pin MIDI sockets; it has no USB.",
+   "Load your samples from disk before the jam: bandmates hear a synthesized stand-in, not your samples."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sequential-studio-440": {
+  "steps": [
+   "Set its MIDI channel so it matches the app.",
+   "Use the 5-pin MIDI sockets; it has no USB.",
+   "Bandmates hear synthesized drums, not your samples."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "oberheim-teo-5": {
+  "steps": [
+   "In the global settings, set MIDI Channel to the app's channel.",
+   "Set MIDI Sysex On to On and MIDI SysEx Cable to the connection you use (MIDI or USB).",
+   "Set MIDI Param Send to NRPN and MIDI Param Receive to NRPN.",
+   "Set MIDI Out Select to the same connection (or All).",
+   "Sounds are about 4.7 KB; USB is faster than 5-pin MIDI."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://oberheim.com/wp-content/uploads/2025/07/TEO-5-MIDI-Implementation-Document_v2.pdf"
+  ]
+ },
+ "oberheim-matrix-6": {
+  "steps": [
+   "Set its MIDI channel in its master (global) settings so it matches the app.",
+   "If its master settings have a SysEx or patch-exchange enable, turn it on.",
+   "Use the 5-pin MIDI sockets; it has no USB.",
+   "Received sounds overwrite a stored patch: back up your patches first."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Matrix%206.py"
+  ]
+ },
+ "oberheim-eight-voice": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "oberheim-ob-1": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "oberheim-ob-sx": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "oberheim-ob-mx": {
+  "steps": [
+   "Set its MIDI channel so it matches the app.",
+   "Use the 5-pin MIDI sockets; it has no USB.",
+   "Make sure the voice cards you want to hear are assigned to that channel."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "oberheim-ob-12": {
+  "steps": [
+   "Set its MIDI channel in the MIDI menu so it matches the app.",
+   "Turn on controller (CC) transmit so knob moves reach the app.",
+   "Use the 5-pin MIDI sockets."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "oberheim-ob3-2": {
+  "steps": [
+   "Set its MIDI channel so it matches the app.",
+   "Use the 5-pin MIDI sockets.",
+   "Drawbar moves are sent as CC; leave controller transmit on."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "oberheim-two-voice-pro": {
+  "steps": [
+   "Set the MIDI channel for each SEM voice so it matches the app.",
+   "Use the 5-pin MIDI In socket.",
+   "It has no sound memory: bandmates' twins follow the catalogue sound, not your knobs."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-minimoog-voyager": {
+  "steps": [
+   "In Master Mode, set the MIDI channel to the app's channel.",
+   "In Master Mode, set RECEIVE PRESETS to SYSEX ENABLED.",
+   "Leave SYSEX DEVICE ID at 1 (both Voyagers sharing a sound must use the same ID).",
+   "Use the 5-pin MIDI sockets; the Voyager has no USB MIDI.",
+   "To share by hand, use SEND PANEL SOUND, not SEND PRESET(S): SEND PRESET(S) overwrites the stored slot on the other Voyager."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://www.allfordj.ru/upload/iblock/e74/rukovodstvo_polzovatelya_moog_minimoog_voyager_performer_edition.pdf",
+   "https://forum.moogmusic.com/t/saving-patches-from-one-voyager-to-another/3796"
+  ]
+ },
+ "moog-minimoog-voyager-xl": {
+  "steps": [
+   "In Master Mode, set the MIDI channel to the app's channel.",
+   "In Master Mode, set RECEIVE PRESETS to SYSEX ENABLED.",
+   "Leave SYSEX DEVICE ID at 1.",
+   "Use the 5-pin MIDI sockets.",
+   "Share by hand with SEND PANEL SOUND, not SEND PRESET(S), which overwrites a slot."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://www.allfordj.ru/upload/iblock/e74/rukovodstvo_polzovatelya_moog_minimoog_voyager_performer_edition.pdf"
+  ]
+ },
+ "moog-minimoog-voyager-old-school": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead.",
+   "A MIDI-to-CV converter into its CV/gate inputs lets the app's notes play it, but the app still cannot hear what you play."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-little-phatty": {
+  "steps": [
+   "Set the MIDI channel in its global menu so it matches the app.",
+   "Make sure knob CC transmit is on in its MIDI settings (needs OS 3 or later).",
+   "Stage II units have USB; older ones use the 5-pin sockets only.",
+   "Knob moves are relayed live; the app can't fetch its stored sound automatically."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://forum.moogmusic.com/t/phatty-to-phatty-patch-transfer/19120"
+  ]
+ },
+ "moog-slim-phatty": {
+  "steps": [
+   "Set the MIDI channel in its global menu so it matches the app.",
+   "Make sure knob CC transmit is on.",
+   "Use USB or the 5-pin MIDI sockets.",
+   "Knob moves are relayed live; stored sounds can't be fetched automatically."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://forum.moogmusic.com/t/phatty-to-phatty-patch-transfer/19120"
+  ]
+ },
+ "moog-sub-phatty": {
+  "steps": [
+   "Set the MIDI channel in its global settings so it matches the app.",
+   "Turn on CC transmit for the panel knobs.",
+   "Use USB or the 5-pin MIDI sockets.",
+   "Knob moves are relayed live; stored sounds can't be fetched automatically."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-sub-37": {
+  "steps": [
+   "Set the MIDI channel in its global MIDI settings so it matches the app.",
+   "Turn on CC transmit and receive for the panel controls.",
+   "Use USB or the 5-pin MIDI sockets.",
+   "Knob moves are relayed live; stored sounds can't be fetched automatically."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-sirin": {
+  "steps": [
+   "Set its MIDI channel (via its global settings or editor) so it matches the app.",
+   "Turn on CC transmit for the panel knobs.",
+   "Use USB or the 5-pin MIDI sockets.",
+   "Knob moves are relayed live; stored sounds can't be fetched automatically."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-taurus-3": {
+  "steps": [
+   "Set its MIDI channel in its global settings so it matches the app.",
+   "Use USB or the 5-pin MIDI sockets.",
+   "Stored sounds can't be fetched automatically yet."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-taurus-ii": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-werkstatt-01": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-mavis": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-subharmonicon": {
+  "steps": [
+   "Connect the app's MIDI output to its MIDI In.",
+   "It plays the app's notes and follows MIDI clock; it sends nothing back.",
+   "It has no sound memory to share."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-labyrinth": {
+  "steps": [
+   "Connect the app's MIDI output to its TRS MIDI input with a type-A TRS adapter.",
+   "If it ignores MIDI, try the other TRS adapter type.",
+   "It has no sound memory to share."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://forum.moogmusic.com/t/moog-labyrinth-with-daw/22953"
+  ]
+ },
+ "moog-spectravox": {
+  "steps": [
+   "Connect the app's MIDI output to its MIDI input.",
+   "It plays the app's notes on its oscillator; it sends nothing back.",
+   "It has no sound memory to share."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-messenger": {
+  "steps": [
+   "Set its MIDI channel in its settings so it matches the app.",
+   "Use USB-C or the 5-pin MIDI sockets.",
+   "Turn on CC transmit for the panel if it has the option.",
+   "Stored sounds can't be fetched automatically yet."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://www.synthtopia.com/content/2025/05/08/moog-messenger-is-moogs-most-accessible-analog-synthesizer-ever/"
+  ]
+ },
+ "moog-sonic-six": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-satellite": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-micromoog": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-minitmoog": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-multimoog": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-opus-3": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-liberation": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-concertmate-mg-1": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-system-35": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead.",
+   "A MIDI-to-CV converter lets the app's notes play it, but the app still cannot hear what you play."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-model-55": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead.",
+   "A MIDI-to-CV converter lets the app's notes play it, but the app still cannot hear what you play."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-model-15": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead.",
+   "A MIDI-to-CV converter lets the app's notes play it, but the app still cannot hear what you play."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "moog-model-10": {
+  "steps": [
+   "This unit has no MIDI, so there is nothing to set on the synth for the app.",
+   "Bandmates cannot get a software twin of your playing from it: the app never sees your notes.",
+   "If you want them to hear it, plug its audio output into your audio interface instead.",
+   "A MIDI-to-CV converter lets the app's notes play it, but the app still cannot hear what you play."
+  ],
+  "confidence": "guess",
+  "sources": []
+ }
+}

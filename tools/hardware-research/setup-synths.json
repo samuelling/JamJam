@@ -1,0 +1,1276 @@
+{
+ "teenage-engineering-op-xy": {
+  "steps": [
+   "Connect by USB-C for the simplest setup. For 5-pin DIN gear, use a TRS-to-MIDI cable in the multi-out jack and set that port to 'midi' on the COM screen (unplug it first; the port function can't change while plugged in).",
+   "Open project settings > config > midi and give the track you'll play a MIDI channel that matches the app.",
+   "On COM, press M3 (devices) and make sure notes, CCs and clock are enabled for the app's connection.",
+   "Play on that track; turning its knobs sends CCs on the track's channel.",
+   "Sounds can't be shared over MIDI: presets are files copied over MTP. The app relays knob moves only."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://teenage.engineering/guides/op-xy/com",
+   "https://teenage.engineering/guides/op-xy/how-to",
+   "https://teenage.engineering/guides/op-xy/midi-references",
+   "https://teenage.engineering/_img/68ef8a079775f13263a349ef_original.pdf"
+  ]
+ },
+ "teenage-engineering-op-1-field": {
+  "steps": [
+   "Connect by USB-C (or pair over Bluetooth MIDI from the COM screen). There is no 5-pin or TRS MIDI port.",
+   "Hold Shift and press the Output button to open COM, then press T1 (MIDI).",
+   "Set the MIDI channel to match the app and turn on MIDI notes and 'other MIDI' so encoder moves are sent.",
+   "Turn on MIDI clock only if you want it to follow the app's tempo.",
+   "Sounds can't be shared over MIDI: patches are files on the OP-1 field's disk. The app relays knob moves only."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://teenage.engineering/_img/676030a8ef599a28c8bc97cf_original.pdf"
+  ]
+ },
+ "teenage-engineering-po-14-sub": {
+  "steps": [
+   "This unit has no MIDI, so the app can't hear its notes or knob moves.",
+   "Plug its audio output into your audio interface (or the app's audio lane) so bandmates hear the real thing.",
+   "Pick a matching software twin in the app for bandmates who want to play the same sound.",
+   "To keep in time, it can follow a sync pulse on its audio input (SY modes), not MIDI clock."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/products/po"
+  ]
+ },
+ "teenage-engineering-po-16-factory": {
+  "steps": [
+   "This unit has no MIDI, so the app can't hear its notes or knob moves.",
+   "Plug its audio output into your audio interface (or the app's audio lane) so bandmates hear the real thing.",
+   "Pick a matching software twin in the app for bandmates who want to play the same sound.",
+   "To keep in time, it can follow a sync pulse on its audio input (SY modes), not MIDI clock."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/products/po"
+  ]
+ },
+ "teenage-engineering-po-20-arcade": {
+  "steps": [
+   "This unit has no MIDI, so the app can't hear its notes or knob moves.",
+   "Plug its audio output into your audio interface (or the app's audio lane) so bandmates hear the real thing.",
+   "Pick a matching software twin in the app for bandmates who want to play the same sound.",
+   "To keep in time, it can follow a sync pulse on its audio input (SY modes), not MIDI clock."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/products/po"
+  ]
+ },
+ "teenage-engineering-po-28-robot": {
+  "steps": [
+   "This unit has no MIDI, so the app can't hear its notes or knob moves.",
+   "Plug its audio output into your audio interface (or the app's audio lane) so bandmates hear the real thing.",
+   "Pick a matching software twin in the app for bandmates who want to play the same sound.",
+   "To keep in time, it can follow a sync pulse on its audio input (SY modes), not MIDI clock."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://teenage.engineering/products/po"
+  ]
+ },
+ "dreadbox-erebus": {
+  "steps": [
+   "Set its receive channel as described in the manual for your version (V1-V3); if unsure, send on channel 1.",
+   "Connect the app's MIDI out to its MIDI IN; it has no MIDI out, so the app can't hear its own knobs.",
+   "Its panel isn't sent or received as MIDI, so tweak by hand; bandmates hear your audio or the software twin.",
+   "Patch cables on the patchbay change the sound too, and none of that travels over MIDI."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "dreadbox-erebus-reissue": {
+  "steps": [
+   "Set its receive channel per the reissue manual; if unsure, send on channel 1.",
+   "Connect the app's MIDI out to its MIDI IN; it has no MIDI out, so the app can't hear its own knobs.",
+   "Its panel isn't sent or received as MIDI, so tweak by hand; bandmates hear your audio or the software twin.",
+   "Patch cables on the patchbay change the sound too, and none of that travels over MIDI."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "dreadbox-lil-erebus": {
+  "steps": [
+   "Send notes on the channel the kit's MIDI-to-CV listens to (see the build guide; try channel 1).",
+   "Connect the app's MIDI out to its MIDI IN; it has no MIDI out, so the app can't hear its own knobs.",
+   "Its panel isn't sent or received as MIDI, so tweak by hand; bandmates hear your audio or the software twin.",
+   "Patch cables on the patchbay change the sound too, and none of that travels over MIDI."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "dreadbox-hades": {
+  "steps": [
+   "Set its receive channel per the manual; if unsure, send on channel 1.",
+   "Connect the app's MIDI out to its MIDI IN; it has no MIDI out, so the app can't hear its own knobs.",
+   "Its panel isn't sent or received as MIDI, so tweak by hand; bandmates hear your audio or the software twin.",
+   "Patch cables on the patchbay change the sound too, and none of that travels over MIDI."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "dreadbox-abyss": {
+  "steps": [
+   "Set its MIDI channel in its MIDI setup (see manual) so it matches the app.",
+   "Use the 5-pin MIDI ports.",
+   "It has no patch memory; tweak by hand. Only a few controls answer CC, so the app relays little or nothing.",
+   "Bandmates hear your audio, or the software twin plays for those who choose it."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "dreadbox-nyx": {
+  "steps": [
+   "Set its receive channel per the manual; if unsure, send on channel 1.",
+   "Connect the app's MIDI out to its MIDI IN; it has no MIDI out, so the app can't hear its own knobs.",
+   "Its panel isn't sent or received as MIDI, so tweak by hand; bandmates hear your audio or the software twin.",
+   "Patch cables on the patchbay change the sound too, and none of that travels over MIDI."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "dreadbox-murmux": {
+  "steps": [
+   "Set its receive channel per the manual; if unsure, send on channel 1.",
+   "Connect the app's MIDI out to its MIDI IN; it has no MIDI out, so the app can't hear its own knobs.",
+   "Its panel isn't sent or received as MIDI, so tweak by hand; bandmates hear your audio or the software twin.",
+   "Patch cables on the patchbay change the sound too, and none of that travels over MIDI."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "dreadbox-typhon": {
+  "steps": [
+   "Open Global settings > Midi channels and set Input to your channel (not All) and Output to the same channel.",
+   "In the MIDI CC menu set CC to enabled (this also enables program change).",
+   "Update to firmware 4.2 or later so knob moves are sent as CC; older firmware only receives them.",
+   "Use USB or the 5-pin DIN ports, not both at once.",
+   "There's no SysEx sound dump; the app relays knob moves only."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://cdn.shopify.com/s/files/1/0527/2557/9960/files/Typhon-Users-Manual.pdf",
+   "https://synthanatomy.com/2026/04/dreadbox-typhon-4-2-new-firmware-brings-major-midi-improvements-and-more.html"
+  ]
+ },
+ "dreadbox-nymphes": {
+  "steps": [
+   "Connect by USB; Nymphes has no 5-pin MIDI port.",
+   "Set its MIDI channel (firmware v2 has MIDI channel learn; see the manual) to match the app.",
+   "Update to firmware v2 or later so it sends its CCs and the full CC set when you load a preset.",
+   "Knob moves are sent as CC. The app can't ask for just the current sound, so it relays knob moves."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://synthanatomy.com/?p=63153",
+   "https://github.com/jtpack/nymphes-osc"
+  ]
+ },
+ "polyend-medusa": {
+  "steps": [
+   "Set the MIDI channel in the Medusa's MIDI settings to match the app.",
+   "Turn on CC send/receive for panel parameters in the same menu.",
+   "Pick the port you use: USB or 5-pin MIDI.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "analogue-solutions-treadstone": {
+  "steps": [
+   "Send notes on the channel its MIDI-to-CV listens to (see manual; try channel 1).",
+   "Connect the app's MIDI out to its MIDI IN; it has no MIDI out, so the app can't hear its own knobs.",
+   "Its panel isn't sent or received as MIDI, so tweak by hand; bandmates hear your audio or the software twin.",
+   "Patch cables on the patchbay change the sound too, and none of that travels over MIDI."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://www.synthtopia.com/content/2018/01/24/analogue-solutions-intros-599-treadstone-analog-mono-synth/"
+  ]
+ },
+ "black-corporation-deckards-dream": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "It responds to poly aftertouch and MPE; send from an MPE controller for the full CS-80-style expression.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "black-corporation-deckards-dream-mk2": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "black-corporation-kijimi": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "Keep firmware the same on both Kijimis; older and newer sound dumps differ in length.",
+   "Turn on SysEx in its MIDI settings so the app can ask for the current sound."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/BC_Kijimi.py"
+  ]
+ },
+ "black-corporation-kijimi-mk2": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "black-corporation-xerxes": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "udo-super-6": {
+  "steps": [
+   "Press SHIFT, then MIDI CH, and pick your channel with buttons 1-8 / A-H (16 choices).",
+   "Press TX/RX E and light buttons 1 (send knob moves) and 2 (receive them); add 3 for smooth 14-bit NRPN.",
+   "Press TX/RX P to turn program change send/receive on if you want patch changes to follow.",
+   "Use either USB or the 5-pin MIDI ports, not both at once; the manual warns this can cause erratic behaviour.",
+   "To share a sound, press SHIFT then P DUMP; it sends the current patch as SysEx. Press SHIFT again to leave."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://cdn.shopify.com/s/files/1/0024/2352/1341/files/UDO-Super-6-Manual.pdf"
+  ]
+ },
+ "udo-super-gemini": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC/NRPN send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "Use either USB or 5-pin MIDI, not both at once.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "groove-synthesis-3rd-wave": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on NRPN (or CC) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "Turn on SysEx in its MIDI settings so the app can ask for the current sound."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/GrooveSynthesis_3rdWave.py"
+  ]
+ },
+ "groove-synthesis-3rd-wave-8m": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on NRPN (or CC) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "melbourne-instruments-nina": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "Its motorised knobs jump to the stored sound on program change; relayed knob moves will move them too.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "melbourne-instruments-delia": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "expressive-e-osmose": {
+  "steps": [
+   "Set the MIDI channel/MPE zone in the Osmose's MIDI settings; use MPE if the app's twin supports it, otherwise a single channel.",
+   "Connect by USB or 5-pin MIDI.",
+   "Its sounds come from the onboard engine; knob/macro moves go out as CC.",
+   "There's no command to fetch the current sound; the app relays expression and macros only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "tasty-chips-gr-1": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: 5-pin MIDI IN or a USB controller.",
+   "Sounds depend on the samples loaded, so a bandmate's GR-1 needs the same sample to match.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "soma-lyra-8": {
+  "steps": [
+   "This unit has no MIDI, so the app can't hear its notes or knob moves.",
+   "Plug its audio output into your audio interface (or the app's audio lane) so bandmates hear the real thing.",
+   "Pick a matching software twin in the app for bandmates who want to play the same sound.",
+   "Its pitches are set by knobs, not a keyboard, so a twin will only approximate it."
+  ],
+  "confidence": "secondary",
+  "sources": []
+ },
+ "soma-terra": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "erica-synths-bassline-db-01": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "erica-synths-syntrx": {
+  "steps": [
+   "Set its MIDI receive channel per the manual (try channel 1).",
+   "Connect the app's MIDI out to its MIDI IN.",
+   "The matrix and knobs aren't sent over MIDI, so tweak by hand; bandmates hear your audio or a twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "erica-synths-syntrx-ii": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "erica-synths-steampipe": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "twisted-electrons-megafm": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "twisted-electrons-acid8-mkiii": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sonicware-liven-xfm": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the TRS MIDI jacks (with the adapter).",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sonicware-liven-8bit-warps": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the TRS MIDI jacks (with the adapter).",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sonicware-liven-ambient-0": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the TRS MIDI jacks (with the adapter).",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sonicware-elz-1": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the TRS MIDI jacks (with the adapter).",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "sonicware-elz-1-play": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the TRS MIDI jacks (with the adapter).",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "supercritical-redshift-6": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "ik-multimedia-uno-synth": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 3.5 mm MIDI input with IK's adapter.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "ik-multimedia-uno-synth-pro": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "modal-cobalt8": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on NRPN (or CC) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "modal-cobalt5s": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on NRPN (or CC) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "modal-skulpt": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on NRPN (or CC) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "modal-craft-synth-2": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on NRPN (or CC) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "modal-002": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on NRPN (or CC) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "modal-008": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on NRPN (or CC) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "korg-kingkorg-neo": {
+  "steps": [
+   "In the Global/MIDI settings set the global MIDI channel to match the app; SysEx uses this channel too.",
+   "Turn on the \"SysEx\" MIDI filter so it answers sound requests.",
+   "Make sure Control Change (and program change if you want it) are enabled in the MIDI filters so knob moves are sent.",
+   "Connect with USB or the 5-pin MIDI sockets."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/943/"
+  ]
+ },
+ "korg-kingkorg": {
+  "steps": [
+   "In the Global/MIDI settings set the global MIDI channel to match the app; SysEx uses this channel too.",
+   "Turn on the \"SysEx\" MIDI filter so it answers sound requests.",
+   "Make sure Control Change (and program change if you want it) are enabled in the MIDI filters so knob moves are sent.",
+   "Connect with USB or the 5-pin MIDI sockets."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/97/"
+  ]
+ },
+ "korg-microkorg-2": {
+  "steps": [
+   "In the Global/MIDI settings set the global MIDI channel to match the app; SysEx uses this channel too.",
+   "Turn on the \"SysEx\" MIDI filter so it answers sound requests.",
+   "Make sure Control Change (and program change if you want it) are enabled in the MIDI filters so knob moves are sent.",
+   "Connect with USB or the 5-pin MIDI sockets."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/944/"
+  ]
+ },
+ "korg-nts-1-mkii": {
+  "steps": [
+   "In the Global/MIDI settings set the global MIDI channel to match the app; SysEx uses this channel too.",
+   "Turn on the SysEx reception (on by default) so it answers sound requests.",
+   "Make sure Control Change (and program change if you want it) are enabled in the MIDI filters so knob moves are sent.",
+   "Connect with USB-C or the 3.5 mm TRS MIDI jacks.",
+   "Turn on the global 'MIDI Short Message' setting so it receives notes and CCs."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/933/"
+  ]
+ },
+ "korg-nts-1": {
+  "steps": [
+   "Connect by USB, or to its 3.5 mm MIDI IN with a TRS adapter.",
+   "Set the MIDI channel in its global settings to match the app.",
+   "Knob moves travel as CC; it has no stored sounds to share, so the app relays knob moves only."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/832/"
+  ]
+ },
+ "korg-volca-fm2": {
+  "steps": [
+   "In the Global/MIDI settings set the global MIDI channel to match the app; SysEx uses this channel too.",
+   "Turn on the SysEx reception so it answers sound requests.",
+   "Make sure Control Change (and program change if you want it) are enabled in the MIDI filters so knob moves are sent.",
+   "Connect with the 5-pin MIDI sockets.",
+   "Turn on the 'MIDI Short Message' setting so it answers CCs."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/892/"
+  ]
+ },
+ "korg-volca-nubass": {
+  "steps": [
+   "Set its MIDI channel in the volca's settings (see manual) to match the app.",
+   "Turn on 'MIDI RX Short Message' so it responds to CCs.",
+   "Connect the app's MIDI out to its MIDI IN (5-pin). It has no MIDI out, so the app can't hear its own knobs.",
+   "Bandmates' knob moves can control it (CC 40-50), but its own tweaks aren't shared."
+  ],
+  "confidence": "manual",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/820/"
+  ]
+ },
+ "korg-ms-20-mini": {
+  "steps": [
+   "Connect the app's MIDI out to its MIDI IN or use USB.",
+   "Set its receive channel as the manual describes (power-on setting; default channel 1).",
+   "Its knobs and patch cables aren't sent over MIDI, so tweak by hand; bandmates hear your audio or a twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "korg-multi-poly": {
+  "steps": [
+   "Set the global MIDI channel to match the app.",
+   "Enable Control Change transmit/receive in the MIDI settings so knob moves travel as CC.",
+   "Connect by USB or 5-pin MIDI.",
+   "Sounds can't be loaded over MIDI (read-only Property Exchange); the app relays knob moves only."
+  ],
+  "confidence": "secondary",
+  "sources": [
+   "https://www.korg.com/us/support/download/product/0/976/"
+  ]
+ },
+ "korg-phase8": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 3.5 mm TRS MIDI jacks.",
+   "Its eight resonators each have a fixed pitch; notes outside their tuning won't sound.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-jd-xi": {
+  "steps": [
+   "Press MENU, open the MIDI/System settings and set the channel for Digital Synth Part 1 to match the app.",
+   "Turn on SysEx receive/transmit (Rx/Tx Exclusive) in the system MIDI settings.",
+   "Set control change transmit on so knob moves go out as CC.",
+   "Connect by USB or the 5-pin MIDI sockets.",
+   "Only the Digital Synth 1 sound is shared; play that part when you share."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://static.roland.com/assets/media/pdf/JD-Xi_MIDI_Imple_e01_W.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Roland_JD_Xi.py"
+  ]
+ },
+ "roland-jd-xa": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "Turn on SysEx in the system MIDI settings if you'll use an editor; sound sharing isn't supported here.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-system-8": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-gaia-sh-01": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-gaia-2": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-sh-4d": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-s-1": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-j-6": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-sh-01a": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-jx-03": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-jx-08": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "roland-jd-08": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "yamaha-reface-cs": {
+  "steps": [
+   "Connect by USB (or the supplied MIDI adapter cable).",
+   "Set the MIDI channel and turn MIDI Control on, as the reface manual describes (power-on/key-combination settings).",
+   "With MIDI Control on, panel moves are sent as CC.",
+   "Leave the device number at its default (all/1) so the app's request reaches it."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://hu.yamaha.com/files/download/other_assets/7/794817/reface_en_dl_b0.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/YamahaRefaceCP.py"
+  ]
+ },
+ "yamaha-reface-cp": {
+  "steps": [
+   "Connect by USB (or the supplied MIDI adapter cable).",
+   "Set the MIDI channel and turn MIDI Control on, as the reface manual describes (power-on/key-combination settings).",
+   "With MIDI Control on, panel moves are sent as CC.",
+   "Leave the device number at its default (all/1) so the app's request reaches it."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://hu.yamaha.com/files/download/other_assets/7/794817/reface_en_dl_b0.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/YamahaRefaceCP.py"
+  ]
+ },
+ "yamaha-reface-yc": {
+  "steps": [
+   "Connect by USB (or the supplied MIDI adapter cable).",
+   "Set the MIDI channel and turn MIDI Control on, as the reface manual describes (power-on/key-combination settings).",
+   "With MIDI Control on, panel moves are sent as CC.",
+   "Leave the device number at its default (all/1) so the app's request reaches it."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://hu.yamaha.com/files/download/other_assets/7/794817/reface_en_dl_b0.pdf",
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/YamahaRefaceCP.py"
+  ]
+ },
+ "yamaha-modx": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "yamaha-montage-m": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "novation-a-station": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC (or NRPN) send and receive for the panel controls.",
+   "Pick the connection you're using: the 5-pin MIDI sockets (it has no USB MIDI).",
+   "Turn on SysEx in its MIDI settings so the app can ask for the current sound."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Novation_AStation.py",
+   "https://github.com/eclab/edisyn/tree/master/edisyn/synth/novationastation"
+  ]
+ },
+ "novation-k-station": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC (or NRPN) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "novation-mininova": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC (or NRPN) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "novation-circuit-mono-station": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC (or NRPN) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "waldorf-kyra": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC (or NRPN) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "Turn on SysEx in its MIDI settings so the app can ask for the current sound."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Waldorf_Kyra.py",
+   "https://github.com/eclab/edisyn/tree/master/edisyn/synth/waldorfkyra"
+  ]
+ },
+ "waldorf-m": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC (or NRPN) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "Turn on SysEx in its MIDI settings so the app can ask for the current sound."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Waldorf_M.py",
+   "https://github.com/eclab/edisyn/tree/master/edisyn/synth/waldorfm"
+  ]
+ },
+ "waldorf-rocket": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "waldorf-streichfett": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "waldorf-stvc": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "waldorf-microwave-xt": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC (or SysEx parameter) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "studiologic-sledge": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "Turn on SysEx in its MIDI settings so the app can ask for the current sound."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/Studiologic%20Sledge.py"
+  ]
+ },
+ "pioneer-toraiz-as-1": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on NRPN (or CC) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "Turn on SysEx in its MIDI settings so the app can ask for the current sound."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/PioneerToraiz-AS1.py"
+  ]
+ },
+ "alesis-andromeda-a6": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC (or NRPN) send and receive for the panel controls.",
+   "Pick the connection you're using: the 5-pin MIDI sockets.",
+   "Turn on SysEx in its MIDI settings so the app can ask for the current sound."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/christofmuc/KnobKraft-orm/blob/master/adaptations/AlesisAndromedaA6.py"
+  ]
+ },
+ "audiothingies-micromonsta-2": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC (or NRPN) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": [
+   "https://github.com/eclab/edisyn/tree/master/edisyn/synth/audiothingiesmicromonsta"
+  ]
+ },
+ "kodamo-essencefm": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "nonlinear-labs-c15": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "vermona-perfourmer-mkii": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "vermona-mono-lancet": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "critter-and-guitari-organelle-m": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "abstrakt-instruments-avalon": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "cyclone-analogic-tt-303": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "Its panel isn't mapped to MIDI controllers, so tweak by hand.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "arturia-polybrute-12": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC (or NRPN) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "arturia-astrolab": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "Pick the twin by sound type: the AstroLab preset may be a piano, organ or synth.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "arturia-minibrute-2s": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "asm-hydrasynth-deluxe": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on NRPN (or CC) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "In multi mode each part has its own channel; pick the part you're playing.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "elektron-digitone-ii": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC (or NRPN) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "Each track has its own MIDI channel; set the track you play to the app's channel.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "elektron-digitone-keys": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC (or NRPN) send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "gamechanger-audio-motor-synth": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "gamechanger-audio-motor-synth-mkii": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "polyend-synth": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "1010music-lemondrop": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 3.5 mm TRS MIDI jacks.",
+   "Sounds use files on the SD card; a bandmate needs the same files to match.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "1010music-fireball": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 3.5 mm TRS MIDI jacks.",
+   "Sounds use files on the SD card; a bandmate needs the same files to match.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "make-noise-strega": {
+  "steps": [
+   "This unit has no MIDI, so the app can't hear its notes or knob moves.",
+   "Plug its audio output into your audio interface (or the app's audio lane) so bandmates hear the real thing.",
+   "Pick a matching software twin in the app for bandmates who want to play the same sound."
+  ],
+  "confidence": "secondary",
+  "sources": []
+ },
+ "bastl-instruments-kastle-2": {
+  "steps": [
+   "This unit has no MIDI, so the app can't hear its notes or knob moves.",
+   "Plug its audio output into your audio interface (or the app's audio lane) so bandmates hear the real thing.",
+   "Pick a matching software twin in the app for bandmates who want to play the same sound."
+  ],
+  "confidence": "secondary",
+  "sources": []
+ },
+ "bastl-instruments-softpop-sp2": {
+  "steps": [
+   "This unit has no MIDI, so the app can't hear its notes or knob moves.",
+   "Plug its audio output into your audio interface (or the app's audio lane) so bandmates hear the real thing.",
+   "Pick a matching software twin in the app for bandmates who want to play the same sound."
+  ],
+  "confidence": "secondary",
+  "sources": []
+ },
+ "pittsburgh-modular-taiga": {
+  "steps": [
+   "Set its MIDI receive channel per the manual (try channel 1).",
+   "Connect the app's MIDI out to its MIDI input (5-pin/TRS or USB as fitted).",
+   "Its knobs and patch cables aren't sent over MIDI, so tweak by hand; bandmates hear your audio or a twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "pittsburgh-modular-microvolt-3900": {
+  "steps": [
+   "Set its MIDI receive channel per the manual (try channel 1).",
+   "Connect the app's MIDI out to its MIDI input (5-pin/TRS or USB as fitted).",
+   "Its knobs and patch cables aren't sent over MIDI, so tweak by hand; bandmates hear your audio or a twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "pittsburgh-modular-lifeforms-sv-1": {
+  "steps": [
+   "Set its MIDI receive channel per the manual (try channel 1).",
+   "Connect the app's MIDI out to its MIDI input (5-pin/TRS or USB as fitted).",
+   "Its knobs and patch cables aren't sent over MIDI, so tweak by hand; bandmates hear your audio or a twin."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "clavia-nord-wave-2": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ },
+ "clavia-nord-lead-3": {
+  "steps": [
+   "Set its MIDI channel in its global/MIDI settings so it matches the channel the app uses.",
+   "In the same menu, turn on CC send and receive for the panel controls.",
+   "Pick the connection you're using: the 5-pin MIDI sockets.",
+   "There's no command to fetch the current sound; the app relays knob moves only."
+  ],
+  "confidence": "guess",
+  "sources": []
+ }
+}

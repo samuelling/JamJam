@@ -1,0 +1,653 @@
+{
+  "roland-juno-106": {
+    "steps": [
+      "Set the Juno-106 to the same MIDI channel as your bandmate's (see the MIDI channel section of the owner's manual).",
+      "On the back panel, set the MIDI function switch to position III, so it sends and receives sysex as well as notes and controllers.",
+      "Leave the switch at III: every slider and switch move then goes out and comes in as a sysex message on its own.",
+      "Connect with 5-pin MIDI cables (the Juno-106 has no USB).",
+      "To share a stored patch, select it and the Juno-106 sends it. To share the sound the sliders are set to right now, press MANUAL.",
+      "If a slider sends values on its own, clean or replace it before you jam, or it will keep changing your bandmate's sound."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://www.atarimagazines.com/st-log/issue33/64_1_THE_ST_AND_THE_ROLAND_JUNO_106_SYNTHESIZER.php"
+    ]
+  },
+  "roland-alpha-juno-2": {
+    "steps": [
+      "In the MIDI functions, set the Alpha Juno's MIDI channel to the one your app uses.",
+      "In the MIDI functions, turn on system exclusive (sysex), so it sends and receives tone data.",
+      "With sysex on, edits you make with the alpha dial go out as sysex messages.",
+      "Connect with 5-pin MIDI cables (no USB).",
+      "There's no 'send' button: write your edited tone to a memory, then select that tone. Selecting it sends the whole tone to your bandmate."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland_MKS50.py"
+    ]
+  },
+  "roland-jx-8p": {
+    "steps": [
+      "Set the JX-8P's MIDI channel to the one your app uses (see the MIDI section of the owner's manual).",
+      "Turn on its MIDI exclusive (sysex) setting, so tone data is sent and received.",
+      "With sysex on, PG-800 programmer and panel edits go out as sysex messages.",
+      "Connect with 5-pin MIDI cables (no USB).",
+      "To send your sound, write your edits to a tone memory, then select that tone. The JX-8P sends the whole tone when it's selected."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland%20JX-8P.py"
+    ]
+  },
+  "roland-super-jx-mks-70": {
+    "steps": [
+      "Set the MIDI control channel and the Tone A/B channels the same as your bandmate's unit (MIDI functions 11, 21 and 31).",
+      "Turn on sysex (exclusive) in the MIDI functions.",
+      "Panel or PG-800 edits go out as sysex parameter messages once sysex is on.",
+      "Connect with 5-pin MIDI cables (no USB).",
+      "Check both units run the same ROM (stock/V3 or Vecoven V4): their patch formats don't mix.",
+      "To send your sound, write it to a patch, then select that patch. It sends the patch plus its tones."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland_MKS-70.py",
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland_MKS70V4.py"
+    ]
+  },
+  "roland-ju-06a": {
+    "steps": [
+      "Set the JU-06A's MIDI channel to the one your app uses (Boutique units do this with a button combination at power-on; see the owner's manual).",
+      "Nothing to turn on for sysex: the JU-06A doesn't support it, so whole patches can't be sent.",
+      "Knob and slider moves go out and come in as CC messages automatically.",
+      "Connect with USB or with 5-pin MIDI, not both at once.",
+      "To match sounds, both players load the same patch number (Program Change works). Then your knob moves keep them in step."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/JU-06A_MIDIImpleChart_multi02_W.pdf"
+    ]
+  },
+  "roland-jp-08": {
+    "steps": [
+      "Set the JP-08's MIDI channel to the one your app uses (Boutique units do this with a button combination at power-on; see the owner's manual).",
+      "Nothing to turn on for sysex: the JP-08 doesn't support it, so whole patches can't be sent.",
+      "Knob and slider moves go out and come in as CC messages automatically.",
+      "Connect with USB or with 5-pin MIDI, not both at once.",
+      "To match sounds, both players load the same patch number (Program Change works). Then your knob moves keep them in step."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/JP-08_MIDI_Imple_eng03_W.pdf"
+    ]
+  },
+  "roland-tb-03": {
+    "steps": [
+      "Set the TB-03's MIDI channel to the one your app uses (Boutique power-on button combination; see the owner's manual).",
+      "There's no sysex or Program Change, so the sound can't be sent as a patch.",
+      "Knob moves go out and come in as CC messages automatically.",
+      "Connect with USB or with 5-pin MIDI, not both at once.",
+      "Turn each knob once at the start so your bandmate's TB-03 matches your panel."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TB-03_MIDI_Imple_e01_W.pdf"
+    ]
+  },
+  "roland-se-02": {
+    "steps": [
+      "Set the SE-02's MIDI channel to the one your app uses (see the owner's manual).",
+      "No sysex setting is documented to turn on. Just make sure your app's MIDI OUT reaches the SE-02's MIDI IN or USB.",
+      "Knob moves go out and come in as CC messages.",
+      "Connect with USB or with 5-pin MIDI, not both at once.",
+      "The SE-02 can't send its current sound by itself: turn each knob once to sync, or have both players load the same patch."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/SE-02_MIDI_Imple_Chart_eng01_W.pdf",
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland_SE02.py"
+    ]
+  },
+  "roland-tb-3": {
+    "steps": [
+      "Set the TB-3's MIDI channel to the one your app uses (see the owner's manual).",
+      "Leave the device ID at its default (17), so the app's requests reach it.",
+      "Knob and touch-pad moves go out as CC messages (cutoff, resonance, accent, effect, env mod, tuning).",
+      "Use the TB-3's USB port for MIDI, or its MIDI jacks, but not both at once.",
+      "If your sound doesn't arrive, the TB-3 may not answer requests. Move each knob once instead."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TB-3_MI_1.pdf",
+      "https://static.roland.com/assets/media/pdf/TB-3_MI_2.pdf"
+    ]
+  },
+  "roland-d-50": {
+    "steps": [
+      "Set the D-50's basic MIDI channel the same on both units. Its sysex device number follows the channel (channel 1 = 00), so leave it alone.",
+      "In the MIDI functions, turn on exclusive (sysex) send and receive.",
+      "With exclusive on, panel and PG-1000 edits go out as sysex parameter messages.",
+      "Connect with 5-pin MIDI cables (no USB).",
+      "If a sound is refused, turn the D-50's memory protect off.",
+      "Patches using card tones or voices need the same card in both units."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/RolandD50.py"
+    ]
+  },
+  "roland-jv-1080": {
+    "steps": [
+      "In SYSTEM, set the MIDI channel for Patch mode the same on both units.",
+      "Leave the device ID at its default (17), and turn on receiving exclusive (sysex) in the SYSTEM MIDI settings.",
+      "Turn on sending and receiving of edits (sysex) in the SYSTEM MIDI settings, if you want knob moves mirrored.",
+      "Connect with 5-pin MIDI cables (no USB).",
+      "Put the JV-1080 in PATCH mode (not Performance or GM) before sharing.",
+      "Patches using SR-JV80 expansion-board waves need the same board in both units."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Roland_JV1080.py"
+    ]
+  },
+  "roland-jp-8000": {
+    "steps": [
+      "In the System parameters under [MIDI PRM], set 'Perform Ctrl CH' to the channel your app uses.",
+      "Leave 'Device ID' at 17. Under [MIDI SW], set 'Rx Exclusive SW' to ON.",
+      "Under [MIDI SW], set 'Tx/Rx Edit SW' to ON. Set 'Tx/Rx Edit Mode' (MODE1 or MODE2) the same on both units, so knob moves go out and come in.",
+      "Connect with 5-pin MIDI cables (no USB).",
+      "Share the sound before changing performance: the app reads the current (temporary) performance."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/JP-8000_OM.pdf"
+    ]
+  },
+  "roland-juno-x": {
+    "steps": [
+      "Set the MIDI channel for the part you play the same on both units.",
+      "In SYSTEM: MIDI RX, set 'Rx Exclusive' to ON.",
+      "Turn 'Transmitted Edit Data' ON so knob edits are sent. Knobs also send CC.",
+      "Pick one connection, USB or 5-pin MIDI, and use it on both ends.",
+      "Both units should run the same system version."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/JUNO-X_MIDI_imple_eng01_W.pdf"
+    ]
+  },
+  "roland-jupiter-x": {
+    "steps": [
+      "Set the MIDI channel for each scene part the same on both units (SCENE PART EDIT: MIDI).",
+      "In SYSTEM: MIDI RX, set 'Rx Exclusive' to ON.",
+      "Knob moves go out as CC; check the SYSTEM: MIDI TX settings are on.",
+      "Pick one connection, USB or 5-pin MIDI, and use it on both ends.",
+      "Both units should run the same system version (3.0 or later)."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/JUPITER-X_Xm_MIDI_imple_eng06_W.pdf"
+    ]
+  },
+  "roland-tr-8": {
+    "steps": [
+      "Set the TR-8's MIDI channel to the one your app uses (see the owner's manual).",
+      "No sysex on the TR-8, so kits and sounds can't be sent as a patch.",
+      "Knob moves go out and come in as CC messages. Turn each knob once at the start to sync.",
+      "Pick one connection, USB or 5-pin MIDI, and use it on both ends."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TR-8_MIDI_Imple_Chart_e02_W.pdf"
+    ]
+  },
+  "roland-tr-8s": {
+    "steps": [
+      "Set the TR-8S's MIDI channel to the one your app uses (see the owner's manual).",
+      "No sysex on the TR-8S, so kits and sounds can't be sent as a patch.",
+      "Knob moves go out and come in as CC messages. Turn each knob once at the start to sync.",
+      "Pick one connection, USB or 5-pin MIDI, and use it on both ends.",
+      "Have both players pick the same pattern and kit before you start (Program Change selects patterns)."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TR-8S_MIDIImpleChart_eng03_W.pdf"
+    ]
+  },
+  "roland-tr-6s": {
+    "steps": [
+      "Set the TR-6S's MIDI channel to the one your app uses (see the owner's manual).",
+      "No sysex on the TR-6S, so kits and sounds can't be sent as a patch.",
+      "Knob moves go out and come in as CC messages. Turn each knob once at the start to sync.",
+      "Pick one connection, USB or 5-pin MIDI, and use it on both ends.",
+      "Have both players pick the same pattern and kit before you start (Program Change selects patterns)."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TR-6S_MIDIImpleChart_eng02_W.pdf"
+    ]
+  },
+  "roland-tr-08": {
+    "steps": [
+      "Set the TR-08's MIDI channel to the one your app uses (see the owner's manual).",
+      "No sysex on the TR-08, so kits and sounds can't be sent as a patch.",
+      "Knob moves go out and come in as CC messages. Turn each knob once at the start to sync.",
+      "Pick one connection, USB or 5-pin MIDI, and use it on both ends."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TR-08_MIDI_Imple_Chart_eng01_W.pdf"
+    ]
+  },
+  "roland-tr-09": {
+    "steps": [
+      "Set the TR-09's MIDI channel to the one your app uses (see the owner's manual).",
+      "No sysex on the TR-09, so kits and sounds can't be sent as a patch.",
+      "Knob moves go out and come in as CC messages. Turn each knob once at the start to sync.",
+      "Pick one connection, USB or 5-pin MIDI, and use it on both ends."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/TR-09_MIDI_Imple_e01_W.pdf"
+    ]
+  },
+  "roland-sp-404mkii": {
+    "steps": [
+      "Set the SP-404MKII's MIDI channel in its MIDI settings (see the owner's manual).",
+      "Effect knob moves go out as CC messages.",
+      "Pick one connection, USB or 5-pin MIDI, and use it on both ends.",
+      "Samples aren't sent over MIDI: both players need the same project loaded."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "roland-mc-707": {
+    "steps": [
+      "Set the MC-707's MIDI channels for each track (see the owner's manual).",
+      "No sysex, so sounds can't be sent as a patch. Knob moves go out and come in as CC.",
+      "Pick one connection, USB or 5-pin MIDI, and use it on both ends.",
+      "Both players need the same project loaded (copy it via SD card)."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://static.roland.com/assets/media/pdf/MC-707_MIDIImpleChart_eng03_W.pdf"
+    ]
+  },
+  "korg-minilogue": {
+    "steps": [
+      "Press EDIT MODE until GLOBAL EDIT shows, press button 4 (GLOBAL 4), and set 'MIDI Ch'. This channel is part of every patch message, so note it in the app.",
+      "Sysex is always on; nothing to enable. Just leave 'MIDI Route' (GLOBAL 4) set correctly.",
+      "In GLOBAL 5 (button 5), set 'MIDI Tx CC' and 'MIDI Rx CC' to On, so knob moves go out and come in.",
+      "In GLOBAL 4 set 'MIDI Route': USB+MIDI uses both the 5-pin jacks and USB; USB uses USB only.",
+      "To send the current sound from the panel: EDIT MODE to PROGRAM EDIT, button 8 (DUMP), turn the PROGRAM/VALUE knob to 'Press WRITE', and press WRITE."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/ff9fbf05d3dd4b89390f2ffcf1450bdb.txt",
+      "https://www.korg.com/us/support/download/product/0/544/"
+    ]
+  },
+  "korg-monologue": {
+    "steps": [
+      "Press EDIT MODE until GLOBAL EDIT shows, press button 6 (GLOBAL 4), and set 'MIDI Ch'. This channel is part of every patch message.",
+      "Sysex is always on; nothing to enable.",
+      "In GLOBAL 5 (button 7), set 'MIDI Tx CC' and 'MIDI Rx CC' to On, so knob moves go out and come in.",
+      "In GLOBAL 4 set 'MIDI Route': USB+MIDI uses both the 5-pin jacks and USB; USB uses USB only.",
+      "User scales are not part of a program: load the same microtuning on both units if you use one.",
+      "To send the current sound from the panel: EDIT MODE to PROGRAM EDIT, button 12 (DUMP), turn the PROGRAM/VALUE knob to 'Press WRITE', and press WRITE."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/e3733d5dacc8a3b7e73f1c2a3367225b.txt",
+      "https://www.korg.com/us/support/download/product/0/733/"
+    ]
+  },
+  "korg-minilogue-xd": {
+    "steps": [
+      "Press EDIT MODE until GLOBAL EDIT shows, press button 6 (GLOBAL 4), and set 'MIDI Ch'. This channel is part of every patch message.",
+      "Sysex is always on; nothing to enable.",
+      "In GLOBAL 5 (button 7), set 'MIDI Tx CC' and 'MIDI Rx CC' to On, so knob moves go out and come in.",
+      "In GLOBAL 4 set 'MIDI Route': USB+MIDI uses both the 5-pin jacks and USB; USB uses USB only.",
+      "If the sound uses a user oscillator or user effect, load the same one into the same slot on both units, and keep the same firmware.",
+      "To send the current sound from the panel: EDIT MODE to PROGRAM EDIT, button 14 (DUMP), turn the PROGRAM/VALUE knob to 'Press WRITE', and press WRITE."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/432b65f8355a288eac5d091f338d08aa.txt",
+      "https://www.korg.com/us/support/download/product/0/811/"
+    ]
+  },
+  "korg-prologue": {
+    "steps": [
+      "Press EDIT MODE until GLOBAL EDIT shows, press button 5 (GLOBAL 5), and set 'MIDI Global Ch'. This channel is part of every patch message.",
+      "Sysex is always on; nothing to enable.",
+      "In GLOBAL 6 (button 6), set 'MIDI Tx CC' and 'MIDI Rx CC' to On. The sub timbre uses 'MIDI Sub CC Ch' (GLOBAL 5).",
+      "In GLOBAL 5 set 'MIDI Route': USB+MIDI uses both the 5-pin jacks and USB; USB uses USB only.",
+      "If the sound uses a user oscillator or user effect, load the same one into the same slot on both units.",
+      "To send the current sound from the panel: EDIT MODE to FUNCTION, button 7 (DUMP), turn to 'Press WRITE', and press WRITE."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/3200e18af22d1668d51f8ca5069fe9f3.txt",
+      "https://cdn.korg.com/us/support/download/files/9317b94261e53e700b0145502850edc2.pdf",
+      "https://www.korg.com/us/support/download/product/0/778/"
+    ]
+  },
+  "korg-microkorg": {
+    "steps": [
+      "Set the EDIT SELECT 2 dial to MIDI, then use knob 1 ('MIDI CH') to set the channel. This channel is part of every patch message.",
+      "Hold SHIFT and press the 4 key (MIDI FILTER), then turn knob 4 (SYSTEM EXCLUSIVE) to Enable.",
+      "In the same MIDI FILTER screen, turn knob 2 (CONTROL CHANGE) to Enable, so knob moves go out and come in.",
+      "Hold SHIFT and press the 8 key (WRITE PROTECT), then turn knob 1 to OFF, so a received sound is accepted.",
+      "Connect with 5-pin MIDI cables (the original microKORG has no USB).",
+      "To send the current sound from the panel: hold SHIFT, press the 6 key (MIDI DATA DUMP), turn knob 1 to 1Program, and press the blinking 6 key."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/302b2c88d5ee7778b5cc817108398ff6.txt",
+      "https://www.korg.com/us/support/download/product/0/104/"
+    ]
+  },
+  "korg-ms2000": {
+    "steps": [
+      "In Global mode, set the global MIDI channel the same on both units. This channel is part of every patch message.",
+      "In Global mode, set the system exclusive ('SystemEx') setting to enabled.",
+      "Turn memory protect off. Users also report setting MIDI clock to external for dumps to work.",
+      "Enable control change transmit and receive in Global mode, so knob moves go out and come in.",
+      "Connect with 5-pin MIDI cables (no USB)."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/KorgMS2000.py"
+    ]
+  },
+  "korg-dw-8000": {
+    "steps": [
+      "Set the DW-8000's MIDI channel the same on both units (MIDI parameters on the panel; see the owner's manual). It's part of every patch message.",
+      "Turn on the MIDI exclusive (sysex) setting.",
+      "With exclusive on, panel edits go out as sysex parameter messages.",
+      "Connect with 5-pin MIDI cables (no USB).",
+      "A received sound plays right away but isn't saved until you WRITE it."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/KorgDW8000.py"
+    ]
+  },
+  "korg-m1": {
+    "steps": [
+      "In GLOBAL mode, set the global MIDI channel the same on both units. It's part of every patch message.",
+      "In GLOBAL mode, turn on system exclusive (sysex) receiving.",
+      "Edits can be sent as sysex parameter messages; enable it in GLOBAL mode if you want knob moves mirrored.",
+      "Connect with 5-pin MIDI cables (no USB).",
+      "Put the M1 in PROGRAM mode (not COMBI) before sharing, and use the same PCM card on both units if the sound needs one."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Korg_M1.py"
+    ]
+  },
+  "korg-triton": {
+    "steps": [
+      "In Global mode P1: MIDI, set 'MIDI Channel' (the global channel) the same on both units.",
+      "In Global P1: MIDI, check 'Enable Exclusive'.",
+      "Knob moves are sent as CC or NRPN; check that control change sending is enabled in the Global MIDI settings.",
+      "Connect with 5-pin MIDI cables (the Triton has no USB MIDI).",
+      "To send the current sound: in Program P0: Play, select the program. With Enable Exclusive checked, the Triton sends it. Save your edits first, because reselecting loses them.",
+      "Sounds using EXB-PCM expansion waves or sample RAM need the same on both units."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://m.barryrudolph.com/recall/manuals/korgtriton.pdf"
+    ]
+  },
+  "korg-wavestate": {
+    "steps": [
+      "Press UTILITY, go to MIDI & USB, and set 'Global Channel' the same on both units.",
+      "Nothing to enable for patches: the wavestate can't receive a whole program over MIDI.",
+      "Assign the Mod Knobs to CCs in UTILITY > MIDI CC Assign, so knob moves go out and come in.",
+      "Pick one connection, USB or 5-pin MIDI, and use it on both ends.",
+      "Both players load the same program (Program Change via Set Lists) before jamming."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://www.korg.com/us/support/download/product/0/840/"
+    ]
+  },
+  "korg-modwave": {
+    "steps": [
+      "Press UTILITY, go to MIDI & USB, and set 'Global Channel' the same on both units.",
+      "Nothing to enable for patches: the modwave can't receive a whole program over MIDI.",
+      "Assign the Mod Knobs to CCs in UTILITY > MIDI CC Assign, so knob moves go out and come in.",
+      "Pick one connection, USB or 5-pin MIDI, and use it on both ends.",
+      "Both players load the same program (Program Change via Set Lists) before jamming."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://www.korg.com/us/support/download/product/0/880/"
+    ]
+  },
+  "korg-opsix": {
+    "steps": [
+      "Hold SHIFT and press EFFECT/GLOBAL, open the MIDI page, and set 'Global Channel'.",
+      "Nothing to enable for patches: the opsix can't receive a whole program over MIDI.",
+      "On the same MIDI page, set 'Tx CC' and 'Rx CC' on, so knob moves go out and come in.",
+      "Pick one connection, USB or 5-pin MIDI, and use it on both ends.",
+      "Both players load the same program before jamming (turn 'Rx Prog Chg' and 'Tx Prog Chg' on to follow program changes)."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://www.korg.com/us/support/download/product/0/874/"
+    ]
+  },
+  "korg-electribe-2": {
+    "steps": [
+      "Press Menu/Enter, use < > to show GLOBAL PARAMETER, press Menu/Enter, and set 'GLOBAL MIDI CH' the same on both units.",
+      "Set 'MIDI RECEIVE FILTER' and 'MIDI SEND FILTER' to Off, so notes and CC messages get through.",
+      "With the filters Off, knob moves go out and come in as CC messages.",
+      "Press Write to save the global settings.",
+      "A received pattern goes to the current (edit) pattern. Press Write if you want to keep it."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://cdn.korg.com/jp/support/download/files/7d4d8d58c389a73c82c958516d0be47d.txt",
+      "https://www.korg.com/us/support/download/product/0/367/"
+    ]
+  },
+  "korg-drumlogue": {
+    "steps": [
+      "Hold SHIFT and press LIVE to enter Global mode, then press button 7 (MIDI ROUTING) and set the MIDI channel.",
+      "No sysex kit transfer, so kits can't be sent as a patch.",
+      "In Global mode, set CC to On in button 8 (MIDI RX) and button 9 (MIDI TX), so knob moves go out and come in.",
+      "In button 7 set 'ROUTE': USB+MIDI uses both USB and the 5-pin jacks; USB uses USB only.",
+      "Both players load the same kit and user units before jamming."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://www.korg.com/us/support/download/product/0/894/"
+    ]
+  },
+  "korg-electribe-er-1": {
+    "steps": [
+      "Set the ER-1's MIDI channel (see the owner's manual).",
+      "Turn on sending and receiving of control changes, so knob moves are mirrored.",
+      "Connect with 5-pin MIDI cables (no USB).",
+      "Patterns can't be sent automatically yet: both players load the same pattern."
+    ],
+    "confidence": "guess",
+    "sources": []
+  },
+  "korg-volca-keys": {
+    "steps": [
+      "Hold MEMORY and turn the volca keys on, press the keyboard button for your channel (1-16), then press REC to save.",
+      "Hold FUNC and turn it on, make sure keyboard button 7 ('MIDI RX ShortMessage') is lit (On), then press REC.",
+      "It has MIDI IN only, so it can receive your bandmate's knob moves (CC) but can't send its own.",
+      "Connect a 5-pin MIDI cable to MIDI IN."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://www.korg.com/us/support/download/product/0/138/"
+    ]
+  },
+  "korg-volca-fm": {
+    "steps": [
+      "Hold MEMORY and turn the volca fm on, press the keyboard button for your channel (1-16), then press REC to save.",
+      "Hold FUNC and turn it on, make sure keyboard button 7 ('MIDI RX ShortMessage') is lit (On), then press REC.",
+      "It has MIDI IN only, so it can receive your bandmate's knob moves (CC) but can't send its own.",
+      "Connect a 5-pin MIDI cable to MIDI IN.",
+      "It can load a DX7 voice your bandmate sends from a DX7/DX7II; there's nothing else to set up."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://www.korg.com/us/support/download/product/0/558/"
+    ]
+  },
+  "korg-volca-bass": {
+    "steps": [
+      "Hold MEMORY and turn the volca bass on, press step button 1-16 for your channel, then press REC to save.",
+      "Hold FUNC and turn it on, make sure the 'MIDI RX ShortMessage' step is lit (On; see the global parameter table), then press REC.",
+      "It has MIDI IN only, so it can receive knob moves (CC) but can't send its own.",
+      "Connect a 5-pin MIDI cable to MIDI IN."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://www.korg.com/us/support/download/product/0/140/"
+    ]
+  },
+  "korg-volca-beats": {
+    "steps": [
+      "Hold MEMORY and turn the volca beats on, press step button 1-16 for your channel, then press REC to save.",
+      "Hold FUNC and turn it on, make sure the 'MIDI RX ShortMessage' step is lit (On; see the global parameter table), then press REC.",
+      "It has MIDI IN only, so it can receive knob moves (CC) but can't send its own.",
+      "Connect a 5-pin MIDI cable to MIDI IN."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://www.korg.com/us/support/download/product/0/141/"
+    ]
+  },
+  "korg-volca-drum": {
+    "steps": [
+      "Hold REC and turn the volca drum on, press step button 1-16 for your channel, then press REC. Tap the lit step again to go back to parts 1-6 on channels 1-6.",
+      "Hold FUNC and turn it on, make sure the 'MIDI RX ShortMessage' step is lit (On; see the global parameter table), then press REC.",
+      "It has MIDI IN only, so it can receive knob moves (CC) but can't send its own.",
+      "Connect a 5-pin MIDI cable to MIDI IN."
+    ],
+    "confidence": "manual",
+    "sources": [
+      "https://www.korg.com/us/support/download/product/0/809/"
+    ]
+  },
+  "korg-volca-sample": {
+    "steps": [
+      "Each part listens on its own MIDI channel (see the owner's manual for the part-to-channel table).",
+      "Hold FUNC and turn the volca sample on, make sure step 7 ('MIDI RX ShortMessage') is lit, then press REC.",
+      "It has MIDI IN only, so it can receive knob moves (CC) but can't send its own.",
+      "Connect a 5-pin MIDI cable to MIDI IN. Samples are not sent over MIDI, so both players need the same samples loaded."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://www.korg.com/us/support/download/product/0/370/"
+    ]
+  },
+  "yamaha-dx7": {
+    "steps": [
+      "Press FUNCTION, then 8, and set the MIDI channel. The sysex device number follows this channel.",
+      "In function 8, set SYS INFO AVAIL, so the DX7 sends and accepts voice data.",
+      "With SYS INFO AVAIL, data-entry slider edits go out as sysex parameter messages.",
+      "On the receiving DX7, turn INTERNAL MEMORY PROTECT off, or it may refuse the sound.",
+      "Connect with 5-pin MIDI cables (no USB).",
+      "To send your sound: store your edit to a voice, then select that voice. With SYS INFO AVAIL the DX7 sends it."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/YamahaDX7.py"
+    ]
+  },
+  "yamaha-dx7ii": {
+    "steps": [
+      "Set the MIDI receive and transmit channel the same on both units. The device number follows the channel.",
+      "Set MIDI IN to 'normal' (button 29), or the DX7II silently ignores sysex.",
+      "Turn memory protect off (button 14) on the receiving unit.",
+      "Turn on sysex parameter sending in the MIDI settings if you want edits mirrored.",
+      "Connect with 5-pin MIDI cables (no USB)."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/YamahaDX7II.py"
+    ]
+  },
+  "yamaha-dx21": {
+    "steps": [
+      "Set the DX21's MIDI receive and transmit channel the same on both units. The device number follows the channel.",
+      "Turn MIDI SYS INFO ON, so it answers requests and sends edits as sysex.",
+      "With MIDI SYS INFO ON, panel edits go out as sysex parameter messages.",
+      "Turn MEMORY PROTECT off on the receiving unit if a sound is refused.",
+      "Connect with 5-pin MIDI cables (no USB)."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://www.manualsdir.com/manuals/228881/yamaha-dx21.html?page=46"
+    ]
+  },
+  "yamaha-dx100": {
+    "steps": [
+      "Set the DX100's MIDI receive and transmit channel the same on both units. The device number follows the channel.",
+      "Turn MIDI SYS INFO ON, so it answers requests and sends edits as sysex.",
+      "With MIDI SYS INFO ON, panel edits go out as sysex parameter messages.",
+      "Turn MEMORY PROTECT off on the receiving unit if a sound is refused.",
+      "Connect with 5-pin MIDI cables (no USB)."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://caraudio.manualsonline.com/manuals/mfg/yamaha/dx100.html?p=48"
+    ]
+  },
+  "yamaha-tx81z": {
+    "steps": [
+      "Set 'Basic Rx channel' and 'Transmit channel' to the same MIDI channel (usually 1).",
+      "In UTILITY > MIDI Control, set 'Exclusive' to On.",
+      "With Exclusive on, edits are sent as sysex parameter messages.",
+      "Connect with 5-pin MIDI cables (no USB).",
+      "Share a single voice: performance settings (PCED) aren't included in the sound."
+    ],
+    "confidence": "secondary",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Yamaha_TX81Z.py"
+    ]
+  },
+  "yamaha-fs1r": {
+    "steps": [
+      "Set the FS1R's performance MIDI channel and the sysex device number the same on both units (device 1 is the default).",
+      "Turn on sysex receive in the system MIDI settings.",
+      "Edits are sent as sysex parameter messages when sysex is on.",
+      "Connect with 5-pin MIDI cables (no USB).",
+      "Fseq data and preset voices aren't sent; both units need them loaded."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/Yamaha_FS1R.py"
+    ]
+  },
+  "yamaha-reface-dx": {
+    "steps": [
+      "Set the reface DX's MIDI channel the same on both units (see the owner's manual).",
+      "Sysex needs no setup the app knows of. If a sound is refused, check the MIDI settings in the reface DX owner's manual.",
+      "Panel edits go out over MIDI; check that MIDI control is on in the reface's settings.",
+      "Use the USB port or the MIDI port (with its breakout cable), but not both at once."
+    ],
+    "confidence": "guess",
+    "sources": [
+      "https://github.com/christofmuc/KnobKraft-orm/blob/9e2522cd44765603162b4afd31419c3597ff85fc/adaptations/YamahaRefaceDX.py"
+    ]
+  },
+  "yamaha-montage": {
+    "steps": [
+      "Set the Montage's MIDI channel in its Utility MIDI settings.",
+      "Knob and slider moves go out and come in as CC or NRPN messages; check control change sending is on.",
+      "Pick one connection, USB or 5-pin MIDI, and use it on both ends.",
+      "Patches can't be sent automatically yet: both players load the same Performance (and libraries)."
+    ],
+    "confidence": "guess",
+    "sources": []
+  }
+}
