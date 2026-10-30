@@ -26,6 +26,7 @@ export class AudioLane {
     this.engine = engine; this.send = send;
     this.on = false; this.bars = 1; this.quality = 'hi'; this.offsetMs = 0;
     this.level = 0; this.sentBytes = 0; this.stream = null; this.node = null;
+    this.hist = []; this.histMs = 0;   // what you played, kept here for two minutes, so a pass can be locked in as an audio take
   }
   delayMs(atRoom) { return this.bars * 4 * this.engine.tempo.beatMs(atRoom); }
 
@@ -65,10 +66,24 @@ export class AudioLane {
       this.level = Math.max(peak, this.level * 0.9);
       this.sentBytes += buf.byteLength;
       this.send(buf);
+      this.hist.push({ start, rate, pcm: Float32Array.from(pcm) }); this.histMs += (pcm.length / rate) * 1000;
+      while (this.histMs > 120000 && this.hist.length > 1) { const h = this.hist.shift(); this.histMs -= (h.pcm.length / h.rate) * 1000; }
     };
     this.on = true;
   }
 
+  // the audio you played between room times t0 and t1 (ms), mono at `rate` (gaps are silence); null if none of it is here
+  slice(t0, t1, rate = 24000) {
+    const n = Math.max(0, Math.round(((t1 - t0) / 1000) * rate)), out = new Float32Array(n); let got = 0;
+    for (const h of this.hist) {
+      const end = h.start + (h.pcm.length / h.rate) * 1000; if (end <= t0 || h.start >= t1) continue;
+      for (let i = Math.max(0, Math.floor(((h.start - t0) / 1000) * rate)); i < n; i++) {
+        const src = ((t0 + (i / rate) * 1000 - h.start) / 1000) * h.rate; if (src < 0) continue; if (src >= h.pcm.length - 1) break;
+        const a = Math.floor(src), f = src - a; out[i] = h.pcm[a] * (1 - f) + h.pcm[a + 1] * f; got++;
+      }
+    }
+    return got > n * 0.5 ? out : null;
+  }
   stopLane() {
     this.on = false;
     if (this.node) { this.node.port.onmessage = null; try { this.src.disconnect(); } catch (_) {} this.node = null; }

@@ -59,6 +59,8 @@ A note on clocks: with a lopsided link (much slower one way than the other) no t
 
 ## Live audio
 
+**Audio takes.** While a section (or a dragged loop) plays and you're live, **🎙 Lock in my live audio** on the section bar keeps your last full pass, cut where you heard yourself play it, as an audio take in your lane: drawn as a waveform in the arrangement, sent once to everyone as binary chunks (a browser that's missing one, say a late joiner, asks for it), then played from the song in every browser like any locked part. Takes, rules and versions work as for notes. Audio takes live in the room's browsers for now: Save song and Save MIDI leave them out.
+
 On the instrument wall and your shelf (it works differently from the instruments, and says so). Stream a mic, a guitar, or a synth you can't twin, NINJAM-style, alongside the notes. Every chunk is stamped with the room time it was played, and the band hears it exactly 1, 2, 4 or 8 bars later. Set the delay to the length of the loop or chord cycle and the late audio lands on the right chords. Direct links only (about 0.8 Mbit/s per listener at 48 kHz, half at 24 kHz). Use headphones.
 
 ## Benchmarks and tuning

@@ -129,7 +129,7 @@ const room = new Room({
       renderCorners();
     },
     message: onMessage,
-    binary(p, buf) { if (isStemChunk(buf)) { onStemChunk(p, buf); return; } const c = decodeChunk(buf); if (c && clock.locked) { engine.laneChunk(key(p.id, 'lane'), c.start, c.delay, c.rate, c.samples); applyVolume(key(p.id, 'lane')); } },
+    binary(p, buf) { if (isAudioChunk(buf)) { onAudioChunk(buf); return; } if (isStemChunk(buf)) { onStemChunk(p, buf); return; } const c = decodeChunk(buf); if (c && clock.locked) { engine.laneChunk(key(p.id, 'lane'), c.start, c.delay, c.rate, c.samples); applyVolume(key(p.id, 'lane')); } },
   },
 });
 window.JJ.room = room;
@@ -263,6 +263,7 @@ function onMessage(p, m) {
     case 'key': takeKey(m.key, true, p.id); break;
     case 'song': if (songStore.apply(m.key, m.v, m.at, m.by)) songChanged(m.key, p.id); break;
     case 'big': takeBig(p, m); break;
+    case 'aud-get': if (typeof m.id === 'string' && AUD.bytes.has(m.id)) sendAudio(p.id, m.id); break;
     case 'where': { const pl = S.players.get(p.id); if (pl) { pl.where = m.w; renderHall(); compose.render(); } break; }
     case 'react': showReaction(p.id, m.r); break;
     case 'srec': if (m.on) armSync(m.id, m.T0, p.id); else endSync(m.id, m.T1, p.id); break;
@@ -869,6 +870,7 @@ function songChanged(k, from) {
   if (k === 'transport' || k === '*') { const tr = songStore.song.transport; if (tr && tr.on && from && from !== S.me && k === 'transport') { const sec = songStore.song.sections[tr.sid]; addChat({ sys: true, text: `${S.players.get(from)?.name || 'A bandmate'} ${tr.mode === 'song' ? 'is playing the song' : `is looping ${sec ? sec.name : 'a section'}`}`, t: Date.now() }); } }
   if (k.startsWith?.('part:')) { const [, sid, pid] = k.split(':'); dropBounce(pid); const p = songStore.song.sections[sid]?.parts?.[pid]; if (p && from && from !== S.me) addChat({ sys: true, text: `${S.players.get(from)?.name || 'A bandmate'} locked ${p.name} into ${songStore.song.sections[sid]?.name || 'a section'}`, t: Date.now() }); }
   if (k.startsWith?.('vp:') || k === 'transport' || k === '*') renderCorners();
+  if (k.startsWith?.('part:') || k === '*') setTimeout(wantAudio, 400);
   compose.render(); renderSecbar(true);
 }
 const compose = makeCompose({
@@ -885,7 +887,7 @@ const compose = makeCompose({
     for (const [pid, pl] of S.players) if (pl.role !== 'listener') { const active = (pl.rack || []).some((x) => { const c = engine.ch.get(key(pid, x.r)); return c && performance.now() - c.flashT < 4000; }); out.push({ who: pl.name, color: colorOf(pid), where: pl.where, parts: (pl.rack || []).map((x) => describe(x.cfg, true)), sid: pos.sid, active }); }
     out[0].active = S.rack.some((e) => { const c = engine.ch.get(key(S.me, e.r)); return c && performance.now() - c.flashT < 4000; });
     return out; }, mutePart: (sid, pid, on) => { const p = songStore.song.sections[sid]?.parts?.[pid]; if (p) setSong(`part:${sid}:${pid}`, { ...p, muted: on }); },
-  iconEl: (p) => iconEl(engine.defs.get(p.inst) || { id: p.inst }),
+  iconEl: (p) => (p.kind === 'audio' ? h('span', { class: 'ico micico', 'aria-hidden': 'true' }, '🎙') : iconEl(engine.defs.get(p.inst) || { id: p.inst })), audioReady: (id) => AUD.bufs.has(id),
 });
 const slugName = () => (songStore.song.title || 'song').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'song';
 const songForExport = () => { const s = JSON.parse(JSON.stringify(songStore.song)); delete s.transport; delete s.players; s.bpm = Math.round(tempo.bpm(clock.now() + 1000)); s.key = S.key.mode ? { root: S.key.root, mode: S.key.mode } : s.key; return s; };
@@ -998,7 +1000,9 @@ function songTick() {
     const bpm = tempo.bpm(tempo.timeOf(seg.start));
     for (const p0 of Object.values(sec.parts || {})) {
       if (p0.muted) continue;
-      const take = SONG.currentTake(p0, seg.start); if (!take || !take.events?.length) continue;
+      const take = SONG.currentTake(p0, seg.start); if (!take) continue;
+      if (take.audio) { playAudioTake(p0, take, seg, b0, b1, end); continue; }
+      if (!take.events?.length) continue;
       const p = { ...p0, id: `${p0.id}.${take.id}`, takeEvents: take.events };   // a cache per take
       const bkey = `${seg.beats}@${bpm.toFixed(2)}`, bc = songPlay.bounce.get(p.id);
       const tag = `${p.id}@${seg.start}`;
@@ -1187,6 +1191,7 @@ function renderSecbar(full) {
       h('span', { class: 'help' }, `${Object.values(sec.parts || {}).filter((p) => !p.muted).length} locked`),
       h('span', { style: 'flex:1' }),
       e && !S.listener ? h('button', { class: 'btn small hot', onclick: () => lockIn(selEntry()) }, `Lock in my ${describe(e.cfg, true)}`) : null,
+      lane.on && !S.listener ? h('button', { class: 'btn small hot', title: 'Keep your last full pass of live audio as a take everyone plays from the song', onclick: () => lockAudio() }, '🎙 Lock in my live audio') : null,
       h('button', { class: 'btn small', onclick: () => goRoom('compose') }, 'Song board'), h('button', { class: 'btn small ghost', onclick: stopTransport }, '■ Stop'));
   }
   if (pos) { setText($('[data-barno]'), `bar ${pos.bar + 1}/${sec.bars}`); setText($('[data-chordnow]'), chordAt(pos.bar)); setText($('[data-chordnext]'), pos.bar + 1 < sec.bars ? `then ${chordAt(pos.bar + 1)}` : ''); }
@@ -1226,11 +1231,106 @@ function lockTake(e, sid, ev, pos) {
   const rule = songStore.song.rule || 'newest', owner = old ? old.by : S.me;
   const base = { name: old?.name || describe(e.cfg, true), lane: old?.lane || `${S.name} · ${describe(e.cfg, true)}`, role: old?.role || SONG.guessRole({ name: describe(e.cfg, true), inst: e.cfg.inst, patch: e.cfg.patch, drums: def?.drums }),
     inst: e.cfg.inst, patch: e.cfg.patch, params: { ...e.cfg.params }, drums: !!def?.drums, by: owner, byName: old?.byName || S.name, hw: e.cfg.hw || null, muted: old?.muted || false, votes: old?.votes || {} };
+  commitTake(sid, pid, base, take, takes, old, pos);
+}
+// a new take in a lane: it becomes the one that sounds by the room's rule, switching at the next pass
+function commitTake(sid, pid, base, take, takes, old, pos) {
+  const rule = songStore.song.rule || 'newest', owner = base.by;
   const next = { ...base, takes, prev: old ? SONG.currentTake(old)?.id : null, switchAt: nextBoundary(pos), current: old?.current };
   next.current = rule === 'owner' && owner !== S.me ? old.current : rule === 'vote' ? SONG.pickCurrent({ ...next, votes: { ...next.votes, [take.id]: [S.me] } }, 'vote', { ...next.votes, [take.id]: [S.me] }) : take.id;
   if (rule === 'vote') next.votes = { ...next.votes, [take.id]: [S.me] };
   setSong(`part:${sid}:${pid}`, next);
   setStatus(`Take ${takes.length} locked into ${songStore.song.sections[sid].name}${next.current === take.id ? ': it plays from the next pass' : ' (waiting to be picked)'}. Keep layering, or play something else.`);
+}
+
+// ---------- audio takes: a pass of your live audio, locked in ----------
+// The pass is cut from what you played (stamped with when you heard it), kept here, and sent once to everyone, who
+// keep it too and play it from the song like any locked part. The song state holds only a small description and a
+// waveform outline; the audio travels as binary chunks (and a browser that's missing one asks for it).
+const AUD = { bufs: new Map(), bytes: new Map(), inbound: new Map(), asked: new Map(), played: new Set(), started: 0 };
+const AUD_MAGIC = 0x54445541, AUD_SR = 24000, AUD_HDR = 24;
+const audioTakes = () => songStore.sections().flatMap((s) => Object.values(s.parts || {}).flatMap((p) => SONG.takesOf(p).filter((t) => t.audio).map((t) => ({ s, p, t }))));
+function audioBuffer(id, sr, pcm16) {
+  if (!engine.ctx) return null;
+  const buf = engine.ctx.createBuffer(1, pcm16.length, sr), ch = buf.getChannelData(0);
+  for (let i = 0; i < pcm16.length; i++) ch[i] = pcm16[i] / 32768;
+  AUD.bufs.set(id, buf); return buf;
+}
+function lockAudio() {
+  const tr = songStore.song.transport;
+  if (!lane.on) { setStatus('Go live first: Live audio on your shelf.', 'error'); return; }
+  if (!tr || !tr.on) { setStatus('Loop a section first, then play a pass and lock it in.', 'error'); return; }
+  const b = tempo.beatAt(clock.now()), pos = positionAt(tr, b); if (!pos) { setStatus('Wait for the section to start.', 'error'); return; }
+  const pieces = [];
+  if (tr.mode === 'range') {
+    const L = pos.seg.passBeats; let ps = pos.seg.pass; if (b - ps < L * 0.98) { if (pos.seg.k > 0) ps -= L; else { setStatus('Play the whole loop once, then lock it in.', 'error'); return; } }
+    for (const t of songStore.timeline()) { const lo = Math.max(tr.a, t.start) - t.start, hi = Math.min(tr.b, t.start + t.beats) - t.start; if (hi > lo) pieces.push({ sid: t.id, start: ps + t.start - tr.a, lo, hi }); }
+  } else {
+    let ws = pos.seg.start; const L = pos.seg.beats;
+    if (b - ws < L * 0.98) { if (tr.mode === 'loop' && pos.seg.k > 0) ws -= L; else { setStatus('Play the whole section once, then lock it in.', 'error'); return; } }
+    pieces.push({ sid: pos.sid, start: ws, lo: 0, hi: L });
+  }
+  const pid = `${S.me}-live`; let n = 0;
+  for (const pc of pieces) {
+    const t0 = tempo.timeOf(pc.start + pc.lo), t1 = tempo.timeOf(pc.start + pc.hi), pcm = lane.slice(t0, t1, AUD_SR); if (!pcm) continue;
+    const id = Math.random().toString(36).slice(2, 10).padEnd(8, '0'), pcm16 = new Int16Array(pcm.length);
+    for (let i = 0; i < pcm.length; i++) pcm16[i] = Math.max(-1, Math.min(1, pcm[i])) * 32767;
+    const peaks = Array.from({ length: 120 }, (_, k) => { let m = 0; for (let i = Math.floor((k * pcm.length) / 120); i < Math.floor(((k + 1) * pcm.length) / 120); i++) m = Math.max(m, Math.abs(pcm[i])); return Math.round(m * 100) / 100; });
+    AUD.bytes.set(id, new Uint8Array(pcm16.buffer)); audioBuffer(id, AUD_SR, pcm16);
+    const sec = songStore.song.sections[pc.sid], old = sec.parts?.[pid];
+    const take = { id: Math.random().toString(36).slice(2, 7), events: [], audio: { id, sr: AUD_SR, frames: pcm.length, from: pc.lo, beats: pc.hi - pc.lo, bpm: tempo.bpm(t0), peaks }, by: S.me, byName: S.name, at: clock.now() };
+    const takes = [...SONG.takesOf(old || {}), take].slice(-12);
+    const base = { name: old?.name || 'Live audio', lane: old?.lane || `${S.name} · Live audio`, role: old?.role || 'texture', kind: 'audio', inst: 'audio', patch: '', params: null, drums: false, by: old ? old.by : S.me, byName: old?.byName || S.name, muted: old?.muted || false, votes: old?.votes || {} };
+    commitTake(pc.sid, pid, base, take, takes, old, pos);
+    for (const peer of room.peers.keys()) sendAudio(peer, id);
+    n++;
+  }
+  if (!n) setStatus("Nothing to lock in: there's no live audio from that pass here.", 'error');
+}
+async function sendAudio(to, id) {
+  const d = AUD.bytes.get(id); if (!d) return;
+  const CH = 16000;
+  for (let o = 0; o < d.length; o += CH) {
+    const part = d.subarray(o, Math.min(d.length, o + CH)), buf = new ArrayBuffer(AUD_HDR + part.length), v = new DataView(buf);
+    v.setUint32(0, AUD_MAGIC, true); v.setUint32(4, AUD_SR, true); v.setUint32(8, o, true); v.setUint32(12, d.length, true);
+    for (let i = 0; i < 8; i++) v.setUint8(16 + i, id.charCodeAt(i) || 48);
+    new Uint8Array(buf, AUD_HDR).set(part);
+    if (!(await room.sendBinaryTo(to, buf))) return;
+  }
+}
+const isAudioChunk = (buf) => buf.byteLength >= AUD_HDR && new DataView(buf).getUint32(0, true) === AUD_MAGIC;
+function onAudioChunk(buf) {
+  const v = new DataView(buf), sr = v.getUint32(4, true), o = v.getUint32(8, true), total = v.getUint32(12, true);
+  let id = ''; for (let i = 0; i < 8; i++) id += String.fromCharCode(v.getUint8(16 + i));
+  if (AUD.bytes.has(id) || total > 64e6) return;
+  const inb = AUD.inbound.get(id) || AUD.inbound.set(id, { buf: new Uint8Array(total), got: 0, seen: new Set() }).get(id);
+  if (inb.seen.has(o)) return; inb.seen.add(o);
+  const part = new Uint8Array(buf, AUD_HDR); inb.buf.set(part, o); inb.got += part.length;
+  if (inb.got >= total) { AUD.inbound.delete(id); AUD.bytes.set(id, inb.buf); audioBuffer(id, sr, new Int16Array(inb.buf.buffer, 0, total >> 1)); compose.render(); }
+}
+// ask for any audio take this browser hasn't got (from whoever locked it, else anyone)
+function wantAudio() {
+  const now = performance.now();
+  for (const { t } of audioTakes()) {
+    const id = t.audio.id; if (AUD.bytes.has(id) || AUD.inbound.has(id) || now - (AUD.asked.get(id) || -1e9) < 8000) continue;
+    AUD.asked.set(id, now);
+    if (room.peers.has(t.by)) room.send({ k: 'aud-get', id }, t.by); else room.send({ k: 'aud-get', id });
+  }
+}
+setInterval(() => { if (S.me && room.peers.size) wantAudio(); }, 3000);
+// play an audio take where its section (or the part of it the loop covers) sounds
+function playAudioTake(p, take, seg, b0, b1, end) {
+  const A = take.audio, buf = AUD.bufs.get(A.id); if (!buf) return;
+  const a0 = seg.start + A.from, lo = Math.max(seg.lo ?? seg.start, a0), hi = Math.min(seg.hi ?? seg.start + seg.beats, a0 + A.beats, Number.isFinite(end) ? end : Infinity);
+  if (hi <= lo || lo >= b1 || hi <= b0) return;
+  const tag = `${p.id}.${take.id}@${seg.start.toFixed(3)}`; if (AUD.played.has(tag)) return; AUD.played.add(tag);
+  if (AUD.played.size > 2000) AUD.played = new Set([...AUD.played].slice(-500));
+  const ctx = engine.ctx, src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = buf; src.connect(g).connect(engine.master);
+  const t = engine.audioTime(tempo.timeOf(lo)), now = ctx.currentTime, into = ((lo - a0) * 60) / A.bpm + Math.max(0, now - t);
+  if (into >= buf.duration) return;
+  src.start(Math.max(now, t), into);
+  const te = engine.audioTime(tempo.timeOf(hi)); g.gain.setValueAtTime(1, Math.max(now, te - 0.008)); g.gain.linearRampToValueAtTime(0, te); src.stop(te + 0.02);
+  songPlay.nodes.add(src); AUD.started++; src.onended = () => { songPlay.nodes.delete(src); g.disconnect(); };
 }
 // a change of take lands at the start of the next pass of that section, so the band hears it switch together
 function nextBoundary(pos) { const tr = songStore.song.transport; if (!tr || !tr.on || !pos) return tempo.beatAt(clock.now() + 300); return pos.seg.pass != null ? pos.seg.pass + pos.seg.passBeats : pos.seg.start + pos.seg.beats; }
@@ -2397,7 +2497,7 @@ function wire() {
       $('#laneDev').replaceChildren(h('option', { value: '' }, 'Default input'), ...devs.map((d) => h('option', { value: d.deviceId, selected: d.deviceId === cur }, d.label || 'Input')));
     }
     room.send({ k: 'lane', lane: { on: lane.on, bars: lane.bars } });
-    renderCorners();
+    renderCorners(); renderSecbar(true);
   };
   // Live audio sits with the instruments; opening it suggests a delay of one pass of the looping section
   const openLive = () => {
@@ -2444,7 +2544,7 @@ Object.assign(window.JJ, {
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
   own: (id, v) => setOwned(id, v),
-  loopRange: (a, b) => loopRange(a, b),
+  loopRange: (a, b) => loopRange(a, b), lockAudio: () => lockAudio(), audio: () => ({ have: [...AUD.bytes.keys()], started: AUD.started }), lane: () => lane,
   addVirtual: (kind, style) => addVirtual(kind, style), setVirtual: (id, p) => setVirtual(id, p), removeVirtual: (id) => removeVirtual(id), lockVirtual: (id, sid) => lockVirtual(id, sid), vplan: (id) => VP.plan.get(id), players: () => songStore.song.players || {},
   setKey: (root, mode) => setKey(root, mode), choose: (sid, pid, t) => choose(sid, pid, t), vote: (sid, pid, t) => vote(sid, pid, t), saveVar: (n) => saveVariation(n), restoreVar: (n) => restoreVariation(n), song: () => songStore.song, setSong: (k, v) => setSong(k, v), loadSong: (sg) => loadSong(sg), songFromTracker: (j) => SONG.songFromTracker(j), songFromMidi: (b) => SONG.songFromMidi(b), songMidi: () => Array.from(SONG.songToMidi(songForExport())), play: (mode, sid) => startTransport(mode, sid), stopSong: () => stopTransport(), lockIn: (r) => lockIn(entry(r)), goRoom: (w) => goRoom(w), bounced: () => [...songPlay.bounce].filter(([, v]) => v.buf).map(([k]) => k), match: (r, on) => { const e = entry(r); if (e) return on ? startMatch(e) : stopMatch(e); }, matchScore: async (r, params) => { const m = entry(r)?.match; return m && m.fitter.scoreAll(params); }, matchObs: (r) => entry(r)?.match?.fitter.obs.map((o) => ({ note: o.note, held: o.held, att: o.att, noise: +o.noise.toFixed(2), hSus: o.hSus && o.hSus.map(Math.round).join(' '), curve: o.curve.slice(0, 40).map(Math.round).join(' ') })),
   matchState: (r) => { const m = entry(r)?.match; return m && { why: m.why, on: m.on, obs: m.fitter.obs.length, renders: m.fitter.renders, ms: m.fitter.ms, lag: m.lag, sim: m.sim, applied: m.applied, d: m.fitter.bestD, params: entry(r).cfg.params }; }, react: (r) => react(r), listen: (code) => enter(code, true), assist: (v) => { S.assist = v; },

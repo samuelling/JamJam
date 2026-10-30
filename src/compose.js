@@ -38,6 +38,13 @@ export function makeCompose(x) {
   }
   // a tiny picture of a take: notes as bars across the cell (pitch up), drums as ticks
   function miniRoll(take, beats, w, ht, color, drums) {
+    if (take?.audio) {
+      // an audio take: its waveform outline, where it sits in the section
+      const A = take.audio, x0 = (A.from / beats) * w, ww = (A.beats / beats) * w, n = A.peaks.length, mid = ht / 2;
+      const pts = A.peaks.map((v, i) => `${(x0 + (i / (n - 1)) * ww).toFixed(1)},${(mid - Math.min(1, v * 1.6) * (mid - 2)).toFixed(1)}`);
+      const back = A.peaks.map((v, i) => `${(x0 + (i / (n - 1)) * ww).toFixed(1)},${(mid + Math.min(1, v * 1.6) * (mid - 2)).toFixed(1)}`).reverse();
+      return `<svg viewBox="0 0 ${w} ${ht}" width="${w}" height="${ht}" preserveAspectRatio="none"><polygon points="${[...pts, ...back].join(' ')}" fill="${color}" opacity="${x.audioReady?.(A.id) ? 1 : 0.35}"/></svg>`;
+    }
     const ev = take?.events || [], on = new Map(), notes = [];
     for (const e of ev) { if (e.type === 'on') on.set(e.note, e); else if (e.type === 'off' && on.has(e.note)) { notes.push({ n: e.note, a: on.get(e.note).b, z: e.b }); on.delete(e.note); } }
     for (const [n, e] of on) notes.push({ n, a: e.b, z: beats });
@@ -258,7 +265,7 @@ export function makeCompose(x) {
           h('button', { class: 'btn small ghost', onclick: () => x.mutePart(s.id, p.id, !p.muted) }, p.muted ? 'Unmute lane here' : 'Mute here'), h('button', { class: 'btn small ghost', onclick: () => { x.removePart(s.id, p.id); cell = null; } }, 'Remove')),
         ...[...ts].reverse().map((t, k) => {
           const votes = (p.votes?.[t.id] || []).length, on = cur && cur.id === t.id;
-          return h('div', { class: 'takerow' + (on ? ' on' : '') }, h('span', { class: 'tno' }, `take ${ts.length - k}`), h('span', {}, `${t.byName || 'someone'}${t.at ? ' · ' + new Date(t.at > 1e12 ? t.at : Date.now()).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''} · ${t.events.filter((e) => e.type === 'on').length} notes`),
+          return h('div', { class: 'takerow' + (on ? ' on' : '') }, h('span', { class: 'tno' }, `take ${ts.length - k}`), h('span', {}, `${t.byName || 'someone'}${t.at ? ' · ' + new Date(t.at > 1e12 ? t.at : Date.now()).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''} · ${t.audio ? `${(t.audio.frames / t.audio.sr).toFixed(1)} s of audio${x.audioReady?.(t.audio.id) ? '' : ' · on its way…'}` : `${t.events.filter((e) => e.type === 'on').length} notes`}`),
             rule === 'vote' ? h('span', { class: 'help' }, `${votes} vote${votes === 1 ? '' : 's'}`) : null, h('span', { style: 'flex:1' }),
             on ? h('b', { class: 'curtag' }, 'sounding') : h('button', { class: 'btn small', onclick: () => (rule === 'vote' ? x.vote(s.id, p.id, t.id) : x.choose(s.id, p.id, t.id)) }, rule === 'vote' ? 'Vote for it' : 'Use this take'));
         }));
