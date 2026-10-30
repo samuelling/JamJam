@@ -45,6 +45,12 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     const vp = await A.evaluate(() => Object.values(JJ.players())[0]);
     check(vp && vp.style === 'funk' && vp.kit === 'studio' && vp.name === 'Funk drummer', `picking Funk on the Studio kit brings in a ${vp ? vp.name : 'nothing'}`);
     check((await A.$$('.corner.vp')).length === 1, 'it takes a corner of its own');
+    // no stray "null" anywhere: the sync take drawer and the section bar while a section loops
+    await A.evaluate(() => { JJ.setSong('sec:v1', { name: 'Verse', bars: 2, chords: ['C', 'G'], notes: '' }); JJ.setSong('order', ['v1']); JJ.play('loop', 'v1'); });
+    await sleep(1500);
+    await A.click('#syncBtn'); await sleep(400);
+    const nulls = await A.evaluate(() => (document.body.innerText.match(/\bnull\b/g) || []).length);
+    check(nulls === 0, `no stray "null" on screen with the sync drawer and the section bar up (${nulls})`);
     check(errors.length === 0, `no page errors${errors.length ? ': ' + errors.join(' | ') : ''}`);
   } catch (e) { console.error(e); failures++; }
   await browser.close();

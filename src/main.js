@@ -15,6 +15,12 @@ import * as VPL from './players.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
 const store = { get: (k) => localStorage.getItem('megajam.' + k) ?? localStorage.getItem('jamjam.' + k), set: (k, v) => localStorage.setItem('megajam.' + k, v) };
 
+// replaceChildren, append and prepend print a null child as the word "null"; every view here builds its children
+// with "cond ? el : null", so leave the empty ones out
+for (const m of ['replaceChildren', 'append', 'prepend']) {
+  const orig = Element.prototype[m];
+  Element.prototype[m] = function (...kids) { return orig.apply(this, kids.filter((k) => k != null && k !== false)); };
+}
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const h = (tag, attrs = {}, ...kids) => {
