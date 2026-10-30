@@ -135,6 +135,9 @@ function updateLeader() {
 function onEntered() {
   if (!room.id || S.me) return;
   S.me = room.id;
+  soundcheck();
+  // the first time in, the wall opens with three suggestions (not in automated tests unless they ask: ?picks=1)
+  if (!S.pickedOnce && (!navigator.webdriver || PICKS)) { S.pickedOnce = true; S.firstPick = true; setTimeout(() => { if (S.firstPick) { renderLibrary(); openDrawer('#libDrawer'); } }, 900); }
   updateLeader();
   if (clock.isLeader) { tempo.start(clock.now(), 96); S.lockedAt = performance.now(); }
   for (const e of S.rack) { engine.setCfg(key(S.me, e.r), e.cfg, -Infinity); ensureSeq(key(S.me, e.r), e.cfg); S.stable.set(key(S.me, e.r), performance.now()); applyVolume(key(S.me, e.r)); }
@@ -226,7 +229,7 @@ function onMessage(p, m) {
       const first = !S.players.has(p.id);
       S.players.set(p.id, { ...(S.players.get(p.id) || {}), name: m.name, rack: [], hashes: m.hashes, lane: m.lane, peerL: m.L, v: m.v });
       for (const x of m.rack || []) remoteCfg(p.id, x.r, x.cfg, -Infinity, x.budget, x.seq);
-      if (first) addChat({ sys: true, text: `${m.name} walked in`, t: Date.now() });
+      if (first) { addChat({ sys: true, text: `${m.name} walked in`, t: Date.now() }); engine.chime(false); }
       if ($('#status').dataset.kind !== 'error') setStatus('');
       renderCorners(); renderMidiPanel(); break;
     }
@@ -577,7 +580,7 @@ function cornerCard(id, rack) {
   const vol = h('input', { type: 'range', min: 0, max: 1.5, step: 0.01, value: v.vol, 'aria-label': 'Volume in your mix', oninput: (e) => { S.vol.set(id, { ...(S.vol.get(id) || { mute: false }), vol: +e.target.value }); applyPlayerVolume(id); } });
   const mute = h('button', { class: 'btn small' + (v.mute ? ' on' : ''), title: 'Mute in your mix', onclick: (e) => { const x = S.vol.get(id) || { vol: 1, mute: false }; x.mute = !x.mute; S.vol.set(id, x); applyPlayerVolume(id); e.target.classList.toggle('on', x.mute); } }, 'M');
   return h('div', { class: 'corner' + (mine ? ' me' : ''), style: `--c:${c}` },
-    h('div', { class: 'chead' }, h('div', { class: 'cname' }, (mine ? S.name : pl.name || peer?.name || 'Jammer') + (mine ? ' · you' : '')), h('span', { class: 'tag tech', 'data-path': id })),
+    h('div', { class: 'chead' }, h('div', { class: 'cname' }, (mine ? S.name : pl.name || peer?.name || 'Jammer') + (mine ? ' · you' : '')), h('span', { class: 'feel', 'data-feel': id }, h('i'), h('span')), h('span', { class: 'tag tech', 'data-path': id })),
     h('div', { class: 'gearrow' }, ...rack.map((x) => {
       const def = engine.defs.get(x.cfg?.inst), unit = x.cfg?.hw && engine.unit(x.cfg.hw);
       return h('div', { class: 'gearitem', title: describe(x.cfg) }, iconEl(x.cfg?.ext ? { id: 'midi' } : def), h('span', { class: 'led', 'data-led': key(id, x.r), style: `--c:${c}` }), h('small', { 'data-budget': key(id, x.r) }, x.cfg?.ext ? x.cfg.ext.name : unit ? unit.model : def?.name || '…'));
@@ -585,6 +588,52 @@ function cornerCard(id, rack) {
     h('div', { class: 'cstats', 'data-stats': id }),
     h('div', { class: 'cfoot' }, vol, mute, h('div', { class: 'lanem', 'data-lane': id, title: 'Audio lane' }, h('i'))),
   );
+}
+const PICKS = new URLSearchParams(location.search).get('picks') === '1';
+// the invite: the code to read out, a link to send, and a QR code to scan from a phone
+async function openInvite(url) {
+  const { default: qrcode } = await import('../vendor/qrcode.js');
+  const q = qrcode(0, 'M'); q.addData(url); q.make();
+  const n = q.getModuleCount(), cell = 6, pad = 4, size = (n + pad * 2) * cell;
+  let d = ''; for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${(c + pad) * cell},${(r + pad) * cell}h${cell}v${cell}h-${cell}z`;
+  const qr = h('div', { class: 'qr' }); qr.innerHTML = `<svg viewBox="0 0 ${size} ${size}" role="img" aria-label="QR code for the invite link"><rect width="${size}" height="${size}" fill="#ECEBE5"/><path d="${d}" fill="#18181B"/></svg>`;
+  const copy = h('button', { class: 'btn hot', onclick: async () => { try { await navigator.clipboard.writeText(url); copy.textContent = 'Copied'; } catch (_) { prompt('Invite link', url); } setTimeout(() => { copy.textContent = 'Copy link'; }, 1500); } }, 'Copy link');
+  $('#inviteBody').replaceChildren(
+    h('div', { class: 'bigcode', 'aria-label': 'Room code ' + room.code.split('').join(' ') }, room.code),
+    h('p', { class: 'help', style: 'margin:0' }, 'Read them the code, send the link, or let them scan this with a phone camera.'),
+    qr,
+    h('div', { class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap;justify-content:center' }, copy,
+      navigator.share ? h('button', { class: 'btn', onclick: () => navigator.share({ title: 'Jam with me on MEGAjam', text: `Room ${room.code}`, url }).catch(() => {}) }, 'Share…') : null),
+    h('code', { class: 'link' }, url));
+  openDrawer('#inviteDrawer');
+}
+
+// the browser may keep sound off until a tap (after a reload, or a link opened in a new tab): ask for one, then ring the bell
+function soundcheck() {
+  const ring = () => { $('#tapToHear')?.classList.add('hide'); engine.chime(true); };
+  if (engine.ctx?.state === 'running') { setTimeout(ring, 150); return; }
+  $('#tapToHear')?.classList.remove('hide');
+  const go = async () => { document.removeEventListener('pointerdown', go, true); document.removeEventListener('keydown', go, true); try { await engine.ctx.resume(); } catch (_) {} ring(); };
+  document.addEventListener('pointerdown', go, true); document.addEventListener('keydown', go, true);
+}
+// how a link feels, in words: from its round trip, whether it went through the relay, and late notes in the last half minute
+function feelOf(id, peer, rack) {
+  if (id === S.me) {
+    if (engine.ctx?.state !== 'running') return ['bad', 'sound is off: tap anywhere'];
+    if (room.peers.size && !clock.locked) return ['wait', 'tuning up…'];
+    return ['ok', room.peers.size ? 'you' : 'you · alone for now'];
+  }
+  if (!peer || peer.path === 'connecting' || !peer.rtt.length) return ['wait', 'saying hello…'];
+  const rtt = pct(peer.rtt, 0.5);
+  let late = 0; for (const x of rack) late += engine.ch.get(key(id, x.r))?.late || 0;
+  peer.lateHist = peer.lateHist || []; const now = performance.now();
+  if (!peer.lateHist.length || now - peer.lateHist[peer.lateHist.length - 1][0] > 2000) peer.lateHist.push([now, late]);
+  while (peer.lateHist.length > 1 && now - peer.lateHist[0][0] > 30000) peer.lateHist.shift();
+  const recentLate = late - peer.lateHist[0][1];
+  if (recentLate > 3 || rtt > 220) return ['bad', 'laggy: a wired connection helps'];
+  if (peer.path === 'relay') return ['warn', 'okay (through the server)'];
+  if (rtt > 110 || recentLate > 0) return ['warn', 'okay: play a touch ahead'];
+  return ['ok', rtt < 45 ? 'tight' : 'good'];
 }
 function updateCorners() {
   const now = performance.now();
@@ -601,6 +650,8 @@ function updateCorners() {
       }
     }
     const rack = id === S.me ? S.rack : pl.rack || [];
+    const fe = $(`[data-feel="${id}"]`);
+    if (fe) { const [kind, words] = feelOf(id, peer, rack); fe.dataset.kind = kind; setText(fe.lastChild, words); }
     for (const x of rack) {
       const k = key(id, x.r), c = engine.ch.get(k);
       for (const led of $$(`[data-led="${k}"]`)) if (c) setCls(led, 'lit', now - c.flashT < 120 || c.held.size > 0);
@@ -945,7 +996,7 @@ function tile(meta, def) {
     try { if (!def) { status.textContent = 'fetching…'; status.classList.remove('hide'); } const d = await engine.ensureDef(id); status.classList.add('hide'); fn(d); }
     catch (err) { status.textContent = "couldn't load it: " + err.message; status.classList.remove('hide'); }
   };
-  const take = () => withDef((d) => { addEntry({ inst: d.id }); closeDrawers(); });
+  const take = () => withDef((d) => { const swap = S.firstPick && S.rack.length === 1 ? S.rack[0] : null; S.firstPick = false; addEntry({ inst: d.id }); if (swap) removeEntry(swap); closeDrawers(); });
   return h('div', { class: 'tile', style: `--r:${tilt(id)}deg` },
     h('span', { class: 'peg' }),
     lib ? h('span', { class: 'from', title: lib.url }, lib.by ? 'by ' + lib.by.split(' ')[0] : lib.name) : null,
@@ -960,8 +1011,18 @@ function plainTile(label, sub, onclick, cls = '') {
   return h('div', { class: 'tile plain ' + cls, style: `--r:${tilt(label)}deg` }, h('span', { class: 'peg' }),
     h('button', { class: 'face', onclick }, label), h('div', { class: 'ptag' }, h('b', {}, sub[0]), h('small', {}, sub[1])));
 }
+const QUICK = [['acoustic/guitar', 'strum', 'Something to strum'], ['monolith', 'bass', 'Hold down the bass'], ['machina', '909', 'Play the drums']];
 function renderLibrary() {
   loadFeatured();
+  const quick = $('#quickPicks');
+  if (quick) {
+    quick.classList.toggle('hide', !S.firstPick);
+    if (S.firstPick) quick.replaceChildren(h('b', {}, 'What do you want to play?'), ...QUICK.map(([id, patch, label]) => {
+      const meta = engine.defs.get(id) || engine.catalog.get(id); if (!meta) return null;
+      return h('button', { class: 'quick', onclick: async () => { try { const d = await engine.ensureDef(id); S.firstPick = false; const swap = S.rack.length === 1 ? S.rack[0] : null; const e = addEntry({ inst: d.id, patch }); if (e && swap) removeEntry(swap); closeDrawers(); } catch (_) {} } },
+        iconEl(engine.defs.get(id) || { id, lib: meta.lib }), h('span', {}, label), h('small', {}, meta.name));
+    }).filter(Boolean), h('button', { class: 'btn small ghost', onclick: () => { S.firstPick = false; renderLibrary(); } }, 'Just looking'));
+  }
   const tiles = [...engine.defs.values()].filter((d) => !d.lib && !d.internal).map((d) => tile({ id: d.id, name: d.name, family: d.family }, d));
   for (const lib of engine.libs.values()) for (const id of lib.entries) tiles.push(tile({ ...engine.catalog.get(id), id, lib: lib.id }, engine.defs.get(id)));
   if (!featuredTried || engine.loadingLibs) tiles.push(h('div', { class: 'tile plain' }, h('span', { class: 'peg' }), h('div', { class: 'face' }, 'hanging more…')));
@@ -1335,11 +1396,7 @@ function wire() {
   $('#joinBtn').onclick = () => enter($('#codeIn').value);
   $('#codeIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') enter($('#codeIn').value); });
   $('#leaveBtn').onclick = leaveRoom;
-  $('#copyBtn').onclick = async () => {
-    const url = `${location.origin}${location.pathname}?room=${room.code}${qs.get('server') ? '&server=' + encodeURIComponent(qs.get('server')) : ''}`;
-    try { await navigator.clipboard.writeText(url); $('#copyBtn').textContent = 'Copied'; } catch (_) { prompt('Invite link', url); }
-    setTimeout(() => { $('#copyBtn').textContent = 'Copy invite'; }, 1500);
-  };
+  $('#copyBtn').onclick = () => openInvite(`${location.origin}${location.pathname}?room=${room.code}${qs.get('server') ? '&server=' + encodeURIComponent(qs.get('server')) : ''}`);
   const bpmNow = () => Math.round(tempo.bpm(clock.now() + 1000));
   $('#bpmDown').onclick = () => setTempo(bpmNow() - 1);
   $('#bpmUp').onclick = () => setTempo(bpmNow() + 1);

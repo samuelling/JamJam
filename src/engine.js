@@ -361,6 +361,16 @@ export class Engine {
     o.onended = () => { o.disconnect(); g.disconnect(); };
   }
 
+  // a doorbell (ding-dong, or a single ding for a bandmate walking in): also how you find out your sound is on
+  chime(two = true) {
+    const ctx = this.ctx; if (!ctx || ctx.state !== 'running') return;
+    const t0 = ctx.currentTime + 0.03, bus = ctx.createGain(); bus.gain.value = 0.18; bus.connect(this.master);
+    const tone = (f, t) => { for (const [m, a] of [[1, 1], [2.76, 0.35], [5.4, 0.12]]) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = f * m;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + 0.004); g.gain.setTargetAtTime(0, t + 0.004, 0.35 / m); o.connect(g).connect(bus); o.start(t); o.stop(t + 2); } };
+    tone(784, t0); if (two) tone(622, t0 + 0.38);
+    setTimeout(() => bus.disconnect(), 3000);
+  }
+
   // audio lane: a chunk of another jammer's audio, captured at room time `start`, to be heard `delay` ms later
   laneChunk(pid, start, delay, rate, samples) {
     const c = this.channel(pid), ctx = this.ctx;

@@ -414,6 +414,34 @@
   .tile .acts .btn { flex: 1; }
   .tile.plain .face { display: grid; place-items: center; aspect-ratio: 3 / 2.2; background: repeating-linear-gradient(45deg, #1d1f23 0 10px, #191a1e 10px 20px); color: var(--mz-toner); font: 400 22px/1.05 var(--display); text-align: center; padding: 14px; }
   .tile .status { font: 400 11px var(--type); color: #2a1e10; background: #e7dcc0; padding: 3px 6px; border-radius: 2px; }
+
+  .feel { display: inline-flex; align-items: center; gap: 5px; font: 400 11px var(--type); color: var(--mz-muted); white-space: nowrap; margin-left: auto; }
+  .feel i { width: 8px; height: 8px; border-radius: 50%; background: #555; box-shadow: 0 0 0 2px #0006; }
+  .feel[data-kind="ok"] i { background: #3ddc84; box-shadow: 0 0 8px #3ddc8499; }
+  .feel[data-kind="warn"] i { background: #ffcf26; box-shadow: 0 0 8px #ffcf2699; }
+  .feel[data-kind="bad"] i { background: #ff4d6a; box-shadow: 0 0 8px #ff4d6a99; animation: bulbFlicker 2.4s infinite; }
+  .feel[data-kind="wait"] i { background: #7DB0FF; opacity: .6; }
+  .chead .tag.tech { margin-left: 6px; }
+  .tapover { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; background: #000a; cursor: pointer; }
+  .tapover > div { display: grid; gap: 8px; max-width: 360px; text-align: center; padding: 22px 26px; background: var(--mz-sheet); border: 1px solid #262a33; transform: rotate(-1deg); box-shadow: 0 20px 50px #000a; }
+  .tapover b { font: 400 26px/1 var(--display); color: var(--mz-toner); }
+  .tapover span { font: 400 13px/1.45 var(--type); color: var(--mz-muted); }
+
+  .sheet.invite { width: min(420px, 100%); background: var(--mz-sheet); }
+  .sheet.invite h2 { font: 400 24px/1 var(--display); }
+  #inviteBody { display: grid; gap: 12px; justify-items: center; text-align: center; }
+  .bigcode { font: 400 64px/1 var(--display); letter-spacing: .18em; color: var(--mz-toner); padding-left: .18em; }
+  .qr { width: 220px; padding: 8px; background: #ECEBE5; transform: rotate(1.2deg); box-shadow: 0 8px 20px #0008; }
+  .qr svg { display: block; width: 100%; height: auto; }
+  .link { font: 400 11px var(--type); color: var(--mz-muted); word-break: break-all; }
+  .quickpicks { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 14px; background: var(--mz-toner); color: #18181b; border-radius: 3px; transform: rotate(-.4deg); box-shadow: 0 6px 16px #0007; }
+  .quickpicks > b { font: 400 22px/1 var(--display); margin-right: 6px; }
+  .quick { display: grid; grid-template-columns: 64px auto; grid-template-rows: auto auto; column-gap: 8px; align-items: center; text-align: left; background: #fff; border: 2px solid #18181b; border-radius: 8px; padding: 6px 10px 6px 6px; color: #18181b; }
+  .quick:hover { background: var(--mz-pink); }
+  .quick .ico { grid-row: span 2; width: 64px; height: 43px; }
+  .quick span { font: 700 14px/1.1 var(--sans); }
+  .quick small { font: 400 11px var(--type); color: #444; }
+  .quickpicks .btn.ghost { color: #18181b; border-color: #18181b55; margin-left: auto; }
 </style>
 <script src="mp-config.js"></script>
 </head>
@@ -519,9 +547,14 @@
   </aside>
 </section>
 
+<div id="tapToHear" class="tapover hide" role="dialog" aria-label="Turn sound on"><div><b>Tap to hear the room</b><span>Your browser keeps sound off until you touch the page. Headphones keep your speakers out of your mic.</span></div></div>
+<div id="inviteDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="Invite a friend">
+  <div class="sheet invite"><header><h2>Bring someone in</h2><button class="btn small" data-close style="margin-left:auto">Close</button></header><div id="inviteBody"></div></div>
+</div>
 <div id="libDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="The shared studio">
   <div class="sheet wall">
     <header><h2>The shared studio</h2><span class="help">Take anything off the wall. Whatever you pick, the whole band hears the same thing.</span><button class="btn small" data-close style="margin-left:auto">Close</button></header>
+    <div class="quickpicks hide" id="quickPicks"></div>
     <div class="pegboard" id="libCards"></div>
     <div id="libExtra" style="display:grid;gap:8px"></div>
     <div class="pages hide" id="libTabs"></div>
