@@ -96,10 +96,10 @@ export function makePadsUI(x) {
         h('label', { class: 'pedit' }, h('small', {}, 'Choke'), h('select', { class: 'lcdsel', 'aria-label': 'Choke group', onchange: (ev) => set({ choke: +ev.target.value }) }, ...['none', 'A', 'B', 'C', 'D'].map((t, k) => h('option', { value: k, selected: (pad.choke || 0) === k }, t))))) : null);
     const wb = editor.querySelector('.pwavebig'); if (wb) wb.innerHTML = wave(pad.id, 600, 44, pad.start || 0, pad.end ?? 1) || `<span class="help">${pad.src ? 'one of the kit\'s own sounds' : 'on its way: a sketch plays until it arrives'}</span>`;
     plate.replaceChildren(
-      h('div', { class: 'devtop' }, h('div', { class: 'brand' }, h('div', { class: 'name' }, 'Pads'),
+      h('div', { class: 'devtop padtop' }, h('div', { class: 'brand' }, h('div', { class: 'name' }, 'Pads'),
         x.kits ? h('select', { class: 'lcdsel kitsel', 'aria-label': 'Kit', title: 'Load a kit onto the pads (your own sounds on them are replaced)', onchange: (ev) => x.pickKit(e, ev.target.value) },
           ...x.kits(e).map(([id, name]) => h('option', { value: id, selected: id === e.cfg.patch }, name))) : null, h('div', { class: 'fam' }, 'Sample pads · drop sounds on them'), x.kitSource?.(e) ? h('div', { class: 'fam credit' }, 'sounds: ' + x.kitSource(e)) : null),
-        h('div', { class: 'screen lcd' }, h('div', { class: 'wide' }, 'Play them with the mouse, a MIDI pad controller (notes 36 to 51) or the keys 1234 · QWER · ASDF · ZXCV. Record a few passes with Record every pass, then fix and quantize the hits in the Compose Room.'))),
+        h('div', { class: 'screen lcd' }, h('div', { class: 'wide' }, 'Mouse, a MIDI pad controller (notes 36–51), or the keyboard laid out like the grid: Z X C V along the bottom, up to 1 2 3 4. Record passes, then fix and quantize the hits in the Compose Room.'))),
       h('div', { class: 'padwrap' }, grid, editor), foot);
   }
   return { render, loadFiles, load, select: (i) => { sel = i; } };

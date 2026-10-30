@@ -2211,8 +2211,20 @@ function renderKeyboard() {
   const sig = input.octave + '|' + drums + '|' + (e?.cfg.inst === 'pads' ? (e.cfg.params.kit || []).map((p) => p?.name || '').join() : '');
   if (sig === kbSig && keyEls.size) { renderKey(); return; }
   kbSig = sig;
-  const base = 12 * (input.octave + 1);
   keyEls = new Map();
+  const padsOn = e?.cfg.inst === 'pads';
+  kb.classList.toggle('padmap', padsOn);
+  setText($('#keyHint'), padsOn ? 'Z X C V along the bottom, up to 1 2 3 4: the pads as they sit on the grid' : 'A W S E D F T G Y H U J K · Z X octave · C V velocity · Space sustain');
+  if (padsOn) {
+    // the keys as they sit on a keyboard, top row first: 1 2 3 4 (pads 13–16) down to Z X C V (pads 1–4)
+    const kit = e.cfg.params.kit || [], byPad = Object.fromEntries(Object.entries(PAD_KEYS).map(([k, i]) => [i, k.toUpperCase()]));
+    kb.replaceChildren(...[12, 8, 4, 0].flatMap((row) => [0, 1, 2, 3].map((c) => {
+      const i = row + c, n = PAD_BASE + i, el = h('div', { class: 'key padkey', 'data-note': n, title: `Pad ${i + 1}: key ${byPad[i]}` }, h('kbd', {}, byPad[i]), h('span', {}, kit[i]?.name || '—'));
+      keyEls.set(n, el); return el;
+    })));
+    renderKey(); return;
+  }
+  const base = 12 * (input.octave + 1);
   const keys = [];
   for (let n = base; n < base + 25; n++) {
     const black = [1, 3, 6, 8, 10].includes(n % 12);
