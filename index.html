@@ -816,6 +816,11 @@
   .cell.autocell { height: 34px; }
   .msb.autob { font-size: 10px; }
   .cell.take .automark { position: absolute; left: 4px; bottom: 2px; font-size: 9px; opacity: .7; pointer-events: none; }
+  .undobar { display: flex; gap: 8px; align-items: center; margin: 6px 0; padding: 8px 12px; border-radius: 8px; background: #ffcf2618; outline: 1px solid #ffcf2660; animation: freshin .2s ease-out; }
+  .undobar span { flex: 1; }
+  .msb.del { opacity: .35; font-size: 10px; filter: grayscale(1); }
+  .arow:hover .msb.del, .msb.del:focus-visible { opacity: 1; filter: none; }
+  @media (hover: none) { .msb.del { opacity: .8; } }
   .stemspanel { margin: 6px 0 10px; padding: 10px 12px; border-radius: 8px; background: #ffffff08; display: grid; gap: 8px; }
   .stemrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .stemrow > small:first-child { font: 700 10px var(--type); text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
@@ -824,7 +829,8 @@
   .lhead { min-width: 0; }
   .lhead.pick { flex-wrap: wrap; row-gap: 2px; }
   .lhead.pick > span:nth-child(2) { min-width: 0; flex: 1 1 60px; overflow: hidden; }
-  .lhead.pick .ms { flex: 1 0 calc(100% - 30px); margin-left: 30px; align-items: center; }
+  .lhead.pick .ms { flex: 1 0 calc(100% - 30px); min-width: 0; margin-left: 30px; align-items: center; }
+  .lhead.pick .ms .tfader.mini { min-width: 0; }
   .tfader.mini { flex: 1 1 40px; min-width: 30px; width: auto; height: 10px; margin: 0 0 0 4px; accent-color: #ECEBE5; }
   .tmix { display: inline-flex; align-items: center; gap: 6px; }
   .tmix input { width: 110px; accent-color: #ffcf26; }

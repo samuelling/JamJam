@@ -25,7 +25,7 @@ const PARAMS = [
   { id: 'length', name: 'Tape length', min: 2, max: 16, def: 8, unit: 's', group: 'Tape' },
   { id: 'wow', name: 'Wow', min: 0, max: 1, def: 0.3, cc: 1, group: 'Transport' },
   { id: 'flutter', name: 'Flutter', min: 0, max: 1, def: 0.3, group: 'Transport' },
-  { id: 'age', name: 'Age', min: 0, max: 1, def: 0.35, group: 'Transport' },
+  { id: 'age', name: 'Tape age', min: 0, max: 1, def: 0.35, group: 'Tape' },
   { id: 'attack', name: 'Pad attack', min: 0.005, max: 0.6, def: 0.035, curve: 'exp', unit: 's', group: 'Keys' },
   { id: 'release', name: 'Release', min: 0.02, max: 1.5, def: 0.12, curve: 'exp', unit: 's', cc: 72, group: 'Keys' },
   { id: 'drive', name: 'Saturation', min: 0, max: 1, def: 0.3, group: 'Output' },

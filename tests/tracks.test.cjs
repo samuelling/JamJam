@@ -105,11 +105,22 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     await A.evaluate(() => document.querySelector('.trackbar .tfader').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))); await sleep(500);
     check((await B.evaluate((lid) => JJ.song().lanes[lid].vol, bass.id)) === 0, 'double-clicking the fader puts it back to 0 dB');
 
-    // remove the track: it and its blocks go
-    A.on('dialog', (d) => d.accept());
-    await A.evaluate(() => [...document.querySelectorAll('.trackbar button')].find((x) => x.textContent === 'Remove track').click()); await sleep(600);
-    const gone = await B.evaluate((lid) => !JJ.song().lanes[lid] && !Object.values(JJ.song().sections).some((s) => s.parts[lid]), bass.id);
-    check(gone, 'Remove track takes the track and its blocks out of the song');
+    // delete the track: it and its blocks go, for everyone, no question asked; Undo puts it all back
+    const nBlocks = await B.evaluate((lid) => Object.values(JJ.song().sections).filter((s) => s.parts[lid]).length, bass.id);
+    await A.evaluate(() => [...document.querySelectorAll('.trackbar button')].find((x) => x.textContent === 'Delete track').click()); await sleep(600);
+    let gone = await B.evaluate((lid) => !JJ.song().lanes[lid] && !Object.values(JJ.song().sections).some((s) => s.parts[lid]), bass.id);
+    check(gone && !!(await A.$('.undobar')), 'Delete track takes the track and its blocks out of the song, and offers Undo');
+    await A.click('.undobar button.hot'); await sleep(600);
+    const back = await B.evaluate((lid) => ({ t: JJ.song().lanes[lid]?.name, n: Object.values(JJ.song().sections).filter((s) => s.parts[lid]).length }), bass.id);
+    check(back.t === 'Low end' && back.n === nBlocks && !(await A.$('.undobar')), `Undo brings the track and its ${nBlocks} block(s) back, for Matt too (${JSON.stringify(back)})`);
+    // the 🗑 on its row deletes it too
+    await A.evaluate(() => [...document.querySelectorAll('.arow')].find((row) => row.querySelector('.lhead b')?.textContent === 'Low end').querySelector('.msb.del').click()); await sleep(600);
+    gone = await B.evaluate((lid) => !JJ.song().lanes[lid] && !Object.values(JJ.song().sections).some((s) => s.parts[lid]), bass.id);
+    check(gone, "the 🗑 on the track's row deletes it");
+    // and the Delete key on a focused track header
+    const before2 = await B.evaluate(() => Object.keys(JJ.song().lanes).length);
+    await A.evaluate(() => document.querySelector('.arow .lhead.pick').focus()); await A.keyboard.press('Delete'); await sleep(600);
+    check((await B.evaluate(() => Object.keys(JJ.song().lanes).length)) === before2 - 1, 'the Delete key on a focused track header deletes that track');
 
     // an older song: label-named lanes, and a rejoin's two blocks for the same lane in one section
     await A.evaluate(() => {
