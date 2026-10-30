@@ -179,6 +179,24 @@ export class Engine {
     if (this.log.length > this.logMax) this.log.splice(0, this.log.length - this.logMax);
   }
 
+  // A sequencer trig: apply its parameter locks at the trig's own sample, trigger, then put the settings back two
+  // samples later, so the lock belongs to that one step (Machina reads a slot's settings at the moment of the hit).
+  seqTrig(k, note, vel, locks, at, base) {
+    const c = this.ch.get(k);
+    const I = c && c.insts[c.insts.length - 1];
+    if (!I) return;
+    const ctx = this.ctx;
+    let t = this.audioTime(at), lateMs = 0;
+    if (t < ctx.currentTime) { lateMs = (ctx.currentTime - t) * 1000; if (lateMs > 3) { c.late++; c.lateWorst = Math.max(c.lateWorst, lateMs); } t = ctx.currentTime; }
+    if (locks) for (const [id, v] of Object.entries(locks)) I.inst.set(id, v, t);
+    I.inst.noteOn(note, vel, t);
+    if (locks) for (const id of Object.keys(locks)) if (base && id in base) I.inst.set(id, base[id], t + 2 / ctx.sampleRate);
+    c.notes.push(at); c.flashT = performance.now(); c.events++;
+    if (c.notes.length > 6000) { const cut = c.notes.length - 3000; c.noteBase += cut; c.notes.splice(0, cut); }
+    this.log.push({ pid: k, type: 'seq', note, at, ctxT: t, heard: this.roomTime(t), lateMs, locks });
+    if (this.log.length > this.logMax) this.log.splice(0, this.log.length - this.logMax);
+  }
+
   // A fingerprint of each jammer's channel as of room time T: the instrument and every parameter.
   // (The app adds a count of the notes in the seconds before T.) Two browsers that agree are making the same music.
   fingerprint(T) {

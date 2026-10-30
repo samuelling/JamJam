@@ -227,6 +227,12 @@ export default {
   family: 'Synthesis drum machine',
   blurb: "Nine drum slots on the GM map, each running one of four synthesis machines: analog TRX, FM, modal physics or raw ground. Crush, pan and drive per slot.",
   drums: true,
+  // sequencer tracks (one per slot): the note each plays and a short label for the track keys
+  seq: { tracks: [
+    { id: 'kick', label: 'BD', note: 36 }, { id: 'snare', label: 'SD', note: 38 }, { id: 'clap', label: 'CP', note: 39 },
+    { id: 'rim', label: 'RS', note: 37 }, { id: 'chh', label: 'CH', note: 42 }, { id: 'ohh', label: 'OH', note: 46 },
+    { id: 'tom', label: 'TT', note: 45 }, { id: 'cym', label: 'CY', note: 49 }, { id: 'perc', label: 'PC', note: 60 },
+  ] },
   params: PARAMS,
   presets: PRESETS,
   async init(ctx) {

@@ -115,6 +115,7 @@ async function run({ p2p, lag, n, silent = false }) {
 
   // audio lane: C streams its (fake) mic, A should play it lane-delayed
   if (p2p && n > 2) {
+    await pages[2].click('.sidetab[data-panel="panel-lane"]');
     await pages[2].click('#laneBtn');
     await sleep(3500);
     const laneInfo = await pages[0].evaluate((pid) => { const c = JJ.engine.ch.get(pid + ':lane'); return { recent: performance.now() - c.laneT, late: c.laneLate }; }, logs[2].me);

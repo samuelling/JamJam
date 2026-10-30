@@ -3,6 +3,8 @@ import { Room } from './net.js';
 import { Engine } from './engine.js';
 import { Input, sendToHardware } from './input.js';
 import { AudioLane, decodeChunk } from './lane.js';
+import { StepSeq } from './seq.js';
+import { iconEl, skinOf } from './skins.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -39,12 +41,51 @@ const S = {
   seq: 0, route: new Map(), pendingP: new Map(), lastPSend: new Map(),
   lockedAt: 0, slackRep: new Map(), needs: new Map(), loopActive: false,
   chat: [], unread: 0, knobGroup: null,
+  mdTrack: 0, mdPage: 0, mdLock: false, held: null, hits: new Map(), md: null,
 };
 window.JJ = { clock, tempo, engine, S };
 const key = (pid, r) => `${pid}:${r}`;
 const pidOf = (k) => k.slice(0, k.indexOf(':'));
 const entry = (r) => S.rack.find((e) => e.r === r);
 const selEntry = () => entry(S.sel) || S.rack[0];
+
+// ---------- sequencers (one per drum instrument), running in lockstep in every browser ----------
+const SEQ_H = 60;                      // how far ahead (ms) each browser schedules sequencer steps
+const seqs = new Map();                // channel key -> StepSeq
+function ensureSeq(k, cfg, snap) {
+  const def = engine.defs.get(cfg?.inst);
+  if (!def?.seq) { seqs.delete(k); return null; }
+  let sq = seqs.get(k);
+  if (!sq) { sq = new StepSeq(def.seq.tracks.length); seqs.set(k, sq); }
+  if (snap) sq.load(snap);
+  return sq;
+}
+function cfgOfKey(k) {
+  const pid = pidOf(k), r = +k.slice(k.indexOf(':') + 1);
+  return pid === S.me ? entry(r)?.cfg : S.players.get(pid)?.rack.find((x) => x.r === r)?.cfg;
+}
+// an edit lands past every browser's scheduling horizon, so all of them apply it before the step it touches
+const editLead = () => (room.peers.size ? lookahead() + SEQ_H + 15 : SEQ_H + 5);
+function seqEdit(e, op) {
+  const sq = seqs.get(key(S.me, e.r)); if (!sq) return;
+  const at = clock.now() + editLead();
+  sq.queue(at, op);
+  if (clock.locked) room.send({ k: 'sq', r: e.r, at, op });
+  renderMachinaDyn(true);
+  if (op[0] === 'l') renderMdEncoders(e, engine.defs.get(e.cfg.inst));
+}
+setInterval(() => {
+  if (!S.me || !engine.ctx) return;
+  const now = clock.now();
+  for (const [k, sq] of seqs) {
+    const cfg = cfgOfKey(k); if (!cfg) continue;
+    const def = engine.defs.get(cfg.inst); if (!def?.seq) continue;
+    for (const st of sq.due(tempo, now, now + SEQ_H)) for (const tg of st.trigs) {
+      engine.seqTrig(k, def.seq.tracks[tg.track].note, 100, tg.locks, st.t, cfg.params);
+      S.hits.set(k + ':' + tg.track, st.t);
+    }
+  }
+}, 15);
 
 // ---------- the room ----------
 const room = new Room({
@@ -55,7 +96,7 @@ const room = new Room({
     peerOpen(p) { sayHello(p.id); },
     peerLeft(p) {
       addChat({ sys: true, text: `${S.players.get(p.id)?.name || p.name} left`, t: Date.now() });
-      for (const k of [...engine.ch.keys()]) if (pidOf(k) === p.id) engine.removeChannel(k);
+      for (const k of [...engine.ch.keys()]) if (pidOf(k) === p.id) { engine.removeChannel(k); seqs.delete(k); }
       S.players.delete(p.id); S.sync.delete(p.id); S.needs.delete(p.id); S.slackRep.delete(p.id);
       renderCorners();
     },
@@ -83,13 +124,13 @@ function onEntered() {
   S.me = room.id;
   updateLeader();
   if (clock.isLeader) { tempo.start(clock.now(), 96); S.lockedAt = performance.now(); }
-  for (const e of S.rack) { engine.setCfg(key(S.me, e.r), e.cfg, -Infinity); S.stable.set(key(S.me, e.r), performance.now()); applyVolume(key(S.me, e.r)); }
+  for (const e of S.rack) { engine.setCfg(key(S.me, e.r), e.cfg, -Infinity); ensureSeq(key(S.me, e.r), e.cfg); S.stable.set(key(S.me, e.r), performance.now()); applyVolume(key(S.me, e.r)); }
   showStudio();
 }
 
-const publicRack = () => S.rack.map((e) => ({ r: e.r, cfg: e.cfg, budget: budgetOf(e) }));
+const publicRack = (withSeq = false) => S.rack.map((e) => ({ r: e.r, cfg: e.cfg, budget: budgetOf(e), seq: withSeq ? seqs.get(key(S.me, e.r))?.snapshot() : undefined }));
 function sayHello(id) {
-  room.send({ k: 'hello', v: VERSION, name: S.name, rack: publicRack(), hashes: engine.hashes, lane: { on: lane.on, bars: lane.bars }, L: lookahead() }, id);
+  room.send({ k: 'hello', v: VERSION, name: S.name, rack: publicRack(true), hashes: engine.hashes, lane: { on: lane.on, bars: lane.bars }, L: lookahead() }, id);
   if (clock.isLeader) {
     room.send({ k: 'tempo', segs: tempo.toJSON() }, id);
     const items = S.chat.filter((c) => !c.sys).slice(-50).map(({ name, text, t, from }) => ({ name, text, t, from }));
@@ -112,12 +153,13 @@ function startPinging(id) {
   go();
 }
 
-function remoteCfg(pid, r, cfg, at, budget) {
+function remoteCfg(pid, r, cfg, at, budget, seqSnap) {
   const pl = S.players.get(pid); if (!pl) return;
   const k = key(pid, r);
   const known = pl.rack.find((x) => x.r === r);
   if (known) { known.cfg = cfg; if (budget) known.budget = budget; } else pl.rack.push({ r, cfg, budget });
   engine.setCfg(k, cfg, at);
+  ensureSeq(k, cfg, seqSnap);
   if (!S.stable.has(k)) S.stable.set(k, performance.now());
   applyVolume(k);
 }
@@ -139,7 +181,7 @@ function onMessage(p, m) {
     case 'hello': {
       const first = !S.players.has(p.id);
       S.players.set(p.id, { ...(S.players.get(p.id) || {}), name: m.name, rack: [], hashes: m.hashes, lane: m.lane, peerL: m.L, v: m.v });
-      for (const x of m.rack || []) remoteCfg(p.id, x.r, x.cfg, -Infinity, x.budget);
+      for (const x of m.rack || []) remoteCfg(p.id, x.r, x.cfg, -Infinity, x.budget, x.seq);
       if (first) addChat({ sys: true, text: `${m.name} walked in`, t: Date.now() });
       if ($('#status').dataset.kind !== 'error') setStatus('');
       renderCorners(); break;
@@ -148,7 +190,7 @@ function onMessage(p, m) {
     case 'unrack': {
       const pl = S.players.get(p.id); if (pl) pl.rack = pl.rack.filter((x) => x.r !== m.r);
       const k = key(p.id, m.r);
-      setTimeout(() => engine.removeChannel(k), Math.max(0, (m.at || 0) - clock.now()));
+      setTimeout(() => { engine.removeChannel(k); seqs.delete(k); }, Math.max(0, (m.at || 0) - clock.now()));
       renderCorners(); break;
     }
     case 'ev': if (m.ev) receiveEvent(p, m.r, m.ev); break;
@@ -158,6 +200,7 @@ function onMessage(p, m) {
     case 'lane': { const pl = S.players.get(p.id); if (pl) pl.lane = m.lane; renderCorners(); break; }
     case 'look': { const pl = S.players.get(p.id); if (pl) { pl.peerL = m.L; if (m.budgets) for (const x of pl.rack) if (m.budgets[x.r]) x.budget = m.budgets[x.r]; } break; }
     case 'fp': checkFingerprint(p.id, m); break;
+    case 'sq': { const sq = seqs.get(key(p.id, m.r)); if (sq && Array.isArray(m.op) && typeof m.at === 'number') sq.queue(m.at, m.op); break; }
     case 'chat': addChat({ from: p.id, name: S.players.get(p.id)?.name || p.name, text: String(m.text || '').slice(0, 500), t: Date.now() }); break;
     case 'chatlog': if (!S.chat.some((c) => !c.sys) && Array.isArray(m.items)) for (const it of m.items.slice(-50)) addChat({ ...it, text: String(it.text || '').slice(0, 500), old: true }, false); break;
   }
@@ -325,6 +368,7 @@ function publishEntry(e) {
   if (!S.me) return;
   const at = clock.now() + (room.peers.size ? lookahead() + 20 : 0);
   engine.setCfg(key(S.me, e.r), e.cfg, at);
+  ensureSeq(key(S.me, e.r), e.cfg);
   if (!S.stable.has(key(S.me, e.r))) S.stable.set(key(S.me, e.r), performance.now());
   room.send({ k: 'cfg', r: e.r, cfg: e.cfg, at, budget: budgetOf(e) });
   applyVolume(key(S.me, e.r));
@@ -351,7 +395,7 @@ function removeEntry(e) {
   S.rack = S.rack.filter((x) => x !== e);
   const k = key(S.me, e.r), at = clock.now() + lookahead() + 20;
   room.send({ k: 'unrack', r: e.r, at });
-  setTimeout(() => engine.removeChannel(k), Math.max(0, at - clock.now()));
+  setTimeout(() => { engine.removeChannel(k); seqs.delete(k); }, Math.max(0, at - clock.now()));
   S.sel = S.rack[0].r;
   renderRack(); renderDevice(); renderCorners(); renderKeyboard();
 }
@@ -431,10 +475,13 @@ const fmt = (P, v) => {
 };
 
 // ---------- UI: status, studio ----------
-function setStatus(text, kind = '') { const el = $('#status'); el.textContent = text || ''; el.dataset.kind = kind; if (kind === 'error') setTimeout(() => { if (el.textContent === text) el.textContent = ''; }, 5000); }
+function setStatus(text, kind = '') {
+  for (const el of [$('#status'), $('#lobbyStatus')]) { if (!el) continue; el.textContent = text || ''; el.dataset.kind = kind; }
+  if (kind === 'error') setTimeout(() => { for (const el of [$('#status'), $('#lobbyStatus')]) if (el && el.textContent === text) el.textContent = ''; }, 5000);
+}
 
 function showStudio() {
-  $('#lobby').classList.add('hide'); $('#studio').classList.remove('hide'); $('#leaveBtn').classList.remove('hide');
+  $('#lobby').classList.add('hide'); $('#studio').classList.remove('hide');
   $('#roomCode').textContent = room.code;
   history.replaceState(null, '', `${location.pathname}?room=${room.code}${qs.get('server') ? '&server=' + encodeURIComponent(qs.get('server')) : ''}${qs.get('p2p') === '0' ? '&p2p=0' : ''}`);
   renderRack(); renderDevice(); renderCorners(); renderTempo(); renderKeyboard(); renderInputStatus();
@@ -473,7 +520,10 @@ function cornerCard(id, rack) {
   const mute = h('button', { class: 'btn small' + (v.mute ? ' on' : ''), title: 'Mute in your mix', onclick: (e) => { const x = S.vol.get(id) || { vol: 1, mute: false }; x.mute = !x.mute; S.vol.set(id, x); applyPlayerVolume(id); e.target.classList.toggle('on', x.mute); } }, 'M');
   return h('div', { class: 'corner' + (mine ? ' me' : ''), style: `--c:${c}` },
     h('div', { class: 'chead' }, h('div', { class: 'cname' }, (mine ? S.name : pl.name || peer?.name || 'Jammer') + (mine ? ' · you' : '')), h('span', { class: 'tag', 'data-path': id })),
-    h('div', { class: 'gear' }, ...rack.map((x) => h('div', {}, h('span', { class: 'led', 'data-led': key(id, x.r), style: `--c:${c}` }), h('span', {}, describe(x.cfg)), h('em', { 'data-budget': key(id, x.r) }, '')))),
+    h('div', { class: 'gearrow' }, ...rack.map((x) => {
+      const def = engine.defs.get(x.cfg?.inst), unit = x.cfg?.hw && engine.unit(x.cfg.hw);
+      return h('div', { class: 'gearitem', title: describe(x.cfg) }, iconEl(def), h('span', { class: 'led', 'data-led': key(id, x.r), style: `--c:${c}` }), h('small', { 'data-budget': key(id, x.r) }, unit ? unit.model : def?.name || '…'));
+    })),
     h('div', { class: 'cstats', 'data-stats': id }),
     h('div', { class: 'cfoot' }, vol, mute, h('div', { class: 'lanem', 'data-lane': id, title: 'Audio lane' }, h('i'))),
   );
@@ -497,7 +547,7 @@ function updateCorners() {
       const k = key(id, x.r), c = engine.ch.get(k);
       for (const led of $$(`[data-led="${k}"]`)) if (c) led.classList.toggle('lit', now - c.flashT < 120 || c.held.size > 0);
       const b = $(`[data-budget="${k}"]`);
-      if (b) { const bb = id === S.me ? budgetOf(x) : x.budget; b.textContent = room.peers.size && bb ? `${bb} ${id === S.me ? partLook(x) : Math.round(BUDGETS[bb].L(pl.peerL ?? 0))}ms` : ''; }
+      if (b) { const bb = id === S.me ? budgetOf(x) : x.budget; b.title = room.peers.size && bb ? `${bb} timing · ${id === S.me ? partLook(x) : Math.round(BUDGETS[bb].L(pl.peerL ?? 0))} ms` : ''; }
     }
     const st = $(`[data-stats="${id}"]`);
     if (st) {
@@ -523,43 +573,33 @@ function updateCorners() {
   }
 }
 
-// --- your rack
+// --- your gear shelf
 function renderRack() {
   const box = $('#rackList'); if (!box) return;
   box.replaceChildren(...S.rack.map((e, i) => {
     const def = engine.defs.get(e.cfg.inst), unit = e.cfg.hw && engine.unit(e.cfg.hw);
-    return h('button', { class: 'cart' + (e.r === (selEntry() || {}).r ? ' sel' : ''), style: `--k:${RACK_COLORS[i % 4]}`, onclick: () => { S.sel = e.r; S.knobGroup = null; renderRack(); renderDevice(); renderKeyboard(); } },
-      h('span', { class: 'stripe' }),
-      h('span', {}, h('b', {}, unit ? unit.model : def.name), h('small', {}, `${unit ? 'twin ' + def.name + ' · ' : ''}${e.cfg.patch} · ${e.midiCh ? 'ch ' + e.midiCh : 'any ch'}`)),
+    return h('button', { class: 'cart' + (e.r === (selEntry() || {}).r ? ' sel' : ''), style: `--k:${RACK_COLORS[i % 4]}`, title: describe(e.cfg), onclick: () => { S.sel = e.r; S.knobGroup = null; S.held = null; renderRack(); renderDevice(); renderKeyboard(); } },
+      iconEl(def),
+      h('b', {}, unit ? unit.model : def.name), h('small', {}, `${unit ? def.name + ' · ' : ''}${e.cfg.patch} · ${e.midiCh ? 'ch' + e.midiCh : 'any'}`),
       h('span', { class: 'led', 'data-led': key(S.me, e.r), style: `--c:${RACK_COLORS[i % 4]}` }));
   }));
 }
 
-// --- the device faceplate for the selected instrument
+// --- the instrument on your desk
 let knobEls = new Map();
-function renderDevice() {
-  const e = selEntry(); if (!e) return;
-  const def = engine.defs.get(e.cfg.inst), unit = e.cfg.hw && engine.unit(e.cfg.hw);
-  $('#devName').textContent = unit ? unit.model : def.name;
-  $('#devFam').textContent = unit ? `${unit.maker} · heard as ${def.name}` : def.family;
+function configFields(e, def, unit) {
   const sel = (label, options, value, onchange) => h('div', {}, h('label', {}, label),
     h('select', { 'aria-label': label, onchange: (ev) => onchange(ev.target.value) }, ...options.map(([v, t]) => h('option', { value: v, selected: String(v) === String(value) }, t))));
-  const fields = [];
-  if (unit) fields.push(sel('Twin', engine.twinCandidates(unit).map((c) => [c.inst, `${engine.defs.get(c.inst).name} ${Math.round(c.score * 100)}%`]), e.cfg.inst, (v) => changeEntry(e, { inst: v })));
-  else fields.push(sel('Instrument', [...engine.defs.values()].map((d) => [d.id, d.name]), e.cfg.inst, (v) => changeEntry(e, { inst: v, patch: null })));
-  fields.push(sel('Patch', engine.patchTypes(e.cfg).map((t) => [t, cap(t)]), e.cfg.patch, (v) => changeEntry(e, { patch: v })));
-  fields.push(sel('Timing', [['auto', `Auto · ${BUDGETS[autoBudget(e.cfg)].label}`], ...Object.entries(BUDGETS).map(([k, b]) => [k, b.label])], e.budget, (v) => { e.budget = v; broadcastLook(true); renderDevice(); renderRack(); }));
-  fields.push(sel('MIDI in', [[0, 'Any channel'], ...Array.from({ length: 16 }, (_, i) => [i + 1, `Channel ${i + 1}`])], e.midiCh, (v) => { e.midiCh = +v; renderRack(); }));
-  if (unit) {
-    fields.push(sel('Plays my synth via', [['', input.outputs.length ? 'None (I play it)' : 'None · enable MIDI'], ...input.outputs.map((o) => [o.id, o.name])], e.midiOut, (v) => { e.midiOut = v; renderDevice(); }));
-    fields.push(h('div', { class: 'wide' }, `The band hears ${def.name} as your ${unit.model}${unit.note ? ' (' + unit.note.replace(/\.$/, '') + ')' : ''}. Shape the knobs until it sounds like your patch. Pick a MIDI output (with Local Control off) and JamJam plays your synth in lockstep too.`));
-  } else fields.push(h('div', { class: 'wide' }, def.blurb || ''));
-  $('#devScreen').replaceChildren(...fields);
-  const groups = [...new Set(def.params.map((P) => P.group || 'Sound'))];
-  if (!groups.includes(S.knobGroup)) S.knobGroup = groups[0];
-  $('#devPages').replaceChildren(...(groups.length > 1 ? groups.map((g) => h('button', { class: 'page' + (g === S.knobGroup ? ' on' : ''), onclick: () => { S.knobGroup = g; renderDevice(); } }, g)) : []));
-  knobEls = new Map();
-  $('#devKnobs').replaceChildren(...def.params.filter((P) => (P.group || 'Sound') === S.knobGroup).map((P, i) => paramControl(e, def, P, KNOB_COLORS[i % 4])));
+  const f = [];
+  if (unit) f.push(sel('Twin', engine.twinCandidates(unit).map((c) => [c.inst, `${engine.defs.get(c.inst).name} ${Math.round(c.score * 100)}%`]), e.cfg.inst, (v) => changeEntry(e, { inst: v })));
+  else f.push(sel('Instrument', [...engine.defs.values()].map((d) => [d.id, d.name]), e.cfg.inst, (v) => changeEntry(e, { inst: v, patch: null })));
+  f.push(sel(def.drums ? 'Kit' : 'Patch', engine.patchTypes(e.cfg).map((t) => [t, cap(t)]), e.cfg.patch, (v) => changeEntry(e, { patch: v })));
+  f.push(sel('Timing', [['auto', `Auto · ${BUDGETS[autoBudget(e.cfg)].label}`], ...Object.entries(BUDGETS).map(([k, b]) => [k, b.label])], e.budget, (v) => { e.budget = v; broadcastLook(true); renderDevice(); renderRack(); }));
+  f.push(sel('MIDI in', [[0, 'Any channel'], ...Array.from({ length: 16 }, (_, i) => [i + 1, `Channel ${i + 1}`])], e.midiCh, (v) => { e.midiCh = +v; renderRack(); }));
+  if (unit) f.push(sel('Plays my synth via', [['', input.outputs.length ? 'None (I play it)' : 'None · enable MIDI'], ...input.outputs.map((o) => [o.id, o.name])], e.midiOut, (v) => { e.midiOut = v; renderDevice(); }));
+  return f;
+}
+function deviceFoot(e, def, unit) {
   const foot = [h('span', { class: 'help' }, BUDGETS[budgetOf(e)].help), h('button', { class: 'btn small', onclick: () => audition(e.cfg) }, 'Audition')];
   if (unit) {
     foot.push(h('button', { class: 'btn small' + (e.hearTwin ? ' on' : ''), title: 'Also hear the twin yourself, to compare with your hardware', onclick: () => { e.hearTwin = !e.hearTwin; applyVolume(key(S.me, e.r)); renderDevice(); } }, 'Hear twin'));
@@ -569,42 +609,186 @@ function renderDevice() {
     }
   }
   foot.push(h('button', { class: 'btn small ghost', onclick: () => removeEntry(e) }, 'Remove'));
-  $('#devFoot').replaceChildren(...foot);
+  return h('div', { class: 'devfoot' }, ...foot);
 }
-function paramControl(e, def, P, color) {
-  const cur = () => e.cfg.params[P.id] ?? P.def;
+function renderDevice() {
+  const e = selEntry(); if (!e) return;
+  const def = engine.defs.get(e.cfg.inst), unit = e.cfg.hw && engine.unit(e.cfg.hw), skin = skinOf(def);
+  $('#device').className = 'device ' + skin.cls + (skin.wood ? ' wood' : '');
+  knobEls = new Map();
+  if (skin.custom === 'machina' && def.seq && seqs.get(key(S.me, e.r))) { renderMachina(e, def, unit); return; }
+  S.md = null;
+  const wide = unit
+    ? `The band hears ${def.name} as your ${unit.model}${unit.note ? ' (' + unit.note.replace(/\.$/, '') + ')' : ''}. Shape the knobs until it sounds like your patch. Pick a MIDI output (with Local Control off) and JamJam plays your synth in lockstep too.`
+    : def.blurb || '';
+  const groups = [...new Set(def.params.map((P) => P.group || 'Sound'))];
+  if (!groups.includes(S.knobGroup)) S.knobGroup = groups[0];
+  const io = (P) => ({ get: () => e.cfg.params[P.id] ?? P.def, set: (v) => setParam(e, P.id, v), reset: () => setParam(e, P.id, def.presets[e.cfg.patch]?.[P.id] ?? P.def), locked: () => false });
+  $('#plate').replaceChildren(...[
+    h('div', { class: 'devtop' },
+      h('div', { class: 'brand' }, h('div', { class: 'name' }, unit ? unit.model : def.name), h('div', { class: 'fam' }, unit ? `${unit.maker} · heard as ${def.name}` : def.family)),
+      h('div', { class: 'screen lcd' }, ...configFields(e, def, unit), h('div', { class: 'wide' }, wide))),
+    groups.length > 1 ? h('div', { class: 'pages' }, ...groups.map((g) => h('button', { class: 'page' + (g === S.knobGroup ? ' on' : ''), onclick: () => { S.knobGroup = g; renderDevice(); } }, g))) : null,
+    h('div', { class: 'encoders' }, ...def.params.filter((P) => (P.group || 'Sound') === S.knobGroup).map((P, i) => paramControl(P, KNOB_COLORS[i % 4], io(P), skin))),
+    deviceFoot(e, def, unit)].filter(Boolean));
+}
+
+// one control: an encoder, a fader, a stepper or a row of LED buttons, depending on the instrument's faceplate
+function paramControl(P, color, io, skin = {}) {
+  const label = h('div', { class: 'encname' }, P.name);
+  if (!P.options && P.step === 1 && P.min === 0 && P.max === 1) { P = { ...P, options: ['Off', 'On'] }; skin = { ...skin, option: 'buttons' }; }
   if (P.options) {
+    if (skin.option === 'buttons' && P.options.length <= 4) {
+      const btns = P.options.map((o, i) => h('button', { onclick: () => { io.set(P.min + i); show(); } }, h('i'), o.replace(/ \(.*\)/, '')));
+      const show = () => btns.forEach((b, i) => b.classList.toggle('on', Math.round(io.get()) - P.min === i));
+      show(); knobEls.set(P.id, { show });
+      return h('div', { class: 'encw' }, h('div', { class: 'optbtns' }, ...btns), label);
+    }
     const lcd = h('div', { class: 'lcd', title: 'Click or scroll to change' });
-    const show = () => { lcd.textContent = P.options[Math.round(cur()) - P.min] ?? '?'; };
-    const step = (d) => { const n = P.options.length; const i = ((Math.round(cur()) - P.min + d) % n + n) % n; setParam(e, P.id, P.min + i); show(); };
+    const show = () => { lcd.textContent = P.options[Math.round(io.get()) - P.min] ?? '?'; lcd.parentElement?.classList.toggle('locked', io.locked()); };
+    const step = (d) => { const n = P.options.length; const i = ((Math.round(io.get()) - P.min + d) % n + n) % n; io.set(P.min + i); show(); };
     lcd.addEventListener('click', () => step(1));
     lcd.addEventListener('wheel', (ev) => { ev.preventDefault(); step(ev.deltaY > 0 ? -1 : 1); }, { passive: false });
-    show();
-    knobEls.set(P.id, { show });
-    return h('div', { class: 'encw' }, h('div', { class: 'stepper' }, h('button', { 'aria-label': `Previous ${P.name}`, onclick: () => step(-1) }, '◀'), lcd, h('button', { 'aria-label': `Next ${P.name}`, onclick: () => step(1) }, '▶')), h('div', { class: 'encname' }, P.name));
+    const wrap = h('div', { class: 'stepper' }, h('button', { 'aria-label': `Previous ${P.name}`, onclick: () => step(-1) }, '◀'), lcd, h('button', { 'aria-label': `Next ${P.name}`, onclick: () => step(1) }, '▶'));
+    show(); knobEls.set(P.id, { show });
+    return h('div', { class: 'encw' }, wrap, label);
   }
-  const enc = h('div', { class: 'enc', tabindex: 0, role: 'slider', 'aria-label': P.name, 'aria-valuemin': 0, 'aria-valuemax': 100, style: `--c:${color}`, title: (P.cc ? `MIDI CC ${P.cc} · ` : '') + 'drag, scroll or arrow keys · double-click resets' }, h('div', { class: 'cap' }));
+  const fader = skin.knob === 'fader';
+  const ctl = fader
+    ? h('div', { class: 'fader', tabindex: 0, role: 'slider', 'aria-label': P.name }, h('div', { class: 'fcap' }))
+    : h('div', { class: 'enc', tabindex: 0, role: 'slider', 'aria-label': P.name, style: `--c:${color}` }, h('div', { class: 'cap' }));
+  ctl.title = (P.cc ? `MIDI CC ${P.cc} · ` : '') + 'drag, scroll or arrow keys · double-click resets';
+  ctl.setAttribute('aria-valuemin', 0); ctl.setAttribute('aria-valuemax', 100);
   const val = h('div', { class: 'encval' });
-  let u = toUnit(P, cur());
-  const draw = () => { enc.style.setProperty('--u', u); const v = fromUnit(P, u); val.textContent = fmt(P, v); enc.setAttribute('aria-valuenow', Math.round(u * 100)); enc.setAttribute('aria-valuetext', fmt(P, v)); };
-  const move = (nu) => { nu = Math.max(0, Math.min(1, nu)); if (P.step) nu = toUnit(P, fromUnit(P, nu)); if (nu === u) return; u = nu; setParam(e, P.id, fromUnit(P, u)); draw(); };
+  let u = toUnit(P, io.get());
+  const draw = () => { ctl.style.setProperty('--u', u); const v = fromUnit(P, u); val.textContent = fmt(P, v); ctl.setAttribute('aria-valuenow', Math.round(u * 100)); ctl.setAttribute('aria-valuetext', fmt(P, v)); ctl.classList.toggle('locked', io.locked()); };
+  const move = (nu) => { nu = Math.max(0, Math.min(1, nu)); if (P.step) nu = toUnit(P, fromUnit(P, nu)); if (nu === u) return; u = nu; io.set(fromUnit(P, u)); draw(); };
   let drag = null;
-  enc.addEventListener('pointerdown', (ev) => { ev.preventDefault(); enc.setPointerCapture(ev.pointerId); enc.focus(); drag = { y: ev.clientY, u }; });
-  enc.addEventListener('pointermove', (ev) => { if (drag) move(drag.u + (drag.y - ev.clientY) / (ev.shiftKey ? 800 : 180)); });
+  ctl.addEventListener('pointerdown', (ev) => { ev.preventDefault(); ctl.setPointerCapture(ev.pointerId); ctl.focus(); drag = { y: ev.clientY, u }; });
+  ctl.addEventListener('pointermove', (ev) => { if (drag) move(drag.u + (drag.y - ev.clientY) / (ev.shiftKey ? 800 : fader ? 110 : 180)); });
   const end = () => { drag = null; };
-  enc.addEventListener('pointerup', end); enc.addEventListener('pointercancel', end);
-  enc.addEventListener('wheel', (ev) => { ev.preventDefault(); move(u - ev.deltaY / (ev.shiftKey ? 4000 : 1200)); }, { passive: false });
-  enc.addEventListener('keydown', (ev) => {
+  ctl.addEventListener('pointerup', end); ctl.addEventListener('pointercancel', end);
+  ctl.addEventListener('wheel', (ev) => { ev.preventDefault(); move(u - ev.deltaY / (ev.shiftKey ? 4000 : 1200)); }, { passive: false });
+  ctl.addEventListener('keydown', (ev) => {
     const d = P.step ? P.step / (P.max - P.min) : ev.shiftKey ? 0.1 : 0.01;
     if (ev.key === 'ArrowUp' || ev.key === 'ArrowRight') { ev.preventDefault(); ev.stopPropagation(); move(u + d); }
     else if (ev.key === 'ArrowDown' || ev.key === 'ArrowLeft') { ev.preventDefault(); ev.stopPropagation(); move(u - d); }
   });
-  enc.addEventListener('dblclick', () => { setParam(e, P.id, def.presets[e.cfg.patch]?.[P.id] ?? P.def); u = toUnit(P, cur()); draw(); });
+  ctl.addEventListener('dblclick', () => { io.reset(); u = toUnit(P, io.get()); draw(); });
   draw();
-  knobEls.set(P.id, { show: () => { u = toUnit(P, cur()); draw(); } });
-  return h('div', { class: 'encw' }, enc, val, h('div', { class: 'encname' }, P.name));
+  knobEls.set(P.id, { show: () => { u = toUnit(P, io.get()); draw(); } });
+  return h('div', { class: 'encw' }, ctl, val, label);
 }
 function knobSet(id) { knobEls.get(id)?.show(); }
+
+// --- Machina: a machine-drum panel with a 16-64 step sequencer and parameter locks
+const MD_PARAMS = ['m', 'pitch', 'decay', 'tone', 'snap', 'crush', 'level', 'pan'];
+function mdView(sq) { const v = new StepSeq(sq.nt); v.load(sq.snapshot()); v.applyUpTo(Infinity); return v; }
+function renderMachina(e, def, unit) {
+  const k = key(S.me, e.r), sq = seqs.get(k), tracks = def.seq.tracks;
+  if (S.mdTrack == null || S.mdTrack >= tracks.length) S.mdTrack = 0;
+  const v = mdView(sq);
+  if (S.mdPage * 16 >= v.len) S.mdPage = 0;
+  const lcd = h('div', { class: 'md-lcd' });
+  const master = h('div', { class: 'md-master' }, ...['drive', 'bits', 'level'].map((id, i) => {
+    const P = def.params.find((p) => p.id === id);
+    return paramControl(P, '#d9dbe0', { get: () => e.cfg.params[id] ?? P.def, set: (x) => setParam(e, id, x), reset: () => setParam(e, id, def.presets[e.cfg.patch]?.[id] ?? P.def), locked: () => false }, skinOf(def));
+  }));
+  const trackKeys = tracks.map((t, i) => {
+    const P = def.params.find((p) => p.id === `${t.id}.m`);
+    const b = h('button', { class: 'md-key' + (i === S.mdTrack ? ' sel' : ''), title: `${t.label}: select track (and hear it)`,
+      onclick: () => { S.mdTrack = i; S.held = null; renderMachina(e, def, unit); playNote(true, t.note, 100, 0); setTimeout(() => playNote(false, t.note, 0, 0), 60); } },
+      h('i'), t.label, h('small', {}, P.options[Math.round(e.cfg.params[`${t.id}.m`] ?? 0)]));
+    return b;
+  });
+  const encWrap = h('div', { class: 'md-encs' });
+  const lenBtns = [16, 32, 48, 64].map((n) => h('button', { class: 'md-btn', onclick: () => seqEdit(e, ['len', n]) }, String(n)));
+  const pageBtns = [0, 1, 2, 3].map((p) => h('button', { class: 'md-btn', onclick: () => { S.mdPage = p; renderMachinaDyn(true); } }, String(p + 1)));
+  const playBtn = h('button', { class: 'md-btn play', onclick: () => seqEdit(e, ['play', Math.ceil(tempo.beatAt(clock.now() + editLead() + 30) / 4 - 1e-9) * 4]) }, '▶ PLAY');
+  const stopBtn = h('button', { class: 'md-btn', onclick: () => seqEdit(e, ['stop', tempo.beatAt(clock.now() + editLead() + 5)]) }, '■ STOP');
+  const lockBtn = h('button', { class: 'md-btn lockbtn' + (S.mdLock ? ' on' : ''), title: 'Lock mode: click a trig to lock parameters on it (or just hold a trig and turn a knob)', onclick: () => { S.mdLock = !S.mdLock; S.held = null; renderMachina(e, def, unit); } }, 'LOCK');
+  const clrBtn = h('button', { class: 'md-btn', title: 'Clear this track', onclick: () => seqEdit(e, ['clr', S.mdTrack]) }, 'CLR');
+  const trigEls = Array.from({ length: 16 }, (_, i) => {
+    const el = h('div', { class: 'md-trig', role: 'button', tabindex: 0, 'aria-label': `Step ${i + 1}` }, h('i'), h('span'));
+    let holdT = null, down = false;
+    el.addEventListener('pointerdown', (ev) => {
+      ev.preventDefault(); el.setPointerCapture(ev.pointerId);
+      const step = S.mdPage * 16 + i;
+      if (S.mdLock || ev.shiftKey) { S.held = S.held && S.held.step === step ? null : { track: S.mdTrack, step }; renderMdEncoders(e, def); renderMachinaDyn(true); return; }
+      down = true;
+      holdT = setTimeout(() => { S.held = { track: S.mdTrack, step, byHold: true }; renderMdEncoders(e, def); renderMachinaDyn(true); }, 230);
+    });
+    const up = () => {
+      if (!down) return; down = false; clearTimeout(holdT);
+      const step = S.mdPage * 16 + i;
+      if (S.held && S.held.byHold) { S.held = null; renderMdEncoders(e, def); renderMachinaDyn(true); return; }
+      const cur = mdView(sq).trig[S.mdTrack][step];
+      seqEdit(e, ['t', S.mdTrack, step, cur ? 0 : 1]);
+    };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', () => { down = false; clearTimeout(holdT); });
+    el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ev.stopPropagation(); const step = S.mdPage * 16 + i; seqEdit(e, ['t', S.mdTrack, step, mdView(sq).trig[S.mdTrack][step] ? 0 : 1]); } });
+    return el;
+  });
+  const cfg = h('div', { class: 'screen lcd', style: 'grid-template-columns:repeat(5,minmax(0,1fr));min-height:0;padding:6px 10px' }, ...configFields(e, def, unit));
+  S.md = { e, def, k, lcd, trackKeys, lenBtns, pageBtns, playBtn, stopBtn, lockBtn, trigEls, encWrap, rev: -1 };
+  $('#plate').replaceChildren(
+    h('div', { class: 'md-top' }, h('div', { class: 'md-logo' }, unit ? unit.model.toUpperCase() : 'MACHINA', h('small', {}, unit ? 'HEARD AS MACHINA' : 'SYNTHESIS DRUM MACHINE')), lcd, master),
+    cfg,
+    h('div', { class: 'md-tracks' }, ...trackKeys),
+    encWrap,
+    h('div', { class: 'md-transport' }, playBtn, stopBtn, h('span', { class: 'md-sep' }), h('span', { class: 'md-hint' }, 'LEN'), ...lenBtns, h('span', { class: 'md-sep' }), h('span', { class: 'md-hint' }, 'PAGE'), ...pageBtns, h('span', { class: 'md-sep' }), lockBtn, clrBtn,
+      h('span', { class: 'md-hint', style: 'margin-left:auto' }, 'tap a trig to toggle · hold it (or shift-click, or LOCK) and turn a knob to p-lock')),
+    h('div', { class: 'md-trigs' }, ...trigEls),
+    deviceFoot(e, def, unit));
+  renderMdEncoders(e, def);
+  renderMachinaDyn(true);
+}
+function renderMdEncoders(e, def) {
+  if (!S.md) return;
+  const t = def.seq.tracks[S.mdTrack], sq = seqs.get(key(S.me, e.r));
+  const held = S.held && S.held.track === S.mdTrack ? S.held : null;
+  knobEls = new Map();
+  S.md.encWrap.replaceChildren(...MD_PARAMS.map((x, i) => {
+    const id = `${t.id}.${x}`, P = def.params.find((p) => p.id === id);
+    const lockOf = () => (held ? (mdView(sq).locks.get(held.track + ':' + held.step) || {})[id] : undefined);
+    const io = {
+      get: () => { const l = lockOf(); return l != null ? l : e.cfg.params[id] ?? P.def; },
+      set: (v) => { if (held && x !== 'm') seqEdit(e, ['l', held.track, held.step, id, v]); else { setParam(e, id, v); if (x === 'm') renderMachinaDyn(true, true); } },
+      reset: () => { if (held) seqEdit(e, ['l', held.track, held.step, id, null]); else setParam(e, id, def.presets[e.cfg.patch]?.[id] ?? P.def); },
+      locked: () => lockOf() != null,
+    };
+    return paramControl({ ...P, name: P.name }, KNOB_COLORS[i % 4], io, skinOf(def));
+  }));
+}
+// the live parts of the Machina panel (playhead, LEDs, pattern), refreshed ten times a second
+function renderMachinaDyn(force = false, relabel = false) {
+  const md = S.md; if (!md) return;
+  const sq = seqs.get(md.k); if (!sq) return;
+  const now = clock.now(), v = mdView(sq), tr = S.mdTrack, tracks = md.def.seq.tracks, t = tracks[tr];
+  const pages = v.len / 16;
+  const head = sq.playing && now >= tempo.timeOf(sq.startBeat) ? Math.floor((tempo.beatAt(now) - sq.startBeat) * 4) % sq.len : -1;
+  md.trigEls.forEach((el, i) => {
+    const step = S.mdPage * 16 + i;
+    el.classList.toggle('on', !!v.trig[tr][step]);
+    el.classList.toggle('lk', v.locks.has(tr + ':' + step));
+    el.classList.toggle('head', step === head);
+    el.classList.toggle('held', !!(S.held && S.held.step === step && S.held.track === tr));
+    el.querySelector('span').textContent = String(step + 1);
+  });
+  md.trackKeys.forEach((b, i) => {
+    const ht = S.hits.get(md.k + ':' + i);
+    b.classList.toggle('hit', ht != null && now >= ht && now - ht < 110);
+    if (relabel) { const P = md.def.params.find((p) => p.id === `${tracks[i].id}.m`); b.querySelector('small').textContent = P.options[Math.round(md.e.cfg.params[`${tracks[i].id}.m`] ?? 0)]; }
+  });
+  md.lenBtns.forEach((b, i) => b.classList.toggle('on', v.len === (i + 1) * 16));
+  md.pageBtns.forEach((b, i) => { b.disabled = i >= pages; b.classList.toggle('on', i === S.mdPage); });
+  md.playBtn.classList.toggle('on', v.playing);
+  const mP = md.def.params.find((p) => p.id === `${t.id}.m`);
+  const held = S.held && S.held.track === tr ? S.held : null;
+  md.lcd.replaceChildren(
+    h('div', {}, h('b', {}, `TRK ${String(tr + 1).padStart(2, '0')} ${t.label}`), ` · ${mP.options[Math.round(md.e.cfg.params[`${t.id}.m`] ?? 0)]} · ${cap(md.e.cfg.patch)} kit`),
+    h('div', { class: 'row2' }, held ? `LOCK  STEP ${held.step + 1}  · turn a knob (double-click clears it)` : `${v.playing ? '▶ PLAY' : '■ STOP'} · ${v.len} STEPS · PAGE ${S.mdPage + 1}/${pages} · ${Math.round(tempo.bpm(now))} BPM${head >= 0 ? ` · STEP ${head + 1}` : ''}`));
+}
 
 // --- audition: a short local phrase through an instrument (only you hear it)
 function audition(cfg) {
@@ -624,16 +808,16 @@ function audition(cfg) {
   setTimeout(() => engine.removeChannel(k), 5 * beat + 3000);
 }
 
-// --- library and hardware drawers
+// --- the gear wall (library) and the hardware desk
 function openDrawer(id) { $(id).classList.remove('hide'); }
 function closeDrawers() { $$('.drawer').forEach((d) => d.classList.add('hide')); }
 function renderLibrary() {
-  $('#libCards').replaceChildren(...[...engine.defs.values()].map((d, i) => h('div', { class: 'card', style: `--k:${KNOB_COLORS[i % 4]}` },
-    h('div', { class: 'fam' }, d.family), h('div', { class: 'name' }, d.name), h('p', {}, d.blurb || ''),
+  $('#libCards').replaceChildren(...[...engine.defs.values()].map((d) => h('div', { class: 'card' },
+    iconEl(d), h('div', { class: 'fam' }, d.family), h('div', { class: 'name' }, d.name), h('p', {}, d.blurb || ''),
     h('div', { class: 'chips' }, ...Object.keys(d.presets).map((t) => h('span', { class: 'chip' }, t))),
     h('div', { class: 'row' },
       h('button', { class: 'btn small', onclick: () => audition(engine.resolve({ inst: d.id })) }, 'Audition'),
-      h('button', { class: 'btn small hot', onclick: () => { addEntry({ inst: d.id }); closeDrawers(); } }, 'Add to my corner')))));
+      h('button', { class: 'btn small hot', onclick: () => { addEntry({ inst: d.id }); closeDrawers(); } }, 'Put it on my desk')))));
 }
 let hwPick = null;
 function renderHardware() {
@@ -646,9 +830,10 @@ function renderHardware() {
   const cands = engine.twinCandidates(unit);
   $('#twinPick').replaceChildren(
     h('p', { class: 'help' }, `The band will hear your ${unit.model} as one of these. Best match first.`),
-    h('div', { class: 'cards' }, ...cands.map((c, i) => {
+    h('div', { class: 'cards' }, ...cands.map((c) => {
       const d = engine.defs.get(c.inst), cfg = engine.resolve({ hw: unit.id, inst: c.inst });
-      return h('div', { class: 'card', style: `--k:${KNOB_COLORS[i % 4]}` },
+      return h('div', { class: 'card' },
+        iconEl(d),
         h('div', { class: 'top' }, h('span', { class: 'fam' }, d.family), h('span', { class: 'score' }, `${Math.round(c.score * 100)}%`)),
         h('div', { class: 'name' }, d.name), h('p', {}, (unit.twin === c.inst ? `Set up with ${unit.model} character. ` : '') + (d.blurb || '')),
         h('div', { class: 'chips' }, ...engine.patchTypes(cfg).map((t) => h('span', { class: 'chip' }, t))),
@@ -756,6 +941,14 @@ function renderNet() {
   $('#netSummary').textContent = `Relay messages: ${room.relayed} · clock ${clock.isLeader ? 'leader (you)' : clock.locked ? `locked (±${clock.errMs.toFixed(1)} ms worst case)` : 'syncing…'}${lane.on ? ` · lane sent ${(lane.sentBytes / 1e6).toFixed(1)} MB` : ''}`;
 }
 
+// ---------- side panels ----------
+function closePanels() { $$('.sidepanel').forEach((p) => p.classList.add('hide')); $$('.sidetab').forEach((t) => t.classList.remove('on')); }
+function togglePanel(id) {
+  const p = $('#' + id), open = p.classList.contains('hide');
+  closePanels();
+  if (open) { p.classList.remove('hide'); $(`.sidetab[data-panel="${id}"]`).classList.add('on'); if (id === 'panel-chat') { S.unread = 0; $('#chatBadge').classList.add('hide'); setTimeout(() => $('#chatIn').focus(), 30); } if (id === 'panel-wire') renderNet(); }
+}
+
 // ---------- band chat ----------
 function addChat(item, notify = true) {
   S.chat.push(item);
@@ -766,7 +959,7 @@ function addChat(item, notify = true) {
   log.append(item.sys ? h('div', { class: 'cmsg sys' }, item.text)
     : h('div', { class: 'cmsg' + (item.old ? ' old' : '') }, h('b', { style: `color:${color}` }, item.name || 'Jammer'), h('span', {}, item.text), h('i', {}, time)));
   log.scrollTop = log.scrollHeight;
-  if (notify && !item.sys && item.from !== S.me && document.activeElement !== $('#chatIn')) { S.unread++; $('#chatBadge').textContent = S.unread; $('#chatBadge').classList.remove('hide'); }
+  if (notify && !item.sys && item.from !== S.me && $('#panel-chat').classList.contains('hide')) { S.unread++; $('#chatBadge').textContent = S.unread; $('#chatBadge').classList.remove('hide'); }
 }
 function sendChat() {
   const el = $('#chatIn'), text = el.value.trim().slice(0, 500);
@@ -798,10 +991,11 @@ async function enter(code) {
 function leaveRoom() {
   room.leave(); lane.stopLane(); input.panic();
   for (const k of [...engine.ch.keys()]) engine.removeChannel(k);
+  seqs.clear(); S.md = null;
   S.me = null; S.players.clear(); S.sync.clear(); S.stable.clear(); S.slackRep.clear(); S.needs.clear();
   S.loopActive = false; S.lookAuto = 0; S.chat = []; $('#chatLog').replaceChildren();
   clock.setLeader(true); clock.offset = 0;
-  $('#studio').classList.add('hide'); $('#lobby').classList.remove('hide'); $('#leaveBtn').classList.add('hide');
+  $('#studio').classList.add('hide'); $('#lobby').classList.remove('hide'); closePanels();
   history.replaceState(null, '', location.pathname);
   setStatus('');
 }
@@ -873,13 +1067,17 @@ function wire() {
   $('#laneBars').onchange = (e) => { lane.bars = +e.target.value; room.send({ k: 'lane', lane: { on: lane.on, bars: lane.bars } }); };
   $('#laneQ').onchange = (e) => { lane.quality = e.target.value; };
   $('#laneOff').oninput = (e) => { lane.offsetMs = +e.target.value; $('#laneOffVal').textContent = `${lane.offsetMs > 0 ? '+' : ''}${lane.offsetMs} ms`; };
+  $$('.sidetab').forEach((t) => t.onclick = () => togglePanel(t.dataset.panel));
+  $$('[data-closepanel]').forEach((b) => b.onclick = closePanels);
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePanels(); });
   wireKeyboard();
 }
 
 setInterval(() => {
   if (!S.me) return;
   computeAutoL();
-  updateCorners(); renderLook(); paintRemoteKeys(); renderTempo();
+  updateCorners(); renderLook(); paintRemoteKeys(); renderTempo(); renderMachinaDyn();
+  $('#onAir').classList.toggle('live', [...room.peers.values()].some((p) => p.path !== 'connecting'));
   const now = performance.now();
   for (const e of S.rack) { const c = engine.ch.get(key(S.me, e.r)); for (const led of $$(`#rackList [data-led="${key(S.me, e.r)}"]`)) if (c) led.classList.toggle('lit', now - c.flashT < 120 || c.held.size > 0); }
 }, 100);
