@@ -21,6 +21,11 @@ const server = http.createServer((req, res) => {
     res.end("window.MP_SERVER = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;\n");
     return;
   }
+  // testing aid: /__drop closes every relay connection, as a Cloudflare restart would (the browsers should reconnect)
+  if (url.pathname === '/__drop') {
+    let n = 0; for (const room of rooms.values()) for (const h of [...room]) { h.close(1012, 'restart'); n++; }
+    res.writeHead(200, { 'content-type': 'text/plain' }); res.end(`dropped ${n}\n`); return;
+  }
   let p = path.normalize(decodeURIComponent(url.pathname)).replace(/^([/\\])+/, '');
   let file = path.join(ROOT, p);
   if (!file.startsWith(ROOT)) { res.writeHead(403); res.end(); return; }

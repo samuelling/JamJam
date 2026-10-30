@@ -28,15 +28,24 @@ export class Room {
     this.fastOn = q.get('fast') !== '0';
   }
 
+  // Your jammer id and join order are fixed for the whole visit, even if the relay connection drops and comes back
+  // with a new relay id: the relay passes everyone's "state", and ours says which jammer we are, so a bandmate whose
+  // direct link to us never broke just notes our new relay address instead of seeing us leave.
   join(code, name) {
     this.leave();
-    this.code = code;
+    this.code = code; this.name = name; this.jid = null; this.n0 = 0; this.retry = 0;
+    this.connect();
+  }
+  connect() {
+    const code = this.code, name = this.name;
+    clearTimeout(this.retryT);
     let ws;
     try { ws = new WebSocket(`${this.server}/room/jj-${code.toLowerCase()}`); }
     catch (e) { this.h.status('error', "Couldn't reach the handshake server."); return; }
     this.ws = ws;
     this.h.status('connecting', 'Connecting…');
     ws.onopen = () => {
+      this.retry = 0;
       ws.send(JSON.stringify({ t: 'hi', name, col: 0 }));
       this.keepalive = setInterval(() => { try { ws.send('ping'); } catch (_) {} }, 20000);
     };
@@ -51,17 +60,22 @@ export class Room {
       const full = ev.code === 4001;
       this.ws = null;
       // direct links survive the relay going away; only report if we never got in
-      if (!this.id) this.h.status('error', full ? 'That room is full.' : "Couldn't reach the handshake server.");
-      else this.h.status('relay-lost', 'Handshake server disconnected. Existing direct links keep playing; new jammers can\'t join until you rejoin.');
+      if (!this.id) { this.h.status('error', full ? 'That room is full.' : "Couldn't reach the handshake server."); return; }
+      // in the room already: keep playing over the direct links and quietly reconnect, backing off up to 30 s
+      this.rid = null;
+      const wait = Math.min(30000, 1000 * 2 ** this.retry++);
+      if (this.retry > 2) this.h.status('relay-lost', 'Reconnecting to the handshake server… Your band keeps playing; new jammers can join once it\'s back.');
+      this.retryT = setTimeout(() => { if (this.id && !this.ws) this.connect(); }, wait);
     };
   }
 
   leave() {
-    clearInterval(this.keepalive);
+    clearInterval(this.keepalive); clearTimeout(this.retryT);
     if (this.ws) { const ws = this.ws; this.ws = null; try { ws.close(1000, 'bye'); } catch (_) {} }
     for (const p of this.peers.values()) this.closePeer(p);
     this.peers.clear();
-    this.id = null;
+    this.rids = new Map();   // relay id -> jammer id
+    this.id = null; this.rid = null;
   }
 
   relaySend(obj) {
@@ -73,7 +87,9 @@ export class Room {
     return true;
   }
   // relay events, chunked when bigger than the relay allows (SDP offers can be)
-  relayEvent(to, e) {
+  relayEvent(jid, e) {
+    const to = this.peers.get(jid)?.rid;
+    if (!to) return false;
     const s = JSON.stringify(e);
     if (s.length <= RELAY_MAX) return this.relaySend({ t: 'ev', to, e });
     const id = Math.random().toString(36).slice(2, 8), parts = Math.ceil(s.length / (RELAY_MAX - 120));
@@ -84,20 +100,32 @@ export class Room {
   onRelay(m) {
     if (m.t === 'welcome') {
       const others = (m.peers || []).filter((p) => p && p.id);
-      if (others.length >= this.maxPeers) { this.leave(); this.h.status('error', `That room already has ${this.maxPeers} jammers.`); return; }
-      this.id = m.id; this.n = m.n;
-      for (const p of others) this.addPeer(p, true);
-      this.h.status('in', others.length ? 'Connecting to the other jammers…' : 'In the room. Waiting for friends…');
+      const first = !this.jid;
+      if (first && others.length >= this.maxPeers) { this.leave(); this.h.status('error', `That room already has ${this.maxPeers} jammers.`); return; }
+      this.rid = m.id;
+      if (first) { this.jid = m.id; this.n0 = m.n; }
+      this.id = this.jid; this.n = this.n0;
+      this.relaySend({ t: 'st', s: { jid: this.jid, n: this.n0 } });
+      for (const o of others) this.meet(o.id, o.st, o, true);
+      if (first) this.h.status('in', others.length ? 'Connecting to the other jammers…' : 'In the room. Waiting for friends…');
+      else this.h.status('relay-back', '');
       this.h.roster();
       return;
     }
-    if (m.t === 'join') {
-      const known = this.peers.get(m.id);
-      if (known) { known.n = m.n; known.name = m.name || known.name; } else this.addPeer(m, false);
-      this.h.roster(); return;
+    if (m.t === 'join') { this.pendingJoin = this.pendingJoin || new Map(); this.pendingJoin.set(m.id, m); return; }   // who it is arrives in its state message
+    if (m.t === 'st') { const j = this.pendingJoin?.get(m.id); this.pendingJoin?.delete(m.id); this.meet(m.id, m.s, j || { id: m.id }, false); this.h.roster(); return; }
+    if (m.t === 'leave') {
+      this.pendingJoin?.delete(m.id);
+      const jid = this.rids.get(m.id), p = jid && this.peers.get(jid); if (!p) return;
+      this.rids.delete(m.id); if (p.rid === m.id) p.rid = null;
+      const gone = () => { if (this.peers.get(p.id) !== p || p.rid) return; this.closePeer(p); this.peers.delete(p.id); this.h.peerLeft(p); this.h.roster(); };
+      // their relay connection dropped, but a live direct link means they're still here and reconnecting
+      if (p.dc && p.dc.readyState === 'open') setTimeout(() => { if (!(p.dc && p.dc.readyState === 'open')) gone(); }, 12000);
+      else gone();
+      return;
     }
-    if (m.t === 'leave') { const p = this.peers.get(m.id); if (p) { this.closePeer(p); this.peers.delete(m.id); this.h.peerLeft(p); this.h.roster(); } return; }
-    if (m.t === 'name') { const p = this.peers.get(m.id); if (p) { p.name = m.name; this.h.roster(); } return; }
+    if (m.t === 'name') { const p = this.peers.get(this.rids.get(m.id)); if (p) { p.name = m.name; this.h.roster(); } return; }
+    if (m.t === 'ev') m = { ...m, id: this.rids.get(m.id) || m.id };
     if (m.t === 'ev' && m.e && typeof m.e === 'object') {
       let e = m.e;
       if (e.k === 'chunk') {
@@ -110,14 +138,23 @@ export class Room {
         try { e = JSON.parse(c.parts.join('')); } catch (_) { return; }
       }
       let p = this.peers.get(m.id);
-      if (!p) { p = this.addPeer({ id: m.id, n: 0, name: '…' }, false); this.h.roster(); }
+      if (!p) { this.rids.set(m.id, m.id); p = this.addPeer({ id: m.id, rid: m.id, n: 0, name: '…' }, false); this.h.roster(); }
       if (e.k === 'sig') this.onSignal(p, e);
       else if (e.k === 'm') this.deliver(p, e.m);
     }
   }
 
+  // a jammer seen through the relay: relay id rid, state st ({jid, n}) naming who they are
+  meet(rid, st, info, initiator) {
+    const jid = (st && st.jid) || rid;
+    if (jid === this.jid) return;
+    this.rids.set(rid, jid);
+    const known = this.peers.get(jid);
+    if (known) { known.rid = rid; if (info.name) known.name = info.name; return known; }   // the same jammer, back through the relay
+    return this.addPeer({ id: jid, rid, n: (st && st.n) || info.n || 0, name: info.name }, initiator);
+  }
   addPeer(info, initiator) {
-    const p = { id: info.id, n: info.n || 0, name: info.name || 'Jammer', pc: null, dc: null, path: 'connecting', pendingIce: [], opened: false, rtt: [], bytesIn: 0 };
+    const p = { id: info.id, rid: info.rid || info.id, n: info.n || 0, name: info.name || 'Jammer', pc: null, dc: null, path: 'connecting', pendingIce: [], opened: false, rtt: [], bytesIn: 0 };
     this.peers.set(p.id, p);
     if (!this.p2p) { this.setPath(p, 'relay'); return p; }
     this.makePC(p);

@@ -355,6 +355,8 @@ function receiveEvent(p, r, ev) {
     if (p.seen.size > 3000) { const it = p.seen.values(); for (let i = 0; i < 1000; i++) p.seen.delete(it.next().value); }
   }
   if (!S.players.get(p.id)) return;
+  // a jammer who just walked in gets old notes too, in the redundant copies riding on each packet: drop anything long past
+  if (clock.locked && ev.at < clock.now() - 1500) return;
   const k = key(p.id, r);
   if (!engine.ch.get(k)?.insts.length) return;
   const loose = ev.b === 'l';
