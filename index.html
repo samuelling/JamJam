@@ -461,7 +461,8 @@
   #keySel { width: auto; max-width: 180px; }
   .tapebtn { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px 0 8px; border-radius: 99px; background: #1e1f22; border: 1px solid #2c2e33; color: var(--mz-toner); font: 400 12px var(--type); }
   .tapebtn i { width: 13px; height: 13px; border-radius: 50%; background: #e0283f; box-shadow: inset 0 -2px 0 #0005; }
-  .tapebtn.rec { border-color: #e0283f; }
+  .tapebtn.rec, #syncBtn.rec { border-color: #e0283f; }
+  #syncBtn.rec { color: #ff6b7d; }
   .tapebtn.rec i { animation: recBlink 1s steps(1) infinite; box-shadow: 0 0 10px #ff3550; }
   @keyframes recBlink { 50% { opacity: .25; } }
   .sheet.tapes { width: min(640px, 100%); background: var(--mz-sheet); }
@@ -522,7 +523,7 @@
     <div class="readout"><span class="legend">BPM</span><button id="bpmDown" class="btn small" aria-label="Slower">−</button><span id="bpmLcd" class="lcd" tabindex="0" role="spinbutton" aria-label="Tempo" title="Drag, scroll or use the arrow keys">96</span><button id="bpmUp" class="btn small" aria-label="Faster">+</button>
       <button id="metroBtn" class="round" title="Metronome" aria-label="Metronome"><svg width="15" height="15" viewBox="0 0 16 16"><path d="M5 15h6L9.5 2h-3z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 11l4-6" stroke="currentColor" stroke-width="1.5"/></svg></button><span id="tempoNote" class="help"></span></div>
     <button id="talkBtn" class="talkbtn" aria-pressed="false" title="Talk to the band: click to leave your mic on, or hold while you talk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Talk</span></button>
-    <button id="tapeBtn" class="tapebtn" title="Record the jam (everyone hears that you are)" aria-label="Record the jam"><i></i><span id="tapeTime"></span></button><button id="tapesBtn" class="btn small hide" title="Play back or save your takes">Tapes</button>
+    <button id="tapeBtn" class="tapebtn" title="Record the jam (everyone hears that you are)" aria-label="Record the jam"><i></i><span id="tapeTime"></span></button><button id="syncBtn" class="btn small" title="Sync record: everyone records their own true sound, gathered into one folder of aligned stems and MIDI">Sync take</button><button id="tapesBtn" class="btn small hide" title="Play back or save your takes">Tapes</button>
     <div class="readout"><span class="legend">Key</span><select id="keySel" class="lcdsel" aria-label="The room's key" title="Everyone shares the key. The keys of the scale light up, and chord pads appear."></select></div>
     <div class="readout tech"><span class="legend">Quant</span><div class="seg" id="quantSeg"><button data-q="0" class="on">OFF</button><button data-q="0.25">1/16</button><button data-q="0.5">1/8</button><button data-q="1">1/4</button></div></div>
     <div class="lookbar tech"><span class="legend">Look</span><div class="meter" title="How far ahead your notes are scheduled"><i id="lookMeter"></i></div><span id="lookVal" class="lcd" style="min-width:72px;text-align:center;font-size:13px;padding:3px 6px">0 ms</span>
@@ -599,6 +600,9 @@
 </div>
 <div id="tapeDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="Your tapes">
   <div class="sheet tapes"><header><h2>The tapes</h2><button class="btn small" data-close style="margin-left:auto">Close</button></header><div id="tapeBody"></div></div>
+</div>
+<div id="syncDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="Sync take">
+  <div class="sheet tapes"><header><h2>Sync take</h2><button class="btn small" data-close style="margin-left:auto">Close</button></header><div id="syncBody" style="display:grid;gap:10px"></div></div>
 </div>
 <div id="libDrawer" class="drawer hide" role="dialog" aria-modal="true" aria-label="The shared studio">
   <div class="sheet wall">

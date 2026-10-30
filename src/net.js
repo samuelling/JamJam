@@ -284,6 +284,13 @@ export class Room {
       else if (p.path === 'relay') this.relayEvent(p.id, { k: 'm', m });
     }
   }
+  // binary to one jammer, waiting while their link's send buffer is full (big transfers: sync record stems)
+  async sendBinaryTo(id, buf) {
+    const p = this.peers.get(id); if (!p || !p.dc) return false;
+    while (p.dc.readyState === 'open' && p.dc.bufferedAmount > 2 << 20) await new Promise((r) => setTimeout(r, 15));
+    if (p.dc.readyState !== 'open') return false;
+    try { p.dc.send(buf); return true; } catch (_) { return false; }
+  }
   sendBinary(buf) {
     for (const p of this.peers.values()) {
       if (p.dc && p.dc.readyState === 'open' && p.dc.bufferedAmount < 1 << 20) { try { p.dc.send(buf); } catch (_) {} }

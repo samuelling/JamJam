@@ -224,7 +224,8 @@ export class Engine {
     const out = this.ctx.createGain();
     const lane = this.ctx.createGain();
     out.connect(this.master); lane.connect(out);
-    c = { pid, out, lane, vol: 1, mute: false, insts: [], cfgLog: [], pLog: [], notes: [], noteBase: 0, late: 0, lateWorst: 0, events: 0, flashT: 0, laneNext: 0, laneLate: 0, laneT: 0, held: new Set() };
+    const pre = this.ctx.createGain(); pre.connect(out);   // the instruments, before your mix's fader: what sync record takes
+    c = { pid, out, pre, lane, vol: 1, mute: false, insts: [], cfgLog: [], pLog: [], notes: [], noteBase: 0, late: 0, lateWorst: 0, events: 0, flashT: 0, laneNext: 0, laneLate: 0, laneT: 0, held: new Set() };
     this.ch.set(pid, c);
     return c;
   }
@@ -268,7 +269,7 @@ export class Engine {
     const g = ctx.createGain();
     g.gain.setValueAtTime(c.insts.length ? 0 : 1, now);
     g.gain.setValueAtTime(1, t);
-    g.connect(c.out);
+    g.connect(c.pre);
     // ?silent=1 (benchmarks): keep all timing and bookkeeping but skip synthesis
     const inst = this.silent ? { noteOn() {}, noteOff() {}, set() {}, allOff() {}, dispose() {} } : def.create(ctx, g, cfg.params, this.env());
     for (const old of c.insts) {

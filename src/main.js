@@ -3,6 +3,7 @@ import { Room } from './net.js';
 import { Engine } from './engine.js';
 import { Tape } from './tape.js';
 import { Talk } from './talk.js';
+import * as SR from './syncrec.js';
 import { Input, sendToHardware, bendBytes } from './input.js';
 import { AudioLane, decodeChunk } from './lane.js';
 import { StepSeq } from './seq.js';
@@ -99,6 +100,7 @@ setInterval(() => {
     const def = engine.defs.get(cfg.inst); if (!def?.seq) continue;
     for (const st of sq.due(tempo, now, now + SEQ_H)) for (const tg of st.trigs) {
       engine.seqTrig(k, def.seq.tracks[tg.track].note, 100, tg.locks, st.t, cfg.params);
+      if (S.srec && !S.srec.done && pidOf(k) === S.me) { const ev = S.srec.events.get(k) || S.srec.events.set(k, []).get(k), n = def.seq.tracks[tg.track].note; ev.push({ type: 'on', note: n, vel: 100, at: st.t }, { type: 'off', note: n, at: st.t + 60 }); }
       if (pidOf(k) !== S.me) { routeOut(k, { type: 'on', note: def.seq.tracks[tg.track].note, vel: 100, at: st.t }); routeOut(k, { type: 'off', note: def.seq.tracks[tg.track].note, at: st.t + 60 }); }
       S.hits.set(k + ':' + tg.track, st.t);
     }
@@ -121,7 +123,7 @@ const room = new Room({
       renderCorners();
     },
     message: onMessage,
-    binary(p, buf) { const c = decodeChunk(buf); if (c && clock.locked) { engine.laneChunk(key(p.id, 'lane'), c.start, c.delay, c.rate, c.samples); applyVolume(key(p.id, 'lane')); } },
+    binary(p, buf) { if (isStemChunk(buf)) { onStemChunk(p, buf); return; } const c = decodeChunk(buf); if (c && clock.locked) { engine.laneChunk(key(p.id, 'lane'), c.start, c.delay, c.rate, c.samples); applyVolume(key(p.id, 'lane')); } },
   },
 });
 window.JJ.room = room;
@@ -249,6 +251,9 @@ function onMessage(p, m) {
       renderCorners(); renderMidiPanel(); break;
     }
     case 'key': takeKey(m.key, true, p.id); break;
+    case 'srec': if (m.on) armSync(m.id, m.T0, p.id); else endSync(m.id, m.T1, p.id); break;
+    case 'srec-ready': syncReady(p.id, m); break;
+    case 'srec-pull': sendStems(p.id, m.id); break;
     case 'tape': addChat({ sys: true, text: `${S.players.get(p.id)?.name || 'A bandmate'} ${m.on ? 'started recording the jam' : 'stopped recording'}`, t: Date.now() }); break;
     case 'cfg': remoteCfg(p.id, m.r, m.cfg, clock.locked ? m.at : -Infinity, m.budget); renderCorners(); break;
     case 'unrack': {
@@ -357,6 +362,7 @@ const REPEAT_MS = +(qs.get('repeat') ?? 20);
 let repeatGen = 0;
 function sendEvent(e, ev, instant) {
   const k = key(S.me, e.r);
+  if (S.srec && !S.srec.done) (S.srec.events.get(k) || S.srec.events.set(k, []).get(k)).push({ ...ev });
   engine.event(k, ev, { now: instant || room.peers.size === 0 || !clock.locked });
   if (!clock.locked) return;
   recentEv.push({ r: e.r, ev }); if (recentEv.length > 3) recentEv.shift();
@@ -688,6 +694,158 @@ function cornerCard(id, rack) {
   );
 }
 const PICKS = new URLSearchParams(location.search).get('picks') === '1';
+// ---------- sync record: every jammer's true sources, gathered and lined up afterwards ----------
+const STEM_MAGIC = 0x4d455453;   // 'STEM'
+const isStemChunk = (buf) => buf.byteLength >= 16 && new DataView(buf).getUint32(0, true) === STEM_MAGIC;
+const slug = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 32) || 'part';
+async function startSync() {
+  if (S.srec && !S.srec.done) { stopSync(); return; }
+  const id = Math.random().toString(36).slice(2, 8), T0 = clock.now() + (room.peers.size ? 700 : 150);
+  room.send({ k: 'srec', on: true, id, T0 });
+  await armSync(id, T0, S.me);
+}
+function stopSync() {
+  const r = S.srec; if (!r || r.T1) return;
+  const T1 = clock.now() + 200;
+  room.send({ k: 'srec', on: false, id: r.id, T1 });
+  endSync(r.id, T1, S.me);
+}
+async function armSync(id, T0, by) {
+  if (S.srec && !S.srec.done && S.srec.id !== id) return;
+  const ctx = engine.ctx; await SR.ensureStemWorklet(ctx);
+  const r = { id, T0, T1: 0, by, events: new Map(), recs: [], anchors: [], files: [], peers: new Map(), got: new Map(), done: false, expect: new Set(S.players.keys()) };
+  S.srec = r;
+  // your instruments, dry
+  for (const e of S.rack) {
+    const k = key(S.me, e.r), c = engine.ch.get(k); if (!c) continue;
+    const hw = e.cfg.hw || e.cfg.ext, name = e.cfg.ext ? e.cfg.ext.name : hw ? engine.unit(e.cfg.hw)?.model : engine.defs.get(e.cfg.inst)?.name;
+    r.recs.push({ k, name, kind: hw ? 'twin' : 'dry', rec: new SR.StemRecorder(ctx, c.pre) });
+  }
+  // your hardware's real sound, through the input you picked
+  if (S.rack.some((e) => e.cfg.hw || e.cfg.ext) && S.srecInput != null) {
+    try {
+      const ms = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: S.srecInput ? { exact: S.srecInput } : undefined, echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 2 } });
+      r.inputStream = ms; r.recs.push({ k: 'input', name: 'audio in', kind: 'input', rec: new SR.StemRecorder(ctx, ctx.createMediaStreamSource(ms)) });
+    } catch (_) { addChat({ sys: true, text: "Sync record couldn't open your audio input, so your hardware is kept as its twin and MIDI.", t: Date.now() }); }
+  }
+  for (const x of r.recs) x.rec.start();
+  const anchor = () => { const t = ctx.currentTime; r.anchors.push([Math.round(t * ctx.sampleRate), engine.roomTime(t)]); };
+  anchor(); r.anchorT = setInterval(anchor, 500);
+  addChat({ sys: true, text: `${by === S.me ? 'You' : S.players.get(by)?.name || 'A bandmate'} started a sync take: everyone records their own true sound.`, t: Date.now() });
+  renderSync(); openDrawer('#syncDrawer');
+}
+function endSync(id, T1, by) {
+  const r = S.srec; if (!r || r.id !== id || r.T1) return;
+  r.T1 = T1; r.stopBy = by; renderSync();
+  // keep recording two seconds past the end for ring-out, then finish
+  setTimeout(() => finishSync(r), Math.max(0, T1 + 2000 - clock.now()) + 300);
+}
+async function finishSync(r) {
+  clearInterval(r.anchorT);
+  const ctx = engine.ctx, sr = ctx.sampleRate, t = ctx.currentTime; r.anchors.push([Math.round(t * sr), engine.roomTime(t)]);
+  for (const x of r.recs) x.rec.stop();
+  r.inputStream?.getTracks().forEach((tr) => tr.stop());
+  r.done = true;
+  const T0 = r.T0, T1 = r.T1, me = slug(S.name);
+  const notesOf = (k) => (r.events.get(k) || []).filter((e) => e.type === 'on' && e.at >= T0 && e.at <= T1).map((e) => e.at - T0);
+  for (const x of r.recs) {
+    let a = SR.toRoomTime(x.rec.data(), r.anchors, T0, T1 + 2000, sr), info = {};
+    if (x.kind === 'input') {
+      const hwKeys = S.rack.filter((e) => e.cfg.hw || e.cfg.ext).map((e) => key(S.me, e.r)), times = hwKeys.flatMap(notesOf);
+      const lag = SR.measureLag(a, times, sr); a = SR.shiftEarlier(a, lag, sr); info.inputLagMs = lag;
+    }
+    const silent = !a.L.some((v) => Math.abs(v) > 1e-4);
+    if (silent && x.kind !== 'input') continue;
+    r.files.push({ name: `${me}/${slug(x.name)}${x.kind === 'twin' ? '-twin' : x.kind === 'input' ? '-audio-in' : ''}.wav`, data: SR.wav(a, sr), kind: x.kind, info });
+  }
+  for (const e of S.rack) {
+    const k = key(S.me, e.r), ev = r.events.get(k); if (!ev || !ev.length) continue;
+    const nm = e.cfg.ext ? e.cfg.ext.name : e.cfg.hw ? engine.unit(e.cfg.hw)?.model : engine.defs.get(e.cfg.inst)?.name;
+    r.files.push({ name: `${me}/${slug(nm)}.mid`, data: SR.midiFile(ev, tempo, T0, T1, `${S.name}: ${nm}`, ((e.outCh || 1) - 1) & 15), kind: 'midi' });
+  }
+  r.mine = { name: S.name, parts: S.rack.map((e) => ({ inst: e.cfg.inst, patch: e.cfg.patch, hw: e.cfg.hw || null, ext: e.cfg.ext?.name || null, params: e.cfg.params })) };
+  r.got.set(S.me, r.files);
+  room.send({ k: 'srec-ready', id: r.id, files: r.files.map((f) => ({ name: f.name, size: f.data.length, kind: f.kind, info: f.info })), who: r.mine });
+  renderSync();
+  if (r.stopBy === S.me || r.by === S.me) gatherSync();
+}
+function syncReady(pid, m) {
+  const r = S.srec; if (!r || r.id !== m.id) return;
+  r.peers.set(pid, { files: m.files, who: m.who, bufs: m.files.map((f) => new Uint8Array(f.size)), have: m.files.map(() => 0) });
+  renderSync();
+  if (r.gathering) room.send({ k: 'srec-pull', id: r.id }, pid);
+}
+function gatherSync() {
+  const r = S.srec; if (!r) return;
+  r.gathering = true;
+  for (const pid of r.peers.keys()) room.send({ k: 'srec-pull', id: r.id }, pid);
+  renderSync(); maybeZip();
+}
+async function sendStems(to, id) {
+  const r = S.srec; if (!r || r.id !== id || !r.done) return;
+  const CH = 16000;
+  for (let fi = 0; fi < r.files.length; fi++) {
+    const d = r.files[fi].data;
+    for (let o = 0; o < d.length; o += CH) {
+      const part = d.subarray(o, Math.min(d.length, o + CH)), buf = new ArrayBuffer(16 + part.length), v = new DataView(buf);
+      v.setUint32(0, STEM_MAGIC, true); v.setUint32(4, fi, true); v.setUint32(8, o, true); v.setUint32(12, d.length, true);
+      new Uint8Array(buf, 16).set(part);
+      if (!(await room.sendBinaryTo(to, buf))) return;
+    }
+  }
+}
+function onStemChunk(p, buf) {
+  const r = S.srec, pr = r && r.peers.get(p.id); if (!pr) return;
+  const v = new DataView(buf), fi = v.getUint32(4, true), o = v.getUint32(8, true);
+  const part = new Uint8Array(buf, 16); if (!pr.bufs[fi]) return;
+  pr.bufs[fi].set(part, o); pr.have[fi] += part.length;
+  if (!pr.t || performance.now() - pr.t > 250) { pr.t = performance.now(); renderSync(); }
+  if (pr.have.every((h, i) => h >= pr.files[i].size)) { r.got.set(p.id, pr.files.map((f, i) => ({ ...f, data: pr.bufs[i] }))); renderSync(); maybeZip(); }
+}
+function maybeZip() {
+  const r = S.srec; if (!r || !r.gathering || r.zip) return;
+  // everyone who was in the room for the take, unless they've left or 30 s have gone by
+  const waiting = [...r.expect].filter((pid) => S.players.has(pid) && !r.got.has(pid));
+  if (!r.got.has(S.me) || [...r.peers.keys()].some((pid) => !r.got.has(pid))) return;
+  if (waiting.length && !r.gaveUp) { if (!r.giveUpT) r.giveUpT = setTimeout(() => { r.gaveUp = true; maybeZip(); }, 30000); return; }
+  clearTimeout(r.giveUpT);
+  const all = [...r.got.values()].flat(), sr = engine.ctx.sampleRate;
+  const stems = all.filter((f) => f.kind === 'dry' || f.kind === 'input' || (f.kind === 'twin' && !all.some((g) => g.kind === 'input' && g.name.split('/')[0] === f.name.split('/')[0])));
+  const mix = SR.mixStems(stems.map((f) => SR.readWav(f.data)));
+  const session = { megajam: 1, room: room.code, take: r.id, start: new Date(Date.now() - (clock.now() - r.T0)).toISOString(), seconds: (r.T1 - r.T0) / 1000, sampleRate: sr,
+    tempo: tempo.segs, key: S.key.mode ? keyName() : null,
+    jammers: [{ name: S.name, ...r.mine }, ...[...r.peers.values()].map((x) => x.who)],
+    files: all.map((f) => ({ name: f.name, kind: f.kind, ...(f.info || {}) })),
+    about: 'Every stem starts at the take\'s first moment on the room\'s clock, so they line up when dropped in at zero. *-twin.wav is the software twin that played for hardware; *-audio-in.wav is the hardware itself, aligned by its notes. MIDI files are on the room\'s beat grid with its tempo changes.' };
+  const base = `megajam-${(room.code || 'jam').toLowerCase()}-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '')}`;
+  const files = [...all.map((f) => ({ name: `${base}/${f.name}`, data: f.data })), { name: `${base}/mix.wav`, data: SR.wav(mix, sr) }, { name: `${base}/session.json`, data: new TextEncoder().encode(JSON.stringify(session, null, 1)) }];
+  r.zip = { url: URL.createObjectURL(SR.zip(files)), name: base + '.zip', count: files.length, mixUrl: URL.createObjectURL(new Blob([SR.wav(mix, sr)], { type: 'audio/wav' })) };
+  renderSync();
+}
+function renderSync() {
+  const box = $('#syncBody'); if (!box) return;
+  const r = S.srec, hasHw = S.rack.some((e) => e.cfg.hw || e.cfg.ext);
+  const inputSel = h('select', { class: 'lcdsel', 'aria-label': 'Audio input for your hardware', disabled: !!(r && !r.done), onchange: (e) => { S.srecInput = e.target.value === 'none' ? null : e.target.value; } },
+    h('option', { value: 'none' }, "Don't record my hardware's audio"), h('option', { value: '', selected: S.srecInput === '' }, 'Default audio input'));
+  if (hasHw && navigator.mediaDevices?.enumerateDevices) navigator.mediaDevices.enumerateDevices().then((ds) => { for (const d of ds) if (d.kind === 'audioinput' && d.deviceId && d.deviceId !== 'default') inputSel.append(h('option', { value: d.deviceId, selected: S.srecInput === d.deviceId }, d.label || 'Audio input')); }).catch(() => {});
+  const rows = [];
+  if (r) {
+    const st = (pid, name) => { const got = r.got.has(pid), pr = r.peers.get(pid); const pct = pr ? Math.round((100 * pr.have.reduce((a, b) => a + b, 0)) / Math.max(1, pr.files.reduce((a, f) => a + f.size, 0))) : 0;
+      return h('div', { class: 'row', style: 'display:flex;gap:8px;align-items:center' }, h('b', {}, name), h('span', { class: 'help' }, !r.T1 ? 'recording' : got ? `✓ ${(r.got.get(pid) || []).length} files` : pr ? (r.gathering ? `sending… ${pct}%` : 'ready') : 'finishing…')); };
+    rows.push(st(S.me, S.name + ' (you)'), ...[...S.players].map(([pid, pl]) => st(pid, pl.name)));
+  }
+  box.replaceChildren(
+    h('p', { class: 'help', style: 'margin:0' }, 'A sync take records what each of you really sounds like, on your own machine: your instruments dry, your hardware through your audio input, and every note as MIDI, all on the room\'s clock. When it stops, everything is gathered here into one folder that lines up in any DAW.'),
+    hasHw ? h('div', { class: 'row', style: 'display:flex;gap:8px;align-items:center;flex-wrap:wrap' }, h('span', { class: 'help' }, 'Your hardware comes in on'), inputSel) : null,
+    ...rows,
+    h('div', { class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap;align-items:center' },
+      h('button', { class: 'btn ' + (r && !r.done ? '' : 'hot'), disabled: !!(r && r.T1 && !r.done), onclick: startSync }, r && !r.done ? (r.T1 ? 'Finishing…' : '■ Stop the take') : '● Start a sync take'),
+      r && r.done && !r.gathering && r.peers.size ? h('button', { class: 'btn', onclick: gatherSync }, 'Gather everyone\'s stems') : null,
+      r && r.zip ? h('a', { class: 'btn hot', href: r.zip.url, download: r.zip.name }, `Save the folder (${r.zip.count} files, zip)`) : null),
+    r && r.zip ? h('audio', { controls: true, src: r.zip.mixUrl, style: 'width:100%' }) : null);
+  setCls($('#syncBtn'), 'rec', !!(r && !r.done));
+}
+
 // ---------- the tape ----------
 async function toggleTape() {
   const b = $('#tapeBtn');
@@ -1569,6 +1727,7 @@ function wire() {
     ks.onchange = () => { const [r, m] = ks.value ? ks.value.split(':') : [S.key.root, '']; setKey(+r, m); };
     $('#lockBtn').onclick = () => { S.lockKey = !S.lockKey; renderKey(); }; renderKey(); }
   $('#tapeBtn').onclick = toggleTape;
+  $('#syncBtn').onclick = () => { renderSync(); openDrawer('#syncDrawer'); };
   { const b = $('#assistBtn'), LV = [[0, 'Rhythm help: off'], [0.45, 'Rhythm help: light'], [0.8, 'Rhythm help: strong']];
     const show = () => { const i = LV.findIndex(([v]) => v === S.assist); b.textContent = LV[i][1]; setCls(b, 'on', S.assist > 0); };
     b.onclick = () => { const i = LV.findIndex(([v]) => v === S.assist); S.assist = LV[(i + 1) % LV.length][0]; show(); }; show(); }
@@ -1641,7 +1800,7 @@ Object.assign(window.JJ, {
   setTempo: (b) => setTempo(b),
   own: (id, v) => setOwned(id, v),
   setKey: (root, mode) => setKey(root, mode), assist: (v) => { S.assist = v; },
-  tape: () => toggleTape(), talk: (on) => talk.setOpen(on), voices: () => [...talk.voices.entries()].map(([id, v]) => ({ id, level: v.level, pan: v.pan.pan.value })), ducked: () => talk.ducked, tapes: () => tape.takes.map((t) => ({ seconds: t.seconds, size: t.blob.size, url: t.url })),
+  tape: () => toggleTape(), sync: () => startSync(), syncState: () => { const r = S.srec; return r && { id: r.id, done: r.done, files: r.files.map((f) => f.name + ':' + f.data.length), got: [...r.got.keys()], zip: r.zip && r.zip.url, T0: r.T0, T1: r.T1 }; }, talk: (on) => talk.setOpen(on), voices: () => [...talk.voices.entries()].map(([id, v]) => ({ id, level: v.level, pan: v.pan.pan.value })), ducked: () => talk.ducked, tapes: () => tape.takes.map((t) => ({ seconds: t.seconds, size: t.blob.size, url: t.url })),
   pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 't' + i); else padUp('t' + i); },
   addExternal: async (name, port, ch, twin) => { if (!input.midi) await input.enableMIDI(); return addEntry({ ext: { name, port, ch }, inst: twin })?.r; },
   enableMIDI: () => input.enableMIDI(),
