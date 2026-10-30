@@ -365,6 +365,7 @@
   .lights .socket { fill: #3a3934; }
   .lights .bulb { fill: #fffbe9; filter: drop-shadow(0 0 3px #fff6cf) drop-shadow(0 0 9px #ffe9a3aa); transform-box: fill-box; transform-origin: 50% 0; }
   .lights .bulb.dead { fill: #6b6a62; filter: none; }
+  .lights .bulb.hot { fill: var(--hot); opacity: 1 !important; filter: drop-shadow(0 0 3px var(--hot)) drop-shadow(0 0 10px var(--hot)); transition: fill .05s; }
   .lights .bulb.blink { animation: bulbBlink var(--d, 7s) var(--o, 0s) infinite steps(1); }
   .lights .bulb.flicker { animation: bulbFlicker var(--d, 3.1s) var(--o, 0s) infinite; }
   @keyframes bulbBlink { 0%, 86% { opacity: 1; } 87%, 91% { opacity: .18; } 92% { opacity: 1; } 94%, 96% { opacity: .2; } }

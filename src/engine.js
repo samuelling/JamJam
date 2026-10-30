@@ -111,6 +111,15 @@ export class Engine {
     this.libs.set(id, lib);
     return lib;
   }
+  // swap a library for another copy of it (same id, another address), forgetting the old copy's loaded instruments
+  async replaceLibrary(url) {
+    const u = Engine.resolveLibraryUrl(url);
+    const r = await fetch(u + 'megajam.json', { cache: 'no-cache' }).catch(() => null);
+    const id = r && r.ok ? String((await r.json()).id || '').replace(/[^\w.-]/g, '').slice(0, 40) : null;
+    const old = id && this.libs.get(id);
+    if (old) { for (const k of old.entries) { this.defs.delete(k); this.loading.delete(k); delete this.hashes[k]; } this.removeLibrary(id); }
+    return this.addLibrary(url);
+  }
   removeLibrary(id) {
     const lib = this.libs.get(id); if (!lib) return;
     for (const k of lib.entries) this.catalog.delete(k);
@@ -307,7 +316,11 @@ export class Engine {
   // what an instrument may ask of the room (4th argument to create): room time <-> this browser's audio time.
   // Each call also gets the event's room stamp (ms) after its audio time, identical in every browser, for anything
   // that must decide the same way everywhere (seeding, a performer model's timing).
-  env() { return this._env || (this._env = { audioTime: (ms) => this.audioTime(ms), roomTime: (t) => this.roomTime(t) }); }
+  // and the room's tempo map (room ms in, beats out and back), for instruments that play patterns of their own
+  env() {
+    return this._env || (this._env = { audioTime: (ms) => this.audioTime(ms), roomTime: (t) => this.roomTime(t),
+      bpm: (ms) => (this.tempo ? this.tempo.bpm(ms) : 120), beatAt: (ms) => (this.tempo ? this.tempo.beatAt(ms) : (ms * 2) / 1000), timeOf: (beat) => (this.tempo ? this.tempo.timeOf(beat) : (beat * 1000) / 2) });
+  }
   seqTrig(k, note, vel, locks, at, base) {
     const c = this.ch.get(k);
     const I = c && c.insts[c.insts.length - 1];

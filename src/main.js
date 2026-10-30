@@ -37,6 +37,7 @@ const VERSION = '0.2';
 
 const clock = new SharedClock();
 const tempo = new Tempo(96);
+
 const engine = new Engine(clock, tempo);
 const S = {
   name: '', me: null,
@@ -123,6 +124,7 @@ const room = new Room({
 window.JJ.room = room;
 const lane = new AudioLane(engine, (buf) => room.sendBinary(buf));
 const tape = new Tape(engine);
+engine.tempo = tempo;   // instruments with their own patterns follow the room's tempo
 
 function leaderId() {
   let best = { id: room.id, n: room.n };
@@ -178,7 +180,7 @@ function remoteCfg(pid, r, cfg, at, budget, seqSnap) {
   const k = key(pid, r);
   const known = pl.rack.find((x) => x.r === r);
   if (known) { known.cfg = cfg; if (budget) known.budget = budget; } else pl.rack.push({ r, cfg, budget });
-  if (cfg.lib && !engine.defs.has(cfg.inst)) {
+  if (cfg.lib && (!engine.defs.has(cfg.inst) || otherCopy(cfg))) {
     // someone is playing an instrument from a library this browser hasn't loaded: a stand-in plays until it loads
     S.standins.set(k, { wanted: cfg, at });
     engine.setCfg(k, engine.resolve(engine.standIn(cfg.meta)), at);
@@ -189,10 +191,14 @@ function remoteCfg(pid, r, cfg, at, budget, seqSnap) {
   if (!S.stable.has(k)) S.stable.set(k, performance.now());
   applyVolume(k);
 }
+// a bandmate plays a public library from another address than ours (another version of it): everyone must run the
+// same code, so this browser switches to theirs
+const otherCopy = (cfg) => !!(cfg.lib && cfg.lib.url && engine.libs.has(cfg.lib.id) && engine.libs.get(cfg.lib.id).url !== cfg.lib.url);
 async function loadWanted(k) {
   const sti = S.standins.get(k); if (!sti) return;
   const cfg = sti.wanted;
   try {
+    if (otherCopy(cfg)) { await engine.replaceLibrary(cfg.lib.url); saveLibs(); }
     if (!engine.catalog.has(cfg.inst) && cfg.lib.url && !engine.libs.has(cfg.lib.id)) { await engine.addLibrary(cfg.lib.url); saveLibs(); }
     if (!engine.catalog.has(cfg.inst)) throw new Error('not here');
     await engine.ensureDef(cfg.inst);
@@ -744,8 +750,18 @@ function feelOf(id, peer, rack) {
   if (rtt > 110 || recentLate > 0) return ['warn', 'okay: play a touch ahead'];
   return ['ok', rtt < 45 ? 'tight' : 'good'];
 }
+// the sad string lights over the console logo join the band: each bulb belongs to a corner and glows its colour when that jammer plays
+function lightsReact(active) {
+  const bulbs = $$('#consoleLights .bulb'); if (!bulbs.length) return;
+  const ids = [S.me, ...[...room.peers.keys()].filter((id) => S.players.has(id))].filter(Boolean);
+  bulbs.forEach((b, i) => {
+    const id = ids[i % Math.max(1, ids.length)], hot = id && active.has(id) && !b.classList.contains('dead');
+    if (hot) b.style.setProperty('--hot', colorOf(id));
+    setCls(b, 'hot', !!hot);
+  });
+}
 function updateCorners() {
-  const now = performance.now();
+  const now = performance.now(), active = new Set();
   for (const id of [S.me, ...room.peers.keys()]) {
     if (!id) continue;
     const peer = room.peers.get(id), pl = S.players.get(id) || {};
@@ -763,7 +779,9 @@ function updateCorners() {
     if (fe) { const [kind, words] = feelOf(id, peer, rack); fe.dataset.kind = kind; setText(fe.lastChild, words); }
     for (const x of rack) {
       const k = key(id, x.r), c = engine.ch.get(k);
-      for (const led of $$(`[data-led="${k}"]`)) if (c) setCls(led, 'lit', now - c.flashT < 120 || c.held.size > 0);
+      const lit = !!c && (now - c.flashT < 120 || c.held.size > 0);
+      if (lit) active.add(id);
+      for (const led of $$(`[data-led="${k}"]`)) if (c) setCls(led, 'lit', lit);
       const b = $(`[data-budget="${k}"]`);
       if (b) { const bb = id === S.me ? budgetOf(x) : x.budget; b.title = room.peers.size && bb ? `${bb} timing · ${id === S.me ? partLook(x) : Math.round(BUDGETS[bb].L(pl.peerL ?? 0))} ms` : ''; }
     }
@@ -792,6 +810,7 @@ function updateCorners() {
       if (lm.style.width !== w) lm.style.width = w;
     }
   }
+  lightsReact(active);
 }
 
 // --- your gear shelf
@@ -1088,7 +1107,7 @@ function libCard(meta, def) {
     status);
 }
 // the shared studio: every instrument hung on a pegboard. One click puts it on your desk.
-const FEATURED = ['github:samuelling/Acoustic@6e0b67071e68aac5259558e1412f2eedcbed8746'];   // pinned, so every jammer loads the identical code
+const FEATURED = ['github:samuelling/Acoustic@b540fd3b83f83014073f4a90e2ec769b34374763'];   // pinned, so every jammer loads the identical code
 let featuredTried = false;
 async function loadFeatured() {
   if (featuredTried) return; featuredTried = true;
