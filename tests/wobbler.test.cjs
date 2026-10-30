@@ -55,6 +55,16 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     out.finite = true; out.peaks = {};
     for (const k of Object.keys(W.presets)) { const x = await render(W, W.presets[k], [[36, 0.1, 1.6], [43, 1.7, 2.6], [48, 2.7, 3.6]], env140); out.finite = out.finite && finite(x); out.peaks[k] = peak(x); }
     out.mono = peak(await render(M, M.presets.bass, [[36, 0.1, 1.6], [43, 1.7, 2.6], [48, 2.7, 3.6]]));
+    // the octave switch and the sub: plain notes (A2 = 110 Hz for the oscillators, A3 = 220 Hz over the sub), nothing wobbling, counted by rising zero crossings
+    const zc = (x, from = 1, to = 3) => { let n = 0, prev = 0, lp = 0; for (let i = Math.floor(from * SR); i < to * SR; i++) { lp += (x[i] - lp) * 0.02; if (prev <= 0 && lp > 0) n++; prev = lp; } return n / (to - from); };
+    const flat = { depth: 0, ampWub: 0, growl: 0, cutoff: 8000, reso: 0, drive: 0.2, detune: 0 };
+    out.osc = { };
+    for (const [k, oc] of [['down2', 0], ['down1', 1], ['zero', 2], ['up1', 3]]) out.osc[k] = zc(await render(W, { ...flat, saw: 0, square: 1, sub: 0, oct: oc }, [[45, 0.1, 3.8]], env140));
+    out.sub = { };
+    for (const [k, so, sw] of [['sine1', 0, 0], ['sine2', 1, 0], ['tri1', 0, 1], ['sq1', 0, 2]]) out.sub[k] = zc(await render(W, { ...flat, saw: 0, square: 0, sub: 1, subOct: so, subWave: sw }, [[57, 0.1, 3.8]], env140));
+    const rms = (x) => Math.sqrt(x.slice(SR, 3 * SR).reduce((a, v) => a + v * v, 0) / (2 * SR));
+    const lean = await render(W, { ...flat, saw: 0, square: 0, sub: 1 }, [[45, 0.1, 3.8]], env140), fat = await render(W, { ...flat, saw: 0, square: 0, sub: 1, beef: 1 }, [[45, 0.1, 3.8]], env140);
+    out.beef = { lean: rms(lean), fat: rms(fat), crestLean: peak(lean) / rms(lean), crestFat: peak(fat) / rms(fat) };
     return out;
   });
   const near = (x, want) => Math.abs(x - want) / want < 0.04;
@@ -66,6 +76,10 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
   check(R.locked < 0.03, `locked to the beat: notes started 0.27 s apart wobble in step (phase apart ${r(R.locked)} cycles)`);
   check(Math.abs(R.restart - Math.min(0.27 * 140 / 60 % 1, 1 - 0.27 * 140 / 60 % 1)) < 0.05, `restart on note: they're apart by the 0.27 s between them (${r(R.restart)} cycles, want ${r(Math.min(0.27 * 140 / 60 % 1, 1 - 0.27 * 140 / 60 % 1))})`);
   check(near(R.noclock, 4), `no room clock: the BPM knob (120) runs it, C3 at 1/8 = ${r(R.noclock)} Hz (want 4)`);
+  const o = R.osc, sb = R.sub;
+  check(near(o.zero, 110) && near(o.down1, 55) && near(o.down2, 27.5) && near(o.up1, 220), `the octave switch moves the oscillators: A2 plays at ${o.down2.toFixed(0)} / ${o.down1.toFixed(0)} / ${o.zero.toFixed(0)} / ${o.up1.toFixed(0)} Hz for −2 / −1 / 0 / +1`);
+  check(near(sb.sine1, 110) && near(sb.sine2, 55) && near(sb.tri1, 110) && near(sb.sq1, 110), `the sub sits one or two octaves under A3: ${sb.sine1.toFixed(0)} and ${sb.sine2.toFixed(0)} Hz; triangle and square at ${sb.tri1.toFixed(0)}, ${sb.sq1.toFixed(0)} Hz`);
+  check(R.beef.fat > R.beef.lean * 1.3 && R.beef.crestFat < R.beef.crestLean, `Beef fattens the sub: louder (${(20 * Math.log10(R.beef.fat / R.beef.lean)).toFixed(1)} dB) and denser (crest ${R.beef.crestLean.toFixed(2)} to ${R.beef.crestFat.toFixed(2)})`);
   check(R.finite, 'no NaN or Inf in any preset');
   const pk = Object.entries(R.peaks).map(([k, v]) => `${k} ${v.toFixed(2)}`).join(', ');
   check(Object.values(R.peaks).every((v) => v > 0.3 * R.mono && v < 1.1 && v < 2.2 * R.mono), `levels sit near Monolith's bass (${R.mono.toFixed(2)}): ${pk}`);

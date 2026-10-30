@@ -352,6 +352,7 @@ registerProcessor('${NAME}', Machina);
 export default {
   id: 'machina',
   name: 'Machina',
+  by: 'Sam',   // Sam's own design: credited on its tile
   family: 'Synthesis drum machine',
   blurb: "Nine drum slots on the GM map, each running one of four synthesis machines: analog TRX, FM, modal physics or raw ground. Body, noise, sweep, drive and crush per slot, bus glue, and two LFOs you can point at any knob, locked to the beat.",
   drums: true,
