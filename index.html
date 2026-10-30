@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JamJam — jam live, in lockstep</title>
+<meta name="description" content="Jam live with up to four people. Every browser runs everyone's instrument, so only the notes travel.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14; --panel: #151922; --panel2: #1b2030; --line: #283044; --ink: #efe9dc; --dim: #9aa0ae; --faint: #5f6678;
+    --hot: #ff8a5c; --ok: #7fd99a; --warn: #f2c14e; --bad: #ff6b6b;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: 'Space Grotesk', system-ui, -apple-system, Segoe UI, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); }
+  body { min-height: 100vh; background:
+    radial-gradient(1200px 500px at 85% -10%, #2a1f3a55, transparent 60%),
+    radial-gradient(900px 400px at -10% 110%, #1f3a3455, transparent 60%), var(--bg); }
+  a { color: var(--hot); }
+  header { display: flex; align-items: center; gap: 14px; padding: 16px 22px; border-bottom: 1px solid var(--line); }
+  .logo { font-weight: 700; font-size: 22px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 10px; }
+  .logo i { display: inline-flex; gap: 3px; }
+  .logo i b { width: 6px; height: 18px; border-radius: 2px; display: block; animation: bob 1.2s ease-in-out infinite; }
+  .logo i b:nth-child(1) { background: #ff8a5c; } .logo i b:nth-child(2) { background: #56c8f0; animation-delay: .15s; }
+  .logo i b:nth-child(3) { background: #b9e35f; animation-delay: .3s; } .logo i b:nth-child(4) { background: #c98cff; animation-delay: .45s; }
+  @keyframes bob { 0%, 100% { transform: scaleY(.55); } 50% { transform: scaleY(1); } }
+  @media (prefers-reduced-motion: reduce) { .logo i b { animation: none; } }
+  .tag { color: var(--dim); font-size: 13px; }
+  #status { margin-left: auto; color: var(--dim); font-size: 13px; text-align: right; }
+  #status[data-kind=error] { color: var(--bad); }
+  main { max-width: 1180px; margin: 0 auto; padding: 22px; }
+  button, select, input[type=text], input[type=number] {
+    font: inherit; color: var(--ink); background: var(--panel2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 12px;
+  }
+  button { cursor: pointer; transition: background .12s, border-color .12s; }
+  button:hover { border-color: #3b4560; background: #212842; }
+  button.primary { background: var(--hot); border-color: var(--hot); color: #1a0f08; font-weight: 600; }
+  button.primary:hover { filter: brightness(1.07); }
+  button.on { background: #2b3a2f; border-color: var(--ok); color: var(--ok); }
+  button.mini { padding: 3px 8px; font-size: 12px; border-radius: 6px; }
+  select { padding: 7px 10px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); margin: 0 0 12px; font-weight: 500; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .help { color: var(--dim); font-size: 13px; }
+  .mono { font-family: var(--mono); }
+
+  /* lobby */
+  #lobby { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+  .hero h1 { font-size: 40px; line-height: 1.05; letter-spacing: -0.03em; margin: 6px 0 14px; }
+  .hero h1 em { font-style: normal; color: var(--hot); }
+  .hero p { color: var(--dim); max-width: 46ch; }
+  .how { display: grid; gap: 10px; margin-top: 18px; }
+  .how div { display: grid; grid-template-columns: 26px 1fr; gap: 10px; color: var(--dim); font-size: 14px; }
+  .how b { color: var(--ink); font-family: var(--mono); font-size: 13px; }
+  .join { display: grid; gap: 12px; }
+  .join label { display: grid; gap: 6px; font-size: 13px; color: var(--dim); }
+  .join input { width: 100%; }
+  #codeIn { text-transform: uppercase; letter-spacing: .3em; font-family: var(--mono); }
+  .or { text-align: center; color: var(--faint); font-size: 12px; }
+
+  /* jam */
+  #jam { display: grid; gap: 16px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+  .code { font-family: var(--mono); font-size: 20px; letter-spacing: .25em; background: var(--panel2); border: 1px dashed #3b4560; border-radius: 9px; padding: 4px 12px; }
+  .grp { display: flex; align-items: center; gap: 8px; padding-left: 14px; border-left: 1px solid var(--line); }
+  #bpm { width: 72px; font-family: var(--mono); }
+  .look { display: grid; grid-template-columns: auto 1fr auto auto; gap: 6px 12px; align-items: center; margin-top: 12px; }
+  #lookVal { font-family: var(--mono); font-size: 18px; color: var(--hot); min-width: 9ch; }
+  #lookHelp { grid-column: 1 / -1; }
+  input[type=range] { accent-color: var(--hot); }
+
+  #players { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .player { background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--pc, var(--line)); border-radius: 12px; padding: 12px; display: grid; gap: 6px; min-height: 128px; }
+  .player.me { background: linear-gradient(180deg, color-mix(in srgb, var(--pc) 9%, var(--panel)), var(--panel)); }
+  .player.empty { border-style: dashed; border-top-width: 1px; opacity: .55; place-content: center; text-align: center; }
+  .prow { display: flex; align-items: center; gap: 8px; }
+  .pname { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pmeta { color: var(--dim); font-size: 13px; }
+  .pstats { color: var(--faint); font-size: 12px; min-height: 18px; }
+  .led { width: 10px; height: 10px; border-radius: 50%; background: #2a3042; flex: none; transition: background .06s, box-shadow .06s; }
+  .led.lit { background: var(--pc); box-shadow: 0 0 10px var(--pc); }
+  .badge { margin-left: auto; font: 11px var(--mono); padding: 2px 7px; border-radius: 99px; border: 1px solid var(--line); color: var(--dim); white-space: nowrap; }
+  .badge[data-kind=ok] { color: var(--ok); border-color: #2f5a3b; }
+  .badge[data-kind=warn] { color: var(--warn); border-color: #5c4b22; }
+  .mix input[type=range] { flex: 1; min-width: 0; }
+  .lanemeter { width: 36px; height: 6px; border-radius: 3px; background: #22283a; overflow: hidden; opacity: .3; }
+  .lanemeter.active { opacity: 1; }
+  .lanemeter i { display: block; height: 100%; width: 0; background: var(--pc); transition: width .08s; }
+
+  .two { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .src { display: flex; gap: 6px; margin-bottom: 12px; }
+  .src label { display: flex; gap: 6px; align-items: center; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line); cursor: pointer; color: var(--dim); }
+  .src input { display: none; }
+  .src label:has(input:checked) { background: var(--panel2); color: var(--ink); border-color: var(--hot); }
+  #knobs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 14px; margin-top: 14px; }
+  .knob { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 12px; color: var(--dim); }
+  .knob input { grid-column: 1 / -1; width: 100%; }
+  .kval { font-family: var(--mono); color: var(--ink); }
+  #twinNote { margin-top: 8px; }
+
+  .keys { position: relative; }
+  #keyboard { display: flex; height: 150px; position: relative; user-select: none; touch-action: none; margin-top: 10px; }
+  .key { flex: 1; position: relative; background: linear-gradient(#f3eee2, #d9d2c2); border: 1px solid #0d0f14; border-radius: 0 0 7px 7px; margin-right: -1px; z-index: 1; background-image: var(--dots, none), linear-gradient(#f3eee2, #d9d2c2); }
+  .key.black { flex: 0 0 0; z-index: 2; }
+  .key.black::before { content: ''; position: absolute; left: -14px; width: 28px; top: 0; height: 62%; background: linear-gradient(#2a2f3c, #12151d); border-radius: 0 0 5px 5px; box-shadow: 0 2px 0 #000; background-image: var(--dots, none), linear-gradient(#2a2f3c, #12151d); }
+  .key.black { pointer-events: none; }
+  .key.black::before { pointer-events: auto; }
+  .key.down { background: linear-gradient(#ffc6a8, #ff9d72); }
+  .key.black.down::before { background: linear-gradient(#ff9d72, #c4572c); }
+  .klabel { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font: 10px var(--mono); color: #6b6455; pointer-events: none; }
+  .key.black .klabel { bottom: auto; top: 40%; left: -14px; right: auto; width: 28px; color: #c9c2b0; z-index: 3; }
+  details summary { cursor: pointer; color: var(--dim); }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 10px; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--dim); font-weight: 500; }
+  td { font-family: var(--mono); }
+  .lane .row { margin-top: 8px; }
+  .lane select { max-width: 100%; }
+  @media (max-width: 900px) {
+    #lobby, .two { grid-template-columns: 1fr; }
+    #players { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grp { border-left: 0; padding-left: 0; }
+  }
+</style>
+<script src="mp-config.js"></script>
+</head>
+<body>
+<header>
+  <div class="logo"><i><b></b><b></b><b></b><b></b></i>JamJam</div>
+  <div class="tag">Jam live in lockstep. Only the notes travel.</div>
+  <div id="status" role="status"></div>
+</header>
+<main>
+  <section id="lobby">
+    <div class="hero">
+      <h1>Play together,<br><em>land together.</em></h1>
+      <p>Up to four people jam in real time. Every browser runs everyone's instrument from the same shared engine, so instead of streaming audio, JamJam sends what your hands do, stamped with the moment it should sound. Everyone hears the same thing at the same instant.</p>
+      <div class="how">
+        <div><b>01</b><span>A tiny Cloudflare relay introduces the browsers, then gets out of the way: notes go directly from player to player.</span></div>
+        <div><b>02</b><span>The browsers agree on one clock. Each note is scheduled a little ahead (the lookahead), just past the slowest link, so it lands everywhere at once.</span></div>
+        <div><b>03</b><span>Bring your own hardware: pick your synth or drum machine, and the others hear a software twin from the same family.</span></div>
+        <div><b>04</b><span>The audio lane streams a mic or guitar alongside, a set number of bars late, NINJAM style.</span></div>
+      </div>
+    </div>
+    <div class="panel join">
+      <h2>Get in</h2>
+      <label>Your name<input id="nameIn" type="text" maxlength="16" placeholder="Name" autocomplete="nickname"></label>
+      <button id="startBtn" class="primary">Start a new room</button>
+      <div class="or">or join a friend</div>
+      <label>Room code<input id="codeIn" type="text" maxlength="4" placeholder="ABCD" autocomplete="off"></label>
+      <button id="joinBtn">Join room</button>
+      <p class="help">Use headphones, especially with the audio lane. Works best in Chrome or Edge on a wired connection.</p>
+    </div>
+  </section>
+
+  <section id="jam" hidden>
+    <div class="panel">
+      <div class="bar">
+        <span class="help">Room</span><span id="roomCode" class="code"></span>
+        <button id="copyBtn">Copy invite link</button>
+        <div class="grp"><span class="help">Tempo</span><input id="bpm" type="number" min="40" max="240" value="96"><span id="tempoNote" class="help"></span><button id="metroBtn">Metronome</button></div>
+        <div class="grp"><span class="help">Quantize</span>
+          <select id="quantSel"><option value="0">Off</option><option value="0.25">1/16</option><option value="0.5">1/8</option><option value="1">1/4</option></select>
+        </div>
+        <div class="grp"><button id="selfBtn" title="Hear your own notes the moment you play them. The others still hear everything in sync.">Hear myself instantly</button></div>
+        <button id="leaveBtn" style="margin-left:auto">Leave</button>
+      </div>
+      <div class="look">
+        <span class="help">Lookahead</span>
+        <input id="lookSlider" type="range" min="0" max="600" step="1" value="40" aria-label="Lookahead in milliseconds">
+        <span id="lookVal">0 ms</span>
+        <span><span id="lookMode" class="help">auto</span> <button id="lookAutoBtn" class="mini">auto</button></span>
+        <span id="lookHelp" class="help"></span>
+      </div>
+    </div>
+
+    <div id="players"></div>
+
+    <div class="two">
+      <div class="panel" id="me">
+        <h2>Your sound</h2>
+        <div class="src">
+          <label><input type="radio" name="source" value="soft" checked>Software instrument</label>
+          <label><input type="radio" name="source" value="hw">My hardware</label>
+        </div>
+        <div id="softRow" class="row">
+          <select id="instSel" aria-label="Instrument"></select>
+          <select id="patchSel" aria-label="Patch type"></select>
+        </div>
+        <div id="hwRow" hidden>
+          <div class="row">
+            <select id="hwSel" aria-label="Your hardware"></select>
+            <select id="patchSel2" aria-label="Patch type"></select>
+            <button id="twinBtn" title="Also hear the software twin, to compare it with your hardware">Hear the twin too</button>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <span class="help">JamJam plays my synth over</span>
+            <select id="midiOutSel" aria-label="MIDI output to your synth"></select>
+            <span class="help">latency</span><input id="hwLat" type="range" min="0" max="40" value="0" aria-label="Hardware latency compensation"><span id="hwLatVal" class="mono help">0 ms</span>
+          </div>
+          <p class="help">Choose a MIDI output (and turn Local Control off on the synth) for lockstep, or leave it on None and play the synth directly to hear yourself instantly.</p>
+          <p id="twinNote" class="help"></p>
+        </div>
+        <div id="knobs"></div>
+      </div>
+      <div class="panel lane">
+        <h2>Audio lane</h2>
+        <p class="help">Stream a mic, guitar or a synth only you own. It's played for the others exactly this many bars late, so set it to the length of the loop or chord cycle. The notes lane stays live.</p>
+        <div class="row">
+          <button id="laneBtn">Start audio lane</button>
+          <select id="laneBars" aria-label="Bars of delay"><option value="1">1 bar late</option><option value="2">2 bars late</option><option value="4">4 bars late</option><option value="8">8 bars late</option></select>
+        </div>
+        <div class="row">
+          <select id="laneDev" aria-label="Audio input"><option value="">Default input</option></select>
+          <select id="laneQ" aria-label="Quality"><option value="hi">48 kHz (≈0.8 Mbit/s per jammer)</option><option value="lo">24 kHz (≈0.4 Mbit/s)</option></select>
+        </div>
+        <div class="row"><span class="help">Timing nudge</span><input id="laneOff" type="range" min="-80" max="80" value="0" aria-label="Audio lane timing nudge"><span id="laneOffVal" class="mono help">0 ms</span></div>
+        <p id="laneHelp" class="help">Use headphones: speakers would feed the others' sound back into your mic, a bar later.</p>
+      </div>
+    </div>
+
+    <div class="panel keys">
+      <div class="row">
+        <h2 style="margin:0">Play</h2>
+        <span id="inputStatus" class="help"></span>
+        <button id="midiBtn" class="mini" style="margin-left:auto">Enable MIDI</button>
+        <button id="panicBtn" class="mini" title="Stop all notes">Panic</button>
+      </div>
+      <div id="keyboard" aria-label="On-screen keyboard"></div>
+      <p class="help">Keys: A W S E D F T G Y H U J K. Coloured dots on the keys show what the others are holding.</p>
+    </div>
+
+    <details class="panel">
+      <summary>How it's connected</summary>
+      <table id="netTable"></table>
+      <p id="netSummary" class="help"></p>
+    </details>
+  </section>
+</main>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
