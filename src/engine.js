@@ -47,7 +47,8 @@ export class Engine {
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -10; comp.knee.value = 6; comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.15;
     this.master.connect(comp).connect(ctx.destination);
-    this.clickBus = ctx.createGain(); this.clickBus.connect(this.master);
+    this.comp = comp;   // the metronome and the doorbell join after the master, so the tape (which records the master) leaves them out
+    this.clickBus = ctx.createGain(); this.clickBus.connect(comp);
     if (ctx.state !== 'running') await ctx.resume().catch(() => {});
     this.tick = setInterval(() => this.metronome(), 25);
   }
@@ -364,7 +365,7 @@ export class Engine {
   // a doorbell (ding-dong, or a single ding for a bandmate walking in): also how you find out your sound is on
   chime(two = true) {
     const ctx = this.ctx; if (!ctx || ctx.state !== 'running') return;
-    const t0 = ctx.currentTime + 0.03, bus = ctx.createGain(); bus.gain.value = 0.18; bus.connect(this.master);
+    const t0 = ctx.currentTime + 0.03, bus = ctx.createGain(); bus.gain.value = 0.16; bus.connect(this.comp || this.master);
     const tone = (f, t) => { for (const [m, a] of [[1, 1], [2.76, 0.35], [5.4, 0.12]]) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = f * m;
       g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + 0.004); g.gain.setTargetAtTime(0, t + 0.004, 0.35 / m); o.connect(g).connect(bus); o.start(t); o.stop(t + 2); } };
     tone(784, t0); if (two) tone(622, t0 + 0.38);

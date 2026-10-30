@@ -1,6 +1,7 @@
 import { SharedClock, Tempo } from './clock.js';
 import { Room } from './net.js';
 import { Engine } from './engine.js';
+import { Tape } from './tape.js';
 import { Input, sendToHardware, bendBytes } from './input.js';
 import { AudioLane, decodeChunk } from './lane.js';
 import { StepSeq } from './seq.js';
@@ -121,6 +122,7 @@ const room = new Room({
 });
 window.JJ.room = room;
 const lane = new AudioLane(engine, (buf) => room.sendBinary(buf));
+const tape = new Tape(engine);
 
 function leaderId() {
   let best = { id: room.id, n: room.n };
@@ -237,6 +239,7 @@ function onMessage(p, m) {
       renderCorners(); renderMidiPanel(); break;
     }
     case 'key': takeKey(m.key, true, p.id); break;
+    case 'tape': addChat({ sys: true, text: `${S.players.get(p.id)?.name || 'A bandmate'} ${m.on ? 'started recording the jam' : 'stopped recording'}`, t: Date.now() }); break;
     case 'cfg': remoteCfg(p.id, m.r, m.cfg, clock.locked ? m.at : -Infinity, m.budget); renderCorners(); break;
     case 'unrack': {
       const pl = S.players.get(p.id); if (pl) pl.rack = pl.rack.filter((x) => x.r !== m.r);
@@ -669,6 +672,33 @@ function cornerCard(id, rack) {
   );
 }
 const PICKS = new URLSearchParams(location.search).get('picks') === '1';
+// ---------- the tape ----------
+async function toggleTape() {
+  const b = $('#tapeBtn');
+  if (!tape.on) {
+    try { await tape.start(); } catch (err) { setStatus("Couldn't start the tape: " + err.message, 'error'); return; }
+    b.classList.add('rec'); room.send({ k: 'tape', on: true });
+    tape.onLimit = () => toggleTape();
+    clearInterval(toggleTape.t); toggleTape.t = setInterval(() => { const t = Math.floor(tape.seconds()); setText($('#tapeTime'), `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`); }, 250);
+  } else {
+    clearInterval(toggleTape.t); b.classList.remove('rec'); setText($('#tapeTime'), '');
+    room.send({ k: 'tape', on: false });
+    tape.stop(); renderTapes(); openDrawer('#tapeDrawer'); $('#tapesBtn').classList.toggle('hide', !tape.takes.length);
+  }
+}
+function renderTapes() {
+  const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  const room4 = room.code || 'jam';
+  $('#tapeBody').replaceChildren(...(tape.takes.length ? [...tape.takes].reverse().map((t, i) => {
+    const n = tape.takes.length - i, name = `megajam-${room4.toLowerCase()}-take${n}-${t.when.toISOString().slice(0, 16).replace(/[:T]/g, '')}.wav`;
+    return h('div', { class: 'take' },
+      h('div', { class: 'cassette' }, h('b', {}, `TAKE ${n}`), h('small', {}, `${t.when.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} · ${fmt(t.seconds)}`)),
+      h('audio', { controls: true, src: t.url, preload: 'metadata' }),
+      h('a', { class: 'btn small hot', href: t.url, download: name }, 'Save WAV'));
+  }) : [h('p', { class: 'help' }, 'Press the red button in the console to record the band.')]),
+  h('p', { class: 'help', style: 'margin:0' }, 'The tape records the mix as you heard it here: everyone\'s instruments and the audio lane, without the metronome. Takes stay in this tab until you close it, so save the ones you want.'));
+}
+
 // the invite: the code to read out, a link to send, and a QR code to scan from a phone
 async function openInvite(url) {
   const { default: qrcode } = await import('../vendor/qrcode.js');
@@ -1509,6 +1539,8 @@ function wire() {
   { const ks = $('#keySel'); ks.replaceChildren(h('option', { value: '' }, 'Free'), ...Object.keys(MODES).flatMap((m) => NOTE_NAMES.map((nm, r) => h('option', { value: `${r}:${m}` }, `${nm} ${MODES[m].name}`))));
     ks.onchange = () => { const [r, m] = ks.value ? ks.value.split(':') : [S.key.root, '']; setKey(+r, m); };
     $('#lockBtn').onclick = () => { S.lockKey = !S.lockKey; renderKey(); }; renderKey(); }
+  $('#tapeBtn').onclick = toggleTape;
+  $('#tapesBtn').onclick = () => { renderTapes(); openDrawer('#tapeDrawer'); };
   $('#addHwBtn').onclick = () => { renderHardware(); openDrawer('#hwDrawer'); setTimeout(() => $('#hwSearch').focus(), 50); };
   $('#addExtBtn').onclick = async () => { if (!input.midi) await input.enableMIDI(); addEntry({ ext: { name: 'My synth', port: input.outputs[0]?.id || '', ch: 1 } }); };
   $('#hwSearch').addEventListener('input', renderHardware);
@@ -1565,6 +1597,7 @@ Object.assign(window.JJ, {
   setTempo: (b) => setTempo(b),
   own: (id, v) => setOwned(id, v),
   setKey: (root, mode) => setKey(root, mode),
+  tape: () => toggleTape(), tapes: () => tape.takes.map((t) => ({ seconds: t.seconds, size: t.blob.size, url: t.url })),
   pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 't' + i); else padUp('t' + i); },
   addExternal: async (name, port, ch, twin) => { if (!input.midi) await input.enableMIDI(); return addEntry({ ext: { name, port, ch }, inst: twin })?.r; },
   enableMIDI: () => input.enableMIDI(),
