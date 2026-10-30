@@ -483,6 +483,20 @@
   .talkmark i { width: 3px; background: var(--mz-blue); border-radius: 1px; animation: talkbar .5s ease-in-out infinite alternate; }
   .talkmark i:nth-child(1) { height: 5px; } .talkmark i:nth-child(2) { height: 11px; animation-delay: .15s; } .talkmark i:nth-child(3) { height: 7px; animation-delay: .3s; }
   @keyframes talkbar { to { transform: scaleY(.4); } }
+
+  .audience { display: flex; align-items: center; gap: 10px; justify-content: flex-end; margin: -4px 4px -6px; min-height: 26px; }
+  #listeners { font: 400 12px var(--type); color: var(--mz-gold); }
+  .reacts { display: inline-flex; gap: 2px; }
+  .react { background: none; border: 0; font-size: 17px; padding: 2px 4px; border-radius: 6px; filter: grayscale(.3); transition: transform .1s; }
+  .react:hover { transform: scale(1.25); filter: none; background: #ffffff10; }
+  #reactLayer { position: fixed; left: 0; right: 0; top: 70px; height: 0; pointer-events: none; z-index: 30; }
+  .reaction { position: absolute; top: 120px; display: grid; justify-items: center; animation: floatUp 2.6s ease-out forwards; }
+  .reaction span { font-size: 34px; filter: drop-shadow(0 4px 6px #0008); }
+  .reaction small { font: 400 11px var(--type); color: var(--mz-toner); background: #000a; padding: 1px 6px; border-radius: 3px; }
+  @keyframes floatUp { 0% { transform: translateY(20px) scale(.6); opacity: 0; } 12% { opacity: 1; transform: translateY(0) scale(1.1); } 100% { transform: translateY(-110px) scale(1); opacity: 0; } }
+  /* a listener's studio: the band's corners, the reactions and the chat; nothing to play */
+  body.listener .deskrow, body.listener .keybed, body.listener #tapeBtn ~ #syncBtn, body.listener .readout:has(#keySel), body.listener #talkBtn { display: none !important; }
+  body.listener #studio { grid-template-rows: auto auto auto 1fr; }
 </style>
 <script src="mp-config.js"></script>
 </head>
@@ -501,6 +515,7 @@
         <button id="startBtn" class="btn hot big">Start a jam</button>
         <div class="or">or join a friend</div>
         <div class="joinrow"><input id="codeIn" type="text" maxlength="4" placeholder="CODE" autocomplete="off" aria-label="Room code"><button id="joinBtn" class="btn">Walk in</button></div>
+        <button id="listenBtn" class="btn small ghost" title="Hear the band without playing: your browser plays their instruments, so it sounds like you're in the room">or just listen in</button>
         <p id="lobbyStatus" class="help" style="margin:0;min-height:1em" role="status"></p>
         <p class="help" style="margin:0">Headphones help. Chrome or Edge works best.</p>
       </div>
@@ -535,7 +550,9 @@
     <span id="lookHelp" class="help tech"></span>
   </div>
 
+  <div class="audience"><span id="listeners" class="help hide"></span><span class="reacts"><button class="react" data-react="clap" aria-label="Applause" title="Applause">👏</button><button class="react" data-react="fire" aria-label="Fire" title="Fire">🔥</button><button class="react" data-react="heart" aria-label="Love it" title="Love it">❤️</button><button class="react" data-react="laugh" aria-label="Ha" title="Ha">😂</button><button class="react" data-react="wow" aria-label="Wow" title="Wow">🤯</button></span></div>
   <div id="corners"></div>
+  <div id="reactLayer" aria-live="polite"></div>
 
   <div class="deskrow">
     <div class="shelf">

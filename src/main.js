@@ -133,8 +133,9 @@ const talk = new Talk(engine, room);
 engine.tempo = tempo;   // instruments with their own patterns follow the room's tempo
 
 function leaderId() {
-  let best = { id: room.id, n: room.n };
-  for (const p of room.peers.values()) if (p.n && p.n < best.n) best = { id: p.id, n: p.n };
+  let best = S.listener ? { id: null, n: Infinity } : { id: room.id, n: room.n };
+  for (const p of room.peers.values()) if (p.role !== 'listener' && p.n && p.n < best.n) best = { id: p.id, n: p.n };
+  if (!best.id) best = { id: room.id, n: room.n };   // only listeners left
   return best.id;
 }
 function updateLeader() {
@@ -149,7 +150,7 @@ function onEntered() {
   S.me = room.id;
   soundcheck();
   // the first time in, the wall opens with three suggestions (not in automated tests unless they ask: ?picks=1)
-  if (!S.pickedOnce && (!navigator.webdriver || PICKS)) { S.pickedOnce = true; S.firstPick = true; setTimeout(() => { if (S.firstPick) { renderLibrary(); openDrawer('#libDrawer'); } }, 900); }
+  if (!S.pickedOnce && !S.listener && (!navigator.webdriver || PICKS)) { S.pickedOnce = true; S.firstPick = true; setTimeout(() => { if (S.firstPick) { renderLibrary(); openDrawer('#libDrawer'); } }, 900); }
   updateLeader();
   if (clock.isLeader) { tempo.start(clock.now(), 96); S.lockedAt = performance.now(); }
   for (const e of S.rack) { engine.setCfg(key(S.me, e.r), e.cfg, -Infinity); ensureSeq(key(S.me, e.r), e.cfg); S.stable.set(key(S.me, e.r), performance.now()); applyVolume(key(S.me, e.r)); }
@@ -158,7 +159,7 @@ function onEntered() {
 
 const publicRack = (withSeq = false) => S.rack.map((e) => ({ r: e.r, cfg: e.cfg, budget: budgetOf(e), seq: withSeq ? seqs.get(key(S.me, e.r))?.snapshot() : undefined }));
 function sayHello(id) {
-  room.send({ k: 'hello', v: VERSION, name: S.name, rack: publicRack(true), hashes: engine.hashes, lane: { on: lane.on, bars: lane.bars }, L: lookahead(), key: S.key }, id);
+  room.send({ k: 'hello', v: VERSION, role: S.listener ? 'listener' : 'band', name: S.name, rack: publicRack(true), hashes: engine.hashes, lane: { on: lane.on, bars: lane.bars }, L: lookahead(), key: S.key }, id);
   if (clock.isLeader) {
     room.send({ k: 'tempo', segs: tempo.toJSON() }, id);
     const items = S.chat.filter((c) => !c.sys).slice(-50).map(({ name, text, t, from }) => ({ name, text, t, from }));
@@ -243,14 +244,16 @@ function onMessage(p, m) {
     case 'slack': S.slackRep.set(p.id, { s: m.s, t: performance.now() }); break;
     case 'hello': {
       const first = !S.players.has(p.id);
-      S.players.set(p.id, { ...(S.players.get(p.id) || {}), name: m.name, rack: [], hashes: m.hashes, lane: m.lane, peerL: m.L, v: m.v });
+      S.players.set(p.id, { ...(S.players.get(p.id) || {}), name: m.name, rack: [], hashes: m.hashes, lane: m.lane, peerL: m.L, v: m.v, role: m.role || 'band' });
+      p.role = m.role || p.role || 'band';
       for (const x of m.rack || []) remoteCfg(p.id, x.r, x.cfg, -Infinity, x.budget, x.seq);
       if (m.key) takeKey(m.key, false);
-      if (first) { addChat({ sys: true, text: `${m.name} walked in`, t: Date.now() }); engine.chime(false); }
+      if (first) { addChat({ sys: true, text: m.role === 'listener' ? `${m.name} is listening in` : `${m.name} walked in`, t: Date.now() }); if (m.role !== 'listener') engine.chime(false); }
       if ($('#status').dataset.kind !== 'error') setStatus('');
       renderCorners(); renderMidiPanel(); break;
     }
     case 'key': takeKey(m.key, true, p.id); break;
+    case 'react': showReaction(p.id, m.r); break;
     case 'srec': if (m.on) armSync(m.id, m.T0, p.id); else endSync(m.id, m.T1, p.id); break;
     case 'srec-ready': syncReady(p.id, m); break;
     case 'srec-pull': sendStems(p.id, m.id); break;
@@ -668,7 +671,10 @@ const patchName = (def, t) => def?.presetNames?.[t] || cap(t);
 // --- the band: one corner per jammer
 function renderCorners() {
   const box = $('#corners'); if (!box || $('#studio').classList.contains('hide')) return;
-  const ids = [S.me, ...room.peers.keys()].filter(Boolean).sort((a, b) => slotOf(a) - slotOf(b));
+  const isBand = (id) => (id === S.me ? !S.listener : room.peers.get(id)?.role !== 'listener' && S.players.get(id)?.role !== 'listener');
+  const ids = [S.me, ...room.peers.keys()].filter((id) => id && isBand(id)).sort((a, b) => slotOf(a) - slotOf(b));
+  const ears = [S.me, ...room.peers.keys()].filter((id) => id && !isBand(id)).length;
+  setText($('#listeners'), ears ? `${ears} listening` : ''); $('#listeners')?.classList.toggle('hide', !ears);
   const rackOf = (id) => (id === S.me ? publicRack() : S.players.get(id)?.rack || []);
   const sig = ids.join(',') + '|' + ids.map((id) => rackOf(id).map((x) => x.r + describe(x.cfg)).join(';')).join('|') + '|' + ids.map((id) => S.players.get(id)?.name || '').join(',');
   if (box.dataset.sig !== sig) {
@@ -694,6 +700,17 @@ function cornerCard(id, rack) {
   );
 }
 const PICKS = new URLSearchParams(location.search).get('picks') === '1';
+// ---------- reactions: listeners (and the band) clap, cheer and laugh ----------
+const REACTIONS = { clap: '👏', fire: '🔥', heart: '❤️', laugh: '😂', wow: '🤯' };
+function react(r) { if (!REACTIONS[r]) return; room.send({ k: 'react', r }); showReaction(S.me, r); }
+function showReaction(pid, r) {
+  const em = REACTIONS[r]; if (!em) return;
+  const who = pid === S.me ? S.name : S.players.get(pid)?.name || 'Someone';
+  const lay = $('#reactLayer'); if (!lay) return;
+  const el = h('div', { class: 'reaction', style: `left:${10 + Math.random() * 80}%` }, h('span', {}, em), h('small', {}, who));
+  lay.append(el); setTimeout(() => el.remove(), 2600);
+}
+
 // ---------- sync record: every jammer's true sources, gathered and lined up afterwards ----------
 const STEM_MAGIC = 0x4d455453;   // 'STEM'
 const isStemChunk = (buf) => buf.byteLength >= 16 && new DataView(buf).getUint32(0, true) === STEM_MAGIC;
@@ -887,7 +904,8 @@ async function openInvite(url) {
     qr,
     h('div', { class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap;justify-content:center' }, copy,
       navigator.share ? h('button', { class: 'btn', onclick: () => navigator.share({ title: 'Jam with me on MEGAjam', text: `Room ${room.code}`, url }).catch(() => {}) }, 'Share…') : null),
-    h('code', { class: 'link' }, url));
+    h('code', { class: 'link' }, url),
+    h('button', { class: 'btn small ghost', onclick: async (ev) => { const lu = url + '&listen=1'; try { await navigator.clipboard.writeText(lu); ev.target.textContent = 'Listener link copied'; } catch (_) { prompt('Listener link', lu); } } }, 'Copy a link for listeners'));
   openDrawer('#inviteDrawer');
 }
 
@@ -1655,8 +1673,9 @@ function sendChat() {
 
 // ---------- entering and leaving ----------
 function randomCode() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < 4; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
-async function enter(code) {
-  const name = ($('#nameIn').value || '').trim().slice(0, 16) || 'Jammer';
+async function enter(code, listen = false) {
+  const name = ($('#nameIn').value || '').trim().slice(0, 16) || (listen ? 'Listener' : 'Jammer');
+  S.listener = !!listen; room.listener = S.listener; document.body.classList.toggle('listener', S.listener);
   code = String(code || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
   if (code.length !== 4) { setStatus('Room codes are four letters.', 'error'); return; }
   S.name = name;
@@ -1664,7 +1683,7 @@ async function enter(code) {
   setStatus('Loading the library…');
   try { await engine.start(); if (!engine.defs.size) { await engine.loadInstruments('.'); await restoreLibs(); } }
   catch (e) { setStatus("Couldn't start audio or load the instruments: " + e.message, 'error'); return; }
-  if (!S.rack.length) {
+  if (!S.rack.length && !S.listener) {
     const cfg = engine.resolve({ inst: 'juniper', patch: 'keys' });
     S.rack.push({ r: S.nextR++, cfg, budget: 'auto', midiCh: 0, midiOut: '', hwLatency: 0, hearTwin: false });
     S.sel = S.rack[0].r;
@@ -1696,6 +1715,7 @@ function wire() {
   try { $('#nameIn').value = store.get('name') || ''; } catch (_) {}
   const pre = (qs.get('room') || '').toUpperCase();
   if (pre) { $('#codeIn').value = pre; $('#joinBtn').classList.add('hot'); $('#startBtn').classList.remove('hot'); }
+  if (pre && qs.get('listen') === '1') { $('#joinBtn').classList.remove('hot'); $('#listenBtn').classList.add('hot'); $('#listenBtn').classList.remove('ghost', 'small'); $('#listenBtn').textContent = 'Listen in'; }
   $('#startBtn').onclick = () => enter(randomCode());
   $('#joinBtn').onclick = () => enter($('#codeIn').value);
   $('#codeIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') enter($('#codeIn').value); });
@@ -1727,6 +1747,8 @@ function wire() {
     ks.onchange = () => { const [r, m] = ks.value ? ks.value.split(':') : [S.key.root, '']; setKey(+r, m); };
     $('#lockBtn').onclick = () => { S.lockKey = !S.lockKey; renderKey(); }; renderKey(); }
   $('#tapeBtn').onclick = toggleTape;
+  for (const b of $$('[data-react]')) b.onclick = () => react(b.dataset.react);
+  $('#listenBtn').onclick = () => enter($('#codeIn').value, true);
   $('#syncBtn').onclick = () => { renderSync(); openDrawer('#syncDrawer'); };
   { const b = $('#assistBtn'), LV = [[0, 'Rhythm help: off'], [0.45, 'Rhythm help: light'], [0.8, 'Rhythm help: strong']];
     const show = () => { const i = LV.findIndex(([v]) => v === S.assist); b.textContent = LV[i][1]; setCls(b, 'on', S.assist > 0); };
@@ -1799,7 +1821,7 @@ Object.assign(window.JJ, {
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
   own: (id, v) => setOwned(id, v),
-  setKey: (root, mode) => setKey(root, mode), assist: (v) => { S.assist = v; },
+  setKey: (root, mode) => setKey(root, mode), react: (r) => react(r), listen: (code) => enter(code, true), assist: (v) => { S.assist = v; },
   tape: () => toggleTape(), sync: () => startSync(), syncState: () => { const r = S.srec; return r && { id: r.id, done: r.done, files: r.files.map((f) => f.name + ':' + f.data.length), got: [...r.got.keys()], zip: r.zip && r.zip.url, T0: r.T0, T1: r.T1 }; }, talk: (on) => talk.setOpen(on), voices: () => [...talk.voices.entries()].map(([id, v]) => ({ id, level: v.level, pan: v.pan.pan.value })), ducked: () => talk.ducked, tapes: () => tape.takes.map((t) => ({ seconds: t.seconds, size: t.blob.size, url: t.url })),
   pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 't' + i); else padUp('t' + i); },
   addExternal: async (name, port, ch, twin) => { if (!input.midi) await input.enableMIDI(); return addEntry({ ext: { name, port, ch }, inst: twin })?.r; },

@@ -101,11 +101,13 @@ export class Room {
     if (m.t === 'welcome') {
       const others = (m.peers || []).filter((p) => p && p.id);
       const first = !this.jid;
-      if (first && others.length >= this.maxPeers) { this.leave(); this.h.status('error', `That room already has ${this.maxPeers} jammers.`); return; }
+      // up to maxPeers in the band; listeners (who play nothing) fill the relay's remaining places
+      const band = others.filter((o) => !(o.st && o.st.role === 'listener')).length;
+      if (first && !this.listener && band >= this.maxPeers) { this.leave(); this.h.status('error', `That room already has ${this.maxPeers} jammers. You can still listen in.`); return; }
       this.rid = m.id;
       if (first) { this.jid = m.id; this.n0 = m.n; }
       this.id = this.jid; this.n = this.n0;
-      this.relaySend({ t: 'st', s: { jid: this.jid, n: this.n0 } });
+      this.relaySend({ t: 'st', s: { jid: this.jid, n: this.n0, role: this.listener ? 'listener' : 'band' } });
       for (const o of others) this.meet(o.id, o.st, o, true);
       if (first) this.h.status('in', others.length ? 'Connecting to the other jammers…' : 'In the room. Waiting for friends…');
       else this.h.status('relay-back', '');
@@ -150,8 +152,10 @@ export class Room {
     if (jid === this.jid) return;
     this.rids.set(rid, jid);
     const known = this.peers.get(jid);
-    if (known) { known.rid = rid; if (info.name) known.name = info.name; return known; }   // the same jammer, back through the relay
-    return this.addPeer({ id: jid, rid, n: (st && st.n) || info.n || 0, name: info.name }, initiator);
+    if (known) { known.rid = rid; if (info.name) known.name = info.name; if (st && st.role) known.role = st.role; return known; }   // the same jammer, back through the relay
+    const p = this.addPeer({ id: jid, rid, n: (st && st.n) || info.n || 0, name: info.name }, initiator);
+    p.role = (st && st.role) || 'band';
+    return p;
   }
   addPeer(info, initiator) {
     const p = { id: info.id, rid: info.rid || info.id, n: info.n || 0, name: info.name || 'Jammer', pc: null, dc: null, path: 'connecting', pendingIce: [], opened: false, rtt: [], bytesIn: 0 };
