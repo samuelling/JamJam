@@ -26,6 +26,7 @@ export class SongStore {
     this.stamps[k] = [at, by];
     const s = this.song;
     if (['title', 'bpm', 'key', 'meter', 'order', 'labels', 'rule', 'transport'].includes(k)) s[k] = v;
+    else if (k.startsWith('vp:')) { s.players = s.players || {}; if (v == null) delete s.players[k.slice(3)]; else s.players[k.slice(3)] = { ...v, id: k.slice(3) }; }
     else if (k.startsWith('var:')) { s.variations = s.variations || {}; if (v == null) delete s.variations[k.slice(4)]; else s.variations[k.slice(4)] = v; }
     else if (k.startsWith('sec:')) { const id = k.slice(4); if (v == null) delete s.sections[id]; else s.sections[id] = { parts: s.sections[id]?.parts || {}, ...v, id }; }
     else if (k.startsWith('part:')) { const [, sid, pid] = k.split(':'); const sec = s.sections[sid] || (s.sections[sid] = { id: sid, name: '…', bars: 8, chords: [], notes: '', parts: {} }); if (v == null) delete sec.parts[pid]; else sec.parts[pid] = { ...v, id: pid }; }
@@ -43,6 +44,7 @@ export class SongStore {
       if (k.startsWith('sec:')) { const sec = s.sections[k.slice(4)]; v = sec ? { name: sec.name, bars: sec.bars, chords: sec.chords, notes: sec.notes } : null; }
       else if (k.startsWith('part:')) { const [, sid, pid] = k.split(':'); v = s.sections[sid]?.parts?.[pid] ?? null; }
       else if (k.startsWith('var:')) v = s.variations?.[k.slice(4)] ?? null;
+      else if (k.startsWith('vp:')) v = s.players?.[k.slice(3)] ?? null;
       else v = s[k];
       this.apply(k, v, at, by);
     }

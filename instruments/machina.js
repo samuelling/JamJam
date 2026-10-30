@@ -49,6 +49,14 @@ const PRESETS = {
   '909': kit([0, 0, 0, 0, 0, 0, 0, 0, 0], { 'kick.decay': 0.8, 'kick.tone': 0.55, 'kick.snap': 0.75, 'kick.pitch': 2, 'snare.snap': 0.8, 'snare.tone': 0.65, 'chh.tone': 0.7, 'chh.snap': 0.65, 'ohh.snap': 0.65, drive: 0.35 }),
   efm: kit([1, 1, 1, 1, 1, 1, 1, 1, 1], { 'kick.tone': 0.3, 'snare.tone': 0.55, 'chh.tone': 0.7, 'cym.tone': 0.6, 'perc.tone': 0.5, drive: 0.25 }),
   acoustic: kit([2, 2, 2, 2, 2, 2, 2, 2, 2], { 'kick.tone': 0.3, 'snare.snap': 0.6, 'tom.decay': 1.4, 'cym.decay': 1.5, drive: 0.05, 'chh.pan': -0.3, 'ohh.pan': -0.3, 'tom.pan': 0.25, 'cym.pan': 0.35 }),
+  // a small jazz kit: an 18" bass drum tuned up, a crisp coated snare, toms that sing, a dark ride with a long wash
+  jazz: kit([2, 2, 2, 2, 2, 2, 2, 2, 2], { 'kick.pitch': 7, 'kick.decay': 0.7, 'kick.tone': 0.45, 'kick.snap': 0.25, 'kick.level': 0.7, 'snare.tone': 0.55, 'snare.snap': 0.7, 'snare.decay': 0.8, 'rim.level': 0.6,
+    'chh.tone': 0.45, 'chh.decay': 0.7, 'chh.level': 0.55, 'ohh.tone': 0.45, 'tom.pitch': 3, 'tom.decay': 1.3, 'tom.level': 0.7, 'cym.tone': 0.32, 'cym.decay': 2.6, 'cym.level': 0.72, drive: 0.05,
+    'chh.pan': -0.35, 'ohh.pan': -0.35, 'tom.pan': 0.2, 'cym.pan': 0.3 }),
+  // the same kit played with brushes: the snare a soft wash of noise, everything quieter and closer
+  brushes: kit([2, 3, 2, 2, 2, 2, 2, 2, 2], { 'kick.pitch': 7, 'kick.decay': 0.6, 'kick.tone': 0.35, 'kick.snap': 0.05, 'kick.level': 0.6, 'snare.tone': 0.35, 'snare.snap': 0.05, 'snare.decay': 0.55, 'snare.level': 0.75,
+    'chh.tone': 0.4, 'chh.level': 0.45, 'tom.pitch': 3, 'tom.decay': 1.1, 'tom.snap': 0.1, 'tom.level': 0.6, 'cym.tone': 0.28, 'cym.decay': 2.2, 'cym.level': 0.55, drive: 0.02,
+    'chh.pan': -0.35, 'tom.pan': 0.2, 'cym.pan': 0.3 }),
   lofi: kit([0, 3, 0, 3, 3, 3, 0, 3, 1], { 'kick.crush': 0.45, 'snare.crush': 0.55, 'chh.crush': 0.6, 'ohh.crush': 0.6, 'clap.crush': 0.4, 'perc.crush': 0.35, bits: 9, drive: 0.5 }),
 };
 

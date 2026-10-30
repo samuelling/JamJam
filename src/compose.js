@@ -23,7 +23,8 @@ export function makeCompose(x) {
   // x: { h, $, store, playersOf(), setSong(k, v), play(mode, sid), stop(), transport(), jamThis(sid), importFile(f), exportMidi(), exportJson(),
   //      removePart, mutePart, choose, vote, saveVariation, restoreVariation, setRole, working(), me(), iconEl, keyName(), bpm() }
   const { h, $ } = x;
-  let PX = 18, sel = null, cell = null, editing = null;   // px per bar; the selected section and lane
+  let PX = 18, sel = null, cell = null, editing = null;
+  let open = false; try { open = localStorage.getItem('megajam.lanes') === '1'; } catch (_) {}   // lanes folded into one row by default   // px per bar; the selected section and lane
   const LANE_COLORS = ['#FF68BA', '#7DB0FF', '#D8A83A', '#3ddc84', '#b892ff', '#ff8a3d', '#5fd4d4', '#ECEBE5'];
   const laneColor = (i) => LANE_COLORS[i % LANE_COLORS.length];
   function lanes() {
@@ -68,7 +69,8 @@ export function makeCompose(x) {
     const busy = new Map();   // lane -> the jammer playing it in the looping section right now
     if (loopId) for (const w of work) if (w.where === 'jam' && w.active) for (const name of w.parts) busy.set(`${w.who} · ${name}`, w);
     const cols = order.map((id, i) => ({ id, i, s: song.sections[id], label: (song.labels || [])[i] || '', w: Math.max(70, song.sections[id].bars * PX) }));
-    const ruler = h('div', { class: 'arow ruler' }, h('div', { class: 'lhead' }, h('b', {}, 'Lanes'), h('small', {}, 'locked · being played · empty')),
+    const toggle = () => { open = !open; try { localStorage.setItem('megajam.lanes', open ? '1' : '0'); } catch (_) {} render(); };
+    const ruler = h('div', { class: 'arow ruler' }, h('div', { class: 'lhead' }, h('button', { class: 'lanetoggle', 'aria-expanded': String(open), title: open ? 'Fold the lanes into one row' : 'Show a row per lane, with its takes', onclick: toggle }, open ? '▾ ' : '▸ ', h('b', {}, `${L.length} lane${L.length === 1 ? '' : 's'}`)), h('small', {}, 'locked · being played · empty')),
       ...cols.map((c) => {
         const tlc = tl[c.i], live = tr && tr.on && (tr.mode === 'song' ? true : tr.sid === c.id);
         const here = c.id === loopId ? [...new Set(busy.values())] : [];
@@ -77,7 +79,7 @@ export function makeCompose(x) {
           h('span', { class: 'ticks' }, ...Array.from({ length: c.s.bars }, (_, b) => h('i', { class: (b % 4 === 0 ? 'bar4' : '') + (c.s.chords[b] ? ' ch' : ''), title: c.s.chords[b] || '' }))),
           here.length ? h('span', { class: 'herein' }, ...here.map((w) => h('i', { style: `--c:${w.color}`, title: `${w.who} is jamming here` }, w.who.slice(0, 1)))) : null);
       }));
-    const rows = L.map((ln, li) => h('div', { class: 'arow' },
+    const rows = !open ? [] : L.map((ln, li) => h('div', { class: 'arow' },
       h('div', { class: 'lhead' + (cell && cell.lane === ln.lane ? ' sel' : ''), style: `--lc:${laneColor(li)}` }, x.iconEl(ln.sample), h('span', {}, h('b', {}, ln.lane), h('select', { class: 'role', 'aria-label': `${ln.lane}'s role`, onchange: (e) => { const s0 = x.store.sections().find((s) => Object.values(s.parts || {}).some((p) => laneOf(p) === ln.lane)); const p = Object.values(s0.parts).find((q) => laneOf(q) === ln.lane); x.setRole(s0.id, p.id, e.target.value); } }, ...ROLES.map((r) => h('option', { value: r, selected: (ln.role || '') === r }, r))))),
       ...cols.map((c) => {
         const p = Object.values(c.s.parts || {}).find((q) => laneOf(q) === ln.lane);
@@ -94,7 +96,18 @@ export function makeCompose(x) {
     const known = new Set(L.map((l) => l.lane)), ghosts = [];
     for (const [lane, w] of busy) if (!known.has(lane)) ghosts.push(h('div', { class: 'arow ghost' }, h('div', { class: 'lhead', style: `--lc:${w.color}` }, h('span', {}, h('b', {}, lane), h('small', {}, 'jamming now'))),
       ...cols.map((c) => h('div', { class: c.id === loopId ? 'cell working' : 'cell blank', style: `width:${c.w}px;--lc:${w.color}` }, c.id === loopId ? h('span', {}, '● being played · not locked') : null))));
-    const grid = h('div', { class: 'arranger' }, ruler, ...rows, ...ghosts, h('div', { class: 'playhead hide', 'data-playhead': '' }),
+    // folded: one row, a block per section with a thin stripe for each locked lane
+    const summary = open ? [] : [h('div', { class: 'arow sumrow' }, h('div', { class: 'lhead', style: '--lc:#555' }, h('span', {}, h('b', {}, 'The band'), h('small', {}, L.length ? 'open the lanes to pick takes' : 'nothing locked yet'))),
+      ...cols.map((c) => {
+        const parts = Object.values(c.s.parts || {}), wk = c.id === loopId ? [...new Set(busy.values())] : [];
+        const fresh = wk.filter((w) => !parts.some((p) => w.parts.some((n) => laneOf(p) === `${w.who} · ${n}`)));
+        if (!parts.length) return h('div', { class: 'cell ' + (wk.length ? 'working' : 'empty'), style: `width:${c.w}px;--lc:${wk[0]?.color || '#888'}`, title: wk.length ? `${wk.map((w) => w.who).join(' and ')} playing; nothing locked yet` : 'Nothing locked here yet', onclick: () => { sel = c.id; cell = null; render(); } }, h('span', {}, wk.length ? `● ${wk.map((w) => w.who).join(', ')} · not locked` : '+ jam it'));
+        const blk = h('div', { class: 'cell sum' + (wk.length ? ' retake' : ''), style: `width:${c.w}px;--lc:${wk[0]?.color || '#ECEBE5'}`, title: `${parts.length} lane${parts.length > 1 ? 's' : ''} locked in ${c.s.name}`, onclick: () => { sel = c.id; cell = null; render(); } },
+          h('span', { class: 'stripes' }, ...L.map((ln, li) => { const p = parts.find((q) => laneOf(q) === ln.lane); return h('i', { class: p ? (p.muted ? 'mu' : 'on') : '', style: `--lc:${laneColor(li)}`, title: p ? `${ln.lane}${p.muted ? ' (muted)' : ''}` : '' }); })),
+          h('span', { class: 'lock' }, `🔒 ${parts.length}`), fresh.length ? h('span', { class: 'retaking', style: `--c:${fresh[0].color}` }, `${fresh.map((w) => w.who).join(', ')} trying something`) : null);
+        return blk;
+      }))];
+    const grid = h('div', { class: 'arranger' + (open ? '' : ' folded') }, ruler, ...summary, ...rows, ...(open ? ghosts : []), h('div', { class: 'playhead hide', 'data-playhead': '' }),
       h('div', { class: 'arow' }, h('div', { class: 'lhead addl' }, h('small', {}, L.length ? 'New lanes appear when someone locks in a take.' : 'No lanes yet: jam a section and Lock it in, or import a sketch.')),
         h('div', { class: 'addsec' }, h('b', {}, '+ Section'), ...SECTION_NAMES.map((nm) => h('button', { class: 'btn small ghost', onclick: () => addSection(nm) }, nm)))));
     box.replaceChildren(head, grid, details(sel, cell));

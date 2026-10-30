@@ -70,6 +70,10 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     const want = played.pressed.map((b) => (((b - played.start) % L) + L) % L), ons = cur ? cur.events.filter((e) => e.type === 'on').map((e) => e.b) : [];
     const off = ons.map((b) => Math.min(...want.map((w) => Math.min(Math.abs(w - b), L - Math.abs(w - b)))));
     check(ons.length && Math.max(...off) < 0.12, `each note lands on the beat Matt played it (worst ${Math.max(...off).toFixed(3)} beats out)`);
+    const folded = await A.evaluate(async () => { JJ.goRoom('compose'); await new Promise((r) => setTimeout(r, 300)); return { sum: document.querySelectorAll('#compose .cell.sum').length, take: document.querySelectorAll('#compose .cell.take').length }; });
+    check(folded.sum > 0 && folded.take === 0, `the lanes start folded into one row (${folded.sum} sections with locked parts)`);
+    await A.screenshot({ path: '/tmp/arranger-folded.png' });
+    for (const p of [A, B]) await p.evaluate(() => { if (!document.querySelector('#compose .cell.take')) document.querySelector('#compose .lanetoggle')?.click(); });
     const blocks = await Promise.all([A, B].map((p) => p.evaluate(async () => { JJ.goRoom('compose'); await new Promise((r) => setTimeout(r, 300)); return { takes: document.querySelectorAll('#compose .cell.take').length, empty: document.querySelectorAll('#compose .cell.empty').length, lanes: document.querySelectorAll('#compose .arow:not(.ruler):not(.ghost) .lhead:not(.addl)').length }; })));
     check(blocks[0].takes > 0 && JSON.stringify(blocks[0]) === JSON.stringify(blocks[1]), `both arrangements show the same locked blocks (${blocks[0].takes} locked, ${blocks[0].empty} empty, ${blocks[0].lanes} lanes)`);
     await A.screenshot({ path: '/tmp/arranger.png' });
