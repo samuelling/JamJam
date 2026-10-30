@@ -7,6 +7,9 @@
 const KEYMAP = { a: 0, w: 1, s: 2, e: 3, d: 4, f: 5, t: 6, g: 7, y: 8, h: 9, u: 10, j: 11, k: 12, o: 13, l: 14, p: 15, ';': 16, "'": 17 };
 const key = (ch, note) => ch * 128 + note;
 
+// read once at load: the app rewrites the address bar to ?room=… after you walk in
+const MIDI_MOCK = typeof location !== 'undefined' && new URLSearchParams(location.search).get('midimock') === '1';
+
 export class Input {
   constructor({ note, cc, bend, status }) {
     this.cb = { note, cc, bend, status };
@@ -70,6 +73,15 @@ export class Input {
   }
 
   async enableMIDI() {
+    // testing aid: ?midimock=1 gives two fake output ports that record what they're sent (window.JJ.midiLog)
+    if (MIDI_MOCK) {
+      this.mockLog = [];
+      const port = (id, name) => ({ id, name, send: (data, ts) => this.mockLog.push({ port: id, data: [...data], ts: ts ?? performance.now(), sent: performance.now() }) });
+      this.midi = { inputs: new Map(), outputs: new Map([['mock-a', port('mock-a', 'Mock Synth A')], ['mock-b', port('mock-b', 'Mock Drum Machine')]]) };
+      this.inputs = []; this.outputs = [...this.midi.outputs.values()];
+      this.cb.status();
+      return true;
+    }
     if (!navigator.requestMIDIAccess) { this.cb.status('Web MIDI isn\'t available in this browser (try Chrome, Edge or Firefox).'); return false; }
     try { this.midi = await navigator.requestMIDIAccess({ sysex: false }); }
     catch (_) { this.cb.status('MIDI access was refused.'); return false; }
@@ -98,8 +110,13 @@ export class Input {
   }
 }
 
-// MIDI to a jammer's own hardware, scheduled with Web MIDI timestamps so it plays in lockstep with everyone's twins
+// MIDI out, scheduled with Web MIDI timestamps (performance.now() time) so it lands in lockstep with the room
 export function sendToHardware(port, bytes, localPerfMs) {
   if (!port) return;
   try { port.send(bytes, Math.max(performance.now(), localPerfMs)); } catch (_) {}
+}
+// JamJam's pitch bend (semitones, ±2 full scale) as a 14-bit MIDI bend message
+export function bendBytes(ch, semis) {
+  const v = Math.max(0, Math.min(16383, Math.round(8192 + (semis / 2) * 8191)));
+  return [0xe0 | ((ch - 1) & 15), v & 127, v >> 7];
 }

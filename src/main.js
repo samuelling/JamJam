@@ -1,7 +1,7 @@
 import { SharedClock, Tempo } from './clock.js';
 import { Room } from './net.js';
 import { Engine } from './engine.js';
-import { Input, sendToHardware } from './input.js';
+import { Input, sendToHardware, bendBytes } from './input.js';
 import { AudioLane, decodeChunk } from './lane.js';
 import { StepSeq } from './seq.js';
 import { iconEl, skinOf } from './skins.js';
@@ -46,13 +46,16 @@ const S = {
   lockedAt: 0, slackRep: new Map(), needs: new Map(), loopActive: false,
   chat: [], unread: 0, knobGroup: null,
   mdTrack: 0, mdPage: 0, mdLock: false, held: null, hits: new Map(), md: null,
-  libTab: 'builtin', standins: new Map(),  // channel key -> {wanted cfg} while a stand-in plays someone's library instrument
+  libTab: 'builtin', standins: new Map(),
+  routes: new Map(),                       // a bandmate's part (channel key) -> {port, ch, lat, mute}: played on your MIDI gear
+  mclock: { port: '', on: false, lat: 0, next: null },  // MIDI clock out: the room's tempo to your drum machines  // channel key -> {wanted cfg} while a stand-in plays someone's library instrument
 };
 window.JJ = { clock, tempo, engine, S };
 const key = (pid, r) => `${pid}:${r}`;
 const pidOf = (k) => k.slice(0, k.indexOf(':'));
 const entry = (r) => S.rack.find((e) => e.r === r);
 const selEntry = () => entry(S.sel) || S.rack[0];
+const outPort = (id) => (id ? input.outputs.find((o) => o.id === id) : null);
 
 // ---------- sequencers (one per drum instrument), running in lockstep in every browser ----------
 const SEQ_H = 60;                      // how far ahead (ms) each browser schedules sequencer steps
@@ -87,6 +90,7 @@ setInterval(() => {
     const def = engine.defs.get(cfg.inst); if (!def?.seq) continue;
     for (const st of sq.due(tempo, now, now + SEQ_H)) for (const tg of st.trigs) {
       engine.seqTrig(k, def.seq.tracks[tg.track].note, 100, tg.locks, st.t, cfg.params);
+      if (pidOf(k) !== S.me) { routeOut(k, { type: 'on', note: def.seq.tracks[tg.track].note, vel: 100, at: st.t }); routeOut(k, { type: 'off', note: def.seq.tracks[tg.track].note, at: st.t + 60 }); }
       S.hits.set(k + ':' + tg.track, st.t);
     }
   }
@@ -219,7 +223,7 @@ function onMessage(p, m) {
       for (const x of m.rack || []) remoteCfg(p.id, x.r, x.cfg, -Infinity, x.budget, x.seq);
       if (first) addChat({ sys: true, text: `${m.name} walked in`, t: Date.now() });
       if ($('#status').dataset.kind !== 'error') setStatus('');
-      renderCorners(); break;
+      renderCorners(); renderMidiPanel(); break;
     }
     case 'cfg': remoteCfg(p.id, m.r, m.cfg, clock.locked ? m.at : -Infinity, m.budget); renderCorners(); break;
     case 'unrack': {
@@ -350,6 +354,7 @@ function receiveEvent(p, r, ev) {
   const loose = ev.b === 'l';
   if (!loose) noteSlack(p, ev.at - (ev.o || 0));
   engine.event(k, ev, { now: !clock.locked, loose });
+  routeOut(k, ev);
   if (ev.type === 'p' && ev.id !== 'bend') { const x = S.players.get(p.id).rack.find((y) => y.r === r); if (x) x.cfg.params[ev.id] = ev.v; }
 }
 function targetsFor(ch) {
@@ -376,8 +381,8 @@ function playNote(on, note, vel, ch = 0) {
     }
     const instant = selfInstant(e) && !shift;
     sendEvent(e, { type: on ? 'on' : 'off', note, vel, at, seq: ++S.seq, b: BUDGETS[budgetOf(e)].short, o: (L - lookahead()) + shift }, instant);
-    const port = e.cfg.hw && e.midiOut ? input.outputs.find((o) => o.id === e.midiOut) : null;
-    if (port) sendToHardware(port, on ? [0x90, note, vel] : [0x80, note, 0], instant ? performance.now() : clock.toLocal(at) - (e.hwLatency || 0));
+    const port = outPort(e.midiOut), oc = ((e.outCh || 1) - 1) & 15;
+    if (port) sendToHardware(port, on ? [0x90 | oc, note, vel] : [0x80 | oc, note, 0], instant ? performance.now() : clock.toLocal(at) - (e.hwLatency || 0));
   }
   if (ch === 0) flashKey(note, on);
 }
@@ -408,20 +413,23 @@ function publishEntry(e) {
   room.send({ k: 'cfg', r: e.r, cfg: e.cfg, at, budget: budgetOf(e) });
   applyVolume(key(S.me, e.r));
 }
-function addEntry({ inst, patch, hw }) {
+function addEntry({ inst, patch, hw, ext }) {
   if (S.rack.length >= MAX_RACK) { setStatus(`A corner holds up to ${MAX_RACK} instruments.`, 'error'); return null; }
-  const cfg = engine.resolve({ inst, patch, hw });
+  const cfg = engine.resolve({ inst: ext ? inst || 'none' : inst, patch, hw });
+  if (ext) cfg.ext = { name: String(ext.name || 'My synth').slice(0, 24) };
   const def = engine.defs.get(cfg.inst);
   const usedCh = new Set(S.rack.map((e) => e.midiCh));
   const midiCh = def.drums ? 10 : !usedCh.has(0) ? 0 : [1, 2, 3, 4, 5, 6].find((c) => !usedCh.has(c)) || 0;
-  const e = { r: S.nextR++, cfg, budget: 'auto', midiCh, midiOut: '', hwLatency: 0, hearTwin: false };
+  const e = { r: S.nextR++, cfg, budget: 'auto', midiCh, midiOut: ext?.port ?? '', outCh: ext?.ch || 1, hwLatency: 0, hearTwin: false };
   S.rack.push(e); S.sel = e.r; S.knobGroup = null;
   publishEntry(e);
   renderRack(); renderDevice(); renderCorners(); renderKeyboard();
   return e;
 }
 function changeEntry(e, next) {
+  const ext = e.cfg.ext;
   e.cfg = engine.resolve({ inst: next.inst ?? e.cfg.inst, patch: next.patch, hw: next.hw === undefined ? e.cfg.hw : next.hw });
+  if (ext) e.cfg.ext = ext;
   publishEntry(e);
   renderRack(); renderDevice(); renderCorners(); renderKeyboard();
 }
@@ -477,6 +485,8 @@ const input = new Input({
   note: (on, note, vel, ch) => playNote(on, note, vel, ch),
   cc: (cc, val, ch) => {
     for (const e of targetsFor(ch)) {
+      const port = e.cfg.ext ? outPort(e.midiOut) : null;  // external gear gets your controller's CCs too, in lockstep
+      if (port) sendToHardware(port, [0xb0 | (((e.outCh || 1) - 1) & 15), cc, val], selfInstant(e) ? performance.now() : clock.toLocal(clock.now() + partLook(e)) - (e.hwLatency || 0));
       const def = engine.defs.get(e.cfg.inst), unit = e.cfg.hw && engine.unit(e.cfg.hw);
       let pid = null;
       if (unit && unit.cc) for (const [k, n] of Object.entries(unit.cc)) if (n === cc) pid = k;
@@ -487,7 +497,10 @@ const input = new Input({
       if (e === selEntry()) knobSet(pid);
     }
   },
-  bend: (semi, ch) => { for (const e of targetsFor(ch)) { const L = partLook(e); sendEvent(e, { type: 'p', id: 'bend', v: semi, at: clock.now() + L, seq: ++S.seq, b: BUDGETS[budgetOf(e)].short, o: L - lookahead() }, selfInstant(e)); } },
+  bend: (semi, ch) => { for (const e of targetsFor(ch)) { const L = partLook(e);
+    const port = e.cfg.ext ? outPort(e.midiOut) : null;
+    if (port) sendToHardware(port, bendBytes(e.outCh || 1, semi), selfInstant(e) ? performance.now() : clock.toLocal(clock.now() + L) - (e.hwLatency || 0));
+    sendEvent(e, { type: 'p', id: 'bend', v: semi, at: clock.now() + L, seq: ++S.seq, b: BUDGETS[budgetOf(e)].short, o: L - lookahead() }, selfInstant(e)); } },
   status: (msg) => renderInputStatus(msg),
 });
 window.JJ.input = input;
@@ -531,6 +544,7 @@ const colorOf = (pid) => PLAYER_COLORS[slotOf(pid)];
 function describe(cfg, short = false) {
   if (!cfg) return '…';
   const def = engine.defs.get(cfg.inst), unit = cfg.hw && engine.unit(cfg.hw);
+  if (cfg.ext) return short ? cfg.ext.name : `${cfg.ext.name} (MIDI)${cfg.inst !== 'none' ? ' → ' + (def ? def.name : cfg.meta?.name || cfg.inst) : ''}`;
   if (unit) return short ? unit.model : `${unit.maker} ${unit.model} → ${def ? def.name : cfg.meta?.name || cfg.inst}`;
   return `${def ? def.name : cfg.meta?.name || cfg.inst} · ${patchName(def, cfg.patch)}`;
 }
@@ -558,7 +572,7 @@ function cornerCard(id, rack) {
     h('div', { class: 'chead' }, h('div', { class: 'cname' }, (mine ? S.name : pl.name || peer?.name || 'Jammer') + (mine ? ' · you' : '')), h('span', { class: 'tag', 'data-path': id })),
     h('div', { class: 'gearrow' }, ...rack.map((x) => {
       const def = engine.defs.get(x.cfg?.inst), unit = x.cfg?.hw && engine.unit(x.cfg.hw);
-      return h('div', { class: 'gearitem', title: describe(x.cfg) }, iconEl(def), h('span', { class: 'led', 'data-led': key(id, x.r), style: `--c:${c}` }), h('small', { 'data-budget': key(id, x.r) }, unit ? unit.model : def?.name || '…'));
+      return h('div', { class: 'gearitem', title: describe(x.cfg) }, iconEl(x.cfg?.ext ? { id: 'midi' } : def), h('span', { class: 'led', 'data-led': key(id, x.r), style: `--c:${c}` }), h('small', { 'data-budget': key(id, x.r) }, x.cfg?.ext ? x.cfg.ext.name : unit ? unit.model : def?.name || '…'));
     })),
     h('div', { class: 'cstats', 'data-stats': id }),
     h('div', { class: 'cfoot' }, vol, mute, h('div', { class: 'lanem', 'data-lane': id, title: 'Audio lane' }, h('i'))),
@@ -618,8 +632,8 @@ function renderRack() {
   box.replaceChildren(...S.rack.map((e, i) => {
     const def = engine.defs.get(e.cfg.inst), unit = e.cfg.hw && engine.unit(e.cfg.hw);
     return h('button', { class: 'cart' + (e.r === (selEntry() || {}).r ? ' sel' : ''), style: `--k:${RACK_COLORS[i % 4]}`, title: describe(e.cfg), onclick: () => { S.sel = e.r; S.knobGroup = null; S.held = null; renderRack(); renderDevice(); renderKeyboard(); } },
-      iconEl(def),
-      h('b', {}, unit ? unit.model : def.name), h('small', {}, `${unit ? def.name + ' · ' : ''}${e.cfg.patch} · ${e.midiCh ? 'ch' + e.midiCh : 'any'}`),
+      iconEl(e.cfg.ext ? { id: 'midi' } : def),
+      h('b', {}, e.cfg.ext ? e.cfg.ext.name : unit ? unit.model : def.name), h('small', {}, e.cfg.ext ? `MIDI out ${e.midiOut ? 'ch' + (e.outCh || 1) : '—'}` : `${unit ? def.name + ' · ' : ''}${e.cfg.patch} · ${e.midiCh ? 'ch' + e.midiCh : 'any'}`),
       h('span', { class: 'led', 'data-led': key(S.me, e.r), style: `--c:${RACK_COLORS[i % 4]}` }));
   }));
 }
@@ -631,7 +645,7 @@ function configFields(e, def, unit) {
     h('select', { 'aria-label': label, onchange: (ev) => onchange(ev.target.value) }, ...options.map(([v, t]) => h('option', { value: v, selected: String(v) === String(value) }, t))));
   const f = [];
   if (unit) f.push(sel('Twin', engine.twinCandidates(unit).map((c) => [c.inst, `${engine.defs.get(c.inst).name} ${Math.round(c.score * 100)}%`]), e.cfg.inst, (v) => changeEntry(e, { inst: v })));
-  else f.push(sel('Instrument', [...engine.defs.values()].map((d) => [d.id, d.lib ? `${d.name} (${engine.libs.get(d.lib)?.name || d.lib})` : d.name]), e.cfg.inst, (v) => changeEntry(e, { inst: v, patch: null })));
+  else f.push(sel('Instrument', [...engine.defs.values()].filter((d) => !d.internal).map((d) => [d.id, d.lib ? `${d.name} (${engine.libs.get(d.lib)?.name || d.lib})` : d.name]), e.cfg.inst, (v) => changeEntry(e, { inst: v, patch: null })));
   f.push(sel(def.drums ? 'Kit' : 'Patch', engine.patchTypes(e.cfg).map((t) => [t, patchName(def, t)]), e.cfg.patch, (v) => changeEntry(e, { patch: v })));
   f.push(sel('Timing', [['auto', `Auto · ${BUDGETS[autoBudget(e.cfg)].label}`], ...Object.entries(BUDGETS).map(([k, b]) => [k, b.label])], e.budget, (v) => { e.budget = v; broadcastLook(true); renderDevice(); renderRack(); }));
   f.push(sel('MIDI in', [[0, 'Any channel'], ...Array.from({ length: 16 }, (_, i) => [i + 1, `Channel ${i + 1}`])], e.midiCh, (v) => { e.midiCh = +v; renderRack(); }));
@@ -655,6 +669,7 @@ function renderDevice() {
   const def = engine.defs.get(e.cfg.inst), unit = e.cfg.hw && engine.unit(e.cfg.hw), skin = skinOf(def);
   $('#device').className = 'device ' + skin.cls + (skin.wood ? ' wood' : '');
   knobEls = new Map();
+  if (e.cfg.ext) { renderExternal(e, def); return; }
   if (skin.custom === 'machina' && def.seq && seqs.get(key(S.me, e.r))) { renderMachina(e, def, unit); return; }
   S.md = null;
   const wide = unit
@@ -671,6 +686,41 @@ function renderDevice() {
     groups.length > 1 ? h('div', { class: 'pages' }, ...groups.map((g) => h('button', { class: 'page' + (g === S.knobGroup ? ' on' : ''), onclick: () => { S.knobGroup = g; renderDevice(); } }, g))) : null,
     h('div', { class: 'encoders' }, ...shown.filter((P) => (P.group || 'Sound') === S.knobGroup).map((P, i) => paramControl(P, KNOB_COLORS[i % 4], io(P), skin))),
     deviceFoot(e, def, unit)].filter(Boolean));
+}
+
+// --- external MIDI gear: a synth, drum machine or DAW track on a MIDI port
+function renderExternal(e, def) {
+  $('#device').className = 'device skin-generic wood';
+  const sel = (label, options, value, onchange) => h('div', {}, h('label', {}, label),
+    h('select', { 'aria-label': label, onchange: (ev) => onchange(ev.target.value) }, ...options.map(([v, t]) => h('option', { value: v, selected: String(v) === String(value) }, t))));
+  const name = h('input', { type: 'text', value: e.cfg.ext.name, maxlength: 24, 'aria-label': 'Name', style: 'font:800 22px var(--sans);background:transparent;border:0;border-bottom:1px solid #333;color:var(--legend);width:100%;padding:2px 0',
+    onkeydown: (ev) => ev.stopPropagation(), onchange: (ev) => { e.cfg.ext.name = ev.target.value.trim().slice(0, 24) || 'My synth'; publishEntry(e); renderRack(); renderCorners(); } });
+  const twins = [['none', 'Nothing (bandmates can route it to their own MIDI)'], ...[...engine.defs.values()].filter((d) => !d.internal).map((d) => [d.id, d.name])];
+  const fields = [
+    sel('Plays out on', [['', input.outputs.length ? 'Choose a MIDI output' : 'Enable MIDI first'], ...input.outputs.map((o) => [o.id, o.name])], e.midiOut, (v) => { e.midiOut = v; renderDevice(); renderRack(); }),
+    sel('Out channel', Array.from({ length: 16 }, (_, i) => [i + 1, `Channel ${i + 1}`]), e.outCh || 1, (v) => { e.outCh = +v; renderRack(); }),
+    sel('MIDI in', [[0, 'Any channel'], ...Array.from({ length: 16 }, (_, i) => [i + 1, `Channel ${i + 1}`])], e.midiCh, (v) => { e.midiCh = +v; renderRack(); }),
+    sel('Timing', [['auto', `Auto · ${BUDGETS[autoBudget(e.cfg)].label}`], ...Object.entries(BUDGETS).map(([k, b]) => [k, b.label])], e.budget, (v) => { e.budget = v; broadcastLook(true); renderDevice(); }),
+    sel('The band hears', twins, e.cfg.inst, (v) => changeEntry(e, { inst: v, patch: null })),
+  ];
+  if (e.cfg.inst !== 'none') fields.push(sel('Twin patch', engine.patchTypes(e.cfg).map((t) => [t, patchName(def, t)]), e.cfg.patch, (v) => changeEntry(e, { patch: v })));
+  fields.push(h('div', { class: 'wide' }, `Your notes, sustain, pitch bend and controller knobs go out to this port in lockstep: timestamped to sound at the same moment the band hears your part. ${e.cfg.inst === 'none' ? 'Bandmates hear nothing unless they route it to their own MIDI gear (MIDI panel), or you pick a twin.' : `Bandmates hear ${def.name} unless they route it to their own MIDI gear.`}`));
+  const shown = def.params.filter((P) => !P.hidden);
+  const io = (P) => ({ get: () => e.cfg.params[P.id] ?? P.def, set: (v) => setParam(e, P.id, v), reset: () => setParam(e, P.id, def.presets[e.cfg.patch]?.[P.id] ?? P.def), locked: () => false });
+  knobEls = new Map();
+  const out = h('span', {}, ` ${e.hwLatency} ms`);
+  $('#plate').replaceChildren(...[
+    h('div', { class: 'devtop' },
+      h('div', { class: 'brand' }, name, h('div', { class: 'fam' }, `External MIDI${e.midiOut ? ' · ' + (outPort(e.midiOut)?.name || 'port gone') + ' ch ' + (e.outCh || 1) : ' · no output yet'}`)),
+      h('div', { class: 'screen lcd' }, ...fields)),
+    e.cfg.inst !== 'none' && shown.length ? h('div', { class: 'encoders' }, ...shown.slice(0, 16).map((P, i) => paramControl(P, KNOB_COLORS[i % 4], io(P), skinOf(def)))) : null,
+    h('div', { class: 'devfoot' },
+      h('span', { class: 'help' }, input.midi ? 'Tip: a virtual MIDI port (IAC on Mac, loopMIDI on Windows) reaches a DAW or soft synth.' : 'Enable MIDI to list your outputs.'),
+      input.midi ? null : h('button', { class: 'btn small', onclick: async () => { await input.enableMIDI(); renderDevice(); } }, 'Enable MIDI'),
+      h('label', { class: 'help' }, 'Gear latency ', h('input', { type: 'range', min: 0, max: 60, value: e.hwLatency, style: 'width:80px', oninput: (ev) => { e.hwLatency = +ev.target.value; out.textContent = ` ${e.hwLatency} ms`; } }), out),
+      e.cfg.inst !== 'none' ? h('button', { class: 'btn small' + (e.hearTwin ? ' on' : ''), onclick: () => { e.hearTwin = !e.hearTwin; applyVolume(key(S.me, e.r)); renderDevice(); } }, 'Hear twin') : null,
+      h('button', { class: 'btn small', onclick: () => { const port = outPort(e.midiOut); if (port) { const t = performance.now() + 20, oc = ((e.outCh || 1) - 1) & 15; sendToHardware(port, [0x90 | oc, 60, 100], t); sendToHardware(port, [0x80 | oc, 60, 0], t + 300); } } }, 'Test note'),
+      h('button', { class: 'btn small ghost', onclick: () => removeEntry(e) }, 'Remove'))].filter(Boolean));
 }
 
 // one control: an encoder, a fader, a stepper or a row of LED buttons, depending on the instrument's faceplate
@@ -873,7 +923,7 @@ function renderLibrary() {
   const cards = $('#libCards'), extra = $('#libExtra');
   extra.replaceChildren();
   if (S.libTab === 'builtin') {
-    cards.replaceChildren(...[...engine.defs.values()].filter((d) => !d.lib).map((d) => libCard({ id: d.id, name: d.name, family: d.family, blurb: d.blurb }, d)));
+    cards.replaceChildren(...[...engine.defs.values()].filter((d) => !d.lib && !d.internal).map((d) => libCard({ id: d.id, name: d.name, family: d.family, blurb: d.blurb }, d)));
   } else if (S.libTab === 'add') {
     cards.replaceChildren();
     const inp = h('input', { type: 'text', placeholder: 'github:owner/repo   or   http://localhost:8780/jamjam/', style: 'flex:1;min-width:260px', onkeydown: (e) => { e.stopPropagation(); if (e.key === 'Enter') add(); } });
@@ -999,7 +1049,8 @@ function applyVolume(k) {
   const c = engine.ch.get(k); if (!c || !engine.ctx) return;
   const pid = pidOf(k), v = S.vol.get(pid) || { vol: 1, mute: false };
   let twinMuted = false;
-  if (pid === S.me) { const e = entry(+k.slice(k.indexOf(':') + 1)); twinMuted = !!(e && e.cfg.hw && !e.hearTwin); }
+  if (pid === S.me) { const e = entry(+k.slice(k.indexOf(':') + 1)); twinMuted = !!(e && (e.cfg.hw || e.cfg.ext) && !e.hearTwin); }
+  else if (S.routes.get(k)?.mute && S.routes.get(k)?.port) twinMuted = true;  // you hear it on your own MIDI gear
   c.out.gain.setTargetAtTime(v.mute || twinMuted ? 0 : v.vol, engine.ctx.currentTime, 0.02);
 }
 function applyPlayerVolume(pid) { for (const k of engine.ch.keys()) if (pidOf(k) === pid) applyVolume(k); }
@@ -1018,12 +1069,87 @@ function renderNet() {
   $('#netSummary').textContent = `Relay messages: ${room.relayed} · clock ${clock.isLeader ? 'leader (you)' : clock.locked ? `locked (±${clock.errMs.toFixed(1)} ms worst case)` : 'syncing…'}${lane.on ? ` · lane sent ${(lane.sentBytes / 1e6).toFixed(1)} MB` : ''}`;
 }
 
+// ---------- MIDI out: a bandmate's part on your gear, and the room's clock ----------
+function routeOut(k, ev) {
+  const r = S.routes.get(k); if (!r || !r.port) return;
+  const port = outPort(r.port); if (!port) return;
+  const oc = ((r.ch || 1) - 1) & 15, t = clock.toLocal(ev.at) - (r.lat || 0);
+  if (ev.type === 'on') sendToHardware(port, [0x90 | oc, ev.note, ev.vel ?? 100], t);
+  else if (ev.type === 'off') sendToHardware(port, [0x80 | oc, ev.note, 0], t);
+  else if (ev.type === 'p' && ev.id === 'bend') sendToHardware(port, bendBytes(r.ch || 1, ev.v), t);
+  else if (ev.type === 'p') {
+    // a knob with a MIDI CC goes out as that CC
+    const cfg = cfgOfKey(k), def = cfg && engine.defs.get(cfg.inst), P = def?.params.find((x) => x.id === ev.id);
+    if (P && P.cc) sendToHardware(port, [0xb0 | oc, P.cc, Math.round(toUnit(P, ev.v) * 127)], t);
+  }
+}
+function setRoute(k, patch) {
+  const was = S.routes.get(k) || { port: '', ch: 1, lat: 0, mute: true };
+  const r = { ...was, ...patch };
+  if (was.port && (r.port !== was.port || r.ch !== was.ch)) { const p = outPort(was.port); if (p) sendToHardware(p, [0xb0 | ((was.ch - 1) & 15), 123, 0], performance.now()); } // all notes off
+  if (r.port) S.routes.set(k, r); else S.routes.delete(k);
+  applyVolume(k); renderMidiPanel();
+}
+// MIDI clock: 24 ticks per beat from the shared tempo, Start on a bar, so every jammer's drum machines run in phase
+setInterval(() => {
+  const m = S.mclock;
+  if (!S.me || !m.on || !m.port) return;
+  const port = outPort(m.port); if (!port) return;
+  const now = clock.now(), horizon = now + 100;
+  if (m.next == null) {
+    const bar = Math.ceil(tempo.beatAt(now + 150) / 4 - 1e-9) * 4;
+    const t = clock.toLocal(tempo.timeOf(bar)) - m.lat;
+    sendToHardware(port, [0xf2, 0, 0], t - 1);   // song position: the top
+    sendToHardware(port, [0xfa], t);             // start
+    m.next = bar * 24; m.startBar = bar;
+  }
+  for (let guard = 0; guard < 200; guard++) {
+    const t = tempo.timeOf(m.next / 24);
+    if (t > horizon) break;
+    if (t >= now - 20) sendToHardware(port, [0xf8], clock.toLocal(t) - m.lat);
+    m.next++;
+  }
+}, 20);
+function setClock(patch) {
+  const m = S.mclock, wasOn = m.on && m.port;
+  if (wasOn && (patch.on === false || (patch.port != null && patch.port !== m.port))) { const p = outPort(m.port); if (p) sendToHardware(p, [0xfc], performance.now()); }
+  Object.assign(m, patch);
+  if (!m.on || !m.port || patch.port != null || patch.on) m.next = null;
+  renderMidiPanel();
+}
+function renderMidiPanel() {
+  const box = $('#midiBody'); if (!box) return;
+  const ports = input.outputs;
+  const portSel = (value, on, label) => h('select', { class: 'lcdsel', 'aria-label': label, onchange: (e) => on(e.target.value) }, h('option', { value: '' }, ports.length ? '— off —' : 'no outputs'), ...ports.map((o) => h('option', { value: o.id, selected: o.id === value }, o.name)));
+  const chSel = (value, on) => h('select', { class: 'lcdsel', 'aria-label': 'Channel', onchange: (e) => on(+e.target.value) }, ...Array.from({ length: 16 }, (_, i) => h('option', { value: i + 1, selected: i + 1 === value }, `ch ${i + 1}`)));
+  const parts = [];
+  for (const [pid, pl] of S.players) for (const x of pl.rack || []) parts.push({ k: key(pid, x.r), who: pl.name, what: describe(x.cfg) });
+  const m = S.mclock;
+  box.replaceChildren(
+    input.midi ? h('p', { class: 'help', style: 'margin:0' }, `${ports.length} MIDI output${ports.length === 1 ? '' : 's'}${input.inputs.length ? ` · ${input.inputs.length} input${input.inputs.length === 1 ? '' : 's'}` : ''}. Everything here is sent ahead and timestamped, so it lands in lockstep with the room.`)
+      : h('div', { class: 'row' }, h('button', { class: 'btn small hot', onclick: async () => { await input.enableMIDI(); renderMidiPanel(); renderDevice(); } }, 'Enable MIDI'), h('span', { class: 'help' }, 'Chrome, Edge or Firefox.')),
+    h('h3', { class: 'legend', style: 'margin:8px 0 0' }, 'Clock out'),
+    h('p', { class: 'help', style: 'margin:0' }, 'Sends the room tempo as MIDI clock (24 per beat) with Start on the next bar, so drum machines and sequencers follow the band.'),
+    h('div', { class: 'row' }, portSel(m.port, (v) => setClock({ port: v, on: !!v }), 'Clock output'),
+      h('button', { class: 'btn small' + (m.on && m.port ? ' on' : ''), disabled: !m.port, onclick: () => setClock({ on: !m.on }) }, m.on && m.port ? 'Running' : 'Stopped'),
+      h('label', { class: 'help' }, 'early ', h('input', { type: 'number', min: 0, max: 80, value: m.lat, style: 'width:52px', onkeydown: (e) => e.stopPropagation(), onchange: (e) => { m.lat = Math.max(0, Math.min(80, +e.target.value || 0)); } }), ' ms')),
+    h('h3', { class: 'legend', style: 'margin:8px 0 0' }, "The band's parts on your gear"),
+    h('p', { class: 'help', style: 'margin:0' }, parts.length ? "Pick an output and channel to play a bandmate's part (notes, pitch bend, mapped knobs, sequencer hits) on your own synth or DAW, at the moment the room hears it." : 'When bandmates walk in, their parts show up here.'),
+    ...parts.map(({ k, who, what }) => {
+      const r = S.routes.get(k) || { port: '', ch: 1, mute: true };
+      return h('div', { class: 'row', style: 'border-top:1px solid #222428;padding-top:6px' },
+        h('span', { style: 'flex:1 1 100%;font-size:12px' }, h('b', {}, who), ' · ', what),
+        portSel(r.port, (v) => setRoute(k, { port: v }), `Output for ${who}'s ${what}`), chSel(r.ch || 1, (v) => setRoute(k, { ch: v })),
+        h('label', { class: 'help' }, h('input', { type: 'checkbox', checked: r.mute !== false, onchange: (e) => setRoute(k, { mute: e.target.checked }) }), ' mute in browser'));
+    }));
+}
+
 // ---------- side panels ----------
 function closePanels() { $$('.sidepanel').forEach((p) => p.classList.add('hide')); $$('.sidetab').forEach((t) => t.classList.remove('on')); }
 function togglePanel(id) {
   const p = $('#' + id), open = p.classList.contains('hide');
   closePanels();
-  if (open) { p.classList.remove('hide'); $(`.sidetab[data-panel="${id}"]`).classList.add('on'); if (id === 'panel-chat') { S.unread = 0; $('#chatBadge').classList.add('hide'); setTimeout(() => $('#chatIn').focus(), 30); } if (id === 'panel-wire') renderNet(); }
+  if (open) { p.classList.remove('hide'); $(`.sidetab[data-panel="${id}"]`).classList.add('on'); if (id === 'panel-chat') { S.unread = 0; $('#chatBadge').classList.add('hide'); setTimeout(() => $('#chatIn').focus(), 30); } if (id === 'panel-wire') renderNet(); if (id === 'panel-midi') renderMidiPanel(); }
 }
 
 // ---------- band chat ----------
@@ -1117,6 +1243,7 @@ function wire() {
   $('#lookAutoBtn').onclick = () => { S.lookOverride = null; broadcastLook(); renderLook(); };
   $('#addInstBtn').onclick = () => { renderLibrary(); openDrawer('#libDrawer'); };
   $('#addHwBtn').onclick = () => { renderHardware(); openDrawer('#hwDrawer'); setTimeout(() => $('#hwSearch').focus(), 50); };
+  $('#addExtBtn').onclick = async () => { if (!input.midi) await input.enableMIDI(); addEntry({ ext: { name: 'My synth', port: input.outputs[0]?.id || '', ch: 1 } }); };
   $('#hwSearch').addEventListener('input', renderHardware);
   $('#hwSearch').addEventListener('keydown', (e) => e.stopPropagation());
   $$('[data-close]').forEach((b) => b.onclick = closeDrawers);
@@ -1169,6 +1296,11 @@ Object.assign(window.JJ, {
   removeEntry: (r) => removeEntry(entry(r)),
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
+  addExternal: async (name, port, ch, twin) => { if (!input.midi) await input.enableMIDI(); return addEntry({ ext: { name, port, ch }, inst: twin })?.r; },
+  enableMIDI: () => input.enableMIDI(),
+  route: (k, patch) => setRoute(k, patch),
+  clockOut: (patch) => setClock(patch),
+  midiLog: () => input.mockLog || [],
   addLibrary: async (u) => { const l = await engine.addLibrary(u); saveLibs(); retryStandins(); return l.id; },
   addFromLibrary: async (id, patch) => { await engine.ensureDef(id); return addEntry({ inst: id, patch })?.r; },
 });

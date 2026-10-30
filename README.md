@@ -25,6 +25,10 @@ Each jammer walks into their own **corner**, racks up instruments from a shared 
 - **Libraries: instruments from other repos.** The gear wall can open libraries beyond the built-ins: any folder with a `jamjam.json`, from a public GitHub repo (`github:owner/repo`, served through jsDelivr), a GitHub Pages site, or a build served from your own machine (`tools/serve-library.py` adds the cross-origin headers). When you play a public library's instrument, your bandmates' browsers load it automatically. A library marked private is never shared: each jammer adds their own copy, and anyone without it hears the closest built-in stand-in (and is told so) until they do. See "Writing a library" below.
 - **Band chat**, an **audio lane**, and a **wiring** panel showing every link, in panels that slide out from the side of the desk.
 
+- **External MIDI.** "+ External MIDI" on your shelf puts any synth, drum machine or DAW track reachable over MIDI (a hub, a USB synth, or a virtual port such as IAC on a Mac or loopMIDI on Windows) in your corner. Give it a name, an output port and channel, and optionally a twin from the gear wall for the band to hear. Your notes, sustain, pitch bend and controller knobs go out to it timestamped to the moment the band hears your part (or at once, with self-monitoring on). Twin: none means bandmates hear nothing unless they route your part to their own gear.
+- **The band's parts on your gear.** The MIDI panel (the DIN tab on the side) lists every bandmate's part. Pick an output and channel and that part (notes, pitch bend, knobs that have a MIDI CC, and sequencer hits) plays on your own synth or DAW at the room's moment, not on arrival, and the browser copy is muted.
+- **MIDI clock out.** The same panel sends the room's tempo as MIDI clock, 24 ticks per beat from the shared tempo map, with song position and Start on the next bar, so a drum machine or sequencer on your desk runs in phase with everyone else's. `early` sends it a few ms ahead for gear that's slow to respond. `tests/midi.test.cjs` checks all three with mock ports (`?midimock=1`).
+
 ## How the timing works
 
 | Piece | What it does |
@@ -110,6 +114,7 @@ Each file is an ES module whose default export is an instrument (the contract ab
 node server/dev.js                    # the site plus a local copy of the relay on http://localhost:8787
 NODE_PATH=$(npm root -g) node tests/sync.test.cjs http://localhost:8787/
 NODE_PATH=$(npm root -g) node tests/instruments.test.cjs http://localhost:8787/
+NODE_PATH=$(npm root -g) node tests/midi.test.cjs http://localhost:8787/
 NODE_PATH=$(npm root -g) node tests/bench.cjs http://localhost:8787/ "tm=8&mem=12"
 ```
 

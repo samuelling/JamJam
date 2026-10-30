@@ -42,6 +42,10 @@ export const ICONS = {
     ${keys(12, 38, 96, 16, 16)}<rect x="10" y="54" width="100" height="5" fill="#1a1412"/>
     <rect x="16" y="59" width="3" height="16" fill="#9a9a9a"/><rect x="101" y="59" width="3" height="16" fill="#9a9a9a"/>
     <circle cx="20" cy="30" r="2.2" fill="#cfcfcf"/><circle cx="27" cy="30" r="2.2" fill="#cfcfcf"/></svg>`,
+  midi: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <rect x="14" y="10" width="92" height="60" rx="8" fill="#1d1f23"/><circle cx="60" cy="40" r="20" fill="#0c0d0f" stroke="#55585f" stroke-width="2"/>
+    ${[[-12, 0], [12, 0], [-8.5, 8.5], [8.5, 8.5], [0, 12]].map(([dx, dy]) => `<circle cx="${60 + dx}" cy="${38 + dy - 6}" r="2.4" fill="#c9cbd0"/>`).join('')}
+    <rect x="56" y="57" width="8" height="4" rx="1" fill="#55585f"/><text x="60" y="20" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="6" font-weight="700" fill="#ffcf26">MIDI</text></svg>`,
   generic: `<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
     <rect x="10" y="16" width="100" height="50" rx="6" fill="#25272b"/>${[28, 46, 64, 82].map((x) => `<circle cx="${x}" cy="32" r="5" fill="#3b3e44"/>`).join('')}${keys(16, 44, 88, 16, 14)}</svg>`,
 };

@@ -55,6 +55,9 @@ export class Engine {
       this.defs.set(it.id, def);
       this.hashes[it.id] = hash;
     }
+    // "No twin": a silent stand-in for a part that only plays on external MIDI gear
+    this.defs.set('none', { id: 'none', name: 'No twin', family: 'MIDI only', internal: true, params: [], presets: { midi: {} }, hash: 'none',
+      create: () => ({ noteOn() {}, noteOff() {}, set() {}, allOff() {}, dispose() {} }) });
     const hwText = await (await fetch(`${base}/instruments/hardware.json`, { cache: 'no-cache' })).text();
     this.hardware = JSON.parse(hwText);
     this.hashes.hardware = await sha(hwText);
