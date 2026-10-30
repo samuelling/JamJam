@@ -47,6 +47,42 @@ export function makeCompose(x) {
     const r = notes.map((n) => drums ? `<rect x="${(n.a * sx).toFixed(1)}" y="${(3 + (hi - n.n) * sy).toFixed(1)}" width="1.6" height="${Math.max(2, sy).toFixed(1)}"/>` : `<rect x="${(n.a * sx).toFixed(1)}" y="${(3 + (hi - n.n) * sy).toFixed(1)}" width="${Math.max(1.2, (n.z - n.a) * sx - 0.6).toFixed(1)}" height="${Math.max(1.5, sy - 0.6).toFixed(1)}" rx="0.6"/>`).join('');
     return `<svg viewBox="0 0 ${w} ${ht}" width="${w}" height="${ht}" preserveAspectRatio="none"><g fill="${color}">${r}</g></svg>`;
   }
+  function pickLane(lane) {
+    const song = x.store.song, has = (sid) => Object.values(song.sections[sid]?.parts || {}).find((q) => laneOf(q) === lane);
+    const sid = has(sel) ? sel : song.order.find(has); if (!sid) return;
+    sel = sid; cell = { sid, pid: has(sid).id, lane }; render();
+  }
+  // the picked lane's notes in this section, in detail: a roll under the chord chart, with names, bars and velocities
+  function laneView(s, p, color) {
+    const meter = x.store.song.meter || 4, beats = s.bars * meter, take = currentTake(p), notes = [], on = new Map();
+    for (const e of [...(take?.events || [])].sort((a, b) => a.b - b.b)) { if (e.type === 'on') on.set(e.note, e); else if (e.type === 'off' && on.has(e.note)) { const o = on.get(e.note); notes.push({ n: e.note, a: o.b, z: e.b, v: o.vel ?? 100 }); on.delete(e.note); } }
+    for (const [n, o] of on) notes.push({ n, a: o.b, z: beats, v: o.vel ?? 100 });
+    const close = h('button', { class: 'gearx', style: 'position:static', 'aria-label': 'Hide the notes', onclick: () => { cell = null; render(); } }, '×');
+    const head = (...k) => h('div', { class: 'row lvhead' }, h('b', { style: `color:${color}` }, laneOf(p)), ...k, h('span', { style: 'flex:1' }), close);
+    if (!notes.length) return h('div', { class: 'laneview' }, head(h('span', { class: 'help' }, 'no notes in this take')));
+    const name = (n) => (p.drums ? drumName(n) : NOTE_NAMES[n % 12] + (Math.floor(n / 12) - 1));
+    const pos = (b) => `bar ${Math.floor(b / meter) + 1} beat ${+((b % meter) + 1).toFixed(2)}`;
+    const rows = p.drums ? [...new Set(notes.map((n) => n.n))].sort((a, b) => b - a) : null;
+    let lo = 127, hi = 0; for (const n of notes) { lo = Math.min(lo, n.n); hi = Math.max(hi, n.n); }
+    if (!p.drums) { lo -= 1; hi += 1; }
+    const nRows = p.drums ? rows.length : hi - lo + 1, rh = Math.max(4, Math.min(p.drums ? 14 : 9, Math.floor(150 / nRows))), H = nRows * rh, W = beats * 24;
+    const rowOf = (n) => (p.drums ? rows.indexOf(n) : hi - n);
+    const vels = notes.map((n) => n.v), pcs = [...new Set(notes.map((n) => n.n % 12))].sort((a, b) => a - b);
+    const lanes = [];
+    for (let r = 0; r < nRows; r++) { const n = p.drums ? rows[r] : hi - r; if (!p.drums && [1, 3, 6, 8, 10].includes(n % 12)) lanes.push(`<rect x="0" y="${r * rh}" width="${W}" height="${rh}" fill="#ffffff06"/>`); }
+    const grid = Array.from({ length: beats + 1 }, (_, b) => `<line x1="${b * 24}" x2="${b * 24}" y1="0" y2="${H}" stroke="${b % meter ? '#ffffff0d' : '#ffffff30'}" stroke-width="${b % meter ? 1 : 1.5}" vector-effect="non-scaling-stroke"/>`).join('');
+    const rects = notes.map((n) => `<rect x="${(n.a * 24).toFixed(1)}" y="${rowOf(n.n) * rh + 0.5}" width="${Math.max(3, (n.z - n.a) * 24 - 1).toFixed(1)}" height="${rh - 1}" rx="1.5" fill="${color}" fill-opacity="${(0.35 + 0.65 * Math.min(1, n.v / 127)).toFixed(2)}"><title>${name(n.n)} · ${pos(n.a)} · ${+(n.z - n.a).toFixed(2)} beats · velocity ${n.v}</title></rect>`).join('');
+    const svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none">${lanes.join('')}${grid}${rects}</svg>`;
+    const labels = h('div', { class: 'lvkeys', style: `height:${H}px` }, ...Array.from({ length: nRows }, (_, r) => { const n = p.drums ? rows[r] : hi - r; return p.drums || nRows <= 18 || n % 12 === 0 || r === 1 || r === nRows - 2 ? h('span', { style: `top:${r * rh}px;height:${rh}px;line-height:${rh}px` }, name(n)) : null; }).filter(Boolean));
+    const roll = h('div', { class: 'lvroll' }); roll.innerHTML = svg; roll.append(h('div', { class: 'lvhead-play hide', 'data-lvplay': s.id }));
+    const barsRow = h('div', { class: 'lvbars' }, ...Array.from({ length: s.bars }, (_, b) => h('span', {}, h('i', {}, String(b + 1)), s.chords[b] ? h('b', {}, s.chords[b]) : null)));
+    const stats = [`${notes.length} note${notes.length === 1 ? '' : 's'}`, p.drums ? `${rows.length} voice${rows.length === 1 ? '' : 's'}` : `${name(lo + 1)}–${name(hi - 1)}`, `velocity ${Math.min(...vels)}–${Math.max(...vels)} (avg ${Math.round(vels.reduce((a, b) => a + b, 0) / vels.length)})`, `${+(notes.length / s.bars).toFixed(1)} per bar`,
+      p.drums ? null : `uses ${pcs.map((c) => NOTE_NAMES[c]).join(' ')}`, take?.byName ? `${take.byName}'s take` : null].filter(Boolean);
+    return h('div', { class: 'laneview' }, head(h('span', { class: 'help' }, stats.join(' · '))), h('div', { class: 'lvbody' }, h('div', { class: 'lvgut' }), barsRow, labels, roll));
+  }
+  function drumName(n) {
+    return { 35: 'Kick', 36: 'Kick', 37: 'Rim', 38: 'Snare', 40: 'Snare', 39: 'Clap', 42: 'Hat', 44: 'Pedal hat', 46: 'Open hat', 41: 'Low tom', 43: 'Low tom', 45: 'Mid tom', 47: 'Mid tom', 48: 'High tom', 50: 'High tom', 49: 'Crash', 57: 'Crash', 51: 'Ride', 59: 'Ride', 53: 'Bell', 54: 'Tamb', 56: 'Cowbell', 70: 'Shaker', 75: 'Clave' }[n] || `Perc ${n}`;
+  }
   function render() {
     const box = $('#compose'); if (!box || dragging) return;
     const song = x.store.song, order = song.order.filter((id) => song.sections[id]), tl = x.store.timeline(), tr = x.transport(), meter = song.meter || 4;
@@ -89,7 +125,7 @@ export function makeCompose(x) {
           here.length ? h('span', { class: 'herein' }, ...here.map((w) => h('i', { style: `--c:${w.color}`, title: `${w.who} is jamming here` }, w.who.slice(0, 1)))) : null);
       }));
     const rows = !open ? [] : L.map((ln, li) => h('div', { class: 'arow' },
-      h('div', { class: 'lhead' + (cell && cell.lane === ln.lane ? ' sel' : ''), style: `--lc:${laneColor(li)}` }, x.iconEl(ln.sample), h('span', {}, h('b', {}, ln.lane), h('select', { class: 'role', 'aria-label': `${ln.lane}'s role`, onchange: (e) => { const s0 = x.store.sections().find((s) => Object.values(s.parts || {}).some((p) => laneOf(p) === ln.lane)); const p = Object.values(s0.parts).find((q) => laneOf(q) === ln.lane); x.setRole(s0.id, p.id, e.target.value); } }, ...ROLES.map((r) => h('option', { value: r, selected: (ln.role || '') === r }, r))))),
+      h('div', { class: 'lhead pick' + (cell && cell.lane === ln.lane ? ' sel' : ''), style: `--lc:${laneColor(li)}`, title: `Show ${ln.lane}'s notes below`, onclick: (e) => { if (e.target.closest('select')) return; pickLane(ln.lane); } }, x.iconEl(ln.sample), h('span', {}, h('b', {}, ln.lane), h('select', { class: 'role', 'aria-label': `${ln.lane}'s role`, onchange: (e) => { const s0 = x.store.sections().find((s) => Object.values(s.parts || {}).some((p) => laneOf(p) === ln.lane)); const p = Object.values(s0.parts).find((q) => laneOf(q) === ln.lane); x.setRole(s0.id, p.id, e.target.value); } }, ...ROLES.map((r) => h('option', { value: r, selected: (ln.role || '') === r }, r))))),
       ...cols.map((c) => {
         const p = Object.values(c.s.parts || {}).find((q) => laneOf(q) === ln.lane);
         const wk = c.id === loopId ? busy.get(ln.lane) : null;
@@ -179,6 +215,7 @@ export function makeCompose(x) {
         h('button', { class: 'btn small' + (live ? ' on' : ''), onclick: () => (live ? x.stop() : x.play('loop', s.id)) }, live ? '■ Stop' : '↻ Loop it'),
         h('button', { class: 'btn hot', onclick: () => x.jamThis(s.id) }, 'Jam this section')),
       chart,
+      c && s.parts?.[c.pid] ? laneView(s, s.parts[c.pid], laneColor(Math.max(0, lanes().findIndex((l) => l.lane === laneOf(s.parts[c.pid]))))) : null,
       h('button', { class: 'linkbtn', 'aria-expanded': String(secMore), onclick: () => { secMore = !secMore; remember('secMore', secMore); render(); } }, secMore ? '▾ Less' : '▸ More: fill chords from the key, notes, road map, arrange'),
       secMore ? h('div', { class: 'secmore' },
         h('div', { class: 'row' }, prog, label),
@@ -202,7 +239,7 @@ export function makeCompose(x) {
             on ? h('b', { class: 'curtag' }, 'sounding') : h('button', { class: 'btn small', onclick: () => (rule === 'vote' ? x.vote(s.id, p.id, t.id) : x.choose(s.id, p.id, t.id)) }, rule === 'vote' ? 'Vote for it' : 'Use this take'));
         }));
     }
-    return h('div', { class: 'details' + (takePane ? '' : ' one') }, secPane, takePane);
+    return h('div', { class: 'details' + (takePane ? ' lane' : ' one') }, secPane, takePane);
   }
   function move(i, d) { const o = [...x.store.song.order]; const [v] = o.splice(i, 1); o.splice(i + d, 0, v); x.setSong('order', o); const l = [...(x.store.song.labels || [])]; const [lv] = l.splice(i, 1); l.splice(i + d, 0, lv || ''); x.setSong('labels', l.map((q) => q || '')); }
   function addSection(name) {
@@ -216,6 +253,7 @@ export function makeCompose(x) {
   function tick(pos) {
     const box = $('#compose');
     for (const c of document.querySelectorAll('.chord')) c.classList.toggle('now', !!pos && c.dataset.cell === `${pos.sid}:${pos.bar}`);
+    for (const lv of document.querySelectorAll('[data-lvplay]')) { const on = !!pos && lv.dataset.lvplay === pos.sid; lv.classList.toggle('hide', !on); if (on) lv.style.left = `${Math.min(100, ((pos.bar + pos.beat / (x.store.song.meter || 4)) / x.store.song.sections[pos.sid].bars) * 100)}%`; }
     if (!box || box.offsetParent === null) return;
     // who is playing what changes on its own (someone starts or stops); redraw then, but never under someone's typing
     const tr = x.transport(), s2 = JSON.stringify([tr?.on, tr?.mode, tr?.sid, x.working().filter((w) => w.active && w.where === 'jam').map((w) => [w.who, w.parts])]);

@@ -639,6 +639,21 @@
   .bars { display: flex; align-items: center; gap: 6px; font: 400 12px var(--type); }
   .chord { width: 100%; min-width: 0; padding: 6px 4px; text-align: center; font: 700 14px var(--sans); background: #0e0f12; color: var(--mz-toner); border: 1px solid #23262d; border-radius: 3px; }
   .chord.downbar { border-left: 2px solid #3a3e47; }
+  .lhead.pick { cursor: pointer; } .lhead.pick:hover b { text-decoration: underline; }
+  .lhead.sel { background: #1c1e24; }
+  .laneview { display: grid; gap: 6px; padding: 8px 0 2px; border-top: 1px dashed #2c3039; }
+  .lvhead { gap: 10px; } .lvhead b { font: 700 13px var(--sans); }
+  .lvbody { display: grid; grid-template-columns: 58px 1fr; }
+  .lvbars { display: flex; font: 400 10px var(--type); color: var(--mz-muted); }
+  .lvbars span { flex: 1; display: flex; gap: 5px; align-items: baseline; padding: 0 3px 2px; border-left: 1px solid #ffffff30; overflow: hidden; white-space: nowrap; }
+  .lvbars b { font: 700 11px var(--sans); color: var(--mz-toner); }
+  .lvkeys { position: relative; border-right: 1px solid #2c3039; }
+  .lvkeys span { position: absolute; right: 5px; font: 400 9px var(--type); color: var(--mz-muted); white-space: nowrap; }
+  .lvroll { position: relative; background: #0e0f12; border-radius: 0 3px 3px 0; overflow: hidden; }
+  .lvroll svg { display: block; }
+  .lvroll rect title { pointer-events: none; }
+  .lvhead-play { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--mz-toner); box-shadow: 0 0 6px var(--mz-toner); pointer-events: none; }
+  .details.lane { max-height: 62%; }
   .chord.bad { color: #ff8a8a; }
   .chord.now { background: var(--sc); color: #18181b; }
 </style>
