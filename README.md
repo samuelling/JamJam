@@ -115,6 +115,9 @@ The idea comes from strategy-game networking, where every machine runs the same 
 - **Song presets.** Beside **Import a sketch**, **♪ Song presets…** starts a song from a form, chord changes and a basic band (drums, bass, chords): five each in twenty genres, from rock, pop, jazz and hip hop to bossa nova, salsa, techno and gospel.
   A preset is a line of data in `src/presets.js`; its notes are generated when it's picked and it's then a song like any other, for everyone in the room.
   `tests/presets.test.mjs` checks every one.
+- **AirPlay on iPhone and iPad.** In Safari on iOS, **AirPlay** in the top bar sends the room's sound to a speaker.
+  It adds about two seconds, and says so first: fine for listening, too late to play along.
+  If Safari can't send it, the sound stays on the device and Control Center's AirPlay is the way.
 - **Sketches in, songs out.** Import a MIDI file (tracks become parts, markers become sections, tempo and key come along, chords are read off the notes) or a song from SynthLand's Tracker (`tracker-song/0.1`: rows become sections, tracks become parts on the closest built-in instruments, drum tracks merge into one Machina part, `meta.jam` gives the key).
   Save the song as a type 1 MIDI file (a marker per section) or as `megajam.song/1` JSON.
   `tests/compose.test.cjs` covers it with one of the Tracker's songs.

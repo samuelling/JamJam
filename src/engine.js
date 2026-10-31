@@ -46,11 +46,12 @@ export class Engine {
     this.master = ctx.createGain(); this.master.gain.value = 0.9;
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -10; comp.knee.value = 6; comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.15;
-    this.master.connect(comp).connect(ctx.destination);
+    this.out = ctx.createGain(); this.out.connect(ctx.destination);   // the last stop: the device, or an AirPlay stream (airplay.js)
+    this.master.connect(comp).connect(this.out);
     // everything that plays goes into the mix's stems, then the Stem Console (see console.js) or, without it, the master.
     // The console's output goes past the compressor: it has its own limiter, and the compressor adds makeup gain.
     this.stems = Array.from({ length: 8 }, () => ctx.createGain()); this.stems.forEach((g) => g.connect(this.master));
-    this.songOut = ctx.createGain(); this.songOut.connect(ctx.destination);
+    this.songOut = ctx.createGain(); this.songOut.connect(this.out);
     this.busLatency = 0;   // seconds the console adds; note times allow for it, so they're still heard on the room's clock
     this.comp = comp;   // the metronome and the doorbell join after the master, so the tape (which records the master) leaves them out
     this.clickBus = ctx.createGain(); this.clickBus.connect(comp);

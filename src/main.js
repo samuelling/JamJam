@@ -8,6 +8,7 @@ import * as MATCH from './match.js';
 import * as SONG from './song.js';
 import { makeCompose, colorOfSection } from './compose.js';
 import { GENRES, presetSong } from './presets.js';
+import { makeAirplay } from './airplay.js';
 import { STYLES, STEMS as MIX_STEMS, stemOf, masterSettings, consoleValues, startConsole } from './console.js';
 import { Input, sendToHardware, bendBytes, srcOf } from './input.js';
 import { AudioLane, decodeChunk } from './lane.js';
@@ -2737,6 +2738,7 @@ function wire() {
     const show = () => { const i = LV.findIndex(([v]) => v === S.assist); b.textContent = LV[i][1]; setCls(b, 'on', S.assist > 0); };
     b.onclick = () => { const i = LV.findIndex(([v]) => v === S.assist); S.assist = LV[(i + 1) % LV.length][0]; show(); }; show(); }
   // Talk: click to leave your mic open, or hold to talk and let go to stop
+  makeAirplay(engine, $('#airplayBtn'), setStatus);
   { const b = $('#talkBtn'); let downAt = 0, wasOpen = false;
     const show = () => { setCls(b, 'on', talk.open); b.setAttribute('aria-pressed', String(talk.open)); b.querySelector('span').textContent = talk.open ? 'Talking' : 'Talk'; };
     b.addEventListener('pointerdown', async (e) => { e.preventDefault(); downAt = performance.now(); wasOpen = talk.open; if (!wasOpen) { if (!(await talk.setOpen(true))) { setStatus("Couldn't open your mic. Check the browser's permission for this page.", 'error'); return; } show(); } });
