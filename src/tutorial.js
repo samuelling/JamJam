@@ -60,8 +60,10 @@ export function makeTutorial(api, { h, $ }) {
       target: () => $('#libCards .tile.drums'), wait: () => !!$('#libExtra .dgenre') || api.players() > 0, show: () => $('#libCards .tile.drums .face')?.click() },
     { id: 'style', title: 'Pick a style', text: 'Every style plays differently. Rock is a good start; try Funk or Hip hop later.',
       target: () => $('#libExtra'), wait: () => api.players() > 0, show: () => (btnText($('#libExtra'), /^Rock/) || $('#libExtra .dgenre button'))?.click() },
-    { id: 'tempo', title: 'Set the speed', text: touch ? 'The tempo (BPM, beats per minute) is shared too. Tap + a few times to speed up.' : 'The tempo (BPM, beats per minute) is shared too. Press + a few times to speed up, or drag the number.',
-      target: () => $('#bpmLcd')?.closest('.readout'), setup: (c) => { c.b0 = api.bpm(); }, wait: (c) => Math.abs(api.bpm() - c.b0) >= 4, show: () => api.setBpm(api.bpm() + 10) },
+    // a definite target (four presses of +), and the card counts along as you go
+    { id: 'tempo', title: 'Set the speed', live: true,
+      text: (c) => { const now = api.bpm(), left = c.goal - now; return `The tempo (BPM, beats per minute) sets how fast the band plays, and everyone shares it. Speed it up from ${c.b0} to ${c.goal}: ${touch ? 'tap' : 'press'} + four times${touch ? '' : ' (or drag the number up)'}. ` + (now >= c.goal ? `It's at ${now}. Hear the drummer speed up?` : `It's at ${now}: ${left} to go.`); },
+      target: () => $('#bpmLcd')?.closest('.readout'), setup: (c) => { c.b0 = api.bpm(); c.goal = Math.min(240, c.b0 + 4); }, wait: (c) => api.bpm() >= c.goal, show: (c) => api.setBpm(c.goal) },
     { id: 'lock', title: 'No wrong notes', text: 'Lock to key makes every key you press land on a note of the room\'s key. Turn it on.',
       target: () => $('#lockBtn'), wait: () => api.lockOn(), show: () => $('#lockBtn')?.click() },
     { id: 'jam', title: 'Jam with the drummer', text: 'Now play along. Anything you play fits the key, so just follow the beat. Play a dozen notes or so.',
@@ -215,12 +217,14 @@ export function makeTutorial(api, { h, $ }) {
     const el = st.target?.(tour.ctx);
     if (el && !el.closest('.drawer, #hall') && [...document.querySelectorAll('.drawer')].some(visible)) api.closeDrawers();
     render();
-    setTimeout(() => { const el = st.target?.(tour.ctx); if (el && visible(el)) { const r = el.getBoundingClientRect(); if (r.top < 60 || r.bottom > innerHeight - 40) el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }, 60);
+    const mine = tour;
+    setTimeout(() => { if (tour !== mine || tour.steps[tour.i] !== st) return; const el = st.target?.(tour.ctx); if (el && visible(el)) { const r = el.getBoundingClientRect(); if (r.top < 60 || r.bottom > innerHeight - 40) el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }, 60);
   }
   function tick() {
     if (!tour) return;
     const st = tour.steps[tour.i], c = tour.ctx;
     if (st.lobby && api.inStudio()) { go(tour.i + 1); return; }
+    if (st.live && typeof st.text === 'function') { const t = tour.el.bubble.querySelector('p'); const s = st.text(c); if (t && t.textContent !== s) t.textContent = s; }
     if (!st.next && !st.end && !c.passed) {
       let ok = false; try { ok = !!st.wait?.(c); } catch (_) {}
       if (ok) { c.passed = true; render(); const at = tour.i; setTimeout(() => { if (tour && tour.i === at) go(at + 1); }, 900); }
