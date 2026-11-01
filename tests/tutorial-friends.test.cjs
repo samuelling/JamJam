@@ -10,7 +10,10 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
 (async () => {
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] }); const errors = [];
   try {
-    const p = await (await b.newContext({ viewport: { width: 1400, height: 1000 } })).newPage();
+    const cx = await b.newContext({ viewport: { width: 1400, height: 1000 } });
+    // like iPhone Safari: a frame nobody has tapped can't start audio, and resume() never settles. Robin must still walk in.
+    await cx.addInitScript(() => { if (!/[?&]bot=1/.test(location.search)) return; Object.defineProperty(BaseAudioContext.prototype, 'state', { get: () => 'suspended' }); AudioContext.prototype.resume = () => new Promise(() => {}); });
+    const p = await cx.newPage();
     p.on('pageerror', (e) => errors.push(e.message));
     const name0 = 'Sam';
     await p.goto(BASE + '?lag=30'); await p.fill('#nameIn', name0); await p.click('#startBtn'); await p.waitForSelector('#studio:not(.hide)'); await sleep(1200);
@@ -60,9 +63,9 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
     check(await waitStep('match'), 'Match my sound'); await next();
     check(await waitStep('sync'), 'Sync take'); await next();
     check(await waitStep('bye'), 'Robin heads home');
-    // the room drops a bandmate whose direct link is still open after it's sure they've gone (up to 12 s)
-    let gone = false; for (let t = 0; t < 70 && !gone; t++) { await sleep(250); gone = !(await p.evaluate(() => [...document.querySelectorAll('.corner .cname')].some((c) => /^Robin/.test(c.textContent)))); }
-    check(gone && !(await p.$('iframe.tour-friend')), "Robin leaves: the corner empties, the hidden frame is gone");
+    // the room drops a bandmate whose direct link is still open after it's sure they've gone (up to 12 s); the frame goes 0.8 s after
+    let gone = false; for (let t = 0; t < 70 && !gone; t++) { await sleep(250); gone = !(await p.$('iframe.tour-friend')) && !(await p.evaluate(() => [...document.querySelectorAll('.corner .cname')].some((c) => /^Robin/.test(c.textContent)))); }
+    check(gone, 'Robin leaves: the corner empties, the hidden frame is gone');
     await next();
     check(await waitStep('end') && /all set/i.test(await card()), '"You\'re all set!"');
     await p.click('.tour-card .btn.hot'); await sleep(300);
