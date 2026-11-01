@@ -156,8 +156,9 @@ export function makeTutorial(api, { h, $ }) {
   const FRIENDS = [
     { id: 'hello', title: 'Jam with a friend', text: 'Let\'s practice with a pretend friend called Robin. Robin is a bit of a robot (they live in this tab), but everything you\'ll see works just the same with a real friend across town. Ready? Press Next and Robin walks in.',
       setup: () => { if (api.where() !== 'jam') api.goRoom('jam'); }, next: true },
-    { id: 'arrive', title: 'Robin walks in', text: 'Robin is joining with your room\'s four-letter code, the one next to Invite. Friends you invite get a corner, just like yours…',
-      target: () => friend.corner() || $('#roomCode')?.closest('.readout'), setup: () => friend.summon(), wait: () => !!friend.corner() && !!friend.here() },
+    { id: 'arrive', title: 'Robin walks in', live: true, text: (c) => 'Robin is joining with your room\'s four-letter code, the one next to Invite. Friends you invite get a corner, just like yours…' +
+        (c.t0 && Date.now() - c.t0 > 15000 && !friend.corner() ? ' Robin is taking a while: check you\'re online. Close the tour and try again if Robin doesn\'t show.' : ''),
+      target: () => friend.corner() || $('#roomCode')?.closest('.readout'), setup: (c) => { c.t0 = Date.now(); friend.summon(); }, wait: () => !!friend.corner() && !!friend.here() },
     { id: 'listen', title: 'Only the notes travel', text: 'That\'s Robin on bass. Here\'s the clever bit: Robin\'s sound never crosses the internet. Only Robin\'s notes do (which key, how hard, and when), and your browser plays Robin\'s bass itself. So it sounds clean on your end, never crackly, even on a slow connection.',
       target: () => friend.corner(), setup: async () => { await friend.play('monolith', 'bass'); friend.groove('bass'); }, next: true },
     { id: 'together', title: 'Play along', text: touch ? 'Join in: tap some notes on the keys. Anything goes; Robin will keep the groove.' : 'Join in: play some notes on your keys (A S D F…). Anything goes; Robin will keep the groove.',

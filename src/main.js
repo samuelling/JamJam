@@ -2667,7 +2667,9 @@ async function enter(code, listen = false) {
   S.name = name;
   try { store.set('name', name); } catch (_) {}
   setStatus('Loading the library…');
-  try { await engine.start(); if (BOT) engine.out.gain.value = 0; if (!engine.defs.size) { await engine.loadInstruments('.'); await restoreLibs(); } songMaster(); }
+  // Robin (?bot=1) lives in a frame nobody taps, and iPhone Safari won't start audio there: resume() never settles.
+  // Robin is silent and keeps time on performance.now(), so it only needs the instruments loaded, not the sound running.
+  try { const on = engine.start(); await (BOT ? Promise.race([on, new Promise((r) => setTimeout(r, 300))]) : on); if (BOT) engine.out.gain.value = 0; if (!engine.defs.size) { await engine.loadInstruments('.'); await restoreLibs(); } songMaster(); }
   catch (e) { setStatus("Couldn't start audio or load the instruments: " + e.message, 'error'); return; }
   // you walk in with an empty desk and pick what to play (automated tests start with keys unless they ask, ?empty=1)
   if (!S.rack.length && !S.listener && navigator.webdriver && !EMPTY_START) {
