@@ -8,7 +8,7 @@
 //
 // api (from main.js): inStudio(), where(), goRoom(w), rack() [{r, inst, lane}], notes() (note-ons you've played),
 // key() {root, mode}, setKey(root, mode), bpm(), setBpm(bpm), players() (virtual bandmates), tapes(), taping(),
-// toggleTape(), closeDrawers(), lockOn(), song(), transport(), play(mode, sid), stop(), playNote(on, note, vel), pad(i, down),
+// toggleTape(), closeDrawers(), firstPick(), instName(inst), lockOn(), song(), transport(), play(mode, sid), stop(), playNote(on, note, vel), pad(i, down),
 // addInstrument(inst, patch), jamLane(id), lockIn(r), draftPart(spec), editTake(sid, pid, events, what, base),
 // setSong(k, v)
 
@@ -36,9 +36,15 @@ export function makeTutorial(api, { h, $ }) {
       target: () => $('#nameIn'), wait: () => ($('#nameIn')?.value || '').trim().length > 0, show: () => { const i = $('#nameIn'); i.value = 'Guest'; i.dispatchEvent(new Event('input', { bubbles: true })); } },
     { id: 'start', lobby: true, title: 'Open your studio', text: 'Press Start a jam. You\'ll get a studio of your own, with a code your friends can use to walk in.',
       target: () => $('#startBtn'), wait: () => api.inStudio(), show: () => $('#startBtn')?.click() },
+    // a first visit walks into a hall with two doors, then the wall opens on "What do you want to play?"
+    { id: 'door', title: 'Two rooms', text: 'The Jam Room is for playing together live; the Compose Room is for building a song. Go into the Jam Room.',
+      skip: () => !visible($('#hall')) && api.where() === 'jam', target: () => $('#hall .door2.jam') || $('#roomSeg [data-room="jam"]'), wait: () => !visible($('#hall')) && api.where() === 'jam', show: () => api.goRoom('jam') },
+    { id: 'pick', title: 'What do you want to play?', text: 'Pick something to play. Play some keys is a good start; you can add more instruments any time.',
+      skip: () => !api.firstPick() && api.rack().length > 0, target: () => (visible($('#quickPicks')) ? $('#quickPicks') : null), wait: () => !api.firstPick() && api.rack().length > 0 && !visible($('#libDrawer')),
+      show: async () => { const q = [...document.querySelectorAll('#quickPicks .quick')].find((b) => /keys/i.test(b.textContent)); if (q) { q.click(); await sleep(400); } if (!api.rack().length) api.addInstrument('juniper', 'keys'); api.closeDrawers(); } },
     { id: 'corner', title: 'This is your corner', text: 'Each player gets a corner along the wall: yours is lit. Friends who join take the empty ones. Every browser plays every player\'s instruments, so the whole band hears the same music at the same moment.',
-      target: () => $('.corner.me'), setup: () => api.goRoom('jam'), next: true },
-    { id: 'desk', title: 'Your desk', text: 'This is the instrument you\'re playing: a synth called Juniper. Its knobs change the sound; the Add slot on the left puts more instruments on your desk.',
+      target: () => $('.corner.me'), setup: () => { if (api.where() !== 'jam') api.goRoom('jam'); }, next: true },
+    { id: 'desk', title: 'Your desk', text: () => `This is the instrument you're playing: ${api.instName(api.rack()[0]?.inst) || 'Juniper'}. Its knobs change the sound; the Add slot on the left puts more instruments on your desk.`,
       target: () => $('#device'), setup: () => { if (!api.rack().length) api.addInstrument('juniper', 'keys'); }, next: true },
     { id: 'play', title: 'Play some notes', text: touch ? 'This is a piano: tap the keys at the bottom of the screen to play. Play a few notes now.' : 'Your computer keyboard is a piano: A S D F G H J K are the white keys, W E T Y U the black ones. Play a few notes now (a MIDI keyboard works too).',
       target: () => $('.keybed'), setup: (c) => { c.n0 = api.notes(); }, wait: (c) => api.notes() - c.n0 >= 6, show: () => phrase([60, 62, 64, 65, 67, 65, 64, 62]) },
@@ -69,7 +75,7 @@ export function makeTutorial(api, { h, $ }) {
   ];
   const COMPOSE = [
     { id: 'room', title: 'The Compose Room', text: 'The Jam Room is for playing live. The Compose Room is where a jam becomes a song you can play back, change and share. Click Compose Room.',
-      target: () => $('#roomSeg [data-room="compose"]'), wait: () => api.where() === 'compose', show: () => api.goRoom('compose') },
+      target: () => (visible($('#hall')) ? $('#hall .door2.comp') : $('#roomSeg [data-room="compose"]')), wait: () => api.where() === 'compose' && !visible($('#hall')), show: () => api.goRoom('compose') },
     { id: 'board', title: 'Your song, laid out', text: 'Sections run left to right (Verse, Chorus…), and each row under them is a track: one instrument. Each box is what that track plays in that section. Let\'s fill one in.',
       target: () => $('.arranger'), setup: (c) => tidySection(c), next: true },
     { id: 'chords', title: 'Give it some chords', text: 'Type one chord per bar. Click the first box and type C, press Enter, then Am, F and G.',
@@ -131,6 +137,11 @@ export function makeTutorial(api, { h, $ }) {
     document.body.append(shade, bubble);
     return { shade, bubble };
   }
+  // Back goes to the last step that still applies: not the lobby once you're in, not one that would skip itself
+  function prevIdx() {
+    for (let j = tour.i - 1; j >= 0; j--) { const s = tour.steps[j]; let sk = false; try { sk = !!s.skip?.(); } catch (_) {} if (!(s.lobby && api.inStudio()) && !sk) return j; }
+    return -1;
+  }
   function render() {
     if (!tour) return;
     const st = tour.steps[tour.i], c = tour.ctx, n = tour.steps.filter((s) => !s.lobby || !tour.skipLobby).length;
@@ -138,12 +149,12 @@ export function makeTutorial(api, { h, $ }) {
     const btn = (label, cls, fn, title) => h('button', { class: 'btn small ' + cls, title: title || '', onclick: (e) => { e.currentTarget.blur(); fn(); } }, label);
     const actions = st.end
       ? [st.nextTour ? btn(`${TOURS[st.nextTour].title} →`, 'hot', () => { remember(tour.name); start(st.nextTour); }) : null, btn('Done', st.nextTour ? 'ghost' : 'hot', () => stop(true))]
-      : [tour.i > (tour.skipLobby ? tour.steps.findIndex((s) => !s.lobby) : 0) ? btn('Back', 'ghost', () => go(tour.i - 1)) : null, h('span', { style: 'flex:1' }),
+      : [prevIdx() >= 0 ? btn('Back', 'ghost', () => go(prevIdx())) : null, h('span', { style: 'flex:1' }),
         st.show && !st.next && !c.passed ? btn(c.showing ? 'Doing it…' : 'Show me', 'ghost tour-show', async () => { if (c.showing) return; c.showing = true; render(); try { await st.show(c); } catch (_) {} c.showing = false; if (!c.passed) render(); }, 'Do this step for me') : null,
         st.next || c.passed ? btn(c.passed ? 'Next ✓' : 'Next', 'hot tour-next', () => go(tour.i + 1)) : h('span', { class: 'tour-wait help' }, 'waiting for you…')];
     tour.el.bubble.replaceChildren(
       h('div', { class: 'tour-top' }, h('small', { class: 'tour-count' }, st.end ? TOURS[tour.name].title : `${TOURS[tour.name].title} · ${at} of ${n}`), h('button', { class: 'tour-x', 'aria-label': 'Leave the tour', title: 'Leave the tour (start it again from ? any time)', onclick: () => stop(false) }, '×')),
-      h('b', { class: 'tour-title' }, (c.passed && !st.next ? '✓ ' : '') + st.title), h('p', {}, st.text), h('div', { class: 'tour-actions' }, ...actions.filter(Boolean)));
+      h('b', { class: 'tour-title' }, (c.passed && !st.next ? '✓ ' : '') + st.title), h('p', {}, typeof st.text === 'function' ? st.text(c) : st.text), h('div', { class: 'tour-actions' }, ...actions.filter(Boolean)));
     place();
   }
   // Where the overlay lives: inside the box that scrolls the target (the studio, the lobby) or the fixed panel that
@@ -197,7 +208,12 @@ export function makeTutorial(api, { h, $ }) {
     const prev = tour.steps[tour.i]; try { prev?.done?.(tour.ctx); } catch (_) {}
     if (i < 0 || i >= tour.steps.length) return stop(true);
     tour.i = i; tour.ctx = {}; const st = tour.steps[i];
+    let skip = false; try { skip = !!st.skip?.(); } catch (_) {}
+    if (skip) return go(i + 1);
     try { st.setup?.(tour.ctx); } catch (_) {}
+    // a drawer left open (the wall, the tapes) would hide what this step points at: close it
+    const el = st.target?.(tour.ctx);
+    if (el && !el.closest('.drawer, #hall') && [...document.querySelectorAll('.drawer')].some(visible)) api.closeDrawers();
     render();
     setTimeout(() => { const el = st.target?.(tour.ctx); if (el && visible(el)) { const r = el.getBoundingClientRect(); if (r.top < 60 || r.bottom > innerHeight - 40) el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }, 60);
   }

@@ -2700,7 +2700,7 @@ const tours = makeTutorial({
   inStudio: () => !$('#studio').classList.contains('hide'), where: () => S.where || 'jam', goRoom: (w) => goRoom(w),
   rack: () => S.rack.map((e) => ({ r: e.r, inst: e.cfg.inst, lane: e.laneId || null })), notes: () => S.notesOn || 0,
   key: () => S.key, setKey: (root, mode) => setKey(root, mode), bpm: () => Math.round(tempo.bpm(clock.now() + 1000)), setBpm: (b) => setTempo(b),
-  players: () => band.list().length, tapes: () => tape.takes.length, taping: () => !!tape.on, toggleTape: () => toggleTape(), closeDrawers: () => closeDrawers(),
+  players: () => band.list().length, tapes: () => tape.takes.length, taping: () => !!tape.on, toggleTape: () => toggleTape(), closeDrawers: () => closeDrawers(), firstPick: () => !!S.firstPick, instName: (id) => engine.defs.get(id)?.name || '',
   lockOn: () => $('#lockBtn')?.getAttribute('aria-pressed') === 'true', song: () => songStore.song, transport: () => songStore.song.transport,
   play: (mode, sid) => startTransport(mode, sid), stop: () => stopTransport(), playNote: (on, n, v) => playNote(on, n, v),
   pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 'tour' + i); else padUp('tour' + i); },
