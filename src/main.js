@@ -19,6 +19,7 @@ import { Blobs, isBlobChunk, toPcm16 } from './blobs.js';
 import { makePadsUI, PAD_KEYS, PAD_BASE } from './padsui.js';
 import { makeGear } from './gear.js';
 import * as STEMS from './stems.js';
+import { makeTutorial, toured } from './tutorial.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
 const store = { get: (k) => localStorage.getItem('megajam.' + k) ?? localStorage.getItem('jamjam.' + k), set: (k, v) => localStorage.setItem('megajam.' + k, v) };
 
@@ -396,6 +397,7 @@ const REPEAT_MS = +(qs.get('repeat') ?? 20);
 let repeatGen = 0;
 function sendEvent(e, ev, instant, from) {
   const k = key(S.me, e.r);
+  if (ev.type === 'on') S.notesOn = (S.notesOn || 0) + 1;   // what you've played (the tours wait on it)
   if (S.srec && !S.srec.done) (S.srec.events.get(k) || S.srec.events.set(k, []).get(k)).push({ ...ev });
   // a take is placed where the player heard the band when they played it: their note sounds one lookahead after
   // their hands move (with a quantize or rhythm-help shift kept, since that is meant), so take the lookahead off
@@ -2693,6 +2695,20 @@ function broadcastLook(force = false) {
   if (force || Math.abs(L - lastLookSent) >= 2 || sig !== lastBudgetSig) { lastLookSent = L; lastBudgetSig = sig; room.send({ k: 'look', L, budgets }); }
 }
 
+// ---------- the guided tours (src/tutorial.js): what they read and do ----------
+const tours = makeTutorial({
+  inStudio: () => !$('#studio').classList.contains('hide'), where: () => S.where || 'jam', goRoom: (w) => goRoom(w),
+  rack: () => S.rack.map((e) => ({ r: e.r, inst: e.cfg.inst, lane: e.laneId || null })), notes: () => S.notesOn || 0,
+  key: () => S.key, setKey: (root, mode) => setKey(root, mode), bpm: () => Math.round(tempo.bpm(clock.now() + 1000)), setBpm: (b) => setTempo(b),
+  players: () => band.list().length, tapes: () => tape.takes.length, taping: () => !!tape.on, toggleTape: () => toggleTape(), closeDrawers: () => closeDrawers(),
+  lockOn: () => $('#lockBtn')?.getAttribute('aria-pressed') === 'true', song: () => songStore.song, transport: () => songStore.song.transport,
+  play: (mode, sid) => startTransport(mode, sid), stop: () => stopTransport(), playNote: (on, n, v) => playNote(on, n, v),
+  pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 'tour' + i); else padUp('tour' + i); },
+  addInstrument: (inst, patch) => addEntry({ inst, patch }), jamLane: (id) => jamLane(id), lockIn: (r) => lockIn(entry(r)),
+  draftPart: (spec) => draftPart(spec), editTake: (sid, pid, ev, what, base) => editTake(sid, pid, ev, what, base), setSong: (k, v) => setSong(k, v),
+}, { h, $ });
+window.JJ.tours = tours;
+
 function wire() {
   try { $('#nameIn').value = store.get('name') || ''; } catch (_) {}
   const pre = (qs.get('room') || '').toUpperCase();
@@ -2702,6 +2718,10 @@ function wire() {
   $('#joinBtn').onclick = () => enter($('#codeIn').value);
   $('#codeIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') enter($('#codeIn').value); });
   $('#leaveBtn').onclick = leaveRoom;
+  // the guided tours: "New to this?" in the lobby, ? in the studio
+  $('#tourBtn').onclick = () => tours.start('jam');
+  $('#helpBtn').onclick = (e) => tours.menu(e.currentTarget);
+  for (const b of $$('.tourbtn')) b.classList.toggle('fresh', !toured('jam'));
   $('#copyBtn').onclick = () => openInvite(`${location.origin}${location.pathname}?room=${room.code}${qs.get('server') ? '&server=' + encodeURIComponent(qs.get('server')) : ''}`);
   const bpmNow = () => Math.round(tempo.bpm(clock.now() + 1000));
   $('#bpmDown').onclick = () => setTempo(bpmNow() - 1);

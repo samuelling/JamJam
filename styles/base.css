@@ -28,6 +28,9 @@ body::before { content: ''; position: fixed; inset: 0 0 auto 0; height: 46vh; z-
   background: repeating-conic-gradient(from 45deg at 50% 50%, #17181b 0 25%, #121316 0 50%) 0 0 / 34px 34px;
   -webkit-mask-image: linear-gradient(#000 40%, transparent); mask-image: linear-gradient(#000 40%, transparent); }
 button, select, input { font: inherit; color: inherit; }
+/* iOS Safari zooms the page in when a text field under 16px gets focus, and stays zoomed: keep fields at 16px there */
+@supports (-webkit-touch-callout: none) { input[type=text], input:not([type]), select, textarea { font-size: max(16px, 1em); } }
+body.touring #studio, body.touring #lobby { position: relative; }
 button { cursor: pointer; }
 ::selection { background: var(--te-orange); color: #000; }
 .mono { font-family: var(--mono); }

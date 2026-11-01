@@ -1,0 +1,19 @@
+/* The guided tours (src/tutorial.js): a lit hole round the thing to look at, a card beside it, the ? menu. */
+.tour-shade { position: fixed; z-index: 900; border-radius: 10px; pointer-events: none; box-shadow: 0 0 0 9999px rgba(8, 8, 12, .62), 0 0 0 3px #ffcf26; }
+.tour-card { position: fixed; z-index: 901; width: 380px; max-width: calc(100vw - 24px); padding: 14px 16px 12px; border-radius: 12px; background: #fdfbf3; color: #18181b; box-shadow: 0 12px 40px #000a; outline: 3px solid #ffcf26; animation: tourin .2s ease-out; font: 400 14px/1.45 var(--sans, sans-serif); }
+.tour-card p { margin: 6px 0 12px; }
+.tour-card .tour-title { display: block; font-size: 17px; font-weight: 700; font-family: var(--sans, sans-serif); }
+.tour-card .tour-top { display: flex; align-items: center; gap: 8px; }
+.tour-card .tour-count { flex: 1; font: 600 11px var(--type, sans-serif); text-transform: uppercase; letter-spacing: .06em; opacity: .6; }
+.tour-card .tour-x { border: 0; background: none; font-size: 20px; line-height: 1; cursor: pointer; color: inherit; opacity: .6; padding: 0 2px; }
+.tour-card .tour-x:hover { opacity: 1; }
+.tour-card .tour-actions { display: flex; align-items: center; gap: 8px; }
+.tour-card .btn.ghost { color: #18181b; border-color: #18181b55; }
+.tour-card .tour-wait { font-size: 12px; opacity: .65; font-style: italic; }
+.tour-menu { position: fixed; z-index: 902; display: grid; gap: 8px; width: 260px; padding: 12px; border-radius: 10px; background: #1b1c21; box-shadow: 0 10px 30px #000a; outline: 1px solid #ffffff22; }
+.tourbtn.fresh { animation: tourpulse 2.4s ease-in-out infinite; }
+@keyframes tourpulse { 0%, 100% { box-shadow: 0 0 0 0 #ffcf2600; } 50% { box-shadow: 0 0 0 4px #ffcf2666; } }
+@keyframes tourin { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .tourbtn.fresh, .tour-card { animation: none; } .tourbtn.fresh { outline: 2px solid #ffcf26; } }
+/* while touring, the studio and the lobby hold the overlay (it scrolls with them): positioned boxes, which moves nothing in them */
+body.touring #studio, body.touring #lobby { position: relative; }

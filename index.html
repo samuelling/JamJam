@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="styles/look.css">
 <link rel="stylesheet" href="styles/rooms.css">
 <link rel="stylesheet" href="styles/compose.css">
+<link rel="stylesheet" href="styles/tutorial.css">
 <script src="mp-config.js"></script>
 </head>
 <body class="simple">
@@ -36,6 +37,7 @@
         <label class="legend" for="nameIn">Your name</label>
         <input id="nameIn" type="text" maxlength="16" placeholder="NAME" autocomplete="nickname">
         <button id="startBtn" class="btn hot big">Start a jam</button>
+        <button id="tourBtn" class="btn small tourbtn" title="A step-by-step walk through your first jam, about five minutes">New to this? Take the tour</button>
         <div class="or">or join a friend</div>
         <div class="joinrow"><input id="codeIn" type="text" maxlength="4" placeholder="CODE" autocomplete="off" aria-label="Room code"><button id="joinBtn" class="btn">Walk in</button></div>
         <button id="listenBtn" class="btn small ghost" title="Hear the band without playing: your browser plays their instruments, so it sounds like you're in the room">or just listen in</button>
@@ -69,7 +71,8 @@
     <button id="selfBtn" class="btn small tech" title="Hear your own parts the moment you play them; the band still hears everything in sync">Hear myself</button>
     <div class="seg roomseg" id="roomSeg" role="group" aria-label="Room"><button data-room="jam" class="on">Jam Room</button><button data-room="compose">Compose Room</button></div>
     <button id="airplayBtn" class="btn small ghost hide" aria-pressed="false" title="Send the sound to an AirPlay speaker. It adds about two seconds of delay.">AirPlay</button>
-    <button id="leaveBtn" class="btn small ghost" style="margin-left:auto">Leave</button>
+    <button id="helpBtn" class="btn small ghost tourbtn" style="margin-left:auto" title="New to this? Step-by-step tours of the Jam Room and the Compose Room" aria-label="Tours: new to this?">? Tours</button>
+    <button id="leaveBtn" class="btn small ghost">Leave</button>
     <span id="lookHelp" class="help tech"></span>
   </div>
 
