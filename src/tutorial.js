@@ -24,8 +24,10 @@ export function makeTutorial(api, { h, $ }) {
   const partOf = (sid, lane) => Object.values(api.song().sections[sid]?.parts || {}).find((p) => p.laneId === lane || p.id === lane);
   const onsIn = (p) => { if (!p) return 0; const t = (p.takes || []).find((q) => q.id === p.current) || (p.takes || []).at(-1); return (t?.events || []).filter((e) => e.type === 'on').length; };
   const btnText = (root, re) => [...(root ? root.querySelectorAll('button') : [])].find((b) => re.test(b.textContent.trim()));
-  const visible = (el) => !!el && el.getClientRects().length > 0 && !el.closest('.hide');
+  // on screen: laid out (not display:none anywhere above it) and not hidden (a .hide class can be overridden by a room)
+  const visible = (el) => !!el && el.getClientRects().length > 0 && (typeof el.checkVisibility !== 'function' || el.checkVisibility({ visibilityProperty: true }));
   // a short phrase on whatever is selected on your desk, for "Show me" on the playing steps
+  const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;   // a phone or tablet: tap, not type
   const phrase = async (notes, ms = 260) => { for (const n of notes) { api.playNote(true, n, 96); await sleep(ms * 0.8); api.playNote(false, n, 0); await sleep(ms * 0.2); } };
 
   // ---------- the two tours ----------
@@ -38,11 +40,11 @@ export function makeTutorial(api, { h, $ }) {
       target: () => $('.corner.me'), setup: () => api.goRoom('jam'), next: true },
     { id: 'desk', title: 'Your desk', text: 'This is the instrument you\'re playing: a synth called Juniper. Its knobs change the sound; the Add slot on the left puts more instruments on your desk.',
       target: () => $('#device'), setup: () => { if (!api.rack().length) api.addInstrument('juniper', 'keys'); }, next: true },
-    { id: 'play', title: 'Play some notes', text: 'Your computer keyboard is a piano: A S D F G H J K are the white keys, W E T Y U the black ones. Play a few notes now (a MIDI keyboard works too).',
+    { id: 'play', title: 'Play some notes', text: touch ? 'This is a piano: tap the keys at the bottom of the screen to play. Play a few notes now.' : 'Your computer keyboard is a piano: A S D F G H J K are the white keys, W E T Y U the black ones. Play a few notes now (a MIDI keyboard works too).',
       target: () => $('.keybed'), setup: (c) => { c.n0 = api.notes(); }, wait: (c) => api.notes() - c.n0 >= 6, show: () => phrase([60, 62, 64, 65, 67, 65, 64, 62]) },
     { id: 'key', title: 'Pick a key for the room', text: 'A key is the set of notes that sound good together. The whole band shares one. Choose A minor from this list: the right keys light up, and chord buttons appear.',
       target: () => $('#keySel'), wait: () => !!api.key()?.mode, show: () => api.setKey(9, 'minor') },
-    { id: 'pads', title: 'Whole chords, one key each', text: 'These chord pads play a full chord at a time. Press the number keys 1 to 6 (or click the pads). Try 1, then 6, then 4, then 5.',
+    { id: 'pads', title: 'Whole chords, one key each', text: touch ? 'These chord pads play a full chord at a time. Tap a few: try the first, then the sixth, the fourth and the fifth.' : 'These chord pads play a full chord at a time. Press the number keys 1 to 6 (or click the pads). Try 1, then 6, then 4, then 5.',
       target: () => $('#pads'), setup: (c) => { c.p = 0; c.on = (e) => { if (/^Digit[1-7]$/.test(e.code) && !e.repeat) c.p++; }; document.addEventListener('keydown', c.on, true); c.clk = (e) => { if (e.target.closest?.('#pads .pad')) c.p++; }; document.addEventListener('pointerdown', c.clk, true); },
       wait: (c) => c.p >= 3, done: (c) => { document.removeEventListener('keydown', c.on, true); document.removeEventListener('pointerdown', c.clk, true); },
       show: async (c) => { for (const i of [0, 5, 3, 4]) { api.pad(i, true); await sleep(450); api.pad(i, false); c.p++; await sleep(80); } } },
@@ -52,7 +54,7 @@ export function makeTutorial(api, { h, $ }) {
       target: () => $('#libCards .tile.drums'), wait: () => !!$('#libExtra .dgenre') || api.players() > 0, show: () => $('#libCards .tile.drums .face')?.click() },
     { id: 'style', title: 'Pick a style', text: 'Every style plays differently. Rock is a good start; try Funk or Hip hop later.',
       target: () => $('#libExtra'), wait: () => api.players() > 0, show: () => (btnText($('#libExtra'), /^Rock/) || $('#libExtra .dgenre button'))?.click() },
-    { id: 'tempo', title: 'Set the speed', text: 'The tempo (BPM, beats per minute) is shared too. Press + a few times to speed up, or drag the number.',
+    { id: 'tempo', title: 'Set the speed', text: touch ? 'The tempo (BPM, beats per minute) is shared too. Tap + a few times to speed up.' : 'The tempo (BPM, beats per minute) is shared too. Press + a few times to speed up, or drag the number.',
       target: () => $('#bpmLcd')?.closest('.readout'), setup: (c) => { c.b0 = api.bpm(); }, wait: (c) => Math.abs(api.bpm() - c.b0) >= 4, show: () => api.setBpm(api.bpm() + 10) },
     { id: 'lock', title: 'No wrong notes', text: 'Lock to key makes every key you press land on a note of the room\'s key. Turn it on.',
       target: () => $('#lockBtn'), wait: () => api.lockOn(), show: () => $('#lockBtn')?.click() },
@@ -90,7 +92,7 @@ export function makeTutorial(api, { h, $ }) {
       target: () => btnText($('.trackbar'), /^Jam it$/), setup: (c) => { c.lane = lanes().filter((t) => !t.drums).at(-1)?.id; if (!api.transport()?.on) api.play('loop', firstSec()?.id); }, wait: (c) => api.rack().some((e) => e.lane === c.lane), show: (c) => api.jamLane(c.lane) },
     { id: 'jamsec', title: 'Into the Jam Room', text: 'Jam this section takes you to the Jam Room with the Verse looping and your bass on the desk, ready to play.',
       target: () => btnText($('#compose'), /^Jam this section$/), wait: () => api.where() === 'jam' && !!api.transport()?.on, show: () => { api.play('loop', firstSec()?.id); api.goRoom('jam'); } },
-    { id: 'bassplay', title: 'Play along', text: 'The bar at the top counts you through the loop. Play a bass line on your keys: press Z twice to drop two octaves first, then low notes on beat 1 of each bar are plenty: C, then A, F, G.',
+    { id: 'bassplay', title: 'Play along', text: touch ? 'The bar at the top counts you through the loop. Tap out a bass line on the keys: one low note at the start of each bar is plenty (C, then A, F, G).' : 'The bar at the top counts you through the loop. Play a bass line on your keys: press Z twice to drop two octaves first, then low notes on beat 1 of each bar are plenty: C, then A, F, G.',
       target: () => $('.keybed'), setup: (c) => { c.n0 = api.notes(); c.lane = lanes().filter((t) => !t.drums).at(-1)?.id; if (!api.transport()?.on) api.play('loop', firstSec()?.id); }, wait: (c) => api.notes() - c.n0 >= 8,
       show: () => phrase([36, 36, 45, 45, 41, 41, 43, 43], 500) },
     { id: 'lock', title: 'Lock it in', text: 'Happy with what you played? Lock in keeps your last full pass of the loop as a take on the bass track. Play a pass you like, then press it.',
@@ -144,18 +146,51 @@ export function makeTutorial(api, { h, $ }) {
       h('b', { class: 'tour-title' }, (c.passed && !st.next ? '✓ ' : '') + st.title), h('p', {}, st.text), h('div', { class: 'tour-actions' }, ...actions.filter(Boolean)));
     place();
   }
+  // Where the overlay lives: inside the box that scrolls the target (the studio, the lobby) or the fixed panel that
+  // holds it (a drawer), placed in that box's own coordinates. It then scrolls with the page natively, and any offset
+  // the browser adds to client coordinates (iOS Safari's zoom after focusing a text field, its moving address bar)
+  // cancels out, since both rects are read the same way. Nothing found: fixed, over the window.
+  function hostOf(el) {
+    for (let a = el && el.parentElement; a && a !== document.body; a = a.parentElement) {
+      if (a.id === 'studio' || a.id === 'lobby') return a;
+      if (getComputedStyle(a).position === 'fixed') return a;
+    }
+    return null;
+  }
+  function adopt(node, host) {
+    const want = host || document.body;
+    if (node.parentElement !== want) want.append(node);
+    node.style.position = host ? 'absolute' : 'fixed';
+  }
   function place() {
     if (!tour) return;
-    const st = tour.steps[tour.i], el = st.target?.(tour.ctx), { shade, bubble } = tour.el, vw = innerWidth, vh = innerHeight, pad = 8;
-    const r = el && visible(el) ? el.getBoundingClientRect() : null;
-    if (!r) { shade.style.cssText = `left:${vw / 2}px;top:${vh / 2}px;width:0;height:0`; bubble.style.left = `${Math.max(12, vw / 2 - 200)}px`; bubble.style.top = `${Math.max(12, vh / 2 - 110)}px`; return; }
-    shade.style.cssText = `left:${r.left - pad}px;top:${r.top - pad}px;width:${r.width + pad * 2}px;height:${r.height + pad * 2}px`;
-    const bw = bubble.offsetWidth || 380, bh = bubble.offsetHeight || 200, gap = 16;
-    let x = r.left + r.width / 2 - bw / 2, y;
-    if (r.bottom + gap + bh < vh) y = r.bottom + gap + pad;
-    else if (r.top - gap - bh > 0) y = r.top - gap - pad - bh;
-    else { y = Math.min(vh - bh - 12, Math.max(12, r.top)); x = r.right + gap + bw < vw ? r.right + gap + pad : r.left - gap - pad - bw; }
-    bubble.style.left = `${Math.max(12, Math.min(vw - bw - 12, x))}px`; bubble.style.top = `${Math.max(12, Math.min(vh - bh - 12, y))}px`;
+    const st = tour.steps[tour.i], el = st.target?.(tour.ctx), { shade, bubble } = tour.el, pad = 8, gap = 14;
+    const r = el && visible(el) ? el.getBoundingClientRect() : null, host = r ? hostOf(el) : null;
+    adopt(shade, host); adopt(bubble, host);
+    // the visible window, in client coordinates: the host's box cut to the viewport
+    const vw = document.documentElement.clientWidth || innerWidth, vh = innerHeight;
+    const hr = host ? host.getBoundingClientRect() : { left: 0, top: 0, right: vw, bottom: vh };
+    const win = { left: Math.max(0, hr.left), top: Math.max(0, hr.top), right: Math.min(vw, hr.right), bottom: Math.min(vh, hr.bottom) };
+    const toHost = (x, y) => (host ? [x - hr.left - host.clientLeft + host.scrollLeft, y - hr.top - host.clientTop + host.scrollTop] : [x, y]);
+    const bw = bubble.offsetWidth || 380, bh = bubble.offsetHeight || 200;
+    let bx, by;
+    if (!r) {
+      const [x, y] = toHost((win.left + win.right) / 2, (win.top + win.bottom) / 2);
+      shade.style.left = `${x}px`; shade.style.top = `${y}px`; shade.style.width = '0px'; shade.style.height = '0px';
+      bx = (win.left + win.right) / 2 - bw / 2; by = (win.top + win.bottom) / 2 - bh / 2;
+    } else {
+      const [x, y] = toHost(r.left - pad, r.top - pad);
+      shade.style.left = `${x}px`; shade.style.top = `${y}px`; shade.style.width = `${r.width + pad * 2}px`; shade.style.height = `${r.height + pad * 2}px`;
+      bx = r.left + r.width / 2 - bw / 2;
+      if (r.bottom + pad + gap + bh <= win.bottom) by = r.bottom + pad + gap;
+      else if (r.top - pad - gap - bh >= win.top) by = r.top - pad - gap - bh;
+      else if (r.right + pad + gap + bw <= win.right) { bx = r.right + pad + gap; by = r.top; }
+      else if (r.left - pad - gap - bw >= win.left) { bx = r.left - pad - gap - bw; by = r.top; }
+      else by = win.bottom - bh - 12;   // no room beside it (a tall target on a phone): the card sits at the bottom
+    }
+    bx = Math.max(win.left + 8, Math.min(win.right - bw - 8, bx)); by = Math.max(win.top + 8, Math.min(win.bottom - bh - 8, by));
+    const [cx, cy] = toHost(bx, by);
+    bubble.style.left = `${cx}px`; bubble.style.top = `${cy}px`;
   }
   function go(i) {
     if (!tour) return;
@@ -206,5 +241,5 @@ export function makeTutorial(api, { h, $ }) {
     const away = (e) => { if (!m.contains(e.target) && e.target !== anchor) { m.remove(); removeEventListener('pointerdown', away, true); } };
     setTimeout(() => addEventListener('pointerdown', away, true), 0);
   }
-  return { start, stop, menu, active: () => tour && { name: tour.name, step: tour.steps[tour.i].id, passed: !!tour.ctx.passed }, steps: (k) => TOURS[k].steps.map((s) => s.id) };
+  return { start, stop, menu, target: () => (tour ? tour.steps[tour.i].target?.(tour.ctx) || null : null), active: () => tour && { name: tour.name, step: tour.steps[tour.i].id, passed: !!tour.ctx.passed }, steps: (k) => TOURS[k].steps.map((s) => s.id) };
 }
