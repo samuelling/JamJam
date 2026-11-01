@@ -54,8 +54,12 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
     check(await waitStep('style'), 'the Drummer tile opens its styles');
     await p.click('#libExtra .dgenre button');
     check(await waitStep('tempo') && (await p.evaluate(() => JJ.band ? 1 : 1)), 'picking a style brings in a drummer; on to tempo');
-    for (let i = 0; i < 5; i++) { await p.click('#bpmUp'); await sleep(120); }
-    check(await waitStep('lock'), 'pressing + a few times moves it on');
+    const b0 = await p.evaluate(() => Math.round(JJ.tempo.bpm(JJ.clock.now() + 1000)));
+    check(new RegExp(`from ${b0} to ${b0 + 4}`).test(await card()) && /4 to go/.test(await card()), `the tempo step names the target: from ${b0} to ${b0 + 4}, 4 to go`);
+    await p.click('#bpmUp'); await sleep(500);
+    check(/3 to go/.test(await card()) && (await step()) === 'tempo', 'one press: the card counts down (3 to go) and waits');
+    for (let i = 0; i < 3; i++) { await p.click('#bpmUp'); await sleep(150); }
+    check(await waitStep('lock'), 'reaching the target moves it on');
     await p.click('#lockBtn');
     check(await waitStep('jam'), 'Lock to key moves it on');
     await p.mouse.click(700, 5); await keys(['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'j', 'h', 'g', 'f', 'd']);
