@@ -12,7 +12,7 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
   try {
     const p = await (await b.newContext({ viewport: { width: 1400, height: 1000 } })).newPage();
     p.on('pageerror', (e) => errors.push(e.message));
-    await p.goto(BASE + '?lag=30'); await sleep(600);
+    await p.goto(BASE + '?lag=30&picks=1&doors=1'); await sleep(600);   // a first visit: the hall's two doors, then "What do you want to play?"
     const step = () => p.evaluate(() => JJ.tours.active()?.step || null);
     const waitStep = async (id, ms = 8000) => { for (let t = 0; t < ms; t += 150) { if ((await step()) === id) return true; await sleep(150); } return false; };
     const card = () => p.textContent('.tour-card');
@@ -27,11 +27,20 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
     await p.fill('#nameIn', 'Robin');
     check(await waitStep('start'), 'typing a name moves it on to Start a jam');
     await p.click('#startBtn');
-    check(await waitStep('corner'), 'starting the studio moves it on to your corner');
+    check(await waitStep('door') && await p.isVisible('#hall'), 'starting the studio: the hall, and the tour says to go into the Jam Room');
+    await p.click('#hall .door2.jam');
+    check(await waitStep('pick'), 'through the Jam Room door: "What do you want to play?"');
+    await p.waitForSelector('#quickPicks .quick', { state: 'visible' }); await sleep(300);
+    const lit2 = await p.evaluate(() => { const s = document.querySelector('.tour-shade').getBoundingClientRect(), c = document.querySelector('#quickPicks').getBoundingClientRect(); return Math.abs(s.top + 8 - c.top) < 3 && Math.abs(s.height - 16 - c.height) < 3; });
+    check(lit2, 'the lit hole sits on the first picks');
+    await p.evaluate(() => [...document.querySelectorAll('#quickPicks .quick')].find((b) => /strum/i.test(b.textContent)).click());
+    check(await waitStep('corner'), 'picking something to strum moves it on to your corner');
+    check(!(await p.evaluate(() => [...document.querySelectorAll('.drawer')].some((d) => d.getClientRects().length && !d.classList.contains('hide')))), 'no drawer is left covering your corner');
+    check(!(await p.$('.tour-card .btn.ghost:not(.tour-show)')) || !(await p.evaluate(() => [...document.querySelectorAll('.tour-card button')].some((b) => b.textContent === 'Back'))), 'no Back from the corner into steps that are done');
     await sleep(600);
     const lit = await p.evaluate(() => { const s = document.querySelector('.tour-shade').getBoundingClientRect(), c = document.querySelector('.corner.me').getBoundingClientRect(); return Math.abs(s.left + 8 - c.left) < 3 && Math.abs(s.width - 16 - c.width) < 3; });
     check(lit, 'the lit hole sits on your corner');
-    await next(); check(await waitStep('desk'), 'Next goes to the desk'); await next();
+    await next(); check(await waitStep('desk') && /Acoustic/.test(await card()), 'Next goes to the desk, naming what you picked'); await next();
     check(await waitStep('play'), 'then: play some notes');
     await p.mouse.click(700, 5); await keys(['a', 's', 'd', 'f', 'g', 'h', 'j']);
     check(await waitStep('key'), 'playing six notes on the computer keys moves it on');
@@ -108,7 +117,7 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
     // the ? menu and leaving part-way
     await p.click('#helpBtn'); await sleep(200);
     check((await p.$$('.tour-menu button')).length === 2, '? opens a menu of both tours');
-    await p.click('.tour-menu button'); check(await waitStep('corner'), 'a tour started from the studio skips the lobby steps');
+    await p.click('.tour-menu button'); check(await waitStep('door'), 'the jam tour started from the Compose Room skips the lobby and first asks you into the Jam Room');
     await p.click('.tour-card .tour-x'); await sleep(200);
     check(!(await p.$('.tour-card')) && !(await p.$('.tour-shade')), '× leaves the tour');
     check(!errors.length, 'no page errors' + (errors.length ? ': ' + errors.join('; ') : ''));

@@ -11,7 +11,7 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
   try {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' });
     const p = await ctx.newPage(); p.on('pageerror', (e) => errors.push(e.message));
-    await p.goto(BASE + '?lag=30'); await sleep(600);
+    await p.goto(BASE + '?lag=30&picks=1&doors=1'); await sleep(600);   // a first visit: hall doors, then the first pick
     // how far the hole is from its target, and whether the card is on screen (client coordinates, after a frame)
     const measure = () => p.evaluate(() => new Promise((res) => requestAnimationFrame(() => {
       const t = JJ.tours.target(), sh = document.querySelector('.tour-shade'), card = document.querySelector('.tour-card');
