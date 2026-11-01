@@ -17,15 +17,21 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
       const t = JJ.tours.target(), sh = document.querySelector('.tour-shade'), card = document.querySelector('.tour-card');
       const c = card.getBoundingClientRect(), on = c.left >= -1 && c.top >= -1 && c.right <= innerWidth + 1 && c.bottom <= innerHeight + 1;
       if (!t || !t.getClientRects().length) return res({ off: 0, on, none: true });
-      const a = t.getBoundingClientRect(), s = sh.getBoundingClientRect();
-      res({ off: Math.max(Math.abs(s.left + 8 - a.left), Math.abs(s.top + 8 - a.top), Math.abs(s.width - 16 - a.width), Math.abs(s.height - 16 - a.height)), on, id: JJ.tours.active().step });
+      const a = t.getBoundingClientRect(), s = sh.getBoundingClientRect(), vv = window.visualViewport || { offsetTop: 0, height: innerHeight };
+      // how much of the target the card covers, and how much of the target is on screen
+      const ix = Math.max(0, Math.min(a.right, c.right) - Math.max(a.left, c.left)), iy = Math.max(0, Math.min(a.bottom, c.bottom) - Math.max(a.top, c.top));
+      const vis = Math.max(0, Math.min(a.bottom, vv.offsetTop + vv.height) - Math.max(a.top, vv.offsetTop)) * Math.max(0, Math.min(a.right, innerWidth) - Math.max(a.left, 0));
+      res({ off: Math.max(Math.abs(s.left + 8 - a.left), Math.abs(s.top + 8 - a.top), Math.abs(s.width - 16 - a.width), Math.abs(s.height - 16 - a.height)), on, id: JJ.tours.active().step,
+        covered: (ix * iy) / Math.max(1, a.width * a.height), shown: vis / Math.max(1, a.width * a.height), th: Math.round(a.height), ch: Math.round(c.height) });
     })));
     const scroller = () => p.evaluate(() => { const t = JJ.tours.target(); const host = t && (t.closest('#studio') || t.closest('#lobby')); if (!host || host.scrollHeight <= host.clientHeight) return false; host.scrollTop += host.scrollTop > 100 ? -120 : 120; return true; });
     const step = () => p.evaluate(() => JJ.tours.active()?.step || null);
-    const bad = [], offscreen = [], scrolled = [];
+    const bad = [], offscreen = [], scrolled = [], covered = [], hidden = [];
     const visit = async () => {
       const id = await step(); await sleep(700);
       const m = await measure(); if (m.off > 2) bad.push(`${id} ${m.off.toFixed(1)}px`); if (!m.on) offscreen.push(id);
+      if (!m.none && m.covered > 0.02) covered.push(`${id} ${(m.covered * 100).toFixed(0)}% (target ${m.th}px, card ${m.ch}px)`);
+      if (!m.none && m.shown < 0.95) hidden.push(`${id} ${(m.shown * 100).toFixed(0)}% on screen (target ${m.th}px)`);
       if (await scroller()) { const m2 = await measure(); if (m2.off > 2) scrolled.push(`${id} ${m2.off.toFixed(1)}px`); }
     };
     const advance = async () => {
@@ -41,10 +47,23 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
       await advance();
       for (let t = 0; t < 40 && (await step()) === id; t++) await sleep(150);
     }
-    check(seen.length >= 30, `walked ${seen.length} steps of both tours on a phone-sized screen`);
+    // and the friend tour: Robin walks in on a phone too
+    await p.evaluate(() => JJ.tours.start('friends'));
+    const seenF = [];
+    for (let guard = 0; guard < 40; guard++) {
+      const id = await step(); if (!id) break;
+      if (seenF.at(-1) !== id) { seenF.push(id); if (id === 'arrive') { for (let t = 0; t < 120 && (await step()) === 'arrive'; t++) await sleep(250); continue; } await visit(); }
+      if (id === 'end') { await p.click('.tour-card .btn.hot'); break; }
+      await advance();
+      for (let t = 0; t < 60 && (await step()) === id; t++) await sleep(150);
+    }
+    check(seenF.length >= 14, `walked the friend tour too (${seenF.length} steps: ${seenF.join(' ')})`);
+    check(seen.length >= 30, `walked ${seen.length} steps of the first two tours on a phone-sized screen`);
     check(!bad.length, 'the lit hole sits on its target at every step' + (bad.length ? ': ' + bad.join(', ') : ''));
     check(!scrolled.length, 'scrolling the page leaves the hole on its target (it scrolls with the page)' + (scrolled.length ? ': ' + scrolled.join(', ') : ''));
     check(!offscreen.length, 'the card is fully on screen at every step' + (offscreen.length ? ': ' + offscreen.join(', ') : ''));
+    check(!covered.length, 'the card never covers what the step points at' + (covered.length ? ': ' + covered.join(', ') : ''));
+    check(!hidden.length, 'what the step points at is on screen' + (hidden.length ? ': ' + hidden.join(', ') : ''));
     // zoomed in, as iOS Safari leaves a page after a text field had focus
     const cdp = await ctx.newCDPSession(p);
     await p.evaluate(() => JJ.tours.start('compose')); await sleep(800);

@@ -45,7 +45,7 @@ export function makeTutorial(api, { h, $ }) {
     { id: 'corner', title: 'This is your corner', text: 'Each player gets a corner along the wall: yours is lit. Friends who join take the empty ones. Every browser plays every player\'s instruments, so the whole band hears the same music at the same moment.',
       target: () => $('.corner.me'), setup: () => { if (api.where() !== 'jam') api.goRoom('jam'); }, next: true },
     { id: 'desk', title: 'Your desk', text: () => `This is the instrument you're playing: ${api.instName(api.rack()[0]?.inst) || 'Juniper'}. Its knobs change the sound; the Add slot on the left puts more instruments on your desk.`,
-      target: () => $('#device'), setup: () => { if (!api.rack().length) api.addInstrument('juniper', 'keys'); }, next: true },
+      target: () => $('#device .devtop') || $('#device .md-top') || $('#device'), setup: () => { if (!api.rack().length) api.addInstrument('juniper', 'keys'); }, next: true },
     { id: 'play', title: 'Play some notes', text: touch ? 'This is a piano: tap the keys at the bottom of the screen to play. Play a few notes now.' : 'Your computer keyboard is a piano: A S D F G H J K are the white keys, W E T Y U the black ones. Play a few notes now (a MIDI keyboard works too).',
       target: () => $('.keybed'), setup: (c) => { c.n0 = api.notes(); }, wait: (c) => api.notes() - c.n0 >= 6, show: () => phrase([60, 62, 64, 65, 67, 65, 64, 62]) },
     { id: 'key', title: 'Pick a key for the room', text: 'A key is the set of notes that sound good together. The whole band shares one. Choose A minor from this list: the right keys light up, and chord buttons appear.',
@@ -59,7 +59,7 @@ export function makeTutorial(api, { h, $ }) {
     { id: 'drummer', title: 'The Drummer', text: 'This wall holds every instrument. Click the Drummer tile.',
       target: () => $('#libCards .tile.drums'), wait: () => !!$('#libExtra .dgenre') || api.players() > 0, show: () => $('#libCards .tile.drums .face')?.click() },
     { id: 'style', title: 'Pick a style', text: 'Every style plays differently. Rock is a good start; try Funk or Hip hop later.',
-      target: () => $('#libExtra'), wait: () => api.players() > 0, show: () => (btnText($('#libExtra'), /^Rock/) || $('#libExtra .dgenre button'))?.click() },
+      target: () => [...document.querySelectorAll('#libExtra .dgenre')].find((g) => /^Rock/i.test(g.querySelector('b')?.textContent || '')) || $('#libExtra'), wait: () => api.players() > 0, show: () => (btnText($('#libExtra'), /^Rock/) || $('#libExtra .dgenre button'))?.click() },
     // a definite target (four presses of +), and the card counts along as you go
     { id: 'tempo', title: 'Set the speed', live: true,
       text: (c) => { const now = api.bpm(), left = c.goal - now; return `The tempo (BPM, beats per minute) sets how fast the band plays, and everyone shares it. Speed it up from ${c.b0} to ${c.goal}: ${touch ? 'tap' : 'press'} + four times${touch ? '' : ' (or drag the number up)'}. ` + (now >= c.goal ? `It's at ${now}. Hear the drummer speed up?` : `It's at ${now}: ${left} to go.`); },
@@ -114,9 +114,80 @@ export function makeTutorial(api, { h, $ }) {
       target: () => $('.playsong'), setup: () => { if (api.transport()?.on && api.transport().mode !== 'song') api.stop(); }, wait: () => !!api.transport()?.on && api.transport().mode === 'song', show: () => api.play('song') },
     { id: 'more', title: 'Grow it and share it', text: 'Add a section for a Chorus, or start from a Song preset with a whole band. Song options has the rest: export stems and an Ableton Live set, save MIDI, or save the song.',
       target: () => $('.moretoggle'), next: true },
-    { id: 'end', title: 'You\'re all set!', text: 'You wrote a song: chords, a beat you clicked in and a bass you played. Now make your own: invite the band, jam a section, lock in the takes you like. Stop the song any time with the same button.', end: true },
+    { id: 'end', title: 'You\'re all set!', text: 'You wrote a song: chords, a beat you clicked in and a bass you played. Now make your own: invite the band, jam a section, lock in the takes you like. Stop the song any time with the same button.', end: true, nextTour: 'friends' },
   ];
-  const TOURS = { jam: { title: 'Your first jam', steps: JAM }, compose: { title: 'Write your first song', steps: COMPOSE } };
+  // ---------- a pretend bandmate: this very app in a hidden frame, walking into your room as Robin ----------
+  // It's a real second player (the same code a friend runs: notes over the network, a corner, chat), just silent and
+  // pretending to be about 60 ms away (?lag=60), so the timing you see is the timing you'd get.
+  const friend = {
+    frame: null, timer: null, r: null,
+    R() { try { return this.frame?.contentWindow?.JJ || null; } catch (_) { return null; } },
+    corner() { return [...document.querySelectorAll('.corner')].find((c) => /^Robin\b/.test(c.querySelector('.cname')?.textContent || '')) || null; },
+    here() { return api.band().find((p) => p.name === 'Robin') || null; },
+    summon() {
+      if (this.frame) return;
+      const q = new URLSearchParams({ room: api.roomCode(), bot: '1', silent: '1', name: 'Robin', lag: '60', empty: '1' }); if (api.server()) q.set('server', api.server());
+      const f = h('iframe', { src: `${location.pathname}?${q}`, title: 'Robin, a pretend bandmate', 'aria-hidden': 'true', tabindex: '-1', class: 'tour-friend' });
+      document.body.append(f); this.frame = f;
+    },
+    async play(inst, patch, hw) {   // put an instrument on Robin's desk (a linked hardware unit too) and select it
+      for (let t = 0; t < 80 && !(this.R()?.S?.me && this.R().clock?.locked && this.R().engine?.defs?.size); t++) await sleep(150);
+      const R = this.R(); if (!R) return;
+      const r = R.addEntry({ inst, patch, hw }); if (r != null) { R.select(r); this.r = r; }
+    },
+    groove(kind) {   // a riff in the room's key, one note per eighth, on the room's beat
+      clearInterval(this.timer); let last = -1;
+      const k = api.key(), root = k?.mode ? k.root : 9, minor = !k?.mode || k.mode === 'minor';
+      const bass = [0, 0, 12, 0, minor ? 3 : 4, 5, 7, minor ? 10 : 9].map((d) => 33 + root + d), pads = [[0, minor ? 3 : 4, 7], [minor ? 8 : 9, 12, minor ? 15 : 16]];
+      this.timer = setInterval(() => {
+        const R = this.R(); if (!R?.input || !R.clock?.locked) return;
+        const beat = R.tempo.beatAt(R.clock.now()), step = Math.floor(beat * 2); if (step === last) return; last = step;
+        if (kind === 'pad') { if (step % 8) return; const ch = pads[Math.floor(step / 8) % 2].map((d) => 57 + root + d); ch.forEach((n) => R.input.press(n, 80)); setTimeout(() => ch.forEach((n) => R.input.release(n)), (60000 / R.tempo.bpm(R.clock.now())) * 3.6); return; }
+        const n = bass[step % 8]; R.input.press(n, step % 2 ? 84 : 104); setTimeout(() => R.input.release(n), (60000 / R.tempo.bpm(R.clock.now())) * 0.4);
+      }, 20);
+    },
+    say(text) { try { this.R()?.chat(text); } catch (_) {} },
+    leave() {   // say goodbye properly (the room drops the corner at once), then take the frame away
+      clearInterval(this.timer); this.timer = null; const f = this.frame; this.frame = null; this.r = null; if (!f) return;
+      try { f.contentWindow?.document.querySelector('#leaveBtn')?.click(); } catch (_) {}
+      setTimeout(() => f.remove(), 800);
+    },
+  };
+  const FRIENDS = [
+    { id: 'hello', title: 'Jam with a friend', text: 'Let\'s practice with a pretend friend called Robin. Robin is a bit of a robot (they live in this tab), but everything you\'ll see works just the same with a real friend across town. Ready? Press Next and Robin walks in.',
+      setup: () => { if (api.where() !== 'jam') api.goRoom('jam'); }, next: true },
+    { id: 'arrive', title: 'Robin walks in', text: 'Robin is joining with your room\'s four-letter code, the one next to Invite. Friends you invite get a corner, just like yours…',
+      target: () => friend.corner() || $('#roomCode')?.closest('.readout'), setup: () => friend.summon(), wait: () => !!friend.corner() && !!friend.here() },
+    { id: 'listen', title: 'Only the notes travel', text: 'That\'s Robin on bass. Here\'s the clever bit: Robin\'s sound never crosses the internet. Only Robin\'s notes do (which key, how hard, and when), and your browser plays Robin\'s bass itself. So it sounds clean on your end, never crackly, even on a slow connection.',
+      target: () => friend.corner(), setup: async () => { await friend.play('monolith', 'bass'); friend.groove('bass'); }, next: true },
+    { id: 'together', title: 'Play along', text: touch ? 'Join in: tap some notes on the keys. Anything goes; Robin will keep the groove.' : 'Join in: play some notes on your keys (A S D F…). Anything goes; Robin will keep the groove.',
+      target: () => $('.keybed'), setup: (c) => { c.n0 = api.notes(); if (!api.rack().length) api.addInstrument('juniper', 'keys'); }, wait: (c) => api.notes() - c.n0 >= 8, done: () => friend.say('ooh nice, keep going!'), show: () => phrase([57, 60, 64, 62, 60, 57, 64, 67], 300) },
+    { id: 'clock', title: 'One clock for the whole band', text: 'How do you stay together when a note takes time to travel? Every note is stamped with a moment on a clock the whole band shares, set a tiny bit in the future. It arrives everywhere before that moment, and everyone hears it at the same instant. Click the gear to see the timing.',
+      target: () => $('#techBtn'), wait: () => api.tech(), show: () => $('#techBtn')?.click() },
+    { id: 'look', title: 'The lookahead', live: true, text: () => `This is the lookahead: how far ahead your notes are planned so they reach Robin in time. Robin is pretending to be about 60 ms away (a friend in another city), so right now it's ${api.look()} ms: the trip, plus a margin so nothing ever arrives late. With a friend in the same town it's much smaller. The app measures it by itself, so there's nothing to set.`,
+      target: () => $('.lookbar'), next: true },
+    { id: 'feel', title: 'Make it feel right', text: 'If your own notes ever feel a hair late under your fingers, turn on Hear myself: you hear yourself instantly, and the band still hears you in sync. Drums and bass keep strict time automatically; slow pads and strings are relaxed about it. Rhythm help nudges early notes onto the beat.',
+      target: () => $('#selfBtn'), next: true },
+    { id: 'chat', title: 'Say hi', text: 'There\'s a band chat, and Robin just wrote in it. Open the chat (the lit-up speech bubble) and say hi back.',
+      target: () => (visible($('#panel-chat')) ? $('#panel-chat') : $('.sidetab[data-panel="panel-chat"]')), setup: (c) => { c.m0 = api.myChats(); friend.say('hey! 👋 Robin here'); }, wait: (c) => api.myChats() > c.m0, done: () => setTimeout(() => friend.say('glad you made it 🎶'), 600),
+      show: async () => { document.querySelector('.sidetab[data-panel="panel-chat"]')?.click(); await sleep(300); const i = $('#chatIn'); if (i) { i.value = 'hi Robin!'; $('#chatSend')?.click(); } } },
+    { id: 'talk', title: 'Or just talk', text: 'Talk turns on your microphone for the band: click to leave it on, or hold it while you speak. Headphones stop the music from echoing back through your mic.',
+      target: () => $('#talkBtn'), setup: () => { for (const b of document.querySelectorAll('#panel-chat [data-closepanel]')) b.click(); }, next: true },
+    { id: 'styles', title: 'Ways to jam', text: 'Jam freely like this. Or loop a section and take turns locking in parts, which builds a song as you go (the Compose Room tour shows how). Or bring a real mic or guitar with Live audio: it reaches the band a bar or two late, on purpose, landing on the same chords one loop later.',
+      target: () => $('.sidetab[data-panel="panel-lane"]'), next: true },
+    { id: 'twin', title: 'Real synths, and twins', live: true, text: () => { const t = friend.here()?.rack.find((x) => x.hw); return `Robin just plugged in a real synth, an OB-6, and linked it in My gear. You don't own one, so your browser plays its twin: the closest software instrument, here ${api.instName(t?.inst) || 'a matching synth'}. Robin hears the real OB-6, and you hear a close match.`; },
+      target: () => friend.corner(), setup: async () => { friend.groove(null); await friend.play('juniper', 'pad', 'sequential-ob-6'); friend.groove('pad'); }, wait: () => !!friend.here()?.rack.some((x) => x.hw), },
+    { id: 'onetoo', title: 'I have one too', text: 'Got the same synth as a friend? Link yours in My gear, and the friend\'s part can play on your real one, with their sound copied across. You both hear the real thing.',
+      target: () => $('#addHwBtn'), next: true },
+    { id: 'match', title: 'Match my sound', text: 'Your synth sounds a certain way, and its twin should too. With your synth linked and its audio coming in, Match my sound listens as you play a few notes and nudges the twin your friends hear until it sounds like yours.',
+      target: () => $('#addHwBtn'), next: true },
+    { id: 'sync', title: 'Keep the good take', text: 'Caught something great? Sync take has everyone record their own true sound, real synths and mics included, and gathers it all into one folder of lined-up tracks to mix later.',
+      target: () => $('#syncBtn'), next: true },
+    { id: 'bye', title: 'Robin heads home', text: 'That\'s it from Robin. To jam with a real friend: Invite copies a link to this studio. Send it, and they walk into an empty corner just like Robin did.',
+      target: () => $('#copyBtn'), setup: () => { friend.say('gotta run, that was fun! 👋'); setTimeout(() => friend.leave(), 1500); }, next: true },
+    { id: 'end', title: 'You\'re all set!', text: 'You know how jamming together works: notes travel, a shared clock keeps everyone together, twins stand in for gear your friends don\'t have, and the chat and Talk keep you talking. Now go find your band.', end: true },
+  ];
+  const TOURS = { jam: { title: 'Your first jam', steps: JAM }, compose: { title: 'Write your first song', steps: COMPOSE }, friends: { title: 'Jam with a friend', steps: FRIENDS } };
 
   // a short Verse to work in: the song's first section, cut to 4 bars when it's still empty
   function tidySection() {
@@ -175,15 +246,40 @@ export function makeTutorial(api, { h, $ }) {
     if (node.parentElement !== want) want.append(node);
     node.style.position = host ? 'absolute' : 'fixed';
   }
+  // the part of the screen you can actually see, in client coordinates: the visual viewport (on a phone: above the
+  // browser's toolbar and the on-screen keyboard), cut to the host's box
+  function windowFor(host) {
+    const vv = window.visualViewport, vw = document.documentElement.clientWidth || innerWidth;
+    const v = vv ? { left: vv.offsetLeft, top: vv.offsetTop, right: vv.offsetLeft + vv.width, bottom: vv.offsetTop + vv.height } : { left: 0, top: 0, right: vw, bottom: innerHeight };
+    const hr = host ? host.getBoundingClientRect() : v;
+    return { left: Math.max(v.left, hr.left), top: Math.max(v.top, hr.top), right: Math.min(v.right, hr.right), bottom: Math.min(v.bottom, hr.bottom) };
+  }
+  // Before placing: make room. If the target isn't fully on screen, or there's no side of it where the card fits
+  // without covering it, scroll the box that holds it so the target sits near the top with the card's room below
+  // (or as much of it as fits). Once per target per step, so you can still scroll away yourself.
+  function makeRoom(el) {
+    const c = tour.ctx; if (!el || c.roomFor === el || (c.roomTries || 0) >= 3) return; c.roomFor = el;
+    const host = hostOf(el), win = windowFor(host), r = el.getBoundingClientRect(), { bubble } = tour.el, bh = bubble.offsetHeight || 220, bw = bubble.offsetWidth || 380, pad = 8, gap = 14;
+    const inView = r.top >= win.top && r.bottom <= win.bottom && r.left >= win.left && r.right <= win.right;
+    const fits = r.bottom + pad + gap + bh <= win.bottom - 8 || r.top - pad - gap - bh >= win.top + 8 || r.right + pad + gap + bw <= win.right - 8 || r.left - pad - gap - bw >= win.left + 8;
+    if (inView && fits) return;
+    c.roomTries = (c.roomTries || 0) + 1;
+    // bring it into view through every box that scrolls (a pane inside the studio, the studio itself), then set the
+    // outer one so the target sits near the top, leaving the card its room underneath
+    const room = r.height + pad * 2 + gap + bh + 16 <= win.bottom - win.top;   // target and card both fit, one above the other
+    el.scrollIntoView({ block: room ? 'start' : 'center', inline: 'nearest' });
+    if (!host || host.scrollHeight <= host.clientHeight + 1 || getComputedStyle(host).position === 'fixed' && !/(auto|scroll)/.test(getComputedStyle(host).overflowY)) return;
+    const r2 = el.getBoundingClientRect(), w2 = windowFor(host);
+    host.scrollTop += r2.top - (room ? w2.top + pad + 8 : w2.top + Math.max(8, (w2.bottom - w2.top - r2.height) / 2));
+  }
   function place() {
     if (!tour) return;
     const st = tour.steps[tour.i], el = st.target?.(tour.ctx), { shade, bubble } = tour.el, pad = 8, gap = 14;
+    if (el && visible(el)) makeRoom(el);
     const r = el && visible(el) ? el.getBoundingClientRect() : null, host = r ? hostOf(el) : null;
     adopt(shade, host); adopt(bubble, host);
     // the visible window, in client coordinates: the host's box cut to the viewport
-    const vw = document.documentElement.clientWidth || innerWidth, vh = innerHeight;
-    const hr = host ? host.getBoundingClientRect() : { left: 0, top: 0, right: vw, bottom: vh };
-    const win = { left: Math.max(0, hr.left), top: Math.max(0, hr.top), right: Math.min(vw, hr.right), bottom: Math.min(vh, hr.bottom) };
+    const hr = host ? host.getBoundingClientRect() : null, win = windowFor(host);
     const toHost = (x, y) => (host ? [x - hr.left - host.clientLeft + host.scrollLeft, y - hr.top - host.clientTop + host.scrollTop] : [x, y]);
     const bw = bubble.offsetWidth || 380, bh = bubble.offsetHeight || 200;
     let bx, by;
@@ -217,8 +313,6 @@ export function makeTutorial(api, { h, $ }) {
     const el = st.target?.(tour.ctx);
     if (el && !el.closest('.drawer, #hall') && [...document.querySelectorAll('.drawer')].some(visible)) api.closeDrawers();
     render();
-    const mine = tour;
-    setTimeout(() => { if (tour !== mine || tour.steps[tour.i] !== st) return; const el = st.target?.(tour.ctx); if (el && visible(el)) { const r = el.getBoundingClientRect(); if (r.top < 60 || r.bottom > innerHeight - 40) el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }, 60);
   }
   function tick() {
     if (!tour) return;
@@ -233,6 +327,7 @@ export function makeTutorial(api, { h, $ }) {
   }
   function start(name) {
     stop(false, true);
+    if (name === 'friends' && !api.inStudio()) return;   // Robin needs a room to walk into
     const T = TOURS[name]; if (!T) return;
     tour = { name, steps: T.steps, i: 0, ctx: {}, el: build(), skipLobby: api.inStudio() };
     document.body.classList.add('touring');
@@ -244,6 +339,7 @@ export function makeTutorial(api, { h, $ }) {
     if (!tour) return;
     try { tour.steps[tour.i]?.done?.(tour.ctx); } catch (_) {}
     if (finished) remember(tour.name);
+    if (tour.name === 'friends') friend.leave();
     clearInterval(tour.timer); removeEventListener('resize', place); removeEventListener('scroll', place, true);
     tour.el.shade.remove(); tour.el.bubble.remove(); tour = null;
     document.body.classList.remove('touring');

@@ -114,13 +114,13 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
     await p.click('.playsong');
     check(await waitStep('more'), 'Play the song moves it on');
     await next();
-    check(await waitStep('end') && /all set/i.test(await card()), '"You\'re all set!" at the end of the song tour');
-    await p.click('.tour-card .btn.hot');
+    check(await waitStep('end') && /all set/i.test(await card()) && /Jam with a friend/.test(await card()), '"You\'re all set!" at the end of the song tour, with the friend tour offered next');
+    await p.evaluate(() => [...document.querySelectorAll('.tour-card button')].find((b) => b.textContent === 'Done').click());
     await sleep(300);
     check(!(await p.$('.tour-card')) && (await p.evaluate(() => localStorage.getItem('megajam.tour.compose'))) === '1' && !(await p.getAttribute('#helpBtn', 'class')).includes('fresh'), 'Done lets go: no card, both tours marked done, the ? stops pulsing');
     // the ? menu and leaving part-way
     await p.click('#helpBtn'); await sleep(200);
-    check((await p.$$('.tour-menu button')).length === 2, '? opens a menu of both tours');
+    check((await p.$$('.tour-menu button')).length === 3, '? opens a menu of the three tours');
     await p.click('.tour-menu button'); check(await waitStep('door'), 'the jam tour started from the Compose Room skips the lobby and first asks you into the Jam Room');
     await p.click('.tour-card .tour-x'); await sleep(200);
     check(!(await p.$('.tour-card')) && !(await p.$('.tour-shade')), '× leaves the tour');

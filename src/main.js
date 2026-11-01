@@ -21,7 +21,10 @@ import { makeGear } from './gear.js';
 import * as STEMS from './stems.js';
 import { makeTutorial, toured } from './tutorial.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
-const store = { get: (k) => localStorage.getItem('megajam.' + k) ?? localStorage.getItem('jamjam.' + k), set: (k, v) => localStorage.setItem('megajam.' + k, v) };
+// ?bot=1: a pretend bandmate the tours run in a hidden frame (src/tutorial.js). It shares this browser's storage, so
+// it writes nothing there and reads none of your gear; it plays nothing out loud (?silent=1 too) and skips the welcome.
+const BOT = new URLSearchParams(location.search).get('bot') === '1';
+const store = { get: (k) => localStorage.getItem('megajam.' + k) ?? localStorage.getItem('jamjam.' + k), set: (k, v) => (BOT ? undefined : localStorage.setItem('megajam.' + k, v)) };
 
 // replaceChildren, append and prepend print a null child as the word "null"; every view here builds its children
 // with "cond ? el : null", so leave the empty ones out
@@ -71,7 +74,7 @@ const S = {
   chat: [], unread: 0, knobGroup: null,
   mdTrack: 0, mdPage: 0, mdLock: false, held: null, hits: new Map(), md: null,
   libTab: 'builtin', standins: new Map(),
-  owned: new Map((() => { try { return JSON.parse(store.get('gear') || '[]'); } catch (_) { return []; } })()),  // hardware you own: id -> {port, ch}
+  owned: new Map((() => { try { return BOT ? [] : JSON.parse(store.get('gear') || '[]'); } catch (_) { return []; } })()),  // hardware you own: id -> {port, ch}
   hwFilter: 'all',
   key: { root: 9, mode: '', at: 0, by: '' },   // the room's key: mode '' = free
   lockKey: false, snapped: new Map(), assist: 0,
@@ -170,8 +173,8 @@ function onEntered() {
   S.me = room.id;
   soundcheck();
   // the first time in, the wall opens with three suggestions (not in automated tests unless they ask: ?picks=1)
-  if (!S.listener && (!navigator.webdriver || DOORS)) { renderHall(); $('#hall')?.classList.remove('hide'); }
-  if (!S.pickedOnce && !S.listener && (!navigator.webdriver || PICKS)) { S.pickedOnce = true; S.firstPick = true; S.pickWhenJam = true; }
+  if (!S.listener && !BOT && (!navigator.webdriver || DOORS)) { renderHall(); $('#hall')?.classList.remove('hide'); }
+  if (!S.pickedOnce && !S.listener && !BOT && (!navigator.webdriver || PICKS)) { S.pickedOnce = true; S.firstPick = true; S.pickWhenJam = true; }
   updateLeader();
   if (clock.isLeader) { tempo.start(clock.now(), 96); S.lockedAt = performance.now(); }
   for (const e of S.rack) { engine.setCfg(key(S.me, e.r), e.cfg, -Infinity); ensureSeq(key(S.me, e.r), e.cfg); S.stable.set(key(S.me, e.r), performance.now()); applyVolume(key(S.me, e.r)); }
@@ -2664,7 +2667,7 @@ async function enter(code, listen = false) {
   S.name = name;
   try { store.set('name', name); } catch (_) {}
   setStatus('Loading the library…');
-  try { await engine.start(); if (!engine.defs.size) { await engine.loadInstruments('.'); await restoreLibs(); } songMaster(); }
+  try { await engine.start(); if (BOT) engine.out.gain.value = 0; if (!engine.defs.size) { await engine.loadInstruments('.'); await restoreLibs(); } songMaster(); }
   catch (e) { setStatus("Couldn't start audio or load the instruments: " + e.message, 'error'); return; }
   // you walk in with an empty desk and pick what to play (automated tests start with keys unless they ask, ?empty=1)
   if (!S.rack.length && !S.listener && navigator.webdriver && !EMPTY_START) {
@@ -2701,6 +2704,9 @@ const tours = makeTutorial({
   rack: () => S.rack.map((e) => ({ r: e.r, inst: e.cfg.inst, lane: e.laneId || null })), notes: () => S.notesOn || 0,
   key: () => S.key, setKey: (root, mode) => setKey(root, mode), bpm: () => Math.round(tempo.bpm(clock.now() + 1000)), setBpm: (b) => setTempo(b),
   players: () => band.list().length, tapes: () => tape.takes.length, taping: () => !!tape.on, toggleTape: () => toggleTape(), closeDrawers: () => closeDrawers(), firstPick: () => !!S.firstPick, instName: (id) => engine.defs.get(id)?.name || '',
+  roomCode: () => room.code, server: () => qs.get('server') || '', myChats: () => S.chat.filter((c) => c.from === S.me && !c.sys).length,
+  look: () => lookahead(), tech: () => !document.body.classList.contains('simple'),
+  band: () => [...S.players.entries()].filter(([id]) => id !== S.me).map(([id, p]) => ({ id, name: p.name, rack: (p.rack || []).map((x) => ({ inst: x.cfg?.inst, hw: x.cfg?.hw || null })) })),
   lockOn: () => $('#lockBtn')?.getAttribute('aria-pressed') === 'true', song: () => songStore.song, transport: () => songStore.song.transport,
   play: (mode, sid) => startTransport(mode, sid), stop: () => stopTransport(), playNote: (on, n, v) => playNote(on, n, v),
   pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 'tour' + i); else padUp('tour' + i); },
@@ -2722,6 +2728,7 @@ function wire() {
   $('#tourBtn').onclick = () => tours.start('jam');
   $('#helpBtn').onclick = (e) => tours.menu(e.currentTarget);
   for (const b of $$('.tourbtn')) b.classList.toggle('fresh', !toured('jam'));
+  if (BOT) { for (const b of $$('.tourbtn')) b.classList.add('hide'); $('#nameIn').value = (qs.get('name') || 'Robin').slice(0, 16); if (pre) setTimeout(() => enter(pre), 200); }
   $('#copyBtn').onclick = () => openInvite(`${location.origin}${location.pathname}?room=${room.code}${qs.get('server') ? '&server=' + encodeURIComponent(qs.get('server')) : ''}`);
   const bpmNow = () => Math.round(tempo.bpm(clock.now() + 1000));
   $('#bpmDown').onclick = () => setTempo(bpmNow() - 1);
@@ -2832,7 +2839,7 @@ setInterval(() => { if (S.me) { renderNet(); broadcastLook(); } }, 1000);
 Object.assign(window.JJ, {
   addInstrument: (inst, patch) => addEntry({ inst, patch }),
   addHardware: (hw, inst) => addEntry({ hw, inst }),
-  select: (r) => { S.sel = r; renderRack(); renderDevice(); renderKeyboard(); },
+  select: (r) => { S.sel = r; renderRack(); renderDevice(); renderKeyboard(); }, addEntry: (o) => addEntry(o)?.r, chat: (t) => { $('#chatIn').value = t; sendChat(); },
   changeEntry: (r, next) => changeEntry(entry(r), next),
   removeEntry: (r) => removeEntry(entry(r)),
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },

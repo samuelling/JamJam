@@ -157,6 +157,8 @@
 .addtrack { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .addtrack.open { margin: 8px 0; padding: 10px 12px; border-radius: 8px; background: #ffffff08; }
 .arow.addform { display: block; }
+/* the form stays on screen however wide the arrangement is (on a phone the Add button was off to the right) */
+.arow.addform .addtrack.open { position: sticky; left: 0; max-width: min(100%, calc(100vw - 40px)); }
 .arow.addform .addtrack.open { margin: 4px 0; background: #ffcf2614; outline: 2px solid #ffcf26; outline-offset: -2px; animation: freshin .25s ease-out; }
 .arow.fresh .lhead, .arow.fresh .cell { animation: freshpulse 3.8s ease-out; }
 .arow.fresh .lhead { box-shadow: inset 4px 0 0 #ffcf26; }
