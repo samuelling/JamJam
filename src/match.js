@@ -21,13 +21,26 @@ function goertzel(x, start, n, f, sr) {
   for (let i = 0; i < n; i++) { const win = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (n - 1)); const s = x[start + i] * win + c * s1 - s2; s2 = s1; s1 = s; }
   return Math.sqrt(Math.max(0, s1 * s1 + s2 * s2 - c * s1 * s2)) / n;
 }
+const LP = new Map();
+function lowpassOf(sr) {   // windowed-sinc (Blackman, 129 taps), flat to about 6 kHz, down by 7.6 kHz (FIT_SR is 16 kHz)
+  if (LP.has(sr)) return LP.get(sr);
+  const N = 129, fc = 6800 / sr, h = new Float32Array(N); let sum = 0;
+  for (let i = 0; i < N; i++) { const m = i - (N - 1) / 2, w = 0.42 - 0.5 * Math.cos((2 * Math.PI * i) / (N - 1)) + 0.08 * Math.cos((4 * Math.PI * i) / (N - 1)); h[i] = (m === 0 ? 2 * fc : Math.sin(2 * Math.PI * fc * m) / (Math.PI * m)) * w; sum += h[i]; }
+  for (let i = 0; i < N; i++) h[i] /= sum;
+  LP.set(sr, h); return h;
+}
 function harmonics(x, sr, f0, at, K = 12) {
   const n = Math.round(sr * 0.064), start = Math.round(at * sr) - (n >> 1);   // the same 64 ms window at any sample rate
   if (start < 0 || start + n > x.length) return null;
   const h = [];
   for (let k = 1; k <= K; k++) { const f = f0 * k; h.push(f < sr * 0.45 ? goertzel(x, start, n, f, sr) : 0); }
   // a sinusoid of amplitude A gives |X|/n = A/4 through a Hann window, so its power A^2/2 is 8 (|X|/n)^2
-  let tot = 0; for (let i = 0; i < n; i++) tot += x[start + i] * x[start + i];
+  // The total counts only what a render at FIT_SR can hold: a 48 kHz input carries a bright sound's upper harmonics
+  // to 20 kHz, and counted here they'd read as noise the twin's renders can never have (it then adds noise and opens
+  // its filter chasing it). So above FIT_SR the window is low-passed first.
+  let tot = 0;
+  if (sr > FIT_SR * 1.1) { const lp = lowpassOf(sr), L = lp.length >> 1; for (let i = 0; i < n; i++) { let y = 0; for (let k = 0; k < lp.length; k++) { const j = start + i + k - L; if (j >= 0 && j < x.length) y += lp[k] * x[j]; } tot += y * y; } }
+  else for (let i = 0; i < n; i++) tot += x[start + i] * x[start + i];
   const harmP = h.reduce((a, v) => a + 8 * v * v, 0);
   const ref = Math.max(...h, 1e-9);
   return { db: h.map((v) => Math.max(-60, 20 * Math.log10(Math.max(v, 1e-9) / ref))), noise: Math.max(0, Math.min(1, 1 - harmP / Math.max(tot / n, 1e-12))) };
@@ -43,7 +56,12 @@ export function analyze(x, sr, note, held) {
   let pk = 0; for (let i = 0; i < m; i++) if (env[i] > pk) pk = env[i];
   if (pk < 1e-4) return null;
   const db = (v) => Math.max(-60, 20 * Math.log10(Math.max(v, 1e-9) / pk));
-  let att = 0; for (let i = 0; i < m; i++) if (env[i] >= 0.9 * pk) { att = i * 5; break; }
+  // the attack's own peak: chorus and slow beating can make a held note swell past its first peak much later, and
+  // that is not the attack. An exponential attack is half way up at about a third of the time it takes to peak, so
+  // look for the peak up to four times that (plus 30 ms), and time the rise to 90% of it.
+  let h50 = 0; for (let i = 0; i < m; i++) if (env[i] >= 0.5 * pk) { h50 = i; break; }
+  let pkA = 0; for (let i = 0, e = Math.min(m, h50 * 4 + 6); i <= e && i < m; i++) if (env[i] > pkA) pkA = env[i];
+  let att = 0; for (let i = 0; i < m; i++) if (env[i] >= 0.9 * pkA) { att = i * 5; break; }
   const curve = []; for (let t = 0; t < 1200; t += 20) { const i = Math.floor(t / 5); curve.push(i < m ? db(env[i]) : -60); }
   const offI = Math.floor((held * 1000) / 5); let rel = null;
   if (offI < m - 10) { const ref = env[offI]; for (let i = offI; i < m; i++) if (env[i] < ref * 0.1) { rel = (i - offI) * 5; break; } if (rel == null) rel = (m - offI) * 5; }

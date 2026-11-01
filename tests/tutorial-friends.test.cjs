@@ -60,7 +60,20 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
     check(twin && twin.hw === 'sequential-ob-6', `Robin links an OB-6 (${JSON.stringify(twin && { hw: twin.hw, inst: twin.inst })})`);
     check(/OB-6/.test(await p.evaluate(() => [...document.querySelectorAll('.corner')].map((c) => c.textContent).join(' '))) && /twin/.test(await card()), "Robin's corner shows the OB-6, and the card explains its twin");
     await next(); check(await waitStep('onetoo'), 'I have one too'); await next();
-    check(await waitStep('match'), 'Match my sound'); await next();
+    check(await waitStep('match'), 'Match my sound');
+    const att0 = await p.evaluate(() => { const f = document.querySelector('iframe.tour-friend').contentWindow.JJ; return f.S.rack.find((x) => x.cfg.hw)?.cfg.params.attack; });
+    const pl0 = await p.evaluate(() => [...JJ.engine.ch.values()].reduce((a, c) => a + c.pLog.length, 0));
+    let demo = null, phases = new Set(); const T1 = Date.now();
+    for (let t = 0; t < 600 && demo?.phase !== 'done' && demo?.phase !== 'fail'; t++) { await sleep(200); demo = await p.evaluate(() => JJ.tours.active()?.demo); if (demo) phases.add(demo.phase); }
+    const att1 = await p.evaluate(() => { const f = document.querySelector('iframe.tour-friend').contentWindow.JJ; return f.S.rack.find((x) => x.cfg.hw)?.cfg.params.attack; });
+    const pl1 = await p.evaluate(() => [...JJ.engine.ch.values()].reduce((a, c) => a + c.pLog.length, 0));
+    console.log('  match demo:', JSON.stringify(demo), 'phases', [...phases].join('>'), 'in', ((Date.now() - T1) / 1000).toFixed(1) + ' s', 'attack', att0, '->', att1, 'param events here', pl0, '->', pl1);
+    check(demo?.phase === 'done' && ['real', 'twin', 'fit'].every((x) => phases.has(x)), 'the demo plays the real OB-6, then its twin, then matches');
+    check(demo && demo.sim > demo.sim0 + 0.1, `the twin gets closer (${demo && Math.round(100 * demo.sim0)}% -> ${demo && Math.round(100 * demo.sim)}% alike)`);
+    check(att1 < att0 / 2, `Robin's twin moves toward the brass sound: a faster attack (${att0} -> ${att1 && att1.toFixed(3)})`);
+    check(pl1 > pl0, 'the new settings reach your browser over the network');
+    check(/Matched: from \d+% to \d+% alike/.test(await card()), 'the card says how close it got');
+    await next();
     check(await waitStep('sync'), 'Sync take'); await next();
     check(await waitStep('bye'), 'Robin heads home');
     // the room drops a bandmate whose direct link is still open after it's sure they've gone (up to 12 s); the frame goes 0.8 s after

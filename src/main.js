@@ -2703,6 +2703,7 @@ function broadcastLook(force = false) {
 // ---------- the guided tours (src/tutorial.js): what they read and do ----------
 const tours = makeTutorial({
   inStudio: () => !$('#studio').classList.contains('hide'), where: () => S.where || 'jam', goRoom: (w) => goRoom(w),
+  audio: () => (engine.ctx ? { ctx: engine.ctx, out: engine.master } : null), def: (id) => engine.defs.get(id), resolve: (cfg) => engine.resolve(cfg),
   rack: () => S.rack.map((e) => ({ r: e.r, inst: e.cfg.inst, lane: e.laneId || null })), notes: () => S.notesOn || 0,
   key: () => S.key, setKey: (root, mode) => setKey(root, mode), bpm: () => Math.round(tempo.bpm(clock.now() + 1000)), setBpm: (b) => setTempo(b),
   players: () => band.list().length, tapes: () => tape.takes.length, taping: () => !!tape.on, toggleTape: () => toggleTape(), closeDrawers: () => closeDrawers(), firstPick: () => !!S.firstPick, instName: (id) => engine.defs.get(id)?.name || '',

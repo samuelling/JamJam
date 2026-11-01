@@ -10,7 +10,9 @@
 // key() {root, mode}, setKey(root, mode), bpm(), setBpm(bpm), players() (virtual bandmates), tapes(), taping(),
 // toggleTape(), closeDrawers(), firstPick(), instName(inst), lockOn(), song(), transport(), play(mode, sid), stop(), playNote(on, note, vel), pad(i, down),
 // addInstrument(inst, patch), jamLane(id), lockIn(r), draftPart(spec), editTake(sid, pid, events, what, base),
-// setSong(k, v)
+// setSong(k, v), audio() {ctx, out}, def(inst), resolve({inst, patch, hw})
+
+import { Fitter, analyze } from './match.js';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const DONE_KEY = 'megajam.tour';
@@ -153,6 +155,70 @@ export function makeTutorial(api, { h, $ }) {
       setTimeout(() => f.remove(), 800);
     },
   };
+  // ---------- Match my sound, demonstrated. A hidden synth set the way Robin set the "real OB-6" (a punchy brass)
+  // stands in for the hardware; Robin's twin starts on the soft pad it was guessed as. The real one's phrase is rendered
+  // here; the twin's, Robin plays over the network. Match my sound's own fitter learns from the real one's notes and
+  // works on the twin out of earshot while the phrases play; between rounds Robin's twin glides to the best it found
+  // (to every browser, as with a real synth). It only glides to a candidate that beats the twin on all the evidence.
+  // Progress lives in c.demo: {phase, round, sim0, sim}.
+  const PH = { held: 0.55, gap: 0.75 };
+  async function renderPhrase(def, params, notes, sr) {
+    const ctx = new OfflineAudioContext(2, Math.ceil(sr * (notes.length * PH.gap + 1.2)), sr);
+    if (def.init) await def.init(ctx);
+    const insts = notes.map((n, i) => { const g = ctx.createGain(); g.connect(ctx.destination); const x = def.create(ctx, g, params); const t = 0.03 + i * PH.gap; x.noteOn(n, 100, t); x.noteOff(n, t + PH.held); return x; });
+    const hold = ctx.suspend(256 / sr).then(async () => { await sleep(30); ctx.resume(); });   // worklet instruments' first messages
+    const buf = await ctx.startRendering(); await hold;
+    for (const x of insts) { try { x.dispose(); } catch (_) {} }
+    return buf;
+  }
+  const rms = (buf) => { const x = buf.getChannelData(0); let e = 0; for (let i = 0; i < x.length; i++) e += x[i] * x[i]; return Math.sqrt(e / x.length) || 1e-9; };
+  async function matchDemo(c) {
+    const d = c.demo = { phase: 'prep', round: 0, sim0: null, sim: null };
+    const live = () => !c.stop && !!friend.frame;
+    const R = friend.R(), e = R?.S?.rack.find((x) => x.r === friend.r), A = api.audio(), def = e && api.def(e.cfg.inst);
+    if (!R || !e || !A || !def) { d.phase = 'fail'; return; }
+    friend.groove(null);
+    const k = api.key(), root = k?.mode ? k.root : 9;
+    const notes = [0, 7, 12].map((x) => 48 + (root % 12) + x);   // root, fifth, octave: C3-B3 and up
+    const start = { ...e.cfg.params };
+    const real = { ...start, pulse: 0, pwm: 0, chorus: 0, attack: 0.05, decay: 0.6, sustain: 0.7, release: 0.35, cutoff: 1100, envAmt: 0.4, reso: 0.2 };
+    const sr = A.ctx.sampleRate, refBuf = await renderPhrase(def, real, notes, sr), twinBuf = await renderPhrase(def, start, notes, sr);
+    const refGain = Math.min(4, rms(twinBuf) / rms(refBuf));   // the same loudness, so you compare the sound, not the level
+    const fit = new Fitter(def, start, { batch: 6, perBatch: 2 }), ch = refBuf.getChannelData(0);
+    [0, 2].forEach((i) => { const s0 = Math.round((0.03 + i * PH.gap) * sr), o = analyze(ch.slice(s0, s0 + Math.round((PH.held + 0.45) * sr)), sr, notes[i], PH.held); if (o) { o.vel = 100; fit.observe(o); } });
+    const alike = async (p) => fit.similarity(await fit.scoreAll(p));
+    let kept = { ...start }, keptSim = d.sim0 = d.sim = await alike(start);
+    // the fitter, in the background: a few batches, then check the best on all the evidence; keep it only if it's better
+    const search = (async () => {
+      while (live() && d.phase !== 'done') {
+        for (let i = 0; i < 3 && live(); i++) { await fit.step(); await sleep(120); }
+        if (!live()) return;
+        const s1 = await alike(fit.best);
+        if (s1 > keptSim + 0.005) { kept = { ...fit.best }; keptSim = s1; } else fit.best = { ...kept };
+      }
+    })();
+    let src = null;
+    c.halt = () => { try { src?.stop(); } catch (_) {} for (const n of notes) try { R.input.release(n); } catch (_) {} };
+    const playReal = () => new Promise((res) => { if (!live()) return res(); const g = A.ctx.createGain(); g.gain.value = refGain; g.connect(A.out); src = A.ctx.createBufferSource(); src.buffer = refBuf; src.connect(g); src.onended = () => { g.disconnect(); res(); }; src.start(); });
+    const playTwin = async () => { for (const n of notes) { if (!live()) return; R.input.press(n, 100); await sleep(PH.held * 1000); R.input.release(n); await sleep((PH.gap - PH.held) * 1000); } await sleep(900); };
+    const both = async () => { d.phase = 'real'; await playReal(); if (!live()) return; await sleep(450); d.phase = 'twin'; await playTwin(); };
+    await sleep(600); await both();
+    for (d.round = 1; d.round <= 3 && live(); d.round++) {
+      d.phase = 'fit';
+      for (let t = 0; t < 40 && live() && keptSim <= d.sim + 0.005; t++) await sleep(250);   // wait for something better (up to 10 s)
+      if (!live()) return;
+      const to = { ...kept }, ids = fit.space.map((P) => P.id).filter((id) => to[id] !== undefined && to[id] !== e.cfg.params[id]), from = { ...e.cfg.params };
+      for (let i = 1; i <= 6 && live(); i++) {   // glide there, as Match my sound does
+        for (const id of ids) { const P = fit.space.find((x) => x.id === id), a = from[id] ?? P.def, b = to[id]; R.setParam(id, P.step ? (i === 6 ? b : a) : P.curve === 'exp' ? a * (b / a) ** (i / 6) : a + (b - a) * (i / 6)); }
+        await sleep(250);
+      }
+      d.sim = Math.max(d.sim, keptSim);
+      if (live()) await both();
+    }
+    if (!live()) return;
+    d.phase = 'done'; await search.catch(() => {});
+    if (live()) friend.groove('pad');
+  }
   const FRIENDS = [
     { id: 'hello', title: 'Jam with a friend', text: 'Let\'s practice with a pretend friend called Robin. Robin is a bit of a robot (they live in this tab), but everything you\'ll see works just the same with a real friend across town. Ready? Press Next and Robin walks in.',
       setup: () => { if (api.where() !== 'jam') api.goRoom('jam'); }, next: true },
@@ -180,8 +246,17 @@ export function makeTutorial(api, { h, $ }) {
       target: () => friend.corner(), setup: async () => { friend.groove(null); await friend.play('juniper', 'pad', 'sequential-ob-6'); friend.groove('pad'); }, wait: () => !!friend.here()?.rack.some((x) => x.hw), },
     { id: 'onetoo', title: 'I have one too', text: 'Got the same synth as a friend? Link yours in My gear, and the friend\'s part can play on your real one, with their sound copied across. You both hear the real thing.',
       target: () => $('#addHwBtn'), next: true },
-    { id: 'match', title: 'Match my sound', text: 'Your synth sounds a certain way, and its twin should too. With your synth linked and its audio coming in, Match my sound listens as you play a few notes and nudges the twin your friends hear until it sounds like yours.',
-      target: () => $('#addHwBtn'), next: true },
+    { id: 'match', title: 'Match my sound', live: true, text: (c) => {
+        const d = c.demo || {}, pc = (v) => `${Math.round(100 * v)}%`;
+        const now = { prep: 'Robin set the real OB-6 to a punchy brass sound. The twin you hear started as a guess: a soft pad. Listen…',
+          real: '▶ Robin\'s real OB-6, as Robin hears it.',
+          twin: `▶ Its twin, in your browser: ${pc(d.sim ?? 0)} alike.`,
+          fit: `Match my sound is trying settings on the twin, out of earshot… (round ${d.round} of 3)`,
+          done: `Matched: from ${pc(d.sim0 ?? 0)} to ${pc(d.sim ?? 0)} alike. Every browser glided to the same settings, so the whole band now hears something close to the real OB-6.`,
+          fail: 'Match my sound listens to your real synth through your audio input as you play, and nudges its twin until it sounds like yours.' }[d.phase || 'prep'];
+        return `${now} With your own synth, this runs quietly while you play. (Here a hidden synth, set the way Robin set the OB-6, stands in for it; the matching is the real thing.)`;
+      },
+      target: () => friend.corner(), setup: (c) => { matchDemo(c).catch(() => { if (c.demo) c.demo.phase = 'fail'; }); }, done: (c) => { c.stop = true; c.halt?.(); if (friend.frame && c.demo?.phase !== 'done') friend.groove('pad'); }, next: true },
     { id: 'sync', title: 'Keep the good take', text: 'Caught something great? Sync take has everyone record their own true sound, real synths and mics included, and gathers it all into one folder of lined-up tracks to mix later.',
       target: () => $('#syncBtn'), next: true },
     { id: 'bye', title: 'Robin heads home', text: 'That\'s it from Robin. To jam with a real friend: Invite copies a link to this studio. Send it, and they walk into an empty corner just like Robin did.',
@@ -358,5 +433,5 @@ export function makeTutorial(api, { h, $ }) {
     const away = (e) => { if (!m.contains(e.target) && e.target !== anchor) { m.remove(); removeEventListener('pointerdown', away, true); } };
     setTimeout(() => addEventListener('pointerdown', away, true), 0);
   }
-  return { start, stop, menu, target: () => (tour ? tour.steps[tour.i].target?.(tour.ctx) || null : null), active: () => tour && { name: tour.name, step: tour.steps[tour.i].id, passed: !!tour.ctx.passed }, steps: (k) => TOURS[k].steps.map((s) => s.id) };
+  return { start, stop, menu, target: () => (tour ? tour.steps[tour.i].target?.(tour.ctx) || null : null), active: () => tour && { name: tour.name, step: tour.steps[tour.i].id, passed: !!tour.ctx.passed, demo: tour.ctx.demo || null }, steps: (k) => TOURS[k].steps.map((s) => s.id) };
 }

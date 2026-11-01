@@ -180,7 +180,7 @@ export class Engine {
     const params = {};
     for (const p of def.params) params[p.id] = p.def;
     Object.assign(params, def.presets[patch] || {});
-    if (unit) for (const [k, v] of Object.entries(unit.character || {})) if (k in params) params[k] = v;
+    if (unit) Object.assign(params, this.character(unit, def));
     const out = { inst: def.id, patch, hw: unit ? unit.id : null, params };
     if (def.lib) {
       const lib = this.libs.get(def.lib);
@@ -192,6 +192,23 @@ export class Engine {
     return out;
   }
   unit(id) { return this.hardware.hardware.find((h) => h.id === id) || null; }
+  // A unit's character (detune, resonance, chorus…) is written in the knob ranges of its family's reference twin
+  // (Poly for analog polysynths: resonance 0-20). Another twin gets each value at the same place on its own knob, so
+  // Juniper (resonance 0-1) gets a touch of resonance, not a filter pushed past its end into a whistle.
+  character(unit, def) {
+    const ref = this.defs.get(this.hardware.families?.[unit.family]?.twin), out = {};
+    const num = (P) => P && typeof P.min === 'number' && typeof P.max === 'number' && P.max > P.min;
+    const at = (P, v) => (P.curve === 'exp' && P.min > 0 ? Math.log(v / P.min) / Math.log(P.max / P.min) : (v - P.min) / (P.max - P.min));
+    const from = (P, u) => (P.curve === 'exp' && P.min > 0 ? P.min * (P.max / P.min) ** u : P.min + u * (P.max - P.min));
+    for (const [k, v] of Object.entries(unit.character || {})) {
+      const P = def.params.find((x) => x.id === k); if (!num(P) || typeof v !== 'number') continue;
+      const R = ref && ref !== def ? ref.params.find((x) => x.id === k) : null;
+      let x = num(R) ? from(P, Math.max(0, Math.min(1, at(R, Math.max(R.min, Math.min(R.max, v)))))) : v;
+      x = Math.max(P.min, Math.min(P.max, x)); if (P.step) x = P.min + Math.round((x - P.min) / P.step) * P.step;
+      out[k] = x;
+    }
+    return out;
+  }
   patchTypes(cfg) {
     const def = this.defs.get(cfg.inst), unit = cfg.hw && this.unit(cfg.hw);
     const t = unit ? unit.types.filter((x) => def.presets[x]) : [];
