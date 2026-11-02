@@ -20,6 +20,7 @@ import { makePadsUI, PAD_KEYS, PAD_BASE } from './padsui.js';
 import { makeGear } from './gear.js';
 import * as STEMS from './stems.js';
 import { makeTutorial, toured } from './tutorial.js';
+import { startStats } from './stats.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
 // ?bot=1: a pretend bandmate the tours run in a hidden frame (src/tutorial.js). It shares this browser's storage, so
 // it writes nothing there and reads none of your gear; it plays nothing out loud (?silent=1 too) and skips the welcome.
@@ -136,7 +137,7 @@ setInterval(() => {
 const room = new Room({
   server: SERVER, maxPeers: MAX, p2p: qs.get('p2p') !== '0',
   handlers: {
-    status(kind, text) { setStatus(text, kind); if (kind === 'in') onEntered(); },
+    status(kind, text) { setStatus(text, kind); if (kind === 'in') onEntered(); if (kind === 'relay-lost') stats.relayLost(); },
     roster() { updateLeader(); renderCorners(); },
     track(p, track, stream) { talk.onTrack(p, track, stream); },
     peerOpen(p) { sayHello(p.id); },
@@ -366,6 +367,9 @@ setInterval(() => {
   if (late > 40) { stall.at = t; stall.log.push([t, late]); }
   if (S.me && room.peers.size && stall.busy() && t - stall.warned > 30000) { stall.warned = t; setStatus("Your computer is struggling to keep up: notes may sound late here. Closing other tabs or using fewer instruments helps.", 'warn'); }
 }, 25);
+// anonymous usage numbers for the admin dashboard (src/stats.js; Help explains it, ?stats=0 turns it off)
+const stats = BOT ? { use() {}, joining() {}, relayLost() {} } : startStats({ endpoint: window.MP_STATS, room, engine, clock, S, stall, pidOf });
+window.JJ.stats = stats;
 function reportSlack() {
   for (const p of room.peers.values()) {
     if (!p.slack || p.slack.length < 2) continue;
@@ -717,7 +721,7 @@ setInterval(sendFingerprint, 2000);
 
 // ---------- input ----------
 const input = new Input({
-  plugged: (name, on) => { setStatus(on ? `${name} connected: play it and you'll hear your selected instrument.` : `${name} unplugged.`); renderInputStatus(); },
+  plugged: (name, on) => { if (on) stats.use('midi'); setStatus(on ? `${name} connected: play it and you'll hear your selected instrument.` : `${name} unplugged.`); renderInputStatus(); },
   note: (on, note, vel, ch, port) => { if (!compose.takeNote(on, note, vel, ch, port)) playNote(on, note, vel, ch, port); },
   heard: (port, ch, note) => gear.heard(port, ch, note),   // what a sequencer is playing, while you add it
   cc: (cc, val, ch, port) => {
@@ -848,6 +852,7 @@ function matchStatus(e) {
   return !n ? 'listening: play some single notes' : `${n} note${n > 1 ? 's' : ''} heard · ${m.fitter.renders ? Math.round(100 * m.fitter.similarity()) + '% alike' : 'fitting…'}${m.lag != null ? ` · input ${m.lag} ms late` : ''}`;
 }
 async function startMatch(e) {
+  stats.use('match');
   if (!canMatch(e)) return;
   let stream;
   try { stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: S.srecInput ? { exact: S.srecInput } : undefined, echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 2 } }); }
@@ -988,6 +993,7 @@ const songForExport = () => { const s = JSON.parse(JSON.stringify(songStore.song
 // Export stems: every track rendered from bar 1 to the end, lined up, into a folder (a synced copy of the band's Google
 // Drive or Dropbox folder lands them with everyone else's) or a zip. o: { mine, to: 'folder' | 'zip' | 'memory' }
 async function exportStemsTo(o = {}, onProgress) {
+  stats.use('stems');
   const song = songForExport(), sr = engine.ctx?.sampleRate || 48000;
   const only = o.mine ? Object.values(song.lanes || {}).filter((t) => t.ownerName === S.name).map((t) => t.id) : null;
   if (only && !only.length) throw new Error("You don't have a track in this song yet.");
@@ -1681,6 +1687,7 @@ function restoreVariation(name) {
 }
 // the two rooms
 function goRoom(w) {
+  if (w === 'compose') stats.use('compose');
   S.where = w; document.body.classList.toggle('where-compose', w === 'compose');
   $('#hall')?.classList.add('hide');
   for (const b of $$('#roomSeg button')) b.classList.toggle('on', b.dataset.room === w);
@@ -1719,6 +1726,7 @@ const STEM_MAGIC = 0x4d455453;   // 'STEM'
 const isStemChunk = (buf) => buf.byteLength >= 16 && new DataView(buf).getUint32(0, true) === STEM_MAGIC;
 const slug = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 32) || 'part';
 async function startSync() {
+  stats.use('synctake');
   if (S.srec && !S.srec.done) { stopSync(); return; }
   const id = Math.random().toString(36).slice(2, 8), T0 = clock.now() + (room.peers.size ? 700 : 150);
   room.send({ k: 'srec', on: true, id, T0 });
@@ -2718,7 +2726,7 @@ function sendChat() {
 function randomCode() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < 4; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
 async function enter(code, listen = false) {
   const name = ($('#nameIn').value || '').trim().slice(0, 16) || (listen ? 'Listener' : 'Jammer');
-  S.listener = !!listen; room.listener = S.listener; document.body.classList.toggle('listener', S.listener);
+  S.listener = !!listen; room.listener = S.listener; if (listen) stats.use('listen'); document.body.classList.toggle('listener', S.listener);
   code = String(code || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
   if (code.length !== 4) { setStatus('Room codes are four letters.', 'error'); return; }
   S.name = name;
@@ -2781,12 +2789,12 @@ function wire() {
   if (pre) { $('#codeIn').value = pre; $('#joinBtn').classList.add('hot'); $('#startBtn').classList.remove('hot'); }
   if (pre && qs.get('listen') === '1') { $('#joinBtn').classList.remove('hot'); $('#listenBtn').classList.add('hot'); $('#listenBtn').classList.remove('ghost', 'small'); $('#listenBtn').textContent = 'Listen in'; }
   $('#startBtn').onclick = () => enter(randomCode());
-  $('#joinBtn').onclick = () => enter($('#codeIn').value);
-  $('#codeIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') enter($('#codeIn').value); });
+  $('#joinBtn').onclick = () => { stats.joining(); enter($('#codeIn').value); };
+  $('#codeIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') { stats.joining(); enter($('#codeIn').value); } });
   $('#leaveBtn').onclick = leaveRoom;
   // the guided tours: "New to this?" in the lobby, ? in the studio
-  $('#tourBtn').onclick = () => tours.start('jam');
-  $('#helpBtn').onclick = (e) => tours.menu(e.currentTarget);
+  $('#tourBtn').onclick = () => { stats.use('tour'); tours.start('jam'); };
+  $('#helpBtn').onclick = (e) => { stats.use('help'); tours.menu(e.currentTarget); };
   for (const b of $$('.tourbtn')) b.classList.toggle('fresh', !toured('jam'));
   if (BOT) { for (const b of $$('.tourbtn')) b.classList.add('hide'); $('#nameIn').value = (qs.get('name') || 'Robin').slice(0, 16); if (pre) setTimeout(() => enter(pre), 200); }
   $('#copyBtn').onclick = () => openInvite(`${location.origin}${location.pathname}?room=${room.code}${qs.get('server') ? '&server=' + encodeURIComponent(qs.get('server')) : ''}`);
@@ -2803,7 +2811,7 @@ function wire() {
     if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); setTempo(bpmNow() - (e.shiftKey ? 10 : 1)); }
   });
   $('#metroBtn').onclick = (e) => { engine.metro.on = !engine.metro.on; engine.metro.next = -1; e.currentTarget.classList.toggle('on', engine.metro.on); };
-  $$('#quantSeg button').forEach((b) => b.onclick = () => { S.quant = +b.dataset.q; $$('#quantSeg button').forEach((x) => x.classList.toggle('on', x === b)); renderLook(); });
+  $$('#quantSeg button').forEach((b) => b.onclick = () => { S.quant = +b.dataset.q; if (S.quant) stats.use('quant'); $$('#quantSeg button').forEach((x) => x.classList.toggle('on', x === b)); renderLook(); });
   $('#selfBtn').onclick = (e) => { S.hearSelf = !S.hearSelf; e.target.classList.toggle('on', S.hearSelf); renderLook(); };
   $('#lookSlider').oninput = (e) => { S.lookOverride = +e.target.value; broadcastLook(); renderLook(); };
   $('#lookAutoBtn').onclick = () => { S.lookOverride = null; broadcastLook(); renderLook(); };
@@ -2828,7 +2836,7 @@ function wire() {
   makeAirplay(engine, $('#airplayBtn'), setStatus);
   { const b = $('#talkBtn'); let downAt = 0, wasOpen = false;
     const show = () => { setCls(b, 'on', talk.open); b.setAttribute('aria-pressed', String(talk.open)); b.querySelector('span').textContent = talk.open ? 'Talking' : 'Talk'; };
-    b.addEventListener('pointerdown', async (e) => { e.preventDefault(); downAt = performance.now(); wasOpen = talk.open; if (!wasOpen) { if (!(await talk.setOpen(true))) { setStatus("Couldn't open your mic. Check the browser's permission for this page.", 'error'); return; } show(); } });
+    b.addEventListener('pointerdown', async (e) => { e.preventDefault(); stats.use('talk'); downAt = performance.now(); wasOpen = talk.open; if (!wasOpen) { if (!(await talk.setOpen(true))) { setStatus("Couldn't open your mic. Check the browser's permission for this page.", 'error'); return; } show(); } });
     b.addEventListener('pointerup', async () => { const held = performance.now() - downAt > 350; if (wasOpen || held) await talk.setOpen(false); show(); });
     b.addEventListener('keydown', async (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); await talk.setOpen(!talk.open); show(); } }); }
   $('#tapesBtn').onclick = () => { renderTapes(); openDrawer('#tapeDrawer'); };
@@ -2851,7 +2859,7 @@ function wire() {
     const btn = e.currentTarget;
     if (lane.on) { lane.stopLane(); btn.textContent = 'Go live'; btn.classList.remove('on'); }
     else {
-      try { await lane.startLane($('#laneDev').value || undefined); }
+      try { await lane.startLane($('#laneDev').value || undefined); stats.use('lane'); }
       catch (err) { $('#laneHelp').textContent = "Couldn't open that input: " + err.message; return; }
       btn.textContent = 'Stop live audio'; btn.classList.add('on'); $('#laneHelp').textContent = `Live: the band hears you ${lane.bars} bar${lane.bars > 1 ? 's' : ''} later.`;
       const devs = await lane.devices(), cur = $('#laneDev').value;
