@@ -90,6 +90,8 @@ const selEntry = () => entry(S.sel) || S.rack[0];
 const outPort = (id) => (id ? input.outputs.find((o) => o.id === id) : null);
 
 // ---------- sequencers (one per drum instrument), running in lockstep in every browser ----------
+const DRUM_AHEAD_MS = 1500;   // how far ahead the drummer queues its bars (src/band.js)
+const OSCLOCK = new URLSearchParams(location.search).get('osclock') !== '0';   // let the computer's own clock help the shared one (see clock.js)
 const SEQ_H = 60;                      // how far ahead (ms) each browser schedules sequencer steps
 const seqs = new Map();                // channel key -> StepSeq
 function ensureSeq(k, cfg, snap) {
@@ -206,9 +208,11 @@ function startPinging(id) {
   const go = () => {
     const p = room.peers.get(id);
     if (!p) return;
-    room.sendFast({ k: 'ping', a: performance.now(), at: clock.locked && S.me ? clock.now() + lookahead() : null }, id);
+    const L = lookahead();
+    room.sendFast({ k: 'ping', a: performance.now(), at: clock.locked && S.me ? clock.now() + L : null, l: L }, id);
     n++;
-    pingTimers.set(id, setTimeout(go, p.path === 'relay' ? 3000 : n < 12 ? 250 : TUNE.ping));
+    // a quick burst at first, so the clock locks within a second or two (over the relay too), then steady
+    pingTimers.set(id, setTimeout(go, n < 12 ? (p.path === 'relay' ? 400 : 250) : p.path === 'relay' ? 3000 : TUNE.ping));
   };
   go();
 }
@@ -268,18 +272,18 @@ function onMessage(p, m) {
   switch (m.k) {
     case 'who': sayHello(p.id); break;
     case 'tempoAsk': if (clock.isLeader) room.send({ k: 'tempo', segs: tempo.toJSON() }, p.id); break;
-    case 'ping': room.sendFast({ k: 'pong', a: m.a, b: clock.now() }, p.id); if (m.at != null) noteSlack(p, m.at); break;
+    case 'ping': room.sendFast({ k: 'pong', a: m.a, b: clock.now(), d: Date.now() - clock.now() }, p.id); if (m.at != null) noteSlack(p, m.at, m.l); break;
     case 'pong': {
       const c = performance.now(), rtt = c - m.a;
       p.rtt.push(rtt); if (p.rtt.length > 30) p.rtt.shift();
       if (p.id === leaderId() && !clock.isLeader) {
         const was = clock.locked;
-        clock.sample(m.a, m.b, c);
+        clock.sample(m.a, m.b, c, OSCLOCK ? m.d : null);
         if (clock.locked && !was) { S.lockedAt = performance.now(); for (const k of S.stable.keys()) S.stable.set(k, S.lockedAt); }
       }
       break;
     }
-    case 'slack': S.slackRep.set(p.id, { s: m.s, t: performance.now() }); break;
+    case 'slack': S.slackRep.set(p.id, { s: m.s, trip: m.trip, busy: !!m.busy, t: performance.now() }); break;
     case 'hello': {
       const first = !S.players.has(p.id);
       S.players.set(p.id, { ...(S.players.get(p.id) || {}), name: m.name, rack: [], hashes: m.hashes, lane: m.lane, peerL: m.L, v: m.v, role: m.role || 'band', where: m.where || 'jam' });
@@ -337,18 +341,37 @@ const TUNE = {
   rep: +(qs.get('rep') ?? 500),       // how often listeners report their margin (ms)
   ping: +(qs.get('ping') ?? 1000),    // steady ping interval on direct links (ms)
   mem: +(qs.get('mem') ?? 12),        // how many reports per listener the lookahead remembers
+  relayPad: +(qs.get('relaypad') ?? 30), // extra ms for a listener reached through the relay (see adjustL)
 };
 function pct(a, q) { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(q * s.length))]; }
-function noteSlack(p, at) {
+// How much spare time a bandmate's ping or note had when it got here. With the lookahead it was sent with (l), that
+// gives the trip itself (l - spare), so the sender can size its lookahead from the trip, not from its current
+// lookahead minus an old spare time (which made each rise feed the next: a 4 s spike pushed it to twice what was
+// needed). A sample taken just after this browser's own main thread stalled measures the stall, not the network:
+// it's left out, so a slow computer doesn't make everyone else play further ahead.
+function noteSlack(p, at, l) {
   if (!clock.locked || !engine.ctx || at == null) return;
-  (p.slack = p.slack || []).push((engine.audioTime(at) - engine.ctx.currentTime) * 1000);
+  if (stall.recent()) return;
+  const spare = (engine.audioTime(at) - engine.ctx.currentTime) * 1000;
+  (p.slack = p.slack || []).push(spare);
   if (p.slack.length > 80) p.slack.shift();
+  if (l != null && Number.isFinite(+l)) { (p.trip = p.trip || []).push(+l - spare); if (p.trip.length > 80) p.trip.shift(); }
 }
+// this browser's own stalls: the main thread not getting to its timers on time (a slow or overloaded computer)
+const stall = { last: performance.now(), at: -1e9, log: [], warned: 0,
+  recent() { const t = performance.now(); return t - this.at < 250 || t - this.last > 80; },
+  busy() { const t = performance.now(); this.log = this.log.filter((x) => t - x[0] < 10000); return this.log.reduce((a, x) => a + x[1], 0) > 600; } };
+setInterval(() => {
+  const t = performance.now(), late = t - stall.last - 25; stall.last = t;
+  if (late > 40) { stall.at = t; stall.log.push([t, late]); }
+  if (S.me && room.peers.size && stall.busy() && t - stall.warned > 30000) { stall.warned = t; setStatus("Your computer is struggling to keep up: notes may sound late here. Closing other tabs or using fewer instruments helps.", 'warn'); }
+}, 25);
 function reportSlack() {
   for (const p of room.peers.values()) {
     if (!p.slack || p.slack.length < 2) continue;
-    room.send({ k: 'slack', s: Math.round(Math.min(...p.slack) * 10) / 10 }, p.id);
-    p.slack = [];
+    const trip = p.trip && p.trip.length ? Math.round(Math.max(...p.trip) * 10) / 10 : undefined;
+    room.send({ k: 'slack', s: Math.round(Math.min(...p.slack) * 10) / 10, trip, busy: stall.busy() || undefined }, p.id);
+    p.slack = []; p.trip = [];
   }
 }
 function computeAutoL() {
@@ -365,19 +388,31 @@ function adjustL() {
     if (r.used) continue;
     r.used = true;
     const hist = S.needs.get(id) || [];
-    hist.push({ need: S.lookAuto - r.s + TUNE.tm, t: now });
+    let need = r.trip != null ? r.trip + TUNE.tm : S.lookAuto - r.s + TUNE.tm;
+    // through the relay a message rides a WebSocket and a server: one held-up packet holds up everything behind it,
+    // and pings between notes rarely catch that, so playing through it needs more room than the quiet trips suggest
+    const via = room.peers.get(id);
+    if (via && via.path === 'relay') need += TUNE.relayPad;
+    // a listener whose own computer is struggling: what it needs beyond the network is its computer, not the band's
+    // lookahead, so it plays some notes late rather than making everyone wait for it
+    if (r.busy) { const pp = room.peers.get(id); if (pp && pp.rtt.length >= 3) need = Math.min(need, pct(pp.rtt, 0.9) / 2 + 60 + TUNE.tm); }
+    hist.push({ need, t: now });
     while (hist.length > TUNE.mem) hist.shift();
     S.needs.set(id, hist);
   }
-  let target = 0, any = false;
+  let target = 0, any = false, clear = true;
   for (const [id, hist] of S.needs) {
     const recent = hist.filter((x) => now - x.t < TUNE.rep * (TUNE.mem + 2));
     if (!recent.length || !room.peers.has(id)) continue;
-    any = true; target = Math.max(target, ...recent.map((x) => x.need));
+    // a spike that's over: when the last two seconds of reports all have lots of room, they speak for this listener
+    // (the full memory keeps ordinary jitter covered, since its needs stay close to the lookahead)
+    const last = recent.slice(-4), roomy = last.length >= 4 && last.every((x) => x.need < S.lookAuto * 0.6);
+    if (!roomy) clear = false;
+    any = true; target = Math.max(target, ...(roomy ? last : recent).map((x) => x.need));
   }
   if (!any) return;
   S.loopActive = true;
-  S.lookAuto = target > S.lookAuto ? target + TUNE.rise : S.lookAuto + (target - S.lookAuto) * TUNE.settle;
+  S.lookAuto = target > S.lookAuto ? target + TUNE.rise : S.lookAuto + (target - S.lookAuto) * (clear ? Math.max(TUNE.settle, 0.35) : TUNE.settle);
   S.lookAuto = Math.min(900, Math.max(5, S.lookAuto));
 }
 setInterval(() => { reportSlack(); adjustL(); }, TUNE.rep);
@@ -420,6 +455,7 @@ function sendEvent(e, ev, instant, from) {
   logForLock(k, { ...ev, from, at: ev.at - (e.seq && seqAhead() ? 0 : partLook(e)) });   // a sequencer ahead already played for the beat it lands on
   engine.event(k, ev, { now: instant || room.peers.size === 0 || !clock.locked });
   if (!clock.locked) return;
+  if (!(e.seq && seqAhead())) ev.l = Math.round(partLook(e));   // the lookahead it was sent with: listeners work out the trip from it
   recentEv.push({ r: e.r, ev }); if (recentEv.length > 3) recentEv.shift();
   room.sendFast({ k: 'evs', items: recentEv });
   // one quick repeat, so a lost packet in a sparse passage is recovered within ~20 ms rather than at the next note
@@ -441,7 +477,7 @@ function receiveEvent(p, r, ev) {
   const k = key(p.id, r);
   if (!engine.ch.get(k)?.insts.length) return;
   const loose = ev.b === 'l';
-  if (!loose) noteSlack(p, ev.at - (ev.o || 0));
+  if (!loose) noteSlack(p, ev.at - (ev.o || 0), ev.l);
   engine.event(k, ev, { now: !clock.locked, loose });
   routeOut(k, ev);
   if (ev.type === 'p' && ev.id !== 'bend') { const x = S.players.get(p.id).rack.find((y) => y.r === r); if (x) x.cfg.params[ev.id] = ev.v; }
@@ -634,10 +670,18 @@ function removeEntry(e) {
   renderRack(); renderDevice(); renderCorners(); renderKeyboard();
 }
 
+// the tempo the room is going to: one you just asked for (a follower's request is on its way to the leader) or the
+// last change scheduled, so the display and the next + or - start from it, not from the tempo still playing
+const wantBpm = () => (S.tempoWant && performance.now() - S.tempoWant.t < 3000 ? S.tempoWant.bpm : tempo.target());
 function setTempo(bpm) {
   bpm = Math.max(40, Math.min(240, Math.round(bpm)));
+  S.tempoWant = { bpm, t: performance.now() }; renderTempo();
   if (!clock.isLeader) { room.send({ k: 'tempoReq', bpm }, leaderId()); return; }
-  tempo.change(clock.now() + Math.max(250, lookahead() * 2 + 100), bpm);
+  // with a drummer or the song playing, every browser has already queued up to 1.5 s of it at the current tempo: the
+  // change lands on a bar line beyond that (and beyond the trip to everyone), so they all switch on the same bar
+  const ahead = Math.max(250, lookahead() * 2 + 100), meter = songStore.song.meter || 4;
+  const queued = Object.values(songStore.song.players || {}).some((v) => v && v.on) || !!songStore.song.transport?.on;
+  if (queued) tempo.change(clock.now() + ahead + DRUM_AHEAD_MS + 100, bpm, meter); else tempo.change(clock.now() + ahead, bpm);
   room.send({ k: 'tempo', segs: tempo.toJSON() });
   engine.metro.next = -1;
   renderTempo();
@@ -2442,7 +2486,7 @@ function autoOwn(pid, r, cfg) {
 // --- tempo, lookahead, keyboard, wiring
 function renderTempo() {
   const el = $('#bpmLcd'); if (!el || el.dataset.drag) return;
-  setText(el, String(Math.round(tempo.bpm(clock.now() + 1000))).padStart(3, '0'));
+  setText(el, String(Math.round(wantBpm())).padStart(3, '0'));   // where it's going, even before the bar it lands on
   setText($('#tempoNote'), room.peers.size && !clock.isLeader ? 'set by the clock leader' : '');
 }
 function renderLook() {
@@ -2718,7 +2762,7 @@ const tours = makeTutorial({
   inStudio: () => !$('#studio').classList.contains('hide'), where: () => S.where || 'jam', goRoom: (w) => goRoom(w),
   audio: () => (engine.ctx ? { ctx: engine.ctx, out: engine.master } : null), def: (id) => engine.defs.get(id), resolve: (cfg) => engine.resolve(cfg),
   rack: () => S.rack.map((e) => ({ r: e.r, inst: e.cfg.inst, lane: e.laneId || null })), notes: () => S.notesOn || 0,
-  key: () => S.key, setKey: (root, mode) => setKey(root, mode), bpm: () => Math.round(tempo.bpm(clock.now() + 1000)), setBpm: (b) => setTempo(b),
+  key: () => S.key, setKey: (root, mode) => setKey(root, mode), bpm: () => Math.round(tempo.target()), setBpm: (b) => setTempo(b),
   players: () => band.list().length, tapes: () => tape.takes.length, taping: () => !!tape.on, toggleTape: () => toggleTape(), closeDrawers: () => closeDrawers(), firstPick: () => !!S.firstPick, instName: (id) => engine.defs.get(id)?.name || '',
   roomCode: () => room.code, server: () => qs.get('server') || '', myChats: () => S.chat.filter((c) => c.from === S.me && !c.sys).length,
   look: () => lookahead(), tech: () => !document.body.classList.contains('simple'),
@@ -2746,7 +2790,7 @@ function wire() {
   for (const b of $$('.tourbtn')) b.classList.toggle('fresh', !toured('jam'));
   if (BOT) { for (const b of $$('.tourbtn')) b.classList.add('hide'); $('#nameIn').value = (qs.get('name') || 'Robin').slice(0, 16); if (pre) setTimeout(() => enter(pre), 200); }
   $('#copyBtn').onclick = () => openInvite(`${location.origin}${location.pathname}?room=${room.code}${qs.get('server') ? '&server=' + encodeURIComponent(qs.get('server')) : ''}`);
-  const bpmNow = () => Math.round(tempo.bpm(clock.now() + 1000));
+  const bpmNow = () => Math.round(wantBpm());
   $('#bpmDown').onclick = () => setTempo(bpmNow() - 1);
   $('#bpmUp').onclick = () => setTempo(bpmNow() + 1);
   const lcd = $('#bpmLcd'); let drag = null;

@@ -50,11 +50,28 @@ const drop = () => new Promise((res) => http.get(new URL('__drop', BASE), (r) =>
     const peers = await Promise.all([B, C].map((p) => p.evaluate(() => [...JJ.room.peers.values()].map((x) => x.id))));
     const mes = await Promise.all([B, C].map((p) => p.evaluate(() => JJ.S.me)));
     check(peers[0].length === 1 && peers[0][0] === mes[1] && peers[1].length === 1 && peers[1][0] === mes[0], `after the relay restarts each has exactly one entry for the other (${JSON.stringify(peers)})`);
-    await Promise.all([B, C].map((p) => p.evaluate(async () => { JJ.engine.log.length = 0; for (let i = 0; i < 6; i++) { JJ.input.press(60 + i, 90); await new Promise((r) => setTimeout(r, 60)); JJ.input.release(60 + i); await new Promise((r) => setTimeout(r, 60)); } })));
+    await Promise.all([B, C].map((p) => p.evaluate(() => { JJ.engine.log.length = 0; })));
+    await Promise.all([B, C].map((p) => p.evaluate(async () => { for (let i = 0; i < 6; i++) { JJ.input.press(60 + i, 90); await new Promise((r) => setTimeout(r, 60)); JJ.input.release(60 + i); await new Promise((r) => setTimeout(r, 60)); } })));
     await sleep(1500);
     const heard = await Promise.all([B, C].map((p) => p.evaluate(() => JJ.engine.log.filter((e) => e.type === 'on' && !e.pid.startsWith(JJ.S.me + ':')).length)));
     check(heard.every((n) => n >= 6), `and each hears the other's notes (${heard.join(', ')})`);
-    // 4. a fourth walks in after all that
+    // 4. with a drummer playing, tempo changes land on a bar line every browser agrees on, and the drummer stays the same
+    await B.evaluate(() => JJ.addVirtual('drums', 'rock')); await sleep(2500);
+    await Promise.all([B, C].map((p) => p.evaluate(() => { JJ.engine.log.length = 0; JJ.engine.logMax = 100000; })));
+    for (let i = 0; i < 4; i++) await C.evaluate(() => document.querySelector('#bpmUp').click());
+    const shown = await C.evaluate(() => document.querySelector('#bpmLcd').textContent.trim());
+    check(shown === '135', `four clicks on + show 135 at once, before the bar it lands on (${shown})`);
+    for (const bpm of [120, 140, 100]) { await sleep(1500); await B.evaluate((b) => JJ.setTempo(b), bpm); }
+    await sleep(6000);
+    const segs = await Promise.all([B, C].map((p) => p.evaluate(() => JSON.stringify(JJ.tempo.toJSON()))));
+    const bars = JSON.parse(segs[0]).filter((x) => x.bpm !== 131).every((x) => Math.abs(x.beat0 / 4 - Math.round(x.beat0 / 4)) < 1e-9);   // the 131 came before the drummer
+    check(segs[0] === segs[1] && bars, `both browsers have the same tempo map, every change made with the drummer on a bar line (${segs[0]})`);
+    const drums = await Promise.all([B, C].map((p) => p.evaluate(() => JJ.engine.log.filter((e) => e.pid.startsWith('vp:') && e.type === 'on').map((e) => `${e.note}@${Math.round(e.at)}`))));
+    const lo = Math.max(...drums.map((d) => Math.min(...d.map((x) => +x.split('@')[1])))) + 500, hi = Math.min(...drums.map((d) => Math.max(...d.map((x) => +x.split('@')[1])))) - 500;
+    const win = drums.map((d) => new Set(d.filter((x) => { const t = +x.split('@')[1]; return t >= lo && t <= hi; })));
+    const differ = [...win[0]].filter((x) => !win[1].has(x)).length + [...win[1]].filter((x) => !win[0].has(x)).length;
+    check(win[0].size > 20 && differ === 0, `the drummer plays the same hits in both browsers through the changes (${win[0].size} hits, ${differ} differ)`);
+    // 5. a fourth walks in after all that
     const D = await mk('&room=' + code, 'Dee', '#joinBtn');
     check(await until(async () => (await players(D)) === 'Ben,Cy' && (await players(B)) === 'Cy,Dee') != null, 'a newcomer still walks in and meets everyone');
   } catch (e) { check(false, 'threw: ' + e.message); }
