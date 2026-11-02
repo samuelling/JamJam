@@ -23,7 +23,7 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
     const next = async () => { await p.click('.tour-card .tour-next'); await sleep(250); };
     await p.click('#helpBtn'); await sleep(200);
     const items = await p.$$eval('.tour-menu button', (bs) => bs.map((x) => x.textContent));
-    check(items.length === 3 && items.some((t) => /Jam with a friend/.test(t)), `Tours lists three tours (${items.join(' | ')})`);
+    check(items.length === 3 && items.some((t) => /Jam with a friend/.test(t)), `Help lists three tours (${items.join(' | ')})`);
     await p.evaluate(() => [...document.querySelectorAll('.tour-menu button')].find((x) => /Jam with a friend/.test(x.textContent)).click());
     check(await waitStep('hello') && /Robin/.test(await card()), 'the tour introduces Robin');
     await next();

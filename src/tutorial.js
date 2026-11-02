@@ -75,7 +75,7 @@ export function makeTutorial(api, { h, $ }) {
       show: async (c) => { if (api.tapes() <= c.t0) { if (!api.taping()) await api.toggleTape(); await phrase([57, 60, 64, 67, 64, 60], 300); await sleep(600); if (api.taping()) await api.toggleTape(); await sleep(400); } api.closeDrawers(); } },
     { id: 'invite', title: 'Bring your friends', text: 'Invite copies a link to this studio. Send it to up to three friends: they click it and walk into the empty corners, and you all play together.',
       target: () => $('#copyBtn'), next: true },
-    { id: 'end', title: 'You\'re all set!', text: 'That\'s a jam: an instrument, a key, a drummer, a tempo and a recording. Everything else is yours to explore. Two more tours wait under Tours, up here, whenever you want them: Write your first song turns a jam into a song, and Jam with a friend shows how playing together works. There\'s a written manual there too, if you\'d rather read.',
+    { id: 'end', title: 'You\'re all set!', text: 'That\'s a jam: an instrument, a key, a drummer, a tempo and a recording. Everything else is yours to explore. Two more tours wait under Help, up here, whenever you want them: Write your first song turns a jam into a song, and Jam with a friend shows how playing together works. There\'s a written manual there too, if you\'d rather read.',
       target: () => $('#helpBtn'), end: true, nextTour: 'compose' },
   ];
   const COMPOSE = [
@@ -426,7 +426,7 @@ export function makeTutorial(api, { h, $ }) {
   function menu(anchor) {
     document.querySelector('.tour-menu')?.remove();
     const m = h('div', { class: 'tour-menu', role: 'menu' },
-      h('b', {}, 'New to this?'),
+      h('b', {}, 'Guided tours'),
       ...Object.entries(TOURS).map(([k, T]) => h('button', { class: 'btn small' + (toured(k) ? '' : ' hot'), role: 'menuitem', onclick: () => { m.remove(); start(k); } }, `${T.title}${toured(k) ? ' ✓' : ''}`)),
       h('small', { class: 'help' }, 'Step by step, about five minutes each. Leave any time with ×.'),
       h('a', { class: 'btn small ghost tour-manual', role: 'menuitem', href: 'help.html', target: '_blank', rel: 'noopener', onclick: () => m.remove() }, 'Read the manual ↗'));
