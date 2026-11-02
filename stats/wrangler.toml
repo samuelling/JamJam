@@ -2,16 +2,18 @@
 name = "megajam-stats"
 main = "worker.js"
 compatibility_date = "2026-10-01"
+workers_dev = true      # https://megajam-stats.samuelling.workers.dev
+preview_urls = false
 
 # Sites allowed to send reports and open the dashboard (localhost is always allowed, for testing)
 [vars]
 ORIGINS = "https://samuelling.github.io"
 
-# Fill in database_id from `npx wrangler d1 create megajam-stats`
+# Created 2026-11-02 (npx wrangler d1 create megajam-stats)
 [[d1_databases]]
 binding = "DB"
 database_name = "megajam-stats"
-database_id = "REPLACE_WITH_ID_FROM_d1_create"
+database_id = "7b3fb01a-1286-49cf-aa04-27560192a9a3"
 
 # Once a day: delete sessions older than 90 days
 [triggers]
