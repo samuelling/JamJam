@@ -117,11 +117,13 @@ export default {
   id: 'acid',
   name: 'Acid Line Lite',
   family: 'Bass line machine',
-  blurb: 'A bass line machine in the 303 tradition: saw or square into a squelchy resonant filter with one decay. Play hard to accent a note (it punches and climbs when accents follow each other), and play legato to slide between notes.',
+  blurb: 'A bass line machine in the 303 tradition: saw or square into a squelchy resonant filter with one decay, and a 16-step sequencer with accent and slide on every step. Play hard to accent a note (it punches and climbs when accents follow each other), and play legato to slide between notes.',
   lineage: 'SynthLand (CrumpLab) Acid Line, pared down for MEGAjam',
   by: 'Matt',   // the full SynthLand instrument is Matt's design; this lite one credits him on its tile
   icon: ICON,
   skin: { knob: 'knob', option: 'buttons', wood: false },
+  // its bass line sequencer: the pattern lives in MEGAjam (src/acidseq.js) and plays this synth in every browser
+  seq: { kind: 'acid' },
   traits: { arch: ['subtractive'], osc: ['vco'], filter: ['diode'], voices: 1, tags: ['acid'] },
   params: PARAMS,
   presets: PRESETS,

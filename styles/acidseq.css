@@ -1,0 +1,32 @@
+/* Acid Line Lite's step sequencer (src/acidseq.js): sixteen step columns under the knobs */
+.acid-seq { margin: 10px 0 4px; padding: 10px; border-radius: 8px; background: #1b1b1d; border: 1px solid #2b2b2f; color: #e7e2d6; font: 600 11px/1.2 'JetBrains Mono', ui-monospace, monospace; }
+.acid-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+.acid-btn, .acid-sel { background: #2a2a2e; color: #e7e2d6; border: 1px solid #3a3a40; border-radius: 5px; padding: 5px 9px; font: inherit; cursor: pointer; }
+.acid-btn:hover { background: #34343a; }
+.acid-btn.on { background: #e8762c; border-color: #e8762c; color: #111; }
+.acid-btn.play.on { background: #4fbf6a; border-color: #4fbf6a; }
+.acid-sep { width: 1px; height: 20px; background: #3a3a40; margin: 0 2px; }
+.acid-hint { color: #8d887c; margin-left: 2px; }
+.acid-tr { min-width: 26px; text-align: center; }
+.acid-lcd { margin-left: auto; background: #0e1a12; color: #9fe2a7; border-radius: 4px; padding: 5px 9px; min-width: 190px; text-align: right; letter-spacing: .04em; }
+.acid-steps { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 4px; }
+.acid-step { display: flex; flex-direction: column; gap: 3px; align-items: stretch; padding: 4px 2px; border-radius: 5px; background: #232327; border: 1px solid transparent; }
+.acid-step:nth-child(4n+1) { background: #29292e; }
+.acid-step.head { border-color: #e8762c; box-shadow: 0 0 0 1px #e8762c inset; }
+.acid-step.sel { border-color: #9fe2a7; }
+.acid-step.off { opacity: .3; }
+.acid-step.rest .acid-note { color: #5d5a54; }
+.acid-num { text-align: center; color: #8d887c; font-size: 10px; }
+.acid-note { background: #121214; color: #f2ede0; border: 1px solid #3a3a40; border-radius: 4px; padding: 5px 0 3px; cursor: ns-resize; font: inherit; display: flex; flex-direction: column; align-items: center; }
+.acid-note b { font-size: 13px; }
+.acid-note small { height: 10px; font-size: 10px; color: #e8762c; }
+.acid-mini { background: none; border: 0; color: #8d887c; cursor: pointer; padding: 0; font-size: 9px; line-height: 12px; }
+.acid-mini:hover { color: #f2ede0; }
+.acid-tog { background: #2a2a2e; color: #8d887c; border: 1px solid #34343a; border-radius: 4px; padding: 3px 0; font: inherit; font-size: 9px; cursor: pointer; }
+.acid-tog.on { background: #e8762c; color: #111; border-color: #e8762c; }
+.acid-tog.gate.on { background: #3c6e47; color: #e7f7e9; border-color: #4fbf6a; }
+.acid-tog.gate.tie { background: #3e3a5c; color: #dcd7ff; border-color: #6f66b8; }
+@media (max-width: 760px) {
+  .acid-steps { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  .acid-lcd { margin-left: 0; min-width: 0; width: 100%; text-align: left; }
+}

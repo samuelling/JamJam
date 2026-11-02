@@ -22,6 +22,7 @@ import * as STEMS from './stems.js';
 import { makeTutorial, toured } from './tutorial.js';
 import { Arp, hasArp, arpOn } from './arp.js';
 import { startStats } from './stats.js';
+import { AcidSeq, makeAcidPanel } from './acidseq.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
 // ?bot=1: a pretend bandmate the tours run in a hidden frame (src/tutorial.js). It shares this browser's storage, so
 // it writes nothing there and reads none of your gear; it plays nothing out loud (?silent=1 too) and skips the welcome.
@@ -94,13 +95,16 @@ const outPort = (id) => (id ? input.outputs.find((o) => o.id === id) : null);
 // ---------- sequencers (one per drum instrument), running in lockstep in every browser ----------
 const DRUM_AHEAD_MS = 1500;   // how far ahead the drummer queues its bars (src/band.js)
 const OSCLOCK = new URLSearchParams(location.search).get('osclock') !== '0';   // let the computer's own clock help the shared one (see clock.js)
-const SEQ_H = 60;                      // how far ahead (ms) each browser schedules sequencer steps
+const SEQ_H = 100;                     // how far ahead (ms) each browser schedules sequencer steps (room for a
+                                       // main-thread hiccup plus the device's output latency)
 const seqs = new Map();                // channel key -> StepSeq
 function ensureSeq(k, cfg, snap) {
   const def = engine.defs.get(cfg?.inst);
   if (!def?.seq) { seqs.delete(k); return null; }
   let sq = seqs.get(k);
-  if (!sq) { sq = new StepSeq(def.seq.tracks.length); seqs.set(k, sq); }
+  const acid = def.seq.kind === 'acid';   // Acid Line Lite's bass line sequencer (src/acidseq.js)
+  if (sq && (sq.kind === 'acid') !== acid) sq = null;
+  if (!sq) { sq = acid ? new AcidSeq() : new StepSeq(def.seq.tracks.length); seqs.set(k, sq); }
   if (snap) sq.load(snap);
   return sq;
 }
@@ -115,7 +119,7 @@ function seqEdit(e, op) {
   const at = clock.now() + editLead();
   sq.queue(at, op);
   if (clock.locked) room.send({ k: 'sq', r: e.r, at, op });
-  renderMachinaDyn(true);
+  renderMachinaDyn(true); S.acid?.refresh(true);
   if (op[0] === 'l') renderMdEncoders(e, engine.defs.get(e.cfg.inst));
 }
 setInterval(() => {
@@ -124,6 +128,19 @@ setInterval(() => {
   for (const [k, sq] of seqs) {
     const cfg = cfgOfKey(k); if (!cfg) continue;
     const def = engine.defs.get(cfg.inst); if (!def?.seq) continue;
+    if (sq.kind === 'acid') {
+      // a bass line: whole notes with ends (slides and ties hold them), played by every browser from the pattern
+      const own = pidOf(k) === S.me, e = own ? entry(+k.slice(k.indexOf(':') + 1)) : null, port = e && outPort(e.midiOut), oc = e ? ((e.outCh || 1) - 1) & 15 : 0;
+      for (const ev of sq.due(tempo, now, now + SEQ_H)) {
+        engine.event(k, ev);
+        if (own) {
+          logForLock(k, ev);
+          if (S.srec && !S.srec.done) (S.srec.events.get(k) || S.srec.events.set(k, []).get(k)).push({ ...ev });
+          if (port) sendToHardware(port, ev.type === 'on' ? [0x90 | oc, ev.note, ev.vel] : [0x80 | oc, ev.note, 0], clock.toLocal(ev.at) - (e.hwLatency || 0));
+        } else routeOut(k, ev);
+      }
+      continue;
+    }
     for (const st of sq.due(tempo, now, now + SEQ_H)) for (const tg of st.trigs) {
       engine.seqTrig(k, def.seq.tracks[tg.track].note, 100, tg.locks, st.t, cfg.params);
       if (pidOf(k) === S.me) { const n = def.seq.tracks[tg.track].note; logForLock(k, { type: 'on', note: n, vel: 100, at: st.t }); logForLock(k, { type: 'off', note: n, at: st.t + 60 }); }
@@ -588,6 +605,8 @@ function playNote(on, note, vel, ch = 0, port = '') {
   const src = srcOf(ch, port);
   { const raw = src * 128 + note;   // the key lock: every key you press lands on a note of the room's key
     if (on) { const sn = snapNote(note, ch, port); S.snapped.set(raw, sn); note = sn; } else { note = S.snapped.get(raw) ?? note; S.snapped.delete(raw); } }
+  // Acid Line Lite's sequencer in WRITE mode: the key also goes into the selected step
+  if (on && S.acid && selEntry()?.r === S.acid.r) S.acid.keyed(note);
   const rk = src * 128 + note;
   const targets = on ? targetsFor(ch, port) : (S.route.get(rk) || []).map(entry).filter(Boolean);
   if (on && !targets.length && !S.listener) { if (!S.nudged || performance.now() - S.nudged > 4000) { S.nudged = performance.now(); setStatus('Pick an instrument first: your desk is empty.'); } }
@@ -2097,6 +2116,7 @@ function renderDevice() {
   knobEls = new Map();
   if (e.cfg.ext) { renderExternal(e, def); return; }
   if (skin.custom === 'machina' && def.seq && seqs.get(key(S.me, e.r))) { renderMachina(e, def, unit); return; }
+  S.acid = null;
   if (def.id === 'pads') { S.md = null; padsUI.render(e, $('#plate'), deviceFoot(e, def, unit)); return; }
   S.md = null;
   const wide = unit
@@ -2112,7 +2132,16 @@ function renderDevice() {
       h('div', { class: 'screen lcd' }, ...configFields(e, def, unit), h('div', { class: 'wide' }, wide))),
     groups.length > 1 ? h('div', { class: 'pages' }, ...groups.map((g) => h('button', { class: 'page' + (g === S.knobGroup ? ' on' : ''), onclick: () => { S.knobGroup = g; renderDevice(); } }, g))) : null,
     h('div', { class: 'encoders' }, ...shown.filter((P) => (P.group || 'Sound') === S.knobGroup).map((P, i) => paramControl(P, KNOB_COLORS[i % 4], io(P), skin))),
+    def.seq?.kind === 'acid' ? acidPanel(e) : null,
     deviceFoot(e, def, unit)].filter(Boolean));
+}
+// Acid Line Lite's step sequencer, under its knobs
+function acidPanel(e) {
+  const k = key(S.me, e.r), sq = () => seqs.get(k) || ensureSeq(k, e.cfg);
+  const p = makeAcidPanel({ h, edit: (op) => seqEdit(e, op), seq: sq, view: () => sq().view(), now: () => clock.now(), tempo,
+    playAt: () => Math.ceil(tempo.beatAt(clock.now() + editLead() + 30) / 4 - 1e-9) * 4, stopAt: () => tempo.beatAt(clock.now() + editLead() + 5) });
+  S.acid = { ...p, r: e.r };
+  return p.el;
 }
 
 // --- external MIDI gear: a synth, drum machine or DAW track on a MIDI port
@@ -2915,7 +2944,7 @@ function wire() {
 setInterval(() => {
   if (!S.me) return;
   computeAutoL();
-  updateCorners(); renderLook(); paintRemoteKeys(); renderTempo(); renderMachinaDyn();
+  updateCorners(); renderLook(); paintRemoteKeys(); renderTempo(); renderMachinaDyn(); S.acid?.refresh();
   if (engine.ctx) {
     talk.tick();
     talk.place([S.me, ...room.peers.keys()]);
@@ -2937,6 +2966,7 @@ Object.assign(window.JJ, {
   removeEntry: (r) => removeEntry(entry(r)),
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
+  seqView: (pid, r) => { const sq = seqs.get(key(pid || S.me, r)); return sq && (sq.kind === 'acid' ? sq.view().snapshot() : sq.snapshot()); },
   own: (id, v) => setOwned(id, v),
   loopRange: (a, b) => loopRange(a, b), editTake: (sid, pid, ev, w) => editTake(sid, pid, ev, w), lockAudio: () => lockAudio(), recAll: (on) => setRecAll(on), audio: () => ({ have: [...blobs.bytes.keys()], started: AUD.started }), lane: () => lane,
   addVirtual: (kind, style) => band.add(kind, style), setVirtual: (id, p) => band.set(id, p), removeVirtual: (id) => band.remove(id), lockVirtual: (id, sid) => band.lock(id, sid), vplan: (id) => band.plan.get(id), players: () => songStore.song.players || {},
