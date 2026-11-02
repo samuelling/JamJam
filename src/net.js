@@ -300,13 +300,16 @@ export class Room {
     }
   }
 
-  // send to one peer (id) or everyone (no id)
+  // send to one peer (id) or everyone (no id). While a direct link is still being tried, messages go through the
+  // relay instead of being dropped: a bandmate who can only use the relay (or is already talking to us through it)
+  // would otherwise get no answers for the 8 s the attempt takes, so their clock couldn't lock and their notes
+  // wouldn't go out
   send(m, id) {
     const targets = id ? [this.peers.get(id)].filter(Boolean) : [...this.peers.values()];
     let s = null;
     for (const p of targets) {
       if (p.dc && p.dc.readyState === 'open') { s = s || JSON.stringify(m); try { p.dc.send(s); } catch (_) {} }
-      else if (p.path === 'relay') this.relayEvent(p.id, { k: 'm', m });
+      else if (p.path === 'relay' || p.path === 'connecting') this.relayEvent(p.id, { k: 'm', m });
     }
   }
   // binary to one jammer, waiting while their link's send buffer is full (big transfers: sync record stems)
