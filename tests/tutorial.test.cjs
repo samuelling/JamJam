@@ -68,6 +68,7 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
     check(await waitStep('invite', 15000), 'Show me records a short tape and moves on');
     await next();
     check(await waitStep('end') && /all set/i.test(await card()), '"You\'re all set!" at the end of the jam tour');
+    check(/Write your first song/.test(await card()) && /Jam with a friend/.test(await card()) && /manual/.test(await card()) && await p.evaluate(() => JJ.tours.target()?.id === 'helpBtn'), 'it points to the other two tours and the manual, under Tours');
     const jamDone = await p.evaluate(() => ({ drummer: document.querySelectorAll('.corner.vp').length, key: JJ.S.key.mode, tapes: document.querySelector('#tapesBtn') && !document.querySelector('#tapesBtn').classList.contains('hide') }));
     check(jamDone.drummer === 1 && jamDone.key === 'minor' && jamDone.tapes, `the jam is real: a drummer in a corner, A minor, a tape (${JSON.stringify(jamDone)})`);
 

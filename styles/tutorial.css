@@ -18,3 +18,6 @@
 /* while touring, the studio and the lobby hold the overlay (it scrolls with them): positioned boxes, which moves nothing in them */
 body.touring #studio, body.touring #lobby { position: relative; }
 .tour-friend { position: fixed; left: 0; bottom: 0; width: 2px; height: 2px; border: 0; opacity: 0; pointer-events: none; }
+/* the written manual: from the Tours menu and the lobby */
+.tour-menu .tour-manual { text-align: center; text-decoration: none; }
+.manuallink { color: var(--mz-blue, #7DB0FF); white-space: nowrap; }

@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MEGAjam manual</title>
+<meta name="description" content="The MEGAjam manual: every part of the studio, with walkthroughs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One+SC&family=Courier+Prime:wght@400;700&family=Spline+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #fdfbf3; --paper2: #f4f0e2; --ink: #1b1b1f; --dim: #5b5b62; --rule: #ddd6c2; --hot: #e5501b; --blue: #2861c9; --gold: #b07d12;
+    --sans: 'Spline Sans', 'Helvetica Neue', system-ui, sans-serif; --display: 'Bowlby One SC', 'Arial Black', Impact, sans-serif; --type: 'Courier Prime', 'Courier New', monospace; --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+  body { margin: 0; background: #0b0b0d; color: var(--ink); font: 16px/1.6 var(--sans); }
+  a { color: var(--blue); }
+  .wrap { display: grid; grid-template-columns: 290px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; min-height: 100vh; }
+  /* the contents */
+  nav { position: sticky; top: 0; height: 100vh; overflow: auto; padding: 22px 18px 40px; color: #d9d6cc; font-size: 14px; }
+  nav .brand { display: block; text-decoration: none; color: inherit; margin-bottom: 4px; }
+  .logo { font: 400 30px/1 var(--display); letter-spacing: .01em; color: #fff; }
+  .logo .lc { font-family: var(--type); font-weight: 700; text-transform: lowercase; color: #ff5a1f; margin-left: 2px; }
+  nav .sub { font: 400 12px var(--type); color: #9b9da3; letter-spacing: .06em; text-transform: uppercase; margin: 2px 0 14px; }
+  nav input { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #2c2e33; background: #16171a; color: #ecebe6; font: inherit; margin-bottom: 12px; }
+  nav ol { list-style: none; padding: 0; margin: 0; counter-reset: ch; }
+  nav li { margin: 0; }
+  nav li > a { display: flex; gap: 8px; padding: 4px 8px; border-radius: 6px; color: #d9d6cc; text-decoration: none; line-height: 1.35; }
+  nav li > a::before { counter-increment: ch; content: counter(ch); min-width: 1.4em; color: #6f7178; font: 400 12px/1.7 var(--mono); }
+  nav li > a:hover { background: #1b1c20; color: #fff; }
+  nav li > a.on { background: #24211a; color: #ffcf26; }
+  nav .back { display: inline-block; margin-top: 16px; color: #9b9da3; font-size: 13px; }
+  nav .nohit { color: #9b9da3; padding: 6px 8px; display: none; }
+  /* the pages */
+  main { background: var(--paper); padding: 48px 64px 80px; box-shadow: 0 0 60px #000c; }
+  .cover { border-bottom: 3px double var(--rule); padding-bottom: 26px; margin-bottom: 8px; }
+  .cover .logo { font-size: 64px; color: var(--ink); }
+  .cover .logo .lc { color: var(--hot); }
+  .cover p { max-width: 640px; color: var(--dim); font-size: 17px; margin: 10px 0 0; }
+  .cover .kicker { font: 700 13px var(--type); letter-spacing: .14em; text-transform: uppercase; color: var(--hot); margin-bottom: 8px; }
+  section.ch { padding-top: 36px; border-top: 1px solid var(--rule); margin-top: 36px; }
+  section.ch:first-of-type { border-top: 0; margin-top: 8px; }
+  h2 { font: 700 30px/1.15 var(--sans); margin: 0 0 6px; letter-spacing: -.01em; }
+  h2 .num { font: 400 15px var(--type); color: var(--hot); display: block; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 4px; }
+  h3 { font: 700 19px/1.3 var(--sans); margin: 28px 0 6px; }
+  h4 { font: 700 15px/1.3 var(--sans); margin: 18px 0 4px; text-transform: uppercase; letter-spacing: .05em; color: var(--dim); }
+  p { margin: 0 0 12px; max-width: 72ch; }
+  .lede { font-size: 17.5px; color: #33333a; }
+  ul, ol { max-width: 72ch; padding-left: 1.3em; margin: 0 0 14px; }
+  li { margin: 3px 0; }
+  b, strong { font-weight: 700; }
+  /* a walkthrough: numbered steps in a box */
+  .walk { background: var(--paper2); border: 1px solid var(--rule); border-left: 4px solid var(--hot); border-radius: 10px; padding: 14px 18px 8px; margin: 14px 0 18px; max-width: 76ch; }
+  .walk > b:first-child { display: block; font: 700 12.5px var(--type); text-transform: uppercase; letter-spacing: .12em; color: var(--hot); margin-bottom: 6px; }
+  .walk ol { margin: 0 0 8px; }
+  .walk li { margin: 5px 0; }
+  .tip, .note, .warn { border-radius: 10px; padding: 10px 14px; margin: 12px 0 16px; max-width: 76ch; font-size: 15px; }
+  .tip { background: #eaf2e4; border: 1px solid #c9dcbd; }
+  .note { background: #e8eef9; border: 1px solid #c6d4ee; }
+  .warn { background: #fbecd9; border: 1px solid #ecd0a6; }
+  .tip::before, .note::before, .warn::before { font: 700 12px var(--type); letter-spacing: .1em; text-transform: uppercase; margin-right: 8px; }
+  .tip::before { content: 'Tip'; color: #3c7a26; } .note::before { content: 'Good to know'; color: var(--blue); } .warn::before { content: 'Watch out'; color: #a35a00; }
+  .ui { font: 600 .92em var(--sans); background: #fff; border: 1px solid #cfc8b4; border-bottom-width: 2px; border-radius: 5px; padding: 0 5px; white-space: nowrap; }
+  kbd { font: 500 .85em var(--mono); background: #fff; border: 1px solid #cfc8b4; border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+  table { border-collapse: collapse; margin: 8px 0 18px; font-size: 15px; max-width: 100%; }
+  th, td { text-align: left; vertical-align: top; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--rule); }
+  th { font: 700 12px var(--type); text-transform: uppercase; letter-spacing: .08em; color: var(--dim); }
+  td:first-child { white-space: nowrap; font-weight: 600; }
+  .tablewrap { overflow-x: auto; }
+  dl { max-width: 76ch; margin: 0 0 14px; }
+  dt { font-weight: 700; margin-top: 10px; }
+  dd { margin: 2px 0 0 0; color: #33333a; }
+  .top { font: 400 13px var(--type); color: var(--dim); text-decoration: none; display: inline-block; margin-top: 10px; }
+  .hidden { display: none !important; }
+  mark { background: #ffe58a; padding: 0 1px; border-radius: 2px; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 3px double var(--rule); color: var(--dim); font-size: 14px; }
+  /* phones: contents become a drop-down bar at the top */
+  .navtoggle { display: none; }
+  @media (max-width: 860px) {
+    .wrap { grid-template-columns: minmax(0, 1fr); }
+    nav { position: fixed; inset: 0 0 auto 0; height: auto; max-height: 100vh; z-index: 10; background: #0b0b0d; padding: 10px 14px; border-bottom: 1px solid #222; }
+    nav .full { display: none; }
+    nav.open .full { display: block; max-height: calc(100vh - 64px); overflow: auto; padding-bottom: 20px; }
+    .navtoggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .navtoggle .logo { font-size: 22px; }
+    .navtoggle button { background: #1b1c20; color: #ecebe6; border: 1px solid #2c2e33; border-radius: 8px; padding: 6px 12px; font: 600 14px var(--sans); }
+    main { padding: 82px 20px 60px; }
+    html { scroll-padding-top: 70px; }
+    .cover .logo { font-size: 44px; }
+    h2 { font-size: 25px; }
+    input, select { font-size: 16px !important; }
+  }
+  @media print {
+    body { background: #fff; } .wrap { display: block; } nav, .top { display: none !important; } main { box-shadow: none; padding: 0; }
+    section.ch { break-before: page; border: 0; } .walk, .tip, .note, .warn, table { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav id="nav" aria-label="Contents">
+  <div class="navtoggle"><span class="logo">MEGA<span class="lc">jam</span></span><button id="navBtn" aria-expanded="false" aria-controls="navFull">Contents</button></div>
+  <div class="full" id="navFull">
+    <a class="brand" href="#top"><span class="logo">MEGA<span class="lc">jam</span></span></a>
+    <div class="sub">The manual</div>
+    <input id="search" type="search" placeholder="Search the manual" aria-label="Search the manual" autocomplete="off">
+    <ol id="toc"></ol>
+    <div class="nohit" id="nohit">Nothing found. Try another word.</div>
+    <a class="back" href="./">← Back to MEGAjam</a>
+  </div>
+</nav>
+
+<main id="top">
+<div class="cover">
+  <div class="kicker">The manual</div>
+  <div class="logo">MEGA<span class="lc">jam</span></div>
+  <p>Everything in the studio, explained in writing, with step-by-step walkthroughs. Read it front to back, or jump to the part you need from the contents. Prefer to learn by doing? The guided tours under <span class="ui">Tours</span> in the studio walk you through the same ground with the app lighting the way.</p>
+</div>
+
+<!-- ======================================================================= -->
+<section class="ch" id="welcome">
+<h2><span class="num">Chapter 1</span>Welcome to MEGAjam</h2>
+<p class="lede">MEGAjam is a shared music studio in your web browser. You and up to three friends walk into the same room from wherever you are, pick instruments, and play together, live.</p>
+<h3>How it works, in one minute</h3>
+<p>Most ways of playing music over the internet send <em>sound</em> from one place to another. Sound is heavy and arrives late, so the band never quite lines up.</p>
+<p>MEGAjam sends something much lighter: what your hands do. When you press a key, your browser sends a tiny message saying "this note, this hard, at this moment". Every browser in the room runs every player's instruments, so each one plays your note itself, at that exact moment, on a clock the whole room shares. Everyone hears the same music at the same instant.</p>
+<p>Think of it like a choir singing from the same score with the same conductor, instead of passing a microphone around. The notes are planned a tiny bit in the future (a few dozen milliseconds, the <b>lookahead</b>) so they always arrive in time.</p>
+<h3>What you need</h3>
+<ul>
+  <li><b>A browser.</b> Chrome or Edge on a computer works best. Safari and Firefox work too, with a few limits (MIDI keyboards need Chrome, Edge or Firefox).</li>
+  <li><b>Headphones.</b> They keep your speakers out of your microphone when you talk to the band, and they make timing feel tighter.</li>
+  <li><b>Optionally:</b> a MIDI keyboard or controller, real synths, a microphone or guitar. None are required: your computer keyboard plays notes.</li>
+</ul>
+<h3>Two rooms</h3>
+<p>Every studio has two rooms, and you can walk between them any time from the top bar:</p>
+<ul>
+  <li><b>The Jam Room</b> is for playing together live.</li>
+  <li><b>The Compose Room</b> is for building a song: sections, chords and parts you can play back, edit and export.</li>
+</ul>
+<p>Talk and chat follow you between rooms, and your bandmates stay in the same studio wherever they are.</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="start">
+<h2><span class="num">Chapter 2</span>Getting started</h2>
+<div class="walk"><b>Walkthrough: start your first jam</b>
+<ol>
+  <li>Open MEGAjam. Type your name in <span class="ui">Your name</span>. It's what the band sees.</li>
+  <li>Click <span class="ui">Start a jam</span>. A studio opens with a four-letter room code at the top.</li>
+  <li>The first time, you'll see two doors. Pick <span class="ui">Jam Room</span>.</li>
+  <li>The first time, MEGAjam also offers a first instrument: something to play keys on, something to strum, a bass, or drums. Pick one.</li>
+  <li>Press <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> on your computer keyboard. You're playing.</li>
+</ol></div>
+<div class="walk"><b>Walkthrough: join a friend's jam</b>
+<ol>
+  <li>Get the room's four-letter code or link from your friend.</li>
+  <li>If you got a link, just open it. If you got a code, type your name, type the code in <span class="ui">CODE</span>, and click <span class="ui">Walk in</span>.</li>
+  <li>You arrive in the same studio, in a corner of your own.</li>
+</ol></div>
+<h3>Just listening</h3>
+<p>Click <span class="ui">or just listen in</span> in the lobby (or open a listener link) to hear the band without playing. Your browser still plays every instrument itself, so it sounds exactly like being in the room. Listeners don't take a player's corner, and the band sees how many people are listening.</p>
+<h3>"Tap to hear the room"</h3>
+<p>Browsers keep sound off until you touch the page. If you open a link in a new tab or reload, MEGAjam may ask you to tap once. Do, and you'll hear a little chime when sound is on.</p>
+<h3>New to this?</h3>
+<p><span class="ui">New to this? Take the tour</span> in the lobby starts a guided tour of your first jam. In the studio, <span class="ui">Tours</span> (top right) lists all three:</p>
+<ul>
+  <li><b>Your first jam</b>: an instrument, a key, chord pads, a drummer, the tempo, recording, inviting friends.</li>
+  <li><b>Write your first song</b>: chords, a drum beat, looping a section, a bass part, locking it in, playing the song.</li>
+  <li><b>Jam with a friend</b>: a pretend bandmate called Robin joins you and shows how playing together works: the shared clock, chat and talk, hardware twins, matching sounds.</li>
+</ul>
+<p>Each step lights up one thing and waits until you've done it. <span class="ui">Show me</span> does it for you, and <span class="ui">×</span> leaves the tour at any step.</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="studio">
+<h2><span class="num">Chapter 3</span>The studio at a glance</h2>
+<p class="lede">From top to bottom, the Jam Room has five parts: the console, the band's corners, your desk, the keys, and the side tabs.</p>
+<h3>The console (top bar)</h3>
+<div class="tablewrap"><table>
+<tr><th>Control</th><th>What it does</th></tr>
+<tr><td>ON AIR</td><td>Lights up when the band is connected.</td></tr>
+<tr><td>Room code · Invite</td><td>The four-letter code for your room. <span class="ui">Invite</span> shows the code, a link and a QR code (<a href="#together">Chapter 9</a>).</td></tr>
+<tr><td>BPM</td><td>The tempo. <span class="ui">−</span> and <span class="ui">+</span>, or drag, scroll or use the arrow keys on the number. The metronome button beside it clicks the beat for you alone.</td></tr>
+<tr><td>Talk</td><td>Your microphone to the band (<a href="#together">Chapter 9</a>).</td></tr>
+<tr><td>● (red)</td><td>Records the jam to a tape (<a href="#record">Chapter 11</a>). <span class="ui">Tapes</span> appears once you have one.</td></tr>
+<tr><td>Sync take</td><td>Everyone records their own true sound into one folder of lined-up tracks.</td></tr>
+<tr><td>Key</td><td>The room's key. Its notes light up on the keys, and chord pads appear.</td></tr>
+<tr><td>Jam Room · Compose Room</td><td>Switch rooms.</td></tr>
+<tr><td>AirPlay</td><td>iPhone and iPad only: send the sound to an AirPlay speaker (<a href="#phones">Chapter 18</a>).</td></tr>
+<tr><td>Tours</td><td>The guided tours, and this manual.</td></tr>
+<tr><td>Leave</td><td>Walk out of the studio.</td></tr>
+</table></div>
+<p>With the technical controls on (the gear button, below), the console also shows <span class="ui">Quant</span>, <span class="ui">Look</span> and <span class="ui">Hear myself</span>, explained in <a href="#timing">Chapter 10</a>.</p>
+<h3>The corners</h3>
+<p>Each player has a corner along the wall: yours is lit in your colour, and empty ones wait for friends. A corner shows the player's name, their instruments, a light for how well their connection is doing, and a volume slider and <span class="ui">M</span> (mute) that set how loud that player is <em>for you</em> (nobody else's mix changes). Virtual drummers get corners of their own.</p>
+<h3>Your desk</h3>
+<p>On the left, <b>Your gear</b> is your shelf: the instruments in your corner, plus <span class="ui">My gear</span> (real synths) and <span class="ui">Live audio</span>. In the middle sits the selected instrument's faceplate, with its knobs (<a href="#instruments">Chapter 4</a>).</p>
+<h3>The keys</h3>
+<p>The on-screen keyboard plays the selected instrument. Above it: <span class="ui">Rhythm help</span>, <span class="ui">Lock to key</span> (once a key is set), <span class="ui">Enable MIDI</span> and <span class="ui">Panic</span> (<a href="#playing">Chapter 5</a>).</p>
+<h3>The side tabs</h3>
+<p>Down the right edge: band chat, live audio, MIDI, and (technical) the wiring view. At the foot, the <b>gear button</b> shows or hides the technical controls: quantize, lookahead, per-instrument timing and MIDI channels, external MIDI and the wiring panel. MEGAjam starts simple; this browser remembers your choice.</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="instruments">
+<h2><span class="num">Chapter 4</span>Instruments</h2>
+<p class="lede">Instruments come from the shared studio's wall. Whatever you pick, the whole band hears exactly the same thing, because every browser runs the same instrument with the same settings.</p>
+<div class="walk"><b>Walkthrough: put an instrument on your desk</b>
+<ol>
+  <li>On your shelf, click the empty slot (<span class="ui">+ Pick one</span> or <span class="ui">+ Add</span>). The wall of instruments opens.</li>
+  <li>Click <span class="ui">▶ Hear it</span> on any tile to audition it.</li>
+  <li>Click a tile to take it. It goes on your desk, selected, and the keys play it.</li>
+  <li>To play another, add it the same way, then click it on your shelf to select it.</li>
+</ol></div>
+<p>A desk holds up to 12 instruments (that many is mostly for sequencer rigs, <a href="#midi">Chapter 14</a>). <span class="ui">Remove</span>, at the foot of the faceplate, takes the selected one off.</p>
+<h3>The faceplate</h3>
+<ul>
+  <li><b>Instrument</b> and <b>Patch</b> (or <b>Kit</b>, for drums): swap the instrument or pick one of its starting sounds.</li>
+  <li><b>Knob pages</b>: instruments with many knobs group them in pages (Filter, Envelope, and so on). Click a page name.</li>
+  <li><b>Knobs</b>: drag up and down, scroll, or click one and use the arrow keys. Hold <kbd>Shift</kbd> for fine moves. Double-click puts a knob back to the patch's setting.</li>
+  <li><span class="ui">Audition</span> plays a short phrase so you can hear your changes without playing.</li>
+</ul>
+<p>Every knob move travels to the band like a note, so everyone hears your sound change at the same moment. Knob moves you make while recording a take are recorded too (<a href="#compose-mix">Chapter 17</a>).</p>
+<h3>The library</h3>
+<div class="tablewrap"><table>
+<tr><th>Instrument</th><th>What it is</th></tr>
+<tr><td>Juniper</td><td>A six-voice polysynth in the spirit of the classic early-80s Japanese poly: saw and pulse with PWM, sub, noise, a resonant filter and lush chorus. Keys, pads, brass, strings, bass.</td></tr>
+<tr><td>Monolith</td><td>A three-oscillator mono synth in the spirit of the 70s American classic: fat basses and leads, with glide.</td></tr>
+<tr><td>Machina</td><td>A synthesis drum machine with nine drum slots, each its own little synth, plus two LFOs and a step sequencer (<a href="#machina">Chapter 8</a>). By Sam.</td></tr>
+<tr><td>Poly</td><td>A light two-oscillator polysynth with a mono/glide mode.</td></tr>
+<tr><td>Tine</td><td>FM keys: electric pianos, bells, FM bass, plucks.</td></tr>
+<tr><td>Tapestry</td><td>A tape-replay keyboard like the 60s and 70s ones: every key plays its own recording that runs out after a few seconds, with wow, flutter and hiss. <b>Tape age</b> wears the tapes out. Switch the medium to optical disc for the looped, dusty sound of 70s home organs, with one-finger chord buttons.</td></tr>
+<tr><td>Wobl Wobl</td><td>A wub-wub bass by Sam: the wobble is locked to the room's beat, and the key you play picks its speed. Octave switch, a sub you can saturate (<b>Beef</b>), talking vowel formants and growl.</td></tr>
+<tr><td>Big Macro</td><td>A macro oscillator with 24 synthesis models behind three knobs (harmonics, timbre, morph): analog, FM, chords, speech, strings, drums and more. DSP from Plaits by Émilie Gillet / Mutable Instruments (MIT licence).</td></tr>
+<tr><td>Pads</td><td>Sixteen sample pads, MPC style (<a href="#pads">Chapter 7</a>).</td></tr>
+<tr><td>Studio Kit</td><td>A recorded acoustic drum kit.</td></tr>
+<tr><td>The "Lite" instruments</td><td>Pared-down instruments after Matt's SynthLand: Tonewheel (organ), Hammerwork (piano), Blown (clarinet, flute, reed), Chip (sound-chip voice), Complex Osc (west-coast) and Analog Drums. Their tiles say "by Matt".</td></tr>
+<tr><td>Acoustic</td><td>Sam's physically modelled acoustic guitar, with a strumming hand: every browser strums the same chord the same way.</td></tr>
+</table></div>
+<h3>Libraries</h3>
+<p>The wall can also open instrument libraries from elsewhere: a GitHub repository (<code>github:owner/repo</code>), a website, or a build served from your own machine. When you play a public library's instrument, your bandmates' browsers load it automatically. A library marked private is never shared: each player adds their own copy, and anyone without it hears the closest built-in stand-in (and is told so).</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="playing">
+<h2><span class="num">Chapter 5</span>Playing</h2>
+<h3>The computer keyboard</h3>
+<div class="tablewrap"><table>
+<tr><th>Keys</th><th>What they do</th></tr>
+<tr><td><kbd>A</kbd> <kbd>W</kbd> <kbd>S</kbd> <kbd>E</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>T</kbd> <kbd>G</kbd> <kbd>Y</kbd> <kbd>H</kbd> <kbd>U</kbd> <kbd>J</kbd> <kbd>K</kbd></td><td>Notes, like a piano: the middle row is the white keys, the row above the black keys.</td></tr>
+<tr><td><kbd>Z</kbd> <kbd>X</kbd></td><td>Octave down, octave up.</td></tr>
+<tr><td><kbd>C</kbd> <kbd>V</kbd></td><td>Softer, harder (velocity).</td></tr>
+<tr><td><kbd>Space</kbd></td><td>Sustain pedal.</td></tr>
+<tr><td><kbd>1</kbd>–<kbd>6</kbd></td><td>Chord pads, when a key is set (below).</td></tr>
+</table></div>
+<p>The on-screen keys play too: click or touch them. With Pads selected, the computer keyboard becomes a 4×4 grid instead (<a href="#pads">Chapter 7</a>).</p>
+<h3>MIDI keyboards and controllers</h3>
+<div class="walk"><b>Walkthrough: play with a MIDI keyboard</b>
+<ol>
+  <li>Plug in your keyboard (USB, or a MIDI interface).</li>
+  <li>Click <span class="ui">Enable MIDI</span> on the keys bar and allow it when the browser asks. Once allowed, MIDI switches on by itself next time.</li>
+  <li>Play. It plays the selected instrument. A controller plugged in later is announced by name.</li>
+</ol></div>
+<p>To play several instruments from several controllers (a drum pad on channel 10 and a keyboard on channel 1, say), turn on the technical controls and give each instrument a <b>MIDI in</b> channel on its faceplate.</p>
+<div class="note">Web MIDI needs Chrome, Edge or Firefox on a computer. Safari, and browsers on iPhone and iPad, don't offer it.</div>
+<h3>The room's key</h3>
+<p>Pick a key from <span class="ui">Key</span> in the console (major, minor, dorian, mixolydian, phrygian, lydian, pentatonics or blues). Everyone shares it. The notes of the scale light up on the keys, and two things appear:</p>
+<ul>
+  <li><b>Chord pads</b> above the keys: six chords that fit the key, on <kbd>1</kbd>–<kbd>6</kbd> or by clicking. A strummed instrument such as Acoustic gets all seven, numbered as players count them (hold <kbd>Shift</kbd> for the seventh chord). While a section of a song plays, the pad for the bar's chord lights up.</li>
+  <li><span class="ui">Lock to key</span>: every key you press lands on a note of the scale. No wrong notes.</li>
+</ul>
+<h3>Rhythm help</h3>
+<p><span class="ui">Rhythm help</span> pulls notes you play slightly off the beat part of the way onto it. Your own timing still counts; it just tidies.</p>
+<h3>Panic</h3>
+<p><span class="ui">Panic</span> stops every note. Use it if something gets stuck.</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="drummer">
+<h2><span class="num">Chapter 6</span>Tempo, the metronome and the virtual drummer</h2>
+<h3>Tempo</h3>
+<p>The <span class="ui">BPM</span> number is the room's tempo. Click <span class="ui">−</span> or <span class="ui">+</span>, drag the number, scroll on it, or click it and use the arrow keys. A tempo change starts on a coming beat so everyone switches together. The metronome button beside it clicks the beat for you alone; it never goes into recordings.</p>
+<h3>The virtual drummer</h3>
+<p>A drummer is a bandmate the room plays for you. It keeps time, fills at the ends of phrases, and follows the song.</p>
+<div class="walk"><b>Walkthrough: add a drummer</b>
+<ol>
+  <li>Open the instrument wall and click the <b>Drummer</b> tile.</li>
+  <li>Pick a genre and a style: jazz (medium swing, two-feel, up-tempo, ballad, waltz), bossa nova, rock, half-time, funk, boom bap, trap, house, drum &amp; bass, reggae one-drop, afrobeat.</li>
+  <li>The drummer walks into a corner of its own and comes in on a bar line a couple of seconds later.</li>
+</ol></div>
+<p>On the drummer's corner:</p>
+<ul>
+  <li><b>Kit</b>: what it plays on. By default the recorded Studio Kit for acoustic styles and a Machina kit for electronic ones.</li>
+  <li><b>Intensity</b>: from laid back to driving.</li>
+  <li><span class="ui">Reroll</span>: the same style played by a different drummer.</li>
+  <li><b>×</b> sends the drummer home.</li>
+  <li>With the technical controls on: <b>Busy</b> (how much it comps), <b>Fills</b> (how often it fills), <b>Feel</b> (in 2, in 4) and <b>listen</b> (it plays up when the band plays more).</li>
+</ul>
+<p>Every browser runs the same drummer from the same settings, so everyone hears the same drums; only the settings travel. A change lands on a bar line a couple of seconds ahead. With a song playing, the drummer follows the sections: it lifts at bridges, builds through solos and ends the song on a big hit.</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="pads">
+<h2><span class="num">Chapter 7</span>Pads: sample pads</h2>
+<p class="lede">Pads is a sixteen-pad sampler, MPC style. Take it off the wall like any instrument.</p>
+<ul>
+  <li><b>Playing</b>: click the pads, use MIDI notes 36–51, or the computer keyboard laid out like the grid: <kbd>Z</kbd> <kbd>X</kbd> <kbd>C</kbd> <kbd>V</kbd> along the bottom row up to <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> on top.</li>
+  <li><b>Kits</b>: seventeen to start from, from studio chops and hand drums to orchestral hits, a kalimba and loops chopped a slice per pad (so they play at any tempo). Every sound is free to use or made here.</li>
+  <li><b>Per pad</b>: trim, tune, gain, and choke groups (a closed hi-hat cutting off an open one).</li>
+</ul>
+<div class="walk"><b>Walkthrough: put your own sound on a pad</b>
+<ol>
+  <li>Select Pads on your desk.</li>
+  <li>Drop an audio file onto a pad, or pick files, or sample the last bar of your live audio.</li>
+  <li>Trim and tune it. Your bandmates receive the sound once over the direct links; until it arrives, their browser plays a quick sketch of it.</li>
+</ol></div>
+<p>Sounds you load are kept in your browser for next time.</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="machina">
+<h2><span class="num">Chapter 8</span>Machina and its sequencer</h2>
+<p class="lede">Machina is a synthesis drum machine: nine slots (kick, snare, toms, hats, clap and more), each a small synth. No samples.</p>
+<h3>The sound</h3>
+<ul>
+  <li>Each slot runs a machine (analog circuits, FM percussion, modal physics or raw sources) with pitch, decay, tone, snap, crush, level and pan.</li>
+  <li>The second row of knobs adds body and noise balance, noise colour and decay, drive and velocity response; kick, snare and toms get a pitch sweep; the kick a sub tail; the clap its burst count and spacing.</li>
+  <li><b>Two LFOs</b> can drive any knob, locked to the room's beat (1/32 to 4 bars, triplets too) or free-running, with five shapes.</li>
+  <li>Notes from C4 up play the perc slot chromatically.</li>
+</ul>
+<h3>The step sequencer</h3>
+<p>Machina has a 16 to 64-step sequencer with pages. Click steps (trigs) to place hits, set the length, and press play: it starts and stops on the bar.</p>
+<div class="walk"><b>Walkthrough: a parameter lock</b>
+<ol>
+  <li>Hold a trig (or Shift-click it, or turn on <span class="ui">LOCK</span> and click it).</li>
+  <li>While holding, turn a knob.</li>
+  <li>That one step now plays with that setting: a higher snare, a longer hat.</li>
+</ol></div>
+<p>The sequencer runs in every browser from the shared pattern and clock, so it sends no notes at all, only your edits. Everyone hears exactly the same hits.</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="together">
+<h2><span class="num">Chapter 9</span>Playing together</h2>
+<div class="walk"><b>Walkthrough: invite someone</b>
+<ol>
+  <li>Click <span class="ui">Invite</span> next to the room code.</li>
+  <li>Read them the four letters, click <span class="ui">Copy link</span> (or <span class="ui">Share…</span>) and send it, or let them scan the QR code with a phone.</li>
+  <li>They walk into an empty corner. Up to four players fit in a room.</li>
+</ol></div>
+<p><span class="ui">Copy a link for listeners</span> gives a link that opens in listening mode: they hear the band but take no corner.</p>
+<h3>A bandmate's corner</h3>
+<p>The light next to a player's name tells you how their connection is doing (green is good). With the technical controls on, a tag says more: <b>clock leader</b> (the player whose clock everyone follows, normally whoever came first), whether the link is direct or going through the server, and a check that everyone is hearing the same music.</p>
+<h3>Chat and reactions</h3>
+<p>The speech-bubble tab opens <b>Band chat</b>; a badge counts unread messages. Under the console, the emoji buttons send a quick reaction everyone sees: applause, fire, love, laughter, wow.</p>
+<h3>Talk</h3>
+<p><span class="ui">Talk</span> sends your voice to the band, like a walkie-talkie:</p>
+<ul>
+  <li><b>Click</b> it to leave your mic on (it says <b>Talking</b>); click again to turn it off.</li>
+  <li><b>Hold</b> it while you speak, and it turns off when you let go.</li>
+</ul>
+<p>Your mic only sends while you're actually talking, and the music dips slightly under voices so you can hear each other. A small three-bar mark lights up in the corner of whoever is speaking. Each voice comes from that player's place in the stereo field. Wear headphones, so the band's music doesn't go back out through your mic.</p>
+<h3>Leaving</h3>
+<p><span class="ui">Leave</span> walks you out. If the clock leader leaves, the next player carries on without a hiccup.</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="timing">
+<h2><span class="num">Chapter 10</span>Timing: how everyone stays together</h2>
+<p class="lede">You don't need any of this to play: MEGAjam measures and sets everything by itself. This chapter is for the curious, and for when something feels off.</p>
+<h3>The shared clock and the lookahead</h3>
+<p>Every note is stamped with a moment on a clock the whole room shares, set a little in the future: the <b>lookahead</b>. It's long enough for the note to reach the farthest player, plus a safety margin. Every browser plays the note at that moment, so the band lands together.</p>
+<p>MEGAjam measures how much spare time each player actually has when your notes arrive and adjusts the lookahead continually, rising at once when needed and settling gently. Friends in the same town might need 20 ms; across a continent, 100 ms or more. Bluetooth headphones add a lot (150 ms or more), so wired headphones help.</p>
+<h3>The technical controls</h3>
+<p>Click the gear button at the foot of the side tabs to show them.</p>
+<dl>
+  <dt>Look</dt><dd>The lookahead in milliseconds, with a meter. Drag the slider to set it by hand; <span class="ui">AUTO</span> goes back to the measured value.</dd>
+  <dt>Hear myself</dt><dd>Off (the default): you hear your notes at the same moment the band does, a lookahead after you play them, like playing a pipe organ. On: you hear yourself instantly, and the band hears you a lookahead later. Try both; for slow sounds, on feels nicer.</dd>
+  <dt>Quant</dt><dd>Quantize: snaps your notes to the next 1/16, 1/8 or 1/4 at least a lookahead away, so the delay disappears into the grid.</dd>
+  <dt>Timing (per instrument)</dt><dd>On the faceplate. <b>Tight</b> (never late: the lookahead plus 10 ms, for drums, bass and plucks), <b>Balanced</b> (the lookahead) or <b>Loose</b> (about 40% of it, and you hear yourself instantly; a far player may get a note a touch late, hidden by a slow attack, for pads and strings). <b>Auto</b> picks from the sound.</dd>
+</dl>
+<h3>The wiring view</h3>
+<p>The wiring tab (technical) lists every link between players: the path (direct or through the server), the round-trip time (RTT), jitter, how late notes arrive, and the lookahead. Players connect to each other directly; a pair that can't (some strict networks) passes messages through the server instead, which adds a little delay, and the corner says so.</p>
+<h3>Same music?</h3>
+<p>Every couple of seconds, each browser checks that it's playing the same instruments with the same settings as everyone else. If not, the corner shows a warning (it sorts itself out, or rejoining fixes it).</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="record">
+<h2><span class="num">Chapter 11</span>Recording</h2>
+<h3>The tape</h3>
+<div class="walk"><b>Walkthrough: record the jam</b>
+<ol>
+  <li>Click the red ● button in the console. Everyone sees that you're recording.</li>
+  <li>Play.</li>
+  <li>Click it again to stop. <span class="ui">Tapes</span> appears.</li>
+  <li>Open <span class="ui">Tapes</span> to play each take back, and <span class="ui">Save WAV</span> to keep it.</li>
+</ol></div>
+<p>The tape records the mix as you heard it: everyone's instruments and live audio, without the metronome. Takes stay only until you close the tab, so save the ones you want.</p>
+<h3>Sync take: everyone's true sound</h3>
+<p>The tape records what <em>your</em> browser played: real synths come through as their software twins. A <b>sync take</b> records what each player really sounds like, on their own machine, and gathers it all into one folder.</p>
+<div class="walk"><b>Walkthrough: a sync take</b>
+<ol>
+  <li>Click <span class="ui">Sync take</span>, then <span class="ui">● Start a sync take</span>. Everyone records.</li>
+  <li>If you play real hardware, pick which audio input it comes in on.</li>
+  <li>Play, then <span class="ui">■ Stop the take</span>.</li>
+  <li>Click <span class="ui">Gather everyone's stems</span>. Each player's files come across.</li>
+  <li><span class="ui">Save the folder</span> downloads a zip: everyone's instruments dry, hardware through its audio input, and every note as MIDI, all lined up from the same moment, ready for any DAW.</li>
+</ol></div>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="live">
+<h2><span class="num">Chapter 12</span>Live audio: mics and guitars</h2>
+<p class="lede">Instruments in MEGAjam travel as notes and land in time. Real sound from a microphone or a guitar can't beat the network, so it works differently: the band hears it a whole number of bars late, landing on the same chords one loop around.</p>
+<p>That's perfect over a loop or a repeating chord cycle (a solo over the changes, a vocal over a groove) and wrong for tight hits with the band.</p>
+<div class="walk"><b>Walkthrough: go live</b>
+<ol>
+  <li>Open the <b>Live audio</b> tab (the microphone at the side), or <span class="ui">Live audio</span> on your shelf.</li>
+  <li>Pick your input, and how late: 1, 2, 4 or 8 bars.</li>
+  <li>Click <span class="ui">Go live</span>. A meter in your corner shows your level.</li>
+  <li>If your audio lands a hair early or late, use <b>Nudge</b>.</li>
+</ol></div>
+<p>While a section of a song loops, <span class="ui">🎙 Lock in my live audio</span> keeps your last full pass as a take that plays from the song for everyone.</p>
+<div class="warn">Use headphones. Otherwise the band's music goes back out through your mic.</div>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="gear">
+<h2><span class="num">Chapter 13</span>Your real synths: My gear</h2>
+<p class="lede">Bring your hardware. You play the real thing; bandmates who own the same model hear your part on theirs, and everyone else hears its closest software <b>twin</b>.</p>
+<div class="walk"><b>Walkthrough: link a synth</b>
+<ol>
+  <li>Connect your synth by MIDI and click <span class="ui">Enable MIDI</span>.</li>
+  <li>Click <span class="ui">My gear</span> on your shelf. MEGAjam lists your MIDI ports and guesses each synth from its name ("is this your OB-6?"). Otherwise, search the list of over 550 units by name, maker, decade or type.</li>
+  <li>Click <span class="ui">Yes, link it</span> (or <span class="ui">Link</span> on its row in the list), then <span class="ui">Play it</span>. It goes on your desk.</li>
+  <li>On the faceplate, <b>Twin</b> lists the software instruments that sound most like it, best first, with a match score. <span class="ui">Hear twin</span> lets you hear the twin yourself, to compare.</li>
+  <li>To have MEGAjam play your synth in time with the band, pick it in <b>Plays my synth via</b> and turn Local Control off on the synth. <b>Synth latency</b> fine-tunes it.</li>
+</ol></div>
+<h3>Set up and Check it works</h3>
+<p>Each linked synth has a <span class="ui">Set up</span> checklist: the steps from its own manual where known (MIDI channel, SysEx on, knobs sending as NRPN or CC, which port), general ones otherwise. <span class="ui">Check it works</span> asks the synth who it is and for its current sound, and says what to fix if it doesn't answer.</p>
+<h3>I have one too: sharing sounds</h3>
+<p>If a bandmate has linked the same model as you, your part plays on <em>their</em> real synth. Your knob moves, program changes and pressure reach it in time with your notes. Where MEGAjam knows how to ask the model for its current sound (77 models so far), your sound is copied across too: their synth loads it on the next bar line, as the current sound, never over a saved program. This needs one extra browser permission (SysEx), asked only when you share sounds.</p>
+<h3>Match my sound</h3>
+<p>A twin starts as a good guess. <b>Match my sound</b> makes it sound like <em>your</em> patch:</p>
+<div class="walk"><b>Walkthrough: match the twin to your synth</b>
+<ol>
+  <li>Bring your synth's audio into the computer (an audio interface, or the mic input).</li>
+  <li>At the foot of its faceplate, click <span class="ui">Match my sound</span> (it changes to <b>Matching…</b>) and allow the audio input.</li>
+  <li>Play some single notes, held a moment, across the range.</li>
+  <li>MEGAjam listens, tries settings on the twin out of earshot, and glides the twin your bandmates hear toward your sound. The status says how alike they are.</li>
+</ol></div>
+<p>It never touches your synth, runs quietly in the background, and backs off if the jam is under strain.</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="midi">
+<h2><span class="num">Chapter 14</span>MIDI: sequencers, external gear and clock</h2>
+<h3>Sequencers</h3>
+<p>A hardware sequencer or DAW can bring many parts at once over one cable (a Cirklon, Hapax, OXI, or your DAW).</p>
+<div class="walk"><b>Walkthrough: add a sequencer</b>
+<ol>
+  <li>In <span class="ui">My gear</span>, click <span class="ui">Add a sequencer</span> and start your sequencer playing.</li>
+  <li>MEGAjam listens and lists every port and channel that has notes.</li>
+  <li>Say what plays each one: a synth you've linked, or a software instrument (channel 10 is guessed as drums, low lines as bass).</li>
+  <li>They go on your desk, each listening to its own port and channel.</li>
+</ol></div>
+<p>MEGAjam sends your sequencer the room's clock, and can <b>run it a lookahead ahead</b>, so its notes land on the room's beat for everyone. Tick <b>MEGAjam plays it</b> for a linked synth and its notes reach it at the moment the band hears them, so you hear the same beat they do.</p>
+<h3>External MIDI</h3>
+<p>With the technical controls on, <span class="ui">+ External MIDI</span> on your shelf puts any synth, drum machine or DAW track reachable over MIDI in your corner, including virtual ports (IAC on a Mac, loopMIDI on Windows). Give it a name, an output and a channel, and optionally a twin for the band to hear. Your notes go out to it timed to the moment the band hears your part.</p>
+<h3>The MIDI panel</h3>
+<p>The MIDI tab (the round DIN-socket icon) does two things:</p>
+<ul>
+  <li><b>The band's parts on your gear</b>: pick an output and channel for any bandmate's part, and it plays on your own synth or DAW, in time, instead of in the browser.</li>
+  <li><b>Clock out</b>: sends the room's tempo as MIDI clock, starting on the next bar, so a drum machine or sequencer on your desk runs in step with everyone. <b>early</b> sends it a few milliseconds ahead for slow-to-respond gear.</li>
+</ul>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="compose">
+<h2><span class="num">Chapter 15</span>The Compose Room: building a song</h2>
+<p class="lede">The Compose Room turns jams into a song. It's laid out like a DAW: sections across the top, one row per track, time running left to right. Everything in it is shared: every change shows up for the whole band at once.</p>
+<h3>The board</h3>
+<ul>
+  <li><b>Sections</b> run across the top: Intro, Verse, Chorus and so on, each sized by its bars, with its chords. Drag a section by its name to move it; its × removes it.</li>
+  <li><b>Tracks</b> are the rows: one instrument each, with who made it. A <b>block</b> is a track's part in one section: solid with a lock when a take is in, dashed when empty, and striped and pulsing in someone's colour while they're playing it live.</li>
+  <li>A <b>playhead</b> runs across while the song plays.</li>
+  <li>Up front: the song's title, <span class="ui">Play the song</span> and the master fader; then the selected section's name, length, chords, <span class="ui">Loop it</span> and <span class="ui">Jam this section</span>.</li>
+  <li><span class="ui">▸ Song options</span> holds the take rule, versions, import and export, stems and automation; <b>More</b> holds chord fills, notes, the road-map label and reordering.</li>
+</ul>
+<div class="walk"><b>Walkthrough: your first song, start to finish</b>
+<ol>
+  <li>Click <span class="ui">Compose Room</span> in the console.</li>
+  <li>Select a section, set its length in bars, and type a chord into each bar's box (for example <code>Am</code>, <code>F</code>, <code>C</code>, <code>G</code>).</li>
+  <li>Add a drum track: <span class="ui">+ Add track</span> under the tracks, pick a drum instrument, and click in a beat on the empty roll that opens.</li>
+  <li>Click <span class="ui">Loop it</span> to hear the section round and round.</li>
+  <li>Add a bass track, then <span class="ui">Jam it</span> (or <span class="ui">Jam this section</span>): you go to the Jam Room with the section looping, a bar counter and the chords above the desk.</li>
+  <li>Play the bass along. Your last full pass is <b>locked in</b> as a take.</li>
+  <li>Go back to the Compose Room and click <span class="ui">Play the song</span>.</li>
+</ol></div>
+<h3>Sections and the loop strip</h3>
+<p>Above the sections runs a <b>loop strip</b>: drag across it to loop any bars (inside a section or across several), drag either end to crop the loop, drag its middle to move it. Changes land on the next bar line without losing your place. A section can also carry a road-map label ("trading 4s", "solo") that the drummer follows.</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="takes">
+<h2><span class="num">Chapter 16</span>Takes, notes and parts</h2>
+<h3>Locking in takes</h3>
+<p>While a section loops, your last full pass on the selected instrument is locked in as a new take in your track, placed where you heard yourself play it. Takes pile up per block. The band picks how a new one lands, under <span class="ui">Song options</span> › <b>New takes</b>:</p>
+<ul>
+  <li><b>take over</b>: the newest take sounds.</li>
+  <li><b>wait for the owner</b>: the track's owner picks.</li>
+  <li><b>go to a vote</b>: the band votes.</li>
+</ul>
+<p>Click a block to see its takes: <span class="ui">Use this take</span> (or <span class="ui">Vote for it</span>). A switch always waits for the top of the next pass, so everyone hears it change together.</p>
+<h3>Record every pass</h3>
+<p><span class="ui">⏺ Record every pass</span> on the section bar keeps every full pass you play as a take, without clicking anything: each of your instruments that played, and your live audio. While you record, your old takes stay quiet so nobody hears them over you. Stop, and the newest take sounds. A block keeps its last 32.</p>
+<h3>Editing notes</h3>
+<p>Click a block (or a track's name) to open its notes in a roll under the section: note names, bar numbers, chords, velocity as brightness.</p>
+<ul>
+  <li><b>Move</b>: drag a note (it snaps to the grid you pick; hold <kbd>Alt</kbd> for none).</li>
+  <li><b>Resize</b>: drag its end.</li>
+  <li><b>Add</b>: click (drag for a longer note).</li>
+  <li><b>Delete</b>: double-click.</li>
+  <li><span class="ui">Quantize</span>: pulls every start toward the grid, at a strength you choose.</li>
+  <li><span class="ui">Clear notes</span> empties the roll; <span class="ui">↶ Undo</span> and <span class="ui">↷ Redo</span> (<kbd>⌘Z</kbd>, <kbd>⇧⌘Z</kbd>) step through your changes.</li>
+  <li>Every edit is a new copy of the take; <span class="ui">Back to the original</span> returns to it as played.</li>
+</ul>
+<h3>Writing parts from scratch</h3>
+<div class="walk"><b>Walkthrough: write a part with step entry</b>
+<ol>
+  <li>Under a section's chords, pick <span class="ui">✎ Write a part for…</span> (a track already in the song, or a new one for an instrument on your desk), or click an empty block.</li>
+  <li>An empty roll opens. Click notes in, or turn on <span class="ui">🎹 Step entry</span>.</li>
+  <li>Pick a note length, then play a note or chord on a MIDI keyboard or the computer keys. It lands at the cursor, which moves on when you let go.</li>
+  <li><span class="ui">Rest ▶</span> skips a step; click a bar number to jump there.</li>
+</ol></div>
+<p>A written part is part of the song, so every browser has it in full before it plays.</p>
+<h3>Tracks</h3>
+<p>A track's settings sit above its takes: rename it, change its instrument or patch (the whole track follows, as in a DAW), <span class="ui">Jam it</span> (its instrument goes on your desk, and what you lock goes into this track), or <span class="ui">Delete track</span>. A track also deletes from the 🗑 on its row, or <kbd>Delete</kbd> on its header. It goes for everyone, and a bar offers <span class="ui">Undo</span> for twelve seconds.</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="compose-mix">
+<h2><span class="num">Chapter 17</span>Mixing, automation, versions and export</h2>
+<h3>The mix</h3>
+<ul>
+  <li>Each track has a <b>fader</b> on its row, and <b>Volume</b> (−∞ to +6 dB) and <b>Pan</b> in its settings. You hear a move as you drag; when you let go it's saved for everyone. Double-click puts either back to the middle.</li>
+  <li><b>M</b> mutes a track for everyone; <b>S</b> solos it for you alone.</li>
+  <li>The <b>master fader</b> beside <span class="ui">Play the song</span> sets the whole song's level.</li>
+</ul>
+<div class="note">The faders on the players' corners are different: they set how loud each live player is to you, and change nothing for anyone else.</div>
+<h3>Automatic mastering</h3>
+<p>Everything the room plays goes through a mastering console: tracks fold into eight stems (drums, bass, chords, pads, melody, solo, hits, texture), each ridden to its own level, then glued, balanced and limited to a loudness that suits the song's style. It's on from the start. <span class="ui">▸ Mastering</span> beside the master fader opens it: on or off, style, auto levels, loudness, ceiling, glue, a level per stem, and meters.</p>
+<h3>Automation</h3>
+<p>Knob moves (and pitch bends) are always recorded with a take and play back with it, for everyone. Knobs go back to the track's settings when the block ends. A block whose take moves knobs shows a small ◇.</p>
+<div class="walk"><b>Walkthrough: draw automation</b>
+<ol>
+  <li><span class="ui">Song options</span> › <span class="ui">Show automation</span>. Each track gets a ◇.</li>
+  <li>Click a track's ◇ to open a lane per knob: the track's setting dashed, the moves as a line.</li>
+  <li>Click to add a point, drag to move it (snaps to 1/16; <kbd>Alt</kbd> for none), double-click to remove it.</li>
+  <li><span class="ui">+ automate a knob…</span> draws any other knob from scratch; × clears a knob.</li>
+</ol></div>
+<h3>Versions</h3>
+<p><span class="ui">Song options</span> › <b>Versions</b> › <span class="ui">Save this version…</span> keeps the current choice of takes under a name ("the one with Matt's solo"). Go back to it any time.</p>
+<h3>Starting from a preset or a sketch</h3>
+<ul>
+  <li><span class="ui">♪ Song presets…</span> starts a song from a form, chord changes and a basic band (drums, bass, chords): five each in twenty genres.</li>
+  <li><span class="ui">Import a sketch…</span> takes a MIDI file (tracks become parts, markers become sections, tempo and key come along) or a song from SynthLand's Tracker.</li>
+  <li><span class="ui">Save MIDI</span> and <span class="ui">Save song</span> export the song as a MIDI file or a MEGAjam song file.</li>
+</ul>
+<h3>Exporting stems</h3>
+<div class="walk"><b>Walkthrough: export stems for your DAW</b>
+<ol>
+  <li><span class="ui">Song options</span> › <span class="ui">Export stems…</span></li>
+  <li>Choose <span class="ui">Download a .zip</span>, or (Chrome and Edge) <span class="ui">Save into a folder…</span>. <span class="ui">Just my tracks</span> exports only yours.</li>
+  <li>You get every track as a 24-bit WAV from bar 1 to the end, all the same length, after each track's fader and pan; plus the mix, the song as MIDI, a note with the tempo and key, and an <b>Ableton Live set</b> (Live 11 or later) with every stem in place.</li>
+  <li>Drop them into any DAW at the song's tempo and they line up.</li>
+</ol></div>
+<p><b>Band folder</b>: paste your band's Google Drive or Dropbox folder link, and everyone sees it. Each player can then <span class="ui">Save into a folder…</span> their synced copy of it, so everyone's stems land together.</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="phones">
+<h2><span class="num">Chapter 18</span>Phones, tablets and AirPlay</h2>
+<p>MEGAjam works on phones and tablets: the studio fits the screen, and the on-screen keys and pads take touch. A few limits:</p>
+<ul>
+  <li>No MIDI on iPhone and iPad (browsers there don't offer it).</li>
+  <li>Tap once when asked: phones keep sound off until you touch the page.</li>
+</ul>
+<p>In Safari on iPhone and iPad, <span class="ui">AirPlay</span> in the console sends the room's sound to a speaker. It adds about two seconds of delay, and says so first: fine for listening, too late to play along. If Safari can't send it, use AirPlay from Control Center.</p>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="keys">
+<h2><span class="num">Chapter 19</span>Keyboard shortcuts</h2>
+<div class="tablewrap"><table>
+<tr><th>Where</th><th>Keys</th><th>What</th></tr>
+<tr><td>Playing</td><td><kbd>A</kbd>–<kbd>K</kbd>, <kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd></td><td>Notes</td></tr>
+<tr><td>Playing</td><td><kbd>Z</kbd> / <kbd>X</kbd></td><td>Octave down / up</td></tr>
+<tr><td>Playing</td><td><kbd>C</kbd> / <kbd>V</kbd></td><td>Softer / harder</td></tr>
+<tr><td>Playing</td><td><kbd>Space</kbd></td><td>Sustain</td></tr>
+<tr><td>Chord pads</td><td><kbd>1</kbd>–<kbd>6</kbd> (<kbd>7</kbd>), <kbd>Shift</kbd></td><td>Chords in the key; Shift adds the seventh</td></tr>
+<tr><td>Pads</td><td><kbd>Z</kbd> <kbd>X</kbd> <kbd>C</kbd> <kbd>V</kbd> … <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></td><td>The 4×4 grid, bottom row to top</td></tr>
+<tr><td>Knobs</td><td>Arrow keys, <kbd>Shift</kbd>, double-click</td><td>Turn; fine; back to the patch's setting</td></tr>
+<tr><td>Tempo</td><td>Arrow keys on BPM</td><td>Slower / faster</td></tr>
+<tr><td>Notes roll</td><td><kbd>⌘Z</kbd> / <kbd>⇧⌘Z</kbd></td><td>Undo / redo</td></tr>
+<tr><td>Notes roll</td><td><kbd>Alt</kbd> while dragging</td><td>No snapping</td></tr>
+<tr><td>Sections</td><td><kbd>Alt</kbd> + arrow keys</td><td>Move the selected section</td></tr>
+<tr><td>Tracks</td><td><kbd>Delete</kbd> on a track's header</td><td>Delete the track (Undo for 12 s)</td></tr>
+</table></div>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="trouble">
+<h2><span class="num">Chapter 20</span>Troubleshooting</h2>
+<dl>
+  <dt>I can't hear anything.</dt>
+  <dd>Tap or click anywhere on the page (browsers keep sound off until you do). Check that the player's corner isn't muted (<b>M</b>) or turned down, that an instrument is selected on your desk, and your computer's volume.</dd>
+  <dt>My MIDI keyboard does nothing.</dt>
+  <dd>Use Chrome, Edge or Firefox on a computer, and click <span class="ui">Enable MIDI</span>. If you set a <b>MIDI in</b> channel on the instrument (technical controls), make sure your keyboard sends on it.</dd>
+  <dt>Everything feels a bit late.</dt>
+  <dd>That's the lookahead: the price of everyone landing together. Check you aren't on Bluetooth headphones (they add a lot); wired is better. Turn on <b>Hear myself</b> to hear your own notes instantly. For slow sounds, set the instrument's Timing to Loose.</dd>
+  <dt>A friend's corner says the link goes through the server.</dt>
+  <dd>Their network won't allow a direct link, so messages pass through MEGAjam's server. It works, just with a little more delay.</dd>
+  <dt>A corner says it's out of sync.</dt>
+  <dd>It usually sorts itself out within a few seconds. If not, that player can leave and walk back in.</dd>
+  <dt>A note is stuck.</dt>
+  <dd>Click <span class="ui">Panic</span>.</dd>
+  <dt>The band hears an echo of themselves when I talk.</dt>
+  <dd>Wear headphones, so the music doesn't go back out through your mic.</dd>
+  <dt>Someone left, but their corner is still there.</dt>
+  <dd>If they closed the tab without leaving, the room waits up to about twelve seconds to be sure they've gone.</dd>
+</dl>
+<a class="top" href="#top">↑ Contents</a>
+</section>
+
+<!-- ======================================================================= -->
+<section class="ch" id="glossary">
+<h2><span class="num">Chapter 21</span>Glossary</h2>
+<dl>
+  <dt>Block</dt><dd>A track's part in one section of the song.</dd>
+  <dt>Clock leader</dt><dd>The player whose clock the room follows; normally whoever came first.</dd>
+  <dt>Corner</dt><dd>Your place in the studio, holding your instruments.</dd>
+  <dt>Lock in</dt><dd>Keep a pass you played over a looping section as a take in the song.</dd>
+  <dt>Lockstep</dt><dd>Every browser runs everyone's instruments and plays every note at the same moment on a shared clock. Only the notes travel.</dd>
+  <dt>Lookahead</dt><dd>How far in the future notes are scheduled, so they reach everyone in time.</dd>
+  <dt>Patch</dt><dd>A saved setting of an instrument's knobs: a starting sound.</dd>
+  <dt>Section</dt><dd>A part of the song (Verse, Chorus…), with a length in bars and chords.</dd>
+  <dt>Stem</dt><dd>One track (or group of tracks) rendered to its own audio file.</dd>
+  <dt>Take</dt><dd>One recorded or written version of a block.</dd>
+  <dt>Track</dt><dd>One instrument in the song, a row on the board.</dd>
+  <dt>Twin</dt><dd>The software instrument that stands in for a real synth, for bandmates who don't own one.</dd>
+</dl>
+<footer>MEGAjam is made by Sam Ling and Matt Crump. Big Macro's DSP comes from Plaits by Émilie Gillet / Mutable Instruments (MIT licence). <a href="./">Back to MEGAjam</a></footer>
+</section>
+</main>
+</div>
+<script>
+// the contents, from the chapters; the current chapter lit as you read; a search that filters chapters and marks the words
+(() => {
+  const toc = document.getElementById('toc'), chapters = [...document.querySelectorAll('section.ch')];
+  for (const s of chapters) {
+    const t = s.querySelector('h2').cloneNode(true); t.querySelector('.num')?.remove();
+    const li = document.createElement('li'), a = document.createElement('a'); a.href = '#' + s.id; a.textContent = t.textContent.trim(); a.dataset.for = s.id; li.append(a); toc.append(li);
+  }
+  const links = [...toc.querySelectorAll('a')];
+  const io = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) links.forEach((a) => a.classList.toggle('on', a.dataset.for === e.target.id)); }, { rootMargin: '-15% 0px -75% 0px' });
+  chapters.forEach((s) => io.observe(s));
+  // phones: the contents fold away behind a button
+  const nav = document.getElementById('nav'), btn = document.getElementById('navBtn');
+  btn.addEventListener('click', () => { const open = !nav.classList.contains('open'); nav.classList.toggle('open', open); btn.setAttribute('aria-expanded', String(open)); });
+  toc.addEventListener('click', () => { nav.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); });
+  // search
+  const q = document.getElementById('search'), nohit = document.getElementById('nohit');
+  const unmark = () => { for (const m of document.querySelectorAll('main mark')) m.replaceWith(document.createTextNode(m.textContent)); document.querySelector('main').normalize(); };
+  const markIn = (root, re) => { const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.parentElement.closest('script, style, .num') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) }); const hits = []; let n; while ((n = w.nextNode())) if (re.test(n.data)) hits.push(n);
+    for (const t of hits) { const f = document.createDocumentFragment(); let last = 0; t.data.replace(re, (m, i) => { f.append(t.data.slice(last, i)); const mk = document.createElement('mark'); mk.textContent = m; f.append(mk); last = i + m.length; return m; }); f.append(t.data.slice(last)); t.replaceWith(f); } };
+  let timer;
+  q.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => {
+    unmark(); const v = q.value.trim(); let shown = 0;
+    if (!v) { chapters.forEach((s) => s.classList.remove('hidden')); links.forEach((a) => a.parentElement.classList.remove('hidden')); nohit.style.display = 'none'; return; }
+    const re = new RegExp(v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    for (const s of chapters) { const hit = re.test(s.textContent); re.lastIndex = 0; s.classList.toggle('hidden', !hit); links.find((a) => a.dataset.for === s.id).parentElement.classList.toggle('hidden', !hit); if (hit) { shown++; markIn(s, re); } }
+    nohit.style.display = shown ? 'none' : 'block';
+  }, 150); });
+})();
+</script>
+</body>
+</html>
