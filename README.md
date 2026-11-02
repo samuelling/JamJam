@@ -11,7 +11,7 @@ The idea comes from strategy-game networking, where every machine runs the same 
 
 ## In the studio
 
-- **New to this?** Two guided tours for someone who has never used a DAW: **Your first jam** (from **New to this? Take the tour** in the lobby) and **Write your first song**, both also under **? Tours** in the studio.
+- **New to this?** Three guided tours for someone who has never used a DAW: **Your first jam** (from **New to this? Take the tour** in the lobby), **Write your first song** and **Jam with a friend** (Robin, a pretend bandmate), all under **Tours** in the studio.
   Each step lights up one thing, says what it is and what to do, and waits until you've done it (any way counts: the computer keys or a MIDI keyboard); **Show me** does it for you.
   The jam tour goes from your name to an instrument, a key, chord pads, a virtual drummer, the tempo, lock to key, a recording and the invite.
   The song tour types chords, clicks in a drum beat, loops the Verse, adds a bass, jams and locks a take, and plays the song.
