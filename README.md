@@ -16,6 +16,7 @@ The idea comes from strategy-game networking, where every machine runs the same 
   The jam tour goes from your name to an instrument, a key, chord pads, a virtual drummer, the tempo, lock to key, a recording and the invite.
   The song tour types chords, clicks in a drum beat, loops the Verse, adds a bass, jams and locks a take, and plays the song.
   Then it lets go: "You're all set". × leaves at any step.
+  At the end of the first tour it points to the other two, and to **the manual** ([help.html](help.html)): a written guide to every part of the studio, with walkthroughs, a search box and a printable layout, linked from the lobby and the Tours menu.
   A third tour, **Jam with a friend**, brings in Robin, a pretend bandmate: this app running in a hidden frame (`?bot=1`), walking into your room as a real second player about 60 ms away, silent and writing nothing to your storage.
   Robin plays a bass riff in your key while the tour explains that only notes travel, the shared clock and the lookahead (with the live number), Hear myself, the chat (Robin says hi, you answer), Talk, the ways to jam, hardware twins (Robin links an OB-6 and you hear its twin), I have one too, Match my sound and Sync take; then Robin says goodbye and leaves.
   On a phone the steps say tap instead of type, and the highlight lives inside the page that scrolls, so it stays on its target while you scroll or zoom; each step scrolls its target into view with room for the card beside it, so the card never covers what it points at.
