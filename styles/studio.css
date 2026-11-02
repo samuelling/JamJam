@@ -36,8 +36,14 @@
 .corner.me { box-shadow: inset 0 1px 0 #ffffff0a, 0 0 0 1px color-mix(in srgb, var(--c) 60%, transparent); }
 .corner.empty { border: 1px dashed #24262a; background: transparent; place-content: center; text-align: center; color: var(--faint); box-shadow: none; }
 .corner.empty::before { display: none; }
-.chead { display: flex; align-items: center; gap: 8px; }
-.cname { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* a corner's contents always fit inside it: a header too long for the corner puts the link status on a second
+   line (and only shortens with … when even that won't fit) instead of pushing everything past the border */
+.corner:not(.empty) { grid-template-columns: minmax(0, 1fr); }
+.chead { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.cname { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.chead .feel { min-width: 0; overflow: hidden; }
+.chead .feel > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.chead .feel > i, .chead .tag.tech { flex: none; }
 .tag { margin-left: auto; font: 10px var(--mono); padding: 1px 7px; border-radius: 99px; border: 1px solid #2d3036; color: var(--dim); white-space: nowrap; }
 .tag[data-kind=ok] { color: var(--ok); border-color: #1d4a31; }
 .tag[data-kind=warn] { color: var(--warn); border-color: #4d4116; }
