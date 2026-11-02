@@ -162,10 +162,16 @@ function leaderId() {
   return best.id;
 }
 function updateLeader() {
-  const was = clock.isLeader;
-  clock.setLeader(leaderId() === room.id);
+  const was = clock.isLeader, lid = leaderId();
+  clock.setLeader(lid === room.id);
   if (clock.isLeader && !was) S.lockedAt = performance.now();
   if (!clock.isLeader) S.lockedAt = 0;
+  // a new leader: it tells the band the tempo it has, and followers ask it, so nobody keeps a tempo the old leader set
+  // or misses one the new leader set while they still thought the old one was in charge
+  if (S.me && lid && lid !== S.leaderSeen) {
+    const first = S.leaderSeen == null; S.leaderSeen = lid;
+    if (!first) { if (lid === room.id) room.send({ k: 'tempo', segs: tempo.toJSON() }); else room.send({ k: 'tempoAsk' }, lid); }
+  }
 }
 
 function onEntered() {
@@ -254,7 +260,14 @@ async function restoreLibs() {
 }
 
 function onMessage(p, m) {
+  // a bandmate we've never had a hello from, still talking a moment after the link opened: their hello went missing
+  // (a link replaced during setup, a reconnect). Ask again, so nobody stays invisible to one side.
+  if (m.k !== 'hello' && m.k !== 'who' && !S.players.has(p.id) && room.peers.get(p.id) === p && p.opened && performance.now() - (p.openedAt || 0) > 1500 && performance.now() - (p.askedAt || 0) > 3000) {
+    p.askedAt = performance.now(); room.send({ k: 'who' }, p.id);
+  }
   switch (m.k) {
+    case 'who': sayHello(p.id); break;
+    case 'tempoAsk': if (clock.isLeader) room.send({ k: 'tempo', segs: tempo.toJSON() }, p.id); break;
     case 'ping': room.sendFast({ k: 'pong', a: m.a, b: clock.now() }, p.id); if (m.at != null) noteSlack(p, m.at); break;
     case 'pong': {
       const c = performance.now(), rtt = c - m.a;
@@ -2684,7 +2697,7 @@ function leaveRoom() {
   room.leave(); lane.stopLane(); input.panic();
   for (const k of [...engine.ch.keys()]) engine.removeChannel(k);
   seqs.clear(); S.md = null;
-  S.me = null; S.players.clear(); S.sync.clear(); S.stable.clear(); S.slackRep.clear(); S.needs.clear();
+  S.me = null; S.leaderSeen = null; S.players.clear(); S.sync.clear(); S.stable.clear(); S.slackRep.clear(); S.needs.clear();
   S.loopActive = false; S.lookAuto = 0; S.chat = []; $('#chatLog').replaceChildren();
   clock.setLeader(true); clock.offset = 0;
   $('#studio').classList.add('hide'); $('#lobby').classList.remove('hide'); closePanels();
