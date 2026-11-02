@@ -48,6 +48,7 @@ function query(sc, i, extra = '') {
 
 async function openJammer(H, i, code, extra) {
   const ctx = await H.browser.newContext({ viewport: { width: 1280, height: 860 }, permissions: ['microphone'] });
+  if (H.sc.init && H.sc.init[i]) await ctx.addInitScript(H.sc.init[i]);
   const page = await ctx.newPage();
   const name = ['Ana', 'Ben', 'Cy', 'Dee', 'Eve'][i];
   page.on('pageerror', (e) => H.errors.push(`${name}: ${e.message}`));

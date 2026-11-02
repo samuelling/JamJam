@@ -226,4 +226,10 @@ add({ id: 'fu-leave-tempo-long', group: 'followup', title: 'the leader leaves, a
     await sleep(5000); H.flow.bpmAt5s = await bpm(); await sleep(15000); H.flow.bpmAt20s = await bpm();
     H.flow.leaders = await Promise.all([1, 2].map((k) => H.pages[k].evaluate(() => JJ.clock.isLeader)));
   } });
+// a computer whose own clock is off: the wall-clock help must ignore it when it's far off, and stay within it otherwise
+const skewDate = (ms) => `(() => { const real = Date.now.bind(Date); const off = ${ms}; Date.now = () => real() + off; })()`;
+add({ id: 'osclock-off-200', group: 'osclock', title: "20/80 ms route, the follower's computer clock 200 ms off", lag: [[20, 4], [80, 8]], init: [null, skewDate(200)] });
+add({ id: 'osclock-off-15', group: 'osclock', title: "20/80 ms route, the follower's computer clock 15 ms off", lag: [[20, 4], [80, 8]], init: [null, skewDate(15)] });
+add({ id: 'osclock-off-0-asym', group: 'osclock', title: '10/200 ms route, computer clocks agree', lag: [[10, 2], [200, 20]] });
+add({ ...S.find((x) => x.id === 'lat-50'), id: 'lat-50-r2', group: 'repeat' }); add({ ...S.find((x) => x.id === 'lat-50'), id: 'lat-50-r3', group: 'repeat' });
 module.exports = S;
