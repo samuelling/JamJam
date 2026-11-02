@@ -1,5 +1,5 @@
 // The written manual (help.html): its contents reach every chapter, its "Chapter N" cross-references name the chapter they
-// link to, search filters and marks, it fits a phone, and the lobby and the Tours menu link to it.
+// link to, search filters and marks, it fits a phone, and the lobby and the Help menu link to it.
 //   node server/dev.js &  (8787)        node tests/help.test.cjs
 const { chromium } = require('playwright');
 const BASE = process.env.BASE || 'http://localhost:8787/';
@@ -53,7 +53,7 @@ let failures = 0; const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL
     await a.fill('#nameIn', 'Sam'); await a.click('#startBtn'); await a.waitForSelector('#studio:not(.hide)'); await sleep(800);
     await a.click('#helpBtn'); await sleep(200);
     const ml = await a.$('.tour-menu a.tour-manual');
-    check(!!ml && (await ml.getAttribute('href')) === 'help.html' && (await ml.getAttribute('target')) === '_blank', 'the Tours menu has the manual, opening in a new tab');
+    check(!!ml && (await ml.getAttribute('href')) === 'help.html' && (await ml.getAttribute('target')) === '_blank', 'the Help menu has the manual, opening in a new tab');
     const r = await a.request.get(BASE + 'help.html'); check(r.ok(), 'help.html is served');
   } catch (e) { check(false, 'threw: ' + e.message); }
   check(!errors.length, `no page errors${errors.length ? ': ' + errors.join(' | ') : ''}`);
