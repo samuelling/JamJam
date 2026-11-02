@@ -1,0 +1,18 @@
+# MEGAjam usage stats Worker (see README.md in this folder). Separate from the handshake relay.
+name = "megajam-stats"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+# Sites allowed to send reports and open the dashboard (localhost is always allowed, for testing)
+[vars]
+ORIGINS = "https://samuelling.github.io"
+
+# Fill in database_id from `npx wrangler d1 create megajam-stats`
+[[d1_databases]]
+binding = "DB"
+database_name = "megajam-stats"
+database_id = "REPLACE_WITH_ID_FROM_d1_create"
+
+# Once a day: delete sessions older than 90 days
+[triggers]
+crons = ["17 7 * * *"]
