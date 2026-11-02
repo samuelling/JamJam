@@ -2498,7 +2498,7 @@ function renderLook() {
   if (!e) return;
   const b = BUDGETS[budgetOf(e)].label.toLowerCase(), pl = partLook(e);
   setText($('#lookHelp'), !room.peers.size ? 'Alone in the studio: notes play the moment you press them.'
-    : S.quant ? `Notes snap to the next ${{ 1: 'beat', 0.5: '8th', 0.25: '16th' }[S.quant]} at least ${pl} ms away, so the band hears them land together.`
+    : S.quant ? `Notes snap to the next ${{ 1: 'beat', 0.5: '8th', 0.25: '16th', 0.125: '32nd' }[S.quant]} at least ${pl} ms away, so the band hears them land together.`
     : selfInstant(e) ? `${describe(e.cfg, true)} · ${b} timing: you hear it instantly, the band hears it ${pl} ms later, all together.`
     : `${describe(e.cfg, true)} · ${b} timing: every note, yours included, sounds ${pl} ms after you play it, at the same instant for everyone. Play a touch ahead, like an organist.`);
 }

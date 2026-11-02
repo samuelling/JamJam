@@ -53,6 +53,10 @@
     [
      "juniper",
      0.45
+    ],
+    [
+     "acid",
+     0.8
     ]
    ]
   },
@@ -114,8 +118,12 @@
   },
   "string-machine": {
    "label": "String machine",
-   "twin": "juniper",
+   "twin": "ensemble",
    "twins": [
+    [
+     "ensemble",
+     0.9
+    ],
     [
      "juniper",
      0.85
@@ -3311,7 +3319,8 @@
     "detune": 0
    },
    "note": "One VCO, the acid squelch.",
-   "midi": false
+   "midi": false,
+   "twin": "acid"
   },
   {
    "id": "roland-tb-3",
@@ -3346,7 +3355,8 @@
     "deviceIdByte": 2,
     "params": "cc",
     "source": "https://static.roland.com/assets/media/pdf/TB-3_MI_1.pdf"
-   }
+   },
+   "twin": "acid"
   },
   {
    "id": "roland-tb-03",
@@ -3373,7 +3383,8 @@
     "Knob moves go out and come in as CC messages automatically.",
     "Connect with USB or with 5-pin MIDI, not both at once.",
     "Turn each knob once at the start so your bandmate's TB-03 matches your panel."
-   ]
+   ],
+   "twin": "acid"
   },
   {
    "id": "behringer-td-3",
@@ -3393,7 +3404,8 @@
     "sub": 0,
     "detune": 0
    },
-   "note": "Based on the TB-303."
+   "note": "Based on the TB-303.",
+   "twin": "acid"
   },
   {
    "id": "roland-d-50",
@@ -8881,7 +8893,8 @@
     "Connect the app's MIDI out to its MIDI IN (5-pin). It has no MIDI out, so the app can't hear its own knobs.",
     "Bandmates' knob moves can control it (CC 40-50), but its own tweaks aren't shared."
    ],
-   "setupSource": "https://www.korg.com/us/support/download/product/0/820/"
+   "setupSource": "https://www.korg.com/us/support/download/product/0/820/",
+   "twin": "acid"
   },
   {
    "id": "korg-ms-20-mini",
@@ -12288,7 +12301,8 @@
     "In the same menu, turn on CC send and receive for the panel controls.",
     "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
     "There's no command to fetch the current sound; the app relays knob moves only."
-   ]
+   ],
+   "twin": "acid"
   },
   {
    "id": "erica-synths-syntrx",
@@ -13982,7 +13996,8 @@
     "In the same menu, turn on CC send and receive for the panel controls.",
     "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
     "There's no command to fetch the current sound; the app relays knob moves only."
-   ]
+   ],
+   "twin": "acid"
   },
   {
    "id": "supercritical-redshift-6",
@@ -14210,7 +14225,8 @@
     "In the same menu, turn on CC send and receive for the panel controls.",
     "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
     "There's no command to fetch the current sound; the app relays knob moves only."
-   ]
+   ],
+   "twin": "acid"
   },
   {
    "id": "cyclone-analogic-tt-303",
@@ -14236,7 +14252,8 @@
     "Its panel isn't mapped to MIDI controllers, so tweak by hand.",
     "Pick the connection you're using: USB or the 5-pin MIDI sockets.",
     "There's no command to fetch the current sound; the app relays knob moves only."
-   ]
+   ],
+   "twin": "acid"
   },
   {
    "id": "gamechanger-audio-motor-synth",
