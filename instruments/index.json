@@ -64,6 +64,14 @@
     {
       "id": "tapestry",
       "file": "tapestry.js"
+    },
+    {
+      "id": "acid",
+      "file": "acid.js"
+    },
+    {
+      "id": "ensemble",
+      "file": "ensemble.js"
     }
   ]
 }

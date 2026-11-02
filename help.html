@@ -228,7 +228,7 @@
 <div class="tablewrap"><table>
 <tr><th>Instrument</th><th>What it is</th></tr>
 <tr><td>Juniper</td><td>A six-voice polysynth in the spirit of the classic early-80s Japanese poly: saw and pulse with PWM, sub, noise, a resonant filter and lush chorus. Keys, pads, brass, strings, bass.</td></tr>
-<tr><td>Monolith</td><td>A three-oscillator mono synth in the spirit of the 70s American classic: fat basses and leads, with glide.</td></tr>
+<tr><td>Monolith</td><td>A three-oscillator mono synth in the spirit of the 70s American classic: fat basses and leads, with glide. Its <b>Arp</b> page is an arpeggiator: hold a chord and it plays the notes one at a time on the band's beat (up, down, up-down, as played or random; 1/4 to 1/32 and triplets; up to four octaves; a gate, where full ties the notes together; and latch, which keeps it going after you let go). The band hears exactly the notes you hear, on the drummer's grid, and takes record the notes themselves. Try the <b>Arp</b> patch.</td></tr>
 <tr><td>Machina</td><td>A synthesis drum machine with nine drum slots, each its own little synth, plus two LFOs and a step sequencer (<a href="#machina">Chapter 8</a>). By Sam.</td></tr>
 <tr><td>Poly</td><td>A light two-oscillator polysynth with a mono/glide mode.</td></tr>
 <tr><td>Tine</td><td>FM keys: electric pianos, bells, FM bass, plucks.</td></tr>
@@ -237,7 +237,8 @@
 <tr><td>Big Macro</td><td>A macro oscillator with 24 synthesis models behind three knobs (harmonics, timbre, morph): analog, FM, chords, speech, strings, drums and more. DSP from Plaits by Émilie Gillet / Mutable Instruments (MIT licence).</td></tr>
 <tr><td>Pads</td><td>Sixteen sample pads, MPC style (<a href="#pads">Chapter 7</a>).</td></tr>
 <tr><td>Studio Kit</td><td>A recorded acoustic drum kit.</td></tr>
-<tr><td>The "Lite" instruments</td><td>Pared-down instruments after Matt's SynthLand: Tonewheel (organ), Hammerwork (piano), Blown (clarinet, flute, reed), Chip (sound-chip voice), Complex Osc (west-coast) and Analog Drums. Their tiles say "by Matt".</td></tr>
+<tr><td>Ensemble</td><td>A 70s string machine: four sections (violins, violas, cellos, basses) you mix like drawbars, a slow swell, tone, and the ensemble chorus that turns one thin sawtooth into a whole string section. It's the twin for string machines.</td></tr>
+<tr><td>The "Lite" instruments</td><td>Pared-down instruments after Matt's SynthLand: Tonewheel (organ), Hammerwork (piano), Blown (clarinet, flute, reed), Chip (sound-chip voice), Complex Osc (west-coast), Analog Drums and Acid Line (a squelchy bass line machine: play hard to accent, play legato to slide; the twin for 303-style boxes). Their tiles say "by Matt".</td></tr>
 <tr><td>Acoustic</td><td>Sam's physically modelled acoustic guitar, with a strumming hand: every browser strums the same chord the same way.</td></tr>
 </table></div>
 <h3>Libraries</h3>
@@ -385,7 +386,7 @@
 <dl>
   <dt>Look</dt><dd>The lookahead in milliseconds, with a meter. Drag the slider to set it by hand; <span class="ui">AUTO</span> goes back to the measured value.</dd>
   <dt>Hear myself</dt><dd>Off (the default): you hear your notes at the same moment the band does, a lookahead after you play them, like playing a pipe organ. On: you hear yourself instantly, and the band hears you a lookahead later. Try both; for slow sounds, on feels nicer.</dd>
-  <dt>Quant</dt><dd>Quantize: snaps your notes to the next 1/16, 1/8 or 1/4 at least a lookahead away, so the delay disappears into the grid.</dd>
+  <dt>Quant</dt><dd>Quantize: snaps your notes to the next 1/32, 1/16, 1/8 or 1/4 at least a lookahead away, so the delay disappears into the grid.</dd>
   <dt>Timing (per instrument)</dt><dd>On the faceplate. <b>Tight</b> (never late: the lookahead plus 10 ms, for drums, bass and plucks), <b>Balanced</b> (the lookahead) or <b>Loose</b> (about 40% of it, and you hear yourself instantly; a far player may get a note a touch late, hidden by a slow attack, for pads and strings). <b>Auto</b> picks from the sound.</dd>
 </dl>
 <h3>The wiring view</h3>

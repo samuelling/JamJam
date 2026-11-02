@@ -248,7 +248,7 @@ export class Engine {
     const lane = this.ctx.createGain();
     out.connect(this.stems[4]); lane.connect(out);
     const pre = this.ctx.createGain(); pre.connect(out);   // the instruments, before your mix's fader: what sync record takes
-    c = { pid, out, pre, lane, stem: 5, vol: 1, mute: false, insts: [], cfgLog: [], pLog: [], notes: [], noteBase: 0, late: 0, lateWorst: 0, events: 0, flashT: 0, laneNext: 0, laneLate: 0, laneT: 0, held: new Set() };
+    c = { pid, out, pre, lane, stem: 5, vol: 1, mute: false, insts: [], cfgLog: [], pLog: [], notes: [], noteBase: 0, late: 0, lateWorst: 0, events: 0, flashT: 0, laneNext: 0, laneLate: 0, laneT: 0, held: new Set(), offAt: new Map() };
     this.ch.set(pid, c);
     return c;
   }
@@ -321,11 +321,16 @@ export class Engine {
       t = ctx.currentTime;
     }
     c.events++;
+    // the fast channel can deliver a note's off before its on (fast arpeggios and short notes, mostly): the on still
+    // plays if its off is yet to come, but isn't counted as held; if the off already went by, it's dropped, since
+    // played late it would hang with nothing left to end it
+    const offAt = ev.type === 'on' ? c.offAt.get(ev.note) : null, ended = offAt != null && offAt > ev.at;
+    if (ended && now === false && this.audioTime(offAt) <= ctx.currentTime) return;
     if (ev.type === 'on') {
-      c.notes.push(ev.at); c.flashT = performance.now(); c.held.add(ev.note);
+      c.notes.push(ev.at); c.flashT = performance.now(); if (!ended) c.held.add(ev.note);
       if (c.notes.length > 6000) { const cut = c.notes.length - 3000; c.noteBase += cut; c.notes.splice(0, cut); }
       I.inst.noteOn(ev.note, ev.vel, t, ev.at, lateMs / 1000);   // late: a slow attack can start where it would be by now
-    } else if (ev.type === 'off') { c.held.delete(ev.note); I.inst.noteOff(ev.note, t, ev.at); }
+    } else if (ev.type === 'off') { c.held.delete(ev.note); c.offAt.set(ev.note, ev.at); I.inst.noteOff(ev.note, t, ev.at); }
     else if (ev.type === 'p') {
       I.inst.set(ev.id, ev.v, t, ev.at);
       if (ev.id !== 'bend') {

@@ -20,6 +20,7 @@ import { makePadsUI, PAD_KEYS, PAD_BASE } from './padsui.js';
 import { makeGear } from './gear.js';
 import * as STEMS from './stems.js';
 import { makeTutorial, toured } from './tutorial.js';
+import { Arp, hasArp, arpOn } from './arp.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
 // ?bot=1: a pretend bandmate the tours run in a hidden frame (src/tutorial.js). It shares this browser's storage, so
 // it writes nothing there and reads none of your gear; it plays nothing out loud (?silent=1 too) and skips the welcome.
@@ -446,14 +447,14 @@ const selfInstant = (e) => !(e?.seq && seqAhead()) && (S.hearSelf || budgetOf(e)
 const recentEv = [];
 const REPEAT_MS = +(qs.get('repeat') ?? 20);
 let repeatGen = 0;
-function sendEvent(e, ev, instant, from) {
+function sendEvent(e, ev, instant, from, sched = false) {
   const k = key(S.me, e.r);
   if (ev.type === 'on') S.notesOn = (S.notesOn || 0) + 1;   // what you've played (the tours wait on it)
   if (S.srec && !S.srec.done) (S.srec.events.get(k) || S.srec.events.set(k, []).get(k)).push({ ...ev });
   // a take is placed where the player heard the band when they played it: their note sounds one lookahead after
   // their hands move (with a quantize or rhythm-help shift kept, since that is meant), so take the lookahead off
   logForLock(k, { ...ev, from, at: ev.at - (e.seq && seqAhead() ? 0 : partLook(e)) });   // a sequencer ahead already played for the beat it lands on
-  engine.event(k, ev, { now: instant || room.peers.size === 0 || !clock.locked });
+  engine.event(k, ev, { now: instant || (!sched && (room.peers.size === 0 || !clock.locked)) });
   if (!clock.locked) return;
   if (!(e.seq && seqAhead())) ev.l = Math.round(partLook(e));   // the lookahead it was sent with: listeners work out the trip from it
   recentEv.push({ r: e.r, ev }); if (recentEv.length > 3) recentEv.shift();
@@ -588,6 +589,7 @@ function playNote(on, note, vel, ch = 0, port = '') {
   if (on) S.route.set(rk, targets.map((e) => e.r)); else S.route.delete(rk);
   const now = clock.now();
   for (const e of targets) {
+    if (hasArp(engine.defs.get(e.cfg.inst)) && (on ? arpOn(e) : e.arp?.running)) { arpKey(e, on, note, vel); continue; }
     const L = partLook(e);
     let at = now + L, shift = 0;
     e.shifts = e.shifts || new Map(); e.onAt = e.onAt || new Map();
@@ -613,8 +615,28 @@ function playNote(on, note, vel, ch = 0, port = '') {
   if (ch === 0) flashKey(note, on);
 }
 
+// the arpeggiator (src/arp.js): your held notes go to it, and it sends the notes it plays like quantized ones,
+// stamped on the room's grid; with nobody else here they're still scheduled ahead, so the steps stay even
+const arpLook = (e) => Math.max(partLook(e), 30);
+function arpKey(e, on, note, vel) {
+  e.arp = e.arp || new Arp({ send: (type, n, v, at) => arpSend(e, type, n, v, at), look: () => arpLook(e), tempo, now: () => clock.now() });
+  if (on) e.arp.press(note, vel, e.cfg.params); else e.arp.release(note, e.cfg.params);
+  e.arp.tick(e.cfg.params);
+}
+function arpSend(e, type, note, vel, at) {
+  if (!S.me) return;
+  const L = partLook(e), on = type === 'on';
+  sendEvent(e, { type, note, vel, at, seq: ++S.seq, b: BUDGETS[budgetOf(e)].short, o: (L - lookahead()) + (at - (clock.now() + L)) }, false, undefined, true);
+  if (e.match?.on) matchNote(e, on, note, vel, at - (e.hwLatency || 0));
+  const port = outPort(e.midiOut), oc = ((e.outCh || 1) - 1) & 15;
+  if (port) sendToHardware(port, on ? [0x90 | oc, note, vel] : [0x80 | oc, note, 0], clock.toLocal(at) - (e.hwLatency || 0));
+}
+function stopArp(e) { if (e.arp) { e.arp.stop(); e.arp = null; } }
+setInterval(() => { for (const e of S.rack) if (e.arp?.running) e.arp.tick(e.cfg.params); }, 20);
+
 function setParam(e, id, v) {
   if (!e) return;
+  if ((id === 'arpMode' && v < 0.5) || (id === 'arpLatch' && v < 0.5 && e.arp && !e.arp.down)) stopArp(e);
   const k = e.r + '|' + id, was = S.pendingP.get(k)?.from ?? e.cfg.params[id];
   e.cfg.params[id] = v;
   S.pendingP.set(k, { e, id, v, from: was });
@@ -655,6 +677,7 @@ function addEntry({ inst, patch, hw, ext }) {
   return e;
 }
 function changeEntry(e, next) {
+  stopArp(e);
   const ext = e.cfg.ext;
   e.cfg = engine.resolve({ inst: next.inst ?? e.cfg.inst, patch: next.patch, hw: next.hw === undefined ? e.cfg.hw : next.hw });
   if (ext) e.cfg.ext = ext;
@@ -662,6 +685,7 @@ function changeEntry(e, next) {
   renderRack(); renderDevice(); renderCorners(); renderKeyboard();
 }
 function removeEntry(e) {
+  stopArp(e);
   S.rack = S.rack.filter((x) => x !== e);
   const k = key(S.me, e.r), at = clock.now() + lookahead() + 20;
   room.send({ k: 'unrack', r: e.r, at });
@@ -2498,7 +2522,7 @@ function renderLook() {
   if (!e) return;
   const b = BUDGETS[budgetOf(e)].label.toLowerCase(), pl = partLook(e);
   setText($('#lookHelp'), !room.peers.size ? 'Alone in the studio: notes play the moment you press them.'
-    : S.quant ? `Notes snap to the next ${{ 1: 'beat', 0.5: '8th', 0.25: '16th' }[S.quant]} at least ${pl} ms away, so the band hears them land together.`
+    : S.quant ? `Notes snap to the next ${{ 1: 'beat', 0.5: '8th', 0.25: '16th', 0.125: '32nd' }[S.quant]} at least ${pl} ms away, so the band hears them land together.`
     : selfInstant(e) ? `${describe(e.cfg, true)} · ${b} timing: you hear it instantly, the band hears it ${pl} ms later, all together.`
     : `${describe(e.cfg, true)} · ${b} timing: every note, yours included, sounds ${pl} ms after you play it, at the same instant for everyone. Play a touch ahead, like an organist.`);
 }
