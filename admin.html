@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>MEGAjam · usage</title>
+<script src="mp-config.js"></script>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface-1: #fcfcfb; --ring: rgba(11,11,11,0.10);
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --hover: rgba(11,11,11,0.05);
+    --series-1: #2a78d6; --series-2: #eb6834;
+    --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface-1: #1a1a19; --ring: rgba(255,255,255,0.10);
+      --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --hover: rgba(255,255,255,0.06);
+      --series-1: #3987e5; --series-2: #d95926;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface-1: #1a1a19; --ring: rgba(255,255,255,0.10);
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --hover: rgba(255,255,255,0.06);
+    --series-1: #3987e5; --series-2: #d95926;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .viz-root { background: var(--page); color: var(--text-primary); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; min-height: 100vh; padding: 20px clamp(12px, 3vw, 32px) 48px; }
+  h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 15px; margin: 0 0 2px; }
+  .sub { color: var(--text-secondary); font-size: 13px; margin: 0 0 12px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+  .bar .grow { flex: 1; }
+  .seg { display: inline-flex; border: 1px solid var(--ring); border-radius: 8px; overflow: hidden; }
+  .seg button, .btn { background: var(--surface-1); color: var(--text-primary); border: 0; padding: 6px 12px; font: inherit; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--ring); }
+  .seg button.on { background: var(--text-primary); color: var(--surface-1); font-weight: 600; }
+  .btn { border: 1px solid var(--ring); border-radius: 8px; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .banner { background: var(--surface-1); border: 1px solid var(--ring); border-left: 4px solid var(--warning); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; color: var(--text-secondary); }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .tile { background: var(--surface-1); border: 1px solid var(--ring); border-radius: 10px; padding: 12px 14px; }
+  .tile .k { color: var(--text-secondary); font-size: 12px; }
+  .tile .v { font-size: 26px; font-weight: 650; letter-spacing: -0.02em; margin-top: 2px; }
+  .tile .d { color: var(--muted); font-size: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 12px; margin-bottom: 12px; }
+  .card { background: var(--surface-1); border: 1px solid var(--ring); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+  .card.wide { grid-column: 1 / -1; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); margin: 4px 0 6px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  svg text { fill: var(--muted); font-size: 11px; font-family: inherit; }
+  svg .lbl { fill: var(--text-secondary); }
+  svg .hit:hover + .mark, svg .hit:hover { cursor: default; }
+  .tip { position: fixed; pointer-events: none; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--ring); border-radius: 8px; padding: 7px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.18); z-index: 9; max-width: 320px; }
+  .tip b { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th { text-align: left; color: var(--text-secondary); font-weight: 600; border-bottom: 1px solid var(--axis); padding: 6px 8px; white-space: nowrap; }
+  td { border-bottom: 1px solid var(--grid); padding: 6px 8px; vertical-align: top; font-variant-numeric: tabular-nums; }
+  td.n, th.n { text-align: right; }
+  tr.click { cursor: pointer; } tr.click:hover td { background: var(--hover); }
+  pre { white-space: pre-wrap; font-size: 11.5px; color: var(--text-secondary); margin: 0; }
+  .tablewrap { overflow-x: auto; max-height: 460px; overflow-y: auto; }
+  .status { display: inline-flex; align-items: center; gap: 6px; }
+  .status i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  form.key { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  form.key input { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--ring); background: var(--surface-1); color: var(--text-primary); min-width: 280px; }
+  .empty { color: var(--muted); padding: 24px 0; text-align: center; }
+  .note { color: var(--text-secondary); font-size: 12.5px; margin: 6px 0 0; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <div class="bar">
+    <h1>MEGAjam · real usage</h1>
+    <span class="grow"></span>
+    <div class="seg" id="range" role="group" aria-label="Time range">
+      <button data-d="1">24 h</button><button data-d="7" class="on">7 days</button><button data-d="30">30 days</button><button data-d="90">90 days</button>
+    </div>
+    <button class="btn" id="refresh">Refresh</button>
+    <label class="muted"><input type="checkbox" id="auto"> auto (1 min)</label>
+    <button class="btn" id="theme" title="Switch between light and dark">Light / dark</button>
+  </div>
+  <div id="msg"></div>
+  <div id="out"></div>
+</div>
+<div class="tip" id="tip" hidden></div>
+<script type="module">
+// The admin dashboard for MEGAjam's usage stats: the same questions the fleet test asks (does joining work, are
+// links direct, how far ahead do notes go, are they late, do browsers stall), answered from real jams. Data comes
+// from the stats Worker (stats/worker.js) with the admin key, which stays in this browser only.
+// ?demo=1 shows made-up data, to see the layout before the Worker has any.
+import { RTT_EDGES, CLOCK_EDGES } from './src/stats.js';
+
+const $ = (s) => document.querySelector(s);
+const qs = new URLSearchParams(location.search);
+const DEMO = qs.get('demo') === '1';
+const ENDPOINT = (qs.get('stats') && /^https?:/.test(qs.get('stats')) ? qs.get('stats') : window.MP_STATS || '').replace(/\/$/, '');
+const store = { get: (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} } };
+let days = +(store.get('jjadmin:days') || 7), data = null, timer = null;
+
+// ---------- small DOM helpers ----------
+function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) { if (v == null || v === false) continue; if (k.startsWith('on')) el.addEventListener(k.slice(2), v); else el.setAttribute(k, v === true ? '' : v); }
+  for (const c of kids.flat()) if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return el;
+}
+const NS = 'http://www.w3.org/2000/svg';
+function s(tag, attrs = {}, ...kids) { const el = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) if (v != null) el.setAttribute(k, v); for (const c of kids.flat()) if (c != null) el.append(c.nodeType ? c : document.createTextNode(String(c))); return el; }
+const fmt = (n, d = 0) => (n == null || !Number.isFinite(n) ? '–' : n.toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d }));
+const pct = (x, d = 0) => (x == null || !Number.isFinite(x) ? '–' : (x * 100).toFixed(d) + '%');
+const ms = (x) => (x == null || !Number.isFinite(x) ? '–' : x >= 10000 ? (x / 1000).toFixed(0) + ' s' : x >= 1000 ? (x / 1000).toFixed(1) + ' s' : Math.round(x) + ' ms');
+const hrs = (sec) => (sec >= 3600 ? (sec / 3600).toFixed(1) + ' h' : sec >= 60 ? Math.round(sec / 60) + ' min' : Math.round(sec) + ' s');
+const median = (a) => { const v = a.filter((x) => x != null && Number.isFinite(x)).sort((x, y) => x - y); return v.length ? v[Math.floor(v.length / 2)] : null; };
+const sum = (a) => a.reduce((x, y) => x + (y || 0), 0);
+const ago = (t) => { const s = (Date.now() - t) / 1000; return s < 90 ? 'just now' : s < 5400 ? Math.round(s / 60) + ' min ago' : s < 129600 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' d ago'; };
+const edgeLabels = (E, unit) => [`< ${E[0]}`, ...E.slice(1).map((e, i) => `${E[i]}–${e}`), `${E[E.length - 1]}+`].map((x) => x + (unit ? ' ' + unit : ''));
+
+// ---------- tooltip ----------
+// (labels come from reports anyone could send: escape them before they go into the tooltip's HTML)
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const tip = $('#tip');
+function hover(el, html) {
+  el.addEventListener('pointermove', (e) => { tip.innerHTML = html; tip.hidden = false; const r = tip.getBoundingClientRect(); tip.style.left = Math.min(innerWidth - r.width - 8, e.clientX + 14) + 'px'; tip.style.top = Math.max(8, e.clientY - r.height - 10) + 'px'; });
+  el.addEventListener('pointerleave', () => { tip.hidden = true; });
+}
+
+// ---------- charts ----------
+// Vertical bars. series: [{name, values, color}] (one or two); stacked or grouped. Rounded data-ends, 2px gaps,
+// hairline grid, one axis, a hover tooltip per category.
+function bars({ labels, series, stacked = false, unit = '', yfmt = (v) => fmt(v), height = 190, tipFmt, width = 640, legend = true }) {
+  const W = width, H = height, L = 40, B = 34, T = 8, R = 4, iw = W - L - R, ih = H - T - B;
+  const tot = labels.map((_, i) => (stacked ? sum(series.map((se) => se.values[i])) : Math.max(...series.map((se) => se.values[i] || 0))));
+  const max = Math.max(1e-9, ...tot), nice = niceMax(max), ticks = [0, nice / 2, nice];
+  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img' });
+  for (const t of ticks) { const y = T + ih - (t / nice) * ih; svg.append(s('line', { x1: L, x2: W - R, y1: y, y2: y, stroke: t ? 'var(--grid)' : 'var(--axis)', 'stroke-width': 1 }), s('text', { x: L - 6, y: y + 4, 'text-anchor': 'end' }, yfmt(t) + (t && unit ? unit : ''))); }
+  const slot = iw / labels.length, bw = Math.min(46, slot * (stacked || series.length === 1 ? 0.62 : 0.8));
+  const every = Math.ceil(labels.length / 14);
+  labels.forEach((lab, i) => {
+    const x0 = L + i * slot + (slot - bw) / 2, g = s('g');
+    let acc = 0;
+    series.forEach((se, k) => {
+      const v = se.values[i] || 0; if (!v) return;
+      const hgt = (v / nice) * ih;
+      if (stacked) {
+        const y = T + ih - ((acc + v) / nice) * ih, top = k === series.length - 1 || !series.slice(k + 1).some((x) => x.values[i]);
+        g.append(roundedBar(x0, y, bw, Math.max(1, hgt - (acc ? 2 : 0)), top, se.color));
+        acc += v;
+      } else {
+        const w = bw / series.length, x = x0 + k * w + (k ? 1 : 0);
+        g.append(roundedBar(x, T + ih - hgt, w - (series.length > 1 ? 1 : 0), hgt, true, se.color));
+      }
+    });
+    const hit = s('rect', { x: L + i * slot, y: T, width: slot, height: ih, fill: 'transparent' });
+    hover(hit, `<b>${esc(lab)}</b><br>` + series.map((se) => `${series.length > 1 ? `<span style="color:${se.color}">■</span> ${esc(se.name)}: ` : ''}${tipFmt ? tipFmt(se.values[i] || 0, se, i) : yfmt(se.values[i] || 0) + unit}`).join('<br>'));
+    g.append(hit);
+    svg.append(g);
+    if (i % every === 0) svg.append(s('text', { x: L + i * slot + slot / 2, y: H - B + 16, 'text-anchor': 'middle' }, lab));
+  });
+  return wrap(svg, series, legend);
+}
+// Horizontal bars, one series, for ranked categories (instruments, features)
+function hbars({ rows, color = 'var(--series-1)', vfmt = (v) => fmt(v), tipFmt }) {
+  const W = 640, rowH = 24, L = 150, R = 56, H = rows.length * rowH + 4;
+  const max = Math.max(1e-9, ...rows.map((r) => r.v));
+  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img' });
+  svg.append(s('line', { x1: L, x2: L, y1: 0, y2: H, stroke: 'var(--axis)' }));
+  rows.forEach((r, i) => {
+    const y = i * rowH + 4, w = Math.max(2, (r.v / max) * (W - L - R)), g = s('g');
+    g.append(s('text', { x: L - 8, y: y + 13, 'text-anchor': 'end', class: 'lbl' }, r.label));
+    g.append(s('path', { d: hRounded(L, y + 2, w, rowH - 10), fill: color }));
+    g.append(s('text', { x: L + w + 6, y: y + 13 }, vfmt(r.v)));
+    const hit = s('rect', { x: 0, y, width: W, height: rowH, fill: 'transparent' });
+    hover(hit, `<b>${esc(r.label)}</b><br>${tipFmt ? tipFmt(r) : vfmt(r.v)}`);
+    g.append(hit); svg.append(g);
+  });
+  return svg;
+}
+// a part-to-whole bar for two or three shares, labelled
+function shareBar(parts) {
+  const total = sum(parts.map((p) => p.v)) || 1;
+  const box = h('div', { style: 'display:flex;gap:2px;height:28px;border-radius:6px;overflow:hidden;margin:6px 0 4px' });
+  for (const p of parts) { if (!p.v) continue; const d = h('div', { style: `flex:${p.v};background:${p.color};min-width:2px` }); hover(d, `<b>${esc(p.name)}</b><br>${pct(p.v / total, 1)} · ${hrs(p.v)}`); box.append(d); }
+  const leg = h('div', { class: 'legend' }, parts.map((p) => h('span', {}, h('i', { style: `background:${p.color}` }), `${p.name} ${pct(p.v / total)}`)));
+  return h('div', {}, box, leg);
+}
+function roundedBar(x, y, w, hh, roundTop, fill) {
+  const r = Math.min(4, w / 2, hh);
+  const d = roundTop ? `M${x},${y + hh}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + hh}Z` : `M${x},${y + hh}V${y}H${x + w}V${y + hh}Z`;
+  return s('path', { d, fill });
+}
+function hRounded(x, y, w, hh) { const r = Math.min(4, hh / 2, w); return `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + hh - r}Q${x + w},${y + hh} ${x + w - r},${y + hh}H${x}Z`; }
+function niceMax(v) { const p = Math.pow(10, Math.floor(Math.log10(v))), m = v / p; return (m <= 1 ? 1 : m <= 1.5 ? 1.5 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
+function wrap(svg, series, legend = true) { return legend && series.length > 1 ? h('div', {}, h('div', { class: 'legend' }, series.map((se) => h('span', {}, h('i', { style: `background:${se.color}` }), se.name))), svg) : svg; }
+function card(title, sub, body, wide) { return h('div', { class: 'card' + (wide ? ' wide' : '') }, h('h2', {}, title), sub ? h('p', { class: 'sub' }, sub) : null, body); }
+function table(cols, rows, onRow) {
+  return h('div', { class: 'tablewrap' }, h('table', {}, h('thead', {}, h('tr', {}, cols.map((c) => h('th', { class: c.n ? 'n' : null }, c.t)))),
+    h('tbody', {}, rows.length ? rows.map((r) => { const tr = h('tr', { class: onRow ? 'click' : null }, cols.map((c) => h('td', { class: c.n ? 'n' : null }, c.f(r)))); if (onRow) tr.addEventListener('click', () => onRow(r, tr)); return tr; }) : h('tr', {}, h('td', { colspan: cols.length, class: 'empty' }, 'Nothing yet')))));
+}
+const tile = (k, v, d) => h('div', { class: 'tile' }, h('div', { class: 'k' }, k), h('div', { class: 'v' }, v), d ? h('div', { class: 'd' }, d) : null);
+
+// ---------- loading ----------
+async function load() {
+  $('#msg').replaceChildren();
+  if (DEMO) { data = demo(); render(); return; }
+  if (!ENDPOINT) { $('#msg').append(h('div', { class: 'banner' }, 'No stats server set: window.MP_STATS in mp-config.js is empty.')); return; }
+  const key = store.get('jjadmin:key');
+  if (!key) { askKey(); return; }
+  try {
+    const r = await fetch(`${ENDPOINT}/summary?days=${days}`, { headers: { authorization: 'Bearer ' + key }, cache: 'no-store' });
+    if (r.status === 401) { askKey('That key was refused.'); return; }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    data = await r.json(); render();
+  } catch (e) { $('#msg').append(h('div', { class: 'banner' }, `Couldn't reach the stats server (${ENDPOINT}): ${e.message}. Is the Worker deployed?`)); }
+}
+function askKey(why) {
+  const inp = h('input', { type: 'password', placeholder: 'Admin key (the ADMIN_KEY secret)', autocomplete: 'off' });
+  $('#msg').replaceChildren(h('div', { class: 'banner' }, why ? h('p', { style: 'margin:0 0 8px' }, why) : null,
+    h('form', { class: 'key', onsubmit: (e) => { e.preventDefault(); store.set('jjadmin:key', inp.value.trim()); load(); } }, inp, h('button', { class: 'btn', type: 'submit' }, 'Open'), h('span', { class: 'muted' }, 'Kept in this browser only.'))));
+  $('#out').replaceChildren();
+}
+
+// ---------- the dashboard ----------
+function render() {
+  const all = data.sessions, now = data.now || Date.now();
+  const roomed = all.filter((x) => x.roomSec > 0), band = all.filter((x) => x.bandSec > 0);
+  const out = $('#out'); out.replaceChildren();
+  if (DEMO) out.append(h('div', { class: 'banner' }, 'Demo data, made up to show the layout. Remove ?demo=1 to see the real numbers.'));
+  out.append(h('p', { class: 'muted', style: 'margin:-6px 0 12px' }, `${all.length} browser sessions in the last ${days === 1 ? '24 hours' : days + ' days'} · updated ${new Date(now).toLocaleTimeString()}`));
+
+  // jams: sessions grouped by hashed room code, where at least two people were in at once
+  const rooms = new Map(); for (const x of roomed) if (x.room) (rooms.get(x.room) || rooms.set(x.room, []).get(x.room)).push(x);
+  const jams = [...rooms.values()].filter((l) => l.some((x) => x.peak >= 1));
+  const heard = sum(band.map((x) => x.notes.heard)), late = sum(band.map((x) => x.notes.late));
+  const errored = all.filter((x) => x.errors.length).length;
+  out.append(h('div', { class: 'tiles' },
+    tile('Sessions', fmt(all.length), `${fmt(roomed.length)} went into a room`),
+    tile('Typical session', hrs(median(all.map((x) => x.dur)) || 0), `median open; jams ${hrs(median(band.map((x) => x.bandSec)) || 0)}`),
+    tile('Jams', fmt(jams.length), `${hrs(sum(band.map((x) => x.bandSec)))} jamming across ${fmt(band.length)} sessions`),
+    tile('Joining takes', ms(median(all.map((x) => x.joinMs))), `median; slowest ${ms(Math.max(0, ...all.map((x) => x.joinMs || 0)))}`),
+    tile('Late notes', heard ? pct(late / heard, 2) : '–', `${fmt(late)} of ${fmt(heard)} heard`),
+    tile('Sessions with errors', all.length ? pct(errored / all.length, 1) : '–', `${fmt(sum(all.flatMap((x) => x.errors.map((e) => e.n))))} errors in all`)));
+
+  // sessions per day (or per hour for 24 h)
+  const byHour = days === 1, nb = byHour ? 24 : days, step = byHour ? 3600000 : 86400000;
+  const start = byHour ? Math.floor(now / step) * step - (nb - 1) * step : new Date(new Date(now).toDateString()).getTime() - (nb - 1) * step;
+  const bins = (pred) => { const v = Array(nb).fill(0); for (const x of all) if (pred(x)) { const i = Math.floor((x.first - start) / step); if (i >= 0 && i < nb) v[i]++; } return v; };
+  const labs = Array.from({ length: nb }, (_, i) => { const d = new Date(start + i * step); return byHour ? d.getHours() + ':00' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); });
+  const g1 = h('div', { class: 'grid' });
+  g1.append(card(byHour ? 'Sessions by hour' : 'Sessions by day', 'Each browser that opened MEGAjam, by whether it jammed with anyone', bars({ labels: labs, stacked: true, width: 1240, height: 220, series: [
+    { name: 'Jammed with someone', values: bins((x) => x.bandSec > 0), color: 'var(--series-1)' },
+    { name: 'Alone or lobby only', values: bins((x) => !(x.bandSec > 0)), color: 'var(--series-2)' }] }), true));
+  // band size
+  const sizes = [1, 2, 3, 4, 5].map((n) => roomed.filter((x) => (n === 5 ? x.peak + 1 >= 5 : x.peak + 1 === n)).length);
+  g1.append(card('Band size', 'Most people in the room at once, per session', bars({ labels: ['alone', '2', '3', '4', '5+'], series: [{ name: 'Sessions', values: sizes, color: 'var(--series-1)' }] })));
+  // links
+  const dSec = sum(band.map((x) => x.net.directSec)), rSec = sum(band.map((x) => x.net.relaySec));
+  const rttD = RTT_EDGES.map((_, i) => 0).concat(0).map((_, i) => sum(band.map((x) => x.net.rttDirect[i] || 0)));
+  const rttR = RTT_EDGES.map((_, i) => 0).concat(0).map((_, i) => sum(band.map((x) => x.net.rttRelay[i] || 0)));
+  const share = (a) => { const t = sum(a) || 1; return a.map((v) => v / t); };
+  g1.append(card('Links: direct or through the server', 'Time linked to each bandmate, and the round trip on each kind of link (share of samples)', h('div', {},
+    shareBar([{ name: 'Direct', v: dSec, color: 'var(--series-1)' }, { name: 'Through the server', v: rSec, color: 'var(--series-2)' }]),
+    bars({ labels: edgeLabels(RTT_EDGES), series: [{ name: 'Direct', values: share(rttD), color: 'var(--series-1)' }, { name: 'Through the server', values: share(rttR), color: 'var(--series-2)' }], yfmt: (v) => pct(v), legend: false, tipFmt: (v, se, i) => `${pct(v, 1)} (${fmt((se.name === 'Direct' ? rttD : rttR)[i])} samples)` }),
+    h('p', { class: 'note' }, 'Round trip in ms. ', `${fmt(sum(band.map((x) => x.net.drops)))} direct links fell back to the server; the handshake server dropped ${fmt(sum(all.map((x) => x.net.relayLost)))} times.`))));
+  // how people use it: session length, kinds of session, where the time goes, and how far people get
+  const g0 = h('div', { class: 'grid' });
+  const LEN = [[60, '< 1 min'], [300, '1–5 min'], [900, '5–15 min'], [1800, '15–30 min'], [3600, '30–60 min'], [7200, '1–2 h'], [Infinity, '2 h+']];
+  const lenBins = (vals) => LEN.map(([hi], i) => vals.filter((v) => v < hi && v >= (i ? LEN[i - 1][0] : 0)).length);
+  g0.append(card('How long sessions last', 'Time the page was open, and time spent jamming with someone (sessions that did)', bars({ labels: LEN.map((l) => l[1]), series: [
+    { name: 'Page open', values: lenBins(all.map((x) => x.dur)), color: 'var(--series-1)' },
+    { name: 'Jamming with someone', values: lenBins(band.map((x) => x.bandSec)), color: 'var(--series-2)' }], tipFmt: (v, se) => `${fmt(v)} sessions (${pct(v / Math.max(1, se.name === 'Page open' ? all.length : band.length))})` })));
+  const KINDS = [
+    ['Left from the lobby', (x) => !x.roomSec],
+    ['Listened in', (x) => (x.secs?.listen || 0) > 0 || x.used.includes('listen')],
+    ['Composed', (x) => (x.secs?.compose || 0) >= 60],
+    ['Jammed in a band (3+)', (x) => x.peak >= 2],
+    ['Jammed as a duo', (x) => x.peak === 1],
+    ['Played alone', (x) => x.notes.played > 0],
+    ['Looked around alone', () => true]];
+  const kindOf = (x) => KINDS.find(([, f]) => f(x))[0];
+  const kinds = KINDS.map(([k]) => { const l = all.filter((x) => kindOf(x) === k); return { label: k, v: l.length, len: median(l.map((x) => x.dur)), play: median(l.map((x) => x.secs?.active || 0)), mob: l.filter((x) => x.dev.mobile).length }; });
+  g0.append(card('Kinds of session', 'Each session counted once, by the first that fits from the top', hbars({ rows: kinds, tipFmt: (r) => `${fmt(r.v)} sessions (${pct(r.v / Math.max(1, all.length))})<br>median ${hrs(r.len || 0)} open, ${hrs(r.play || 0)} playing<br>${pct(r.mob / Math.max(1, r.v))} on phones or tablets` })));
+  const T = (k) => sum(roomed.map((x) => x.secs?.[k] || 0)), roomT = sum(roomed.map((x) => x.roomSec));
+  const where = [
+    { label: 'In a room', v: roomT }, { label: 'With a bandmate', v: sum(band.map((x) => x.bandSec)) }, { label: 'Playing', v: T('active') },
+    { label: 'Compose Room', v: T('compose') }, { label: 'Song playing', v: T('song') }, { label: 'Talk open', v: T('talk') },
+    { label: 'Sending live audio', v: T('lane') }, { label: 'Listening in', v: T('listen') }, { label: 'Tab in the background', v: sum(all.map((x) => x.secs?.hidden || 0)) }];
+  g0.append(card('Where the time goes', 'Hours across all sessions; these overlap (playing happens in a room, with or without a bandmate)', hbars({ rows: where, vfmt: (v) => hrs(v), tipFmt: (r) => `${hrs(r.v)} · ${pct(r.v / Math.max(1, roomT))} of time in rooms` })));
+  const steps = [
+    ['Opened MEGAjam', all.length], ['Went into a room', roomed.length], ['Played a note', all.filter((x) => x.notes.played > 0).length],
+    ['Jammed with someone', band.length], ['Jammed 15 min or more', band.filter((x) => x.bandSec >= 900).length], ['Composed', all.filter((x) => (x.secs?.compose || 0) >= 60).length]];
+  g0.append(card('How far people get', 'Sessions reaching each step, as a share of everyone who opened it', hbars({ rows: steps.map(([k, v]) => ({ label: k, v })), vfmt: (v) => pct(v / Math.max(1, all.length)), tipFmt: (r) => `${fmt(r.v)} sessions · ${pct(r.v / Math.max(1, all.length), 1)}` })));
+  out.append(g1, g0);
+
+  // timing
+  const g2 = h('div', { class: 'grid' });
+  const look = RTT_EDGES.concat(0).map((_, i) => sum(band.map((x) => x.net.look[i] || 0)));
+  g2.append(card('Lookahead', 'How far ahead notes were scheduled (sampled every 5 s with a bandmate)', bars({ labels: edgeLabels(RTT_EDGES), series: [{ name: 'Samples', values: share(look), color: 'var(--series-1)' }], yfmt: (v) => pct(v), tipFmt: (v, _, i) => `${pct(v, 1)} of samples (${fmt(look[i])})` })));
+  const ce = CLOCK_EDGES.concat(0).map((_, i) => sum(band.map((x) => x.net.clockErr[i] || 0)));
+  g2.append(card('Clock error', "A follower's worst-case error against the room clock, in ms", bars({ labels: edgeLabels(CLOCK_EDGES), series: [{ name: 'Samples', values: share(ce), color: 'var(--series-1)' }], yfmt: (v) => pct(v), tipFmt: (v, _, i) => `${pct(v, 1)} of samples (${fmt(ce[i])})` })));
+  // late notes per session
+  const LB = [['none', (r) => r === 0], ['< 0.1%', (r) => r > 0 && r < 0.001], ['0.1–1%', (r) => r >= 0.001 && r < 0.01], ['1–5%', (r) => r >= 0.01 && r < 0.05], ['5%+', (r) => r >= 0.05]];
+  const withNotes = band.filter((x) => x.notes.heard >= 20);
+  g2.append(card('Late notes per session', 'Share of bandmates’ notes that arrived after their time (sessions that heard 20+ notes)', bars({ labels: LB.map((b) => b[0]), series: [{ name: 'Sessions', values: LB.map(([, f]) => withNotes.filter((x) => f(x.notes.late / x.notes.heard)).length), color: 'var(--series-1)' }] })));
+  // stalls
+  const playH = sum(roomed.map((x) => x.roomSec)) / 3600;
+  const stallRows = groupBy(roomed, (x) => (x.dev.mobile ? 'phone/tablet' : 'computer')).map(([k, l]) => ({ label: k, v: sum(l.map((x) => x.stalls)) / Math.max(1e-9, sum(l.map((x) => x.roomSec)) / 3600), n: l.length }));
+  g2.append(card('Main-thread stalls', `Pauses of 40 ms or more in the page, per hour in a room (${fmt(sum(roomed.map((x) => x.stalls)))} in ${playH.toFixed(1)} h)`, hbars({ rows: stallRows, vfmt: (v) => fmt(v, 1) + '/h', tipFmt: (r) => `${fmt(r.v, 1)} stalls per hour · ${r.n} sessions` })));
+  out.append(g2);
+
+  // the sessions that had the worst time
+  const worst = withNotes.map((x) => ({ ...x, rate: x.notes.late / x.notes.heard })).sort((a, b) => b.rate - a.rate || b.notes.lateWorst - a.notes.lateWorst).slice(0, 12).filter((x) => x.rate > 0);
+  out.append(h('div', { class: 'grid' }, card('Sessions with the most late notes', 'Click a row for its full report', table([
+    { t: 'When', f: (x) => ago(x.last) }, { t: 'Device', f: (x) => devName(x) }, { t: 'Band', n: 1, f: (x) => x.peak + 1 },
+    { t: 'Link', f: (x) => (x.net.relaySec > x.net.directSec ? 'server' : 'direct') }, { t: 'Round trip max', n: 1, f: (x) => ms(x.net.rttMax) },
+    { t: 'Lookahead max', n: 1, f: (x) => ms(x.net.lookMax) }, { t: 'Late', n: 1, f: (x) => `${pct(x.rate, 1)} (${fmt(x.notes.late)})` },
+    { t: 'Worst', n: 1, f: (x) => ms(x.notes.lateWorst) }, { t: 'Stalls', n: 1, f: (x) => fmt(x.stalls) }, { t: 'Country', f: (x) => x.country || '–' }], worst, expand), true)));
+
+  // devices, countries, instruments, features
+  const g3 = h('div', { class: 'grid' });
+  const devs = groupBy(all, devName).map(([k, l]) => ({ k, n: l.length, band: l.filter((x) => x.bandSec > 0).length, late: (() => { const hh = sum(l.map((x) => x.notes.heard)); return hh ? sum(l.map((x) => x.notes.late)) / hh : null; })(), stall: sum(l.map((x) => x.stalls)) / Math.max(1e-9, sum(l.map((x) => x.roomSec)) / 3600), ol: median(l.map((x) => x.dev.ol || null)), err: l.filter((x) => x.errors.length).length })).sort((a, b) => b.n - a.n);
+  g3.append(card('Devices', 'Operating system and browser', table([{ t: 'Device', f: (r) => r.k }, { t: 'Sessions', n: 1, f: (r) => fmt(r.n) }, { t: 'Jammed', n: 1, f: (r) => fmt(r.band) }, { t: 'Late notes', n: 1, f: (r) => pct(r.late, 2) }, { t: 'Stalls/h', n: 1, f: (r) => fmt(r.stall, 1) }, { t: 'Audio out', n: 1, f: (r) => ms(r.ol) }, { t: 'With errors', n: 1, f: (r) => fmt(r.err) }], devs)));
+  const ctry = groupBy(all.filter((x) => x.country), (x) => x.country).map(([k, l]) => ({ k, n: l.length, rtt: median(l.map((x) => x.net.rttMax || null)) })).sort((a, b) => b.n - a.n);
+  g3.append(card('Countries', 'From Cloudflare; no addresses are kept', table([{ t: 'Country', f: (r) => r.k }, { t: 'Sessions', n: 1, f: (r) => fmt(r.n) }, { t: 'Median worst round trip', n: 1, f: (r) => ms(r.rtt) }], ctry)));
+  const inst = countList(roomed.flatMap((x) => x.inst)).slice(0, 15);
+  g3.append(card('Instruments', 'Sessions that put each one in their corner', inst.length ? hbars({ rows: inst.map(([k, v]) => ({ label: k, v })), tipFmt: (r) => `${fmt(r.v)} sessions (${pct(r.v / Math.max(1, roomed.length))})` }) : h('div', { class: 'empty' }, 'Nothing yet')));
+  const NAMES = { compose: 'Compose Room', talk: 'Talk', lane: 'Live audio', synctake: 'Sync take', match: 'Sound match', stems: 'Stem export', listen: 'Listen-in', midi: 'MIDI device', tour: 'Tour', help: 'Help menu', quant: 'Quantize', arp: 'Arpeggiator' };
+  const feats = countList(all.flatMap((x) => x.used)).map(([k, v]) => ({ label: NAMES[k] || k, v }));
+  g3.append(card('Features used', 'Sessions that used each at least once', feats.length ? hbars({ rows: feats, tipFmt: (r) => `${fmt(r.v)} sessions (${pct(r.v / Math.max(1, all.length))})` }) : h('div', { class: 'empty' }, 'Nothing yet')));
+  out.append(g3);
+
+  // errors
+  const errs = new Map();
+  for (const x of all) for (const e of x.errors) { const k = e.m + '|' + e.s, o = errs.get(k) || { m: e.m, s: e.s, n: 0, sessions: 0, last: 0, devs: new Set() }; o.n += e.n; o.sessions++; o.last = Math.max(o.last, x.last); o.devs.add(devName(x)); errs.set(k, o); }
+  out.append(h('div', { class: 'grid' }, card('Errors', 'JavaScript errors the page hit, grouped by message and place', table([
+    { t: 'Message', f: (r) => r.m }, { t: 'Where', f: (r) => r.s || '–' }, { t: 'Sessions', n: 1, f: (r) => fmt(r.sessions) }, { t: 'Times', n: 1, f: (r) => fmt(r.n) },
+    { t: 'Devices', f: (r) => [...r.devs].slice(0, 3).join(', ') + (r.devs.size > 3 ? '…' : '') }, { t: 'Last seen', f: (r) => ago(r.last) }],
+  [...errs.values()].sort((a, b) => b.sessions - a.sessions || b.n - a.n).slice(0, 40)), true)));
+
+  // recent sessions
+  out.append(h('div', { class: 'grid' }, card('Recent sessions', 'Newest first; click a row for its full report', table([
+    { t: 'Last report', f: (x) => ago(x.last) }, { t: 'Open', n: 1, f: (x) => hrs(x.dur) }, { t: 'Jamming', n: 1, f: (x) => (x.bandSec ? hrs(x.bandSec) : '–') }, { t: 'Playing', n: 1, f: (x) => (x.secs?.active ? hrs(x.secs.active) : '–') }, { t: 'Kind', f: kindOf },
+    { t: 'Band', n: 1, f: (x) => (x.roomSec ? x.peak + 1 : '–') }, { t: 'Join', n: 1, f: (x) => ms(x.joinMs) }, { t: 'Link', f: (x) => (!x.bandSec ? '–' : x.net.relaySec > x.net.directSec ? 'server' : 'direct') },
+    { t: 'Round trip max', n: 1, f: (x) => (x.bandSec ? ms(x.net.rttMax) : '–') }, { t: 'Late', n: 1, f: (x) => (x.notes.heard ? `${fmt(x.notes.late)}/${fmt(x.notes.heard)}` : '–') },
+    { t: 'Errors', n: 1, f: (x) => fmt(sum(x.errors.map((e) => e.n))) }, { t: 'Device', f: devName }, { t: 'Country', f: (x) => x.country || '–' }],
+  all.slice(0, 60), expand), true)));
+}
+const devName = (x) => `${({ ios: 'iOS', android: 'Android', mac: 'Mac', windows: 'Windows', linux: 'Linux', chromeos: 'ChromeOS' })[x.dev.os] || 'Other'} · ${({ chrome: 'Chrome', safari: 'Safari', firefox: 'Firefox', edge: 'Edge', opera: 'Opera' })[x.dev.br] || 'other'}`;
+function groupBy(list, f) { const m = new Map(); for (const x of list) { const k = f(x); (m.get(k) || m.set(k, []).get(k)).push(x); } return [...m]; }
+function countList(list) { const m = new Map(); for (const k of list) m.set(k, (m.get(k) || 0) + 1); return [...m].sort((a, b) => b[1] - a[1]); }
+function expand(x, tr) {
+  if (tr.nextElementSibling?.classList.contains('detail')) { tr.nextElementSibling.remove(); return; }
+  const { first, last, ...rest } = x;
+  tr.after(h('tr', { class: 'detail' }, h('td', { colspan: tr.children.length }, h('pre', {}, `first report ${new Date(first).toLocaleString()} · last ${new Date(last).toLocaleString()}\n` + JSON.stringify(rest, null, 1)))));
+}
+
+// ---------- demo data: made up, only to see the layout ----------
+function demo() {
+  let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const pick = (a) => a[Math.floor(rnd() * a.length)];
+  const now = Date.now(), sessions = [];
+  const devs = [['mac', 'chrome', false], ['mac', 'safari', false], ['windows', 'chrome', false], ['ios', 'safari', true], ['android', 'chrome', true], ['windows', 'edge', false], ['linux', 'firefox', false]];
+  const insts = ['juniper', 'monolith', 'machina', 'poly', 'tine', 'pads', 'studio', 'acid', 'ensemble', 'wobbler', 'bigmacro', 'tonewheel', 'acoustic'];
+  for (let i = 0; i < 260; i++) {
+    const t = now - rnd() * days * 86400000, [os, br, mobile] = pick(devs), inRoom = rnd() < 0.8, peak = inRoom ? (rnd() < 0.25 ? 0 : 1 + Math.floor(rnd() * rnd() * 4)) : 0;
+    const relay = rnd() < 0.12, roomSec = inRoom ? 120 + rnd() * 3600 : 0, bandSec = peak ? roomSec * (0.5 + rnd() * 0.5) : 0;
+    const base = relay ? 90 + rnd() * 120 : 15 + rnd() * rnd() * 160;
+    const hist = (E, c, sp) => { const v = Array(E.length + 1).fill(0); for (let k = 0; k < 40; k++) { const x = c * (1 + (rnd() - 0.5) * sp); let j = 0; while (j < E.length && x >= E[j]) j++; v[j]++; } return v; };
+    const heard = peak ? Math.round(bandSec * (1 + rnd() * 4)) : 0, lateRate = mobile ? rnd() * 0.04 : rnd() < 0.7 ? 0 : rnd() * 0.006;
+    sessions.push({ first: t, last: t + roomSec * 1000, room: inRoom ? (Math.floor(rnd() * 70) + 1e8).toString(16).slice(0, 8) : '', country: pick(['US', 'US', 'US', 'CA', 'GB', 'DE', 'JP', 'AU']),
+      v: 1, sid: 's' + i, dur: roomSec + 30, roomSec, bandSec, peak, joinMs: peak ? 900 + rnd() * rnd() * (relay ? 12000 : 5000) : null,
+      dev: { os, br, mobile, cores: 8, mem: 8, sr: 48000, ol: mobile ? 30 + rnd() * 60 : 8 + rnd() * 30 },
+      net: { directSec: relay ? 0 : bandSec * peak, relaySec: relay ? bandSec * peak : 0, rttDirect: relay || !peak ? Array(9).fill(0) : hist(RTT_EDGES, base, 0.6), rttRelay: relay && peak ? hist(RTT_EDGES, base, 0.5) : Array(9).fill(0), rttMax: peak ? base * 1.6 : 0,
+        look: peak ? hist(RTT_EDGES, base / 2 + 30, 0.5) : Array(9).fill(0), lookMax: peak ? base + 60 : 0, clockErr: peak ? hist(CLOCK_EDGES, relay ? 6 : 1.5, 1.2) : Array(8).fill(0), clockErrMax: peak ? 4 : 0, relayLost: rnd() < 0.03 ? 1 : 0, drops: rnd() < 0.05 ? 1 : 0 },
+      notes: { played: Math.round(heard * 0.8), heard, late: Math.round(heard * lateRate), lateWorst: lateRate ? 4 + rnd() * 60 : 0 },
+      stalls: Math.round(rnd() * (mobile ? 30 : 6)), stallMs: 0, inst: inRoom ? [...new Set([pick(insts), pick(insts), pick(insts)])].slice(0, 1 + Math.floor(rnd() * 3)) : [], hw: 0,
+      used: ['compose', 'talk', 'tour', 'help', 'quant', 'midi', 'lane'].filter(() => rnd() < 0.2),
+      secs: { active: roomSec * rnd() * 0.6, hidden: rnd() < 0.3 ? roomSec * rnd() * 0.3 : 0, compose: rnd() < 0.25 ? roomSec * rnd() * 0.7 : 0, talk: peak && rnd() < 0.4 ? bandSec * rnd() : 0, lane: rnd() < 0.05 ? bandSec * 0.5 : 0, song: rnd() < 0.3 ? roomSec * rnd() * 0.5 : 0, listen: 0 }, errors: rnd() < 0.06 ? [{ m: pick(["Cannot read properties of undefined (reading 'gain')", 'The AudioContext was not allowed to start.', 'NotAllowedError: play() failed']), s: '/JamJam/src/main.js:' + Math.floor(rnd() * 3000), n: 1 + Math.floor(rnd() * 3) }] : [] });
+  }
+  sessions.sort((a, b) => b.last - a.last);
+  return { now, days, sessions };
+}
+
+// ---------- controls ----------
+for (const b of document.querySelectorAll('#range button')) { b.classList.toggle('on', +b.dataset.d === days); b.onclick = () => { days = +b.dataset.d; store.set('jjadmin:days', days); for (const x of document.querySelectorAll('#range button')) x.classList.toggle('on', x === b); load(); }; }
+$('#refresh').onclick = load;
+$('#auto').onchange = (e) => { clearInterval(timer); if (e.target.checked) timer = setInterval(load, 60000); };
+$('#theme').onclick = () => { const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; r.dataset.theme = dark ? 'light' : 'dark'; store.set('jjadmin:theme', r.dataset.theme); };
+if (store.get('jjadmin:theme')) document.documentElement.dataset.theme = store.get('jjadmin:theme');
+load();
+</script>
+</body>
+</html>

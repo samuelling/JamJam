@@ -8,6 +8,7 @@
 const ICE = [{ urls: ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'] }];
 const RELAY_MAX = 1900;          // the relay drops messages over 2048 characters
 const DIRECT_TIMEOUT_MS = 8000;  // after this, a pair that hasn't connected directly falls back to the relay
+const EARLY_WAIT_MS = 4000;      // how long a relay message from someone not yet named waits for their state
 
 export class Room {
   constructor({ server, maxPeers = 4, p2p = true, handlers }) {
@@ -22,6 +23,8 @@ export class Room {
     this.code = '';
     this.relayed = 0;
     this.chunks = new Map();
+    this.early = new Map();     // relay address -> events that arrived before its state said who it is
+    this.pendingJoin = new Map();
     // testing aid: ?lag=80&jitter=20 delays everything this browser receives, to feel a long-distance link
     const q = new URLSearchParams(location.search);
     this.lag = q.get('lag') || q.get('loss') ? { ms: +q.get('lag') || 0, jitter: +q.get('jitter') || 0, loss: +q.get('loss') || 0 } : null;
@@ -72,8 +75,12 @@ export class Room {
   leave() {
     clearInterval(this.keepalive); clearTimeout(this.retryT);
     if (this.ws) { const ws = this.ws; this.ws = null; try { ws.close(1000, 'bye'); } catch (_) {} }
-    for (const p of this.peers.values()) this.closePeer(p);
-    this.peers.clear();
+    // goodbye over each direct link first, so the band drops us at once instead of waiting to be sure we've gone;
+    // the links close a moment later, once it's out
+    const was = [...this.peers.values()];
+    for (const p of was) { try { if (p.dc && p.dc.readyState === 'open') p.dc.send(JSON.stringify({ __bye: 1 })); } catch (_) {} }
+    setTimeout(() => { for (const p of was) this.closePeer(p); }, 250);
+    this.peers.clear(); this.pendingJoin = new Map(); this.early = new Map();
     this.rids = new Map();   // relay id -> jammer id
     this.id = null; this.rid = null;
   }
@@ -109,25 +116,35 @@ export class Room {
       if (first) { this.jid = m.id; this.n0 = m.n; }
       this.id = this.jid; this.n = this.n0;
       this.relaySend({ t: 'st', s: { jid: this.jid, n: this.n0, role: this.listener ? 'listener' : 'band' } });
-      for (const o of others) this.meet(o.id, o.st, o, true);
+      // someone whose state hasn't reached the relay yet (both of us reconnecting at once) is met when it arrives: met
+      // now, they'd be filed under their relay address, as a second, phantom bandmate
+      for (const o of others) { if (o.st && o.st.jid) this.meet(o.id, o.st, o, true); else this.holdJoin(o.id, { ...o, initiator: true }); }
       if (first) this.h.status('in', others.length ? 'Connecting to the other jammers…' : 'In the room. Waiting for friends…');
       else this.h.status('relay-back', '');
       this.h.roster();
       return;
     }
-    if (m.t === 'join') { this.pendingJoin = this.pendingJoin || new Map(); this.pendingJoin.set(m.id, m); return; }   // who it is arrives in its state message
-    if (m.t === 'st') { const j = this.pendingJoin?.get(m.id); this.pendingJoin?.delete(m.id); this.meet(m.id, m.s, j || { id: m.id }, false); this.h.roster(); return; }
+    if (m.t === 'join') { this.holdJoin(m.id, m); return; }   // who it is arrives in its state message
+    if (m.t === 'st') { const j = this.pendingJoin?.get(m.id); this.pendingJoin?.delete(m.id); this.meet(m.id, m.s, j || { id: m.id }, !!(j && j.initiator)); this.h.roster(); return; }
     if (m.t === 'leave') {
       this.pendingJoin?.delete(m.id);
       const jid = this.rids.get(m.id), p = jid && this.peers.get(jid); if (!p) return;
       this.rids.delete(m.id); if (p.rid === m.id) p.rid = null;
       const gone = () => { if (this.peers.get(p.id) !== p || p.rid) return; this.closePeer(p); this.peers.delete(p.id); this.h.peerLeft(p); this.h.roster(); };
-      // their relay connection dropped, but a live direct link means they're still here and reconnecting
-      if (p.dc && p.dc.readyState === 'open') setTimeout(() => { if (!(p.dc && p.dc.readyState === 'open')) gone(); }, 12000);
+      // their relay connection dropped, but a live direct link means they're still here and reconnecting; if that link
+      // closes too, they've gone (no need to wait out the 12 s)
+      if (p.dc && p.dc.readyState === 'open') { p.relayGone = gone; setTimeout(() => { if (!(p.dc && p.dc.readyState === 'open')) gone(); }, 12000); }
       else gone();
       return;
     }
     if (m.t === 'name') { const p = this.peers.get(this.rids.get(m.id)); if (p) { p.name = m.name; this.h.roster(); } return; }
+    // an event from a relay address we can't name yet (its state is on the way): hold it until we can, so a handshake
+    // offer doesn't make a phantom bandmate; after a few seconds with no state, take it as it is
+    if (m.t === 'ev' && !m.late && !this.rids.has(m.id) && !this.peers.has(m.id)) {
+      const q = this.early.get(m.id) || []; q.push(m); this.early.set(m.id, q);
+      if (q.length === 1) setTimeout(() => { const left = this.early.get(m.id); this.early.delete(m.id); for (const x of left || []) this.onRelay({ ...x, late: true }); }, EARLY_WAIT_MS);
+      return;
+    }
     if (m.t === 'ev') m = { ...m, id: this.rids.get(m.id) || m.id };
     if (m.t === 'ev' && m.e && typeof m.e === 'object') {
       let e = m.e;
@@ -152,6 +169,9 @@ export class Room {
     const jid = (st && st.jid) || rid;
     if (jid === this.jid) return;
     this.rids.set(rid, jid);
+    // a phantom filed under this relay address before we knew who it was: drop it, the real one takes over
+    if (jid !== rid) { const ph = this.peers.get(rid); if (ph && ph.id === rid) { this.closePeer(ph); this.peers.delete(rid); } }
+    const held = this.early.get(rid); if (held) { this.early.delete(rid); setTimeout(() => { for (const x of held) this.onRelay(x); }, 0); }
     const known = this.peers.get(jid);
     if (known) { known.rid = rid; if (info.name) known.name = info.name; if (st && st.role) known.role = st.role; return known; }   // the same jammer, back through the relay
     const p = this.addPeer({ id: jid, rid, n: (st && st.n) || info.n || 0, name: info.name }, initiator);
@@ -237,9 +257,9 @@ export class Room {
     }
     p.dc = dc;
     dc.onopen = () => { clearTimeout(p.fallbackT); this.setPath(p, 'direct'); if (p.needNeg) p.negotiate?.(); };
-    dc.onclose = () => { if (this.peers.get(p.id) === p && p.path === 'direct') this.setPath(p, 'relay'); };
+    dc.onclose = () => { if (this.peers.get(p.id) !== p) return; if (p.relayGone && !p.rid) { p.relayGone(); return; } if (p.path === 'direct') this.setPath(p, 'relay'); };
     dc.onmessage = (ev) => {
-      if (typeof ev.data === 'string') { let m; try { m = JSON.parse(ev.data); } catch (_) { return; } if (m && m.__sig) { this.onSignal(p, m.__sig); return; } this.deliver(p, m, false); }
+      if (typeof ev.data === 'string') { let m; try { m = JSON.parse(ev.data); } catch (_) { return; } if (m && m.__sig) { this.onSignal(p, m.__sig); return; } if (m && m.__bye) { this.dropPeer(p); return; } this.deliver(p, m, false); }
       else {
         p.bytesIn += ev.data.byteLength;
         if (this.lag) setTimeout(() => this.h.binary(p, ev.data), this.lagDelay(p));
@@ -251,7 +271,7 @@ export class Room {
   setPath(p, path) {
     const was = p.path;
     p.path = path;
-    if (!p.opened) { p.opened = true; this.h.peerOpen(p); }
+    if (!p.opened) { p.opened = true; p.openedAt = performance.now(); this.h.peerOpen(p); }
     if (was !== path) this.h.roster();
   }
 
@@ -280,13 +300,16 @@ export class Room {
     }
   }
 
-  // send to one peer (id) or everyone (no id)
+  // send to one peer (id) or everyone (no id). While a direct link is still being tried, messages go through the
+  // relay instead of being dropped: a bandmate who can only use the relay (or is already talking to us through it)
+  // would otherwise get no answers for the 8 s the attempt takes, so their clock couldn't lock and their notes
+  // wouldn't go out
   send(m, id) {
     const targets = id ? [this.peers.get(id)].filter(Boolean) : [...this.peers.values()];
     let s = null;
     for (const p of targets) {
       if (p.dc && p.dc.readyState === 'open') { s = s || JSON.stringify(m); try { p.dc.send(s); } catch (_) {} }
-      else if (p.path === 'relay') this.relayEvent(p.id, { k: 'm', m });
+      else if (p.path === 'relay' || p.path === 'connecting') this.relayEvent(p.id, { k: 'm', m });
     }
   }
   // binary to one jammer, waiting while their link's send buffer is full (big transfers: sync record stems)
@@ -300,6 +323,18 @@ export class Room {
     for (const p of this.peers.values()) {
       if (p.dc && p.dc.readyState === 'open' && p.dc.bufferedAmount < 1 << 20) { try { p.dc.send(buf); } catch (_) {} }
     }
+  }
+
+  // a bandmate who said goodbye: gone now
+  dropPeer(p) {
+    if (this.peers.get(p.id) !== p) return;
+    this.closePeer(p); this.peers.delete(p.id); if (p.rid) this.rids.delete(p.rid);
+    this.h.peerLeft(p); this.h.roster();
+  }
+  // someone the relay told us about, met once their state says who they are (or after a while without one)
+  holdJoin(rid, info) {
+    this.pendingJoin = this.pendingJoin || new Map(); this.pendingJoin.set(rid, info);
+    setTimeout(() => { const j = this.pendingJoin.get(rid); if (!j || this.rids.has(rid)) return; this.pendingJoin.delete(rid); this.meet(rid, j.st || null, j, !!j.initiator); this.h.roster(); }, EARLY_WAIT_MS);
   }
 
   closePeer(p) {

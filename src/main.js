@@ -20,6 +20,9 @@ import { makePadsUI, PAD_KEYS, PAD_BASE } from './padsui.js';
 import { makeGear } from './gear.js';
 import * as STEMS from './stems.js';
 import { makeTutorial, toured } from './tutorial.js';
+import { Arp, hasArp, arpOn } from './arp.js';
+import { startStats } from './stats.js';
+import { AcidSeq, makeAcidPanel } from './acidseq.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
 // ?bot=1: a pretend bandmate the tours run in a hidden frame (src/tutorial.js). It shares this browser's storage, so
 // it writes nothing there and reads none of your gear; it plays nothing out loud (?silent=1 too) and skips the welcome.
@@ -90,13 +93,18 @@ const selEntry = () => entry(S.sel) || S.rack[0];
 const outPort = (id) => (id ? input.outputs.find((o) => o.id === id) : null);
 
 // ---------- sequencers (one per drum instrument), running in lockstep in every browser ----------
-const SEQ_H = 60;                      // how far ahead (ms) each browser schedules sequencer steps
+const DRUM_AHEAD_MS = 1500;   // how far ahead the drummer queues its bars (src/band.js)
+const OSCLOCK = new URLSearchParams(location.search).get('osclock') !== '0';   // let the computer's own clock help the shared one (see clock.js)
+const SEQ_H = 100;                     // how far ahead (ms) each browser schedules sequencer steps (room for a
+                                       // main-thread hiccup plus the device's output latency)
 const seqs = new Map();                // channel key -> StepSeq
 function ensureSeq(k, cfg, snap) {
   const def = engine.defs.get(cfg?.inst);
   if (!def?.seq) { seqs.delete(k); return null; }
   let sq = seqs.get(k);
-  if (!sq) { sq = new StepSeq(def.seq.tracks.length); seqs.set(k, sq); }
+  const acid = def.seq.kind === 'acid';   // Acid Line Lite's bass line sequencer (src/acidseq.js)
+  if (sq && (sq.kind === 'acid') !== acid) sq = null;
+  if (!sq) { sq = acid ? new AcidSeq() : new StepSeq(def.seq.tracks.length); seqs.set(k, sq); }
   if (snap) sq.load(snap);
   return sq;
 }
@@ -111,7 +119,7 @@ function seqEdit(e, op) {
   const at = clock.now() + editLead();
   sq.queue(at, op);
   if (clock.locked) room.send({ k: 'sq', r: e.r, at, op });
-  renderMachinaDyn(true);
+  renderMachinaDyn(true); S.acid?.refresh(true);
   if (op[0] === 'l') renderMdEncoders(e, engine.defs.get(e.cfg.inst));
 }
 setInterval(() => {
@@ -120,6 +128,19 @@ setInterval(() => {
   for (const [k, sq] of seqs) {
     const cfg = cfgOfKey(k); if (!cfg) continue;
     const def = engine.defs.get(cfg.inst); if (!def?.seq) continue;
+    if (sq.kind === 'acid') {
+      // a bass line: whole notes with ends (slides and ties hold them), played by every browser from the pattern
+      const own = pidOf(k) === S.me, e = own ? entry(+k.slice(k.indexOf(':') + 1)) : null, port = e && outPort(e.midiOut), oc = e ? ((e.outCh || 1) - 1) & 15 : 0;
+      for (const ev of sq.due(tempo, now, now + SEQ_H)) {
+        engine.event(k, ev);
+        if (own) {
+          logForLock(k, ev);
+          if (S.srec && !S.srec.done) (S.srec.events.get(k) || S.srec.events.set(k, []).get(k)).push({ ...ev });
+          if (port) sendToHardware(port, ev.type === 'on' ? [0x90 | oc, ev.note, ev.vel] : [0x80 | oc, ev.note, 0], clock.toLocal(ev.at) - (e.hwLatency || 0));
+        } else routeOut(k, ev);
+      }
+      continue;
+    }
     for (const st of sq.due(tempo, now, now + SEQ_H)) for (const tg of st.trigs) {
       engine.seqTrig(k, def.seq.tracks[tg.track].note, 100, tg.locks, st.t, cfg.params);
       if (pidOf(k) === S.me) { const n = def.seq.tracks[tg.track].note; logForLock(k, { type: 'on', note: n, vel: 100, at: st.t }); logForLock(k, { type: 'off', note: n, at: st.t + 60 }); }
@@ -134,7 +155,7 @@ setInterval(() => {
 const room = new Room({
   server: SERVER, maxPeers: MAX, p2p: qs.get('p2p') !== '0',
   handlers: {
-    status(kind, text) { setStatus(text, kind); if (kind === 'in') onEntered(); },
+    status(kind, text) { setStatus(text, kind); if (kind === 'in') onEntered(); if (kind === 'relay-lost') stats.relayLost(); },
     roster() { updateLeader(); renderCorners(); },
     track(p, track, stream) { talk.onTrack(p, track, stream); },
     peerOpen(p) { sayHello(p.id); },
@@ -162,10 +183,16 @@ function leaderId() {
   return best.id;
 }
 function updateLeader() {
-  const was = clock.isLeader;
-  clock.setLeader(leaderId() === room.id);
+  const was = clock.isLeader, lid = leaderId();
+  clock.setLeader(lid === room.id);
   if (clock.isLeader && !was) S.lockedAt = performance.now();
   if (!clock.isLeader) S.lockedAt = 0;
+  // a new leader: it tells the band the tempo it has, and followers ask it, so nobody keeps a tempo the old leader set
+  // or misses one the new leader set while they still thought the old one was in charge
+  if (S.me && lid && lid !== S.leaderSeen) {
+    const first = S.leaderSeen == null; S.leaderSeen = lid;
+    if (!first) { if (lid === room.id) room.send({ k: 'tempo', segs: tempo.toJSON() }); else room.send({ k: 'tempoAsk' }, lid); }
+  }
 }
 
 function onEntered() {
@@ -200,9 +227,11 @@ function startPinging(id) {
   const go = () => {
     const p = room.peers.get(id);
     if (!p) return;
-    room.sendFast({ k: 'ping', a: performance.now(), at: clock.locked && S.me ? clock.now() + lookahead() : null }, id);
+    const L = lookahead();
+    room.sendFast({ k: 'ping', a: performance.now(), at: clock.locked && S.me ? clock.now() + L : null, l: L }, id);
     n++;
-    pingTimers.set(id, setTimeout(go, p.path === 'relay' ? 3000 : n < 12 ? 250 : TUNE.ping));
+    // a quick burst at first, so the clock locks within a second or two (over the relay too), then steady
+    pingTimers.set(id, setTimeout(go, n < 12 ? (p.path === 'relay' ? 400 : 250) : p.path === 'relay' ? 3000 : TUNE.ping));
   };
   go();
 }
@@ -254,19 +283,26 @@ async function restoreLibs() {
 }
 
 function onMessage(p, m) {
+  // a bandmate we've never had a hello from, still talking a moment after the link opened: their hello went missing
+  // (a link replaced during setup, a reconnect). Ask again, so nobody stays invisible to one side.
+  if (m.k !== 'hello' && m.k !== 'who' && !S.players.has(p.id) && room.peers.get(p.id) === p && p.opened && performance.now() - (p.openedAt || 0) > 1500 && performance.now() - (p.askedAt || 0) > 3000) {
+    p.askedAt = performance.now(); room.send({ k: 'who' }, p.id);
+  }
   switch (m.k) {
-    case 'ping': room.sendFast({ k: 'pong', a: m.a, b: clock.now() }, p.id); if (m.at != null) noteSlack(p, m.at); break;
+    case 'who': sayHello(p.id); break;
+    case 'tempoAsk': if (clock.isLeader) room.send({ k: 'tempo', segs: tempo.toJSON() }, p.id); break;
+    case 'ping': room.sendFast({ k: 'pong', a: m.a, b: clock.now(), d: Date.now() - clock.now() }, p.id); if (m.at != null) noteSlack(p, m.at, m.l); break;
     case 'pong': {
       const c = performance.now(), rtt = c - m.a;
       p.rtt.push(rtt); if (p.rtt.length > 30) p.rtt.shift();
       if (p.id === leaderId() && !clock.isLeader) {
         const was = clock.locked;
-        clock.sample(m.a, m.b, c);
+        clock.sample(m.a, m.b, c, OSCLOCK ? m.d : null);
         if (clock.locked && !was) { S.lockedAt = performance.now(); for (const k of S.stable.keys()) S.stable.set(k, S.lockedAt); }
       }
       break;
     }
-    case 'slack': S.slackRep.set(p.id, { s: m.s, t: performance.now() }); break;
+    case 'slack': S.slackRep.set(p.id, { s: m.s, trip: m.trip, busy: !!m.busy, t: performance.now() }); break;
     case 'hello': {
       const first = !S.players.has(p.id);
       S.players.set(p.id, { ...(S.players.get(p.id) || {}), name: m.name, rack: [], hashes: m.hashes, lane: m.lane, peerL: m.L, v: m.v, role: m.role || 'band', where: m.where || 'jam' });
@@ -324,18 +360,41 @@ const TUNE = {
   rep: +(qs.get('rep') ?? 500),       // how often listeners report their margin (ms)
   ping: +(qs.get('ping') ?? 1000),    // steady ping interval on direct links (ms)
   mem: +(qs.get('mem') ?? 12),        // how many reports per listener the lookahead remembers
+  relayPad: +(qs.get('relaypad') ?? 30), // extra ms for a listener reached through the relay (see adjustL)
 };
 function pct(a, q) { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(q * s.length))]; }
-function noteSlack(p, at) {
+// How much spare time a bandmate's ping or note had when it got here. With the lookahead it was sent with (l), that
+// gives the trip itself (l - spare), so the sender can size its lookahead from the trip, not from its current
+// lookahead minus an old spare time (which made each rise feed the next: a 4 s spike pushed it to twice what was
+// needed). A sample taken just after this browser's own main thread stalled measures the stall, not the network:
+// it's left out, so a slow computer doesn't make everyone else play further ahead.
+function noteSlack(p, at, l) {
   if (!clock.locked || !engine.ctx || at == null) return;
-  (p.slack = p.slack || []).push((engine.audioTime(at) - engine.ctx.currentTime) * 1000);
+  if (stall.recent()) return;
+  const spare = (engine.audioTime(at) - engine.ctx.currentTime) * 1000;
+  (p.slack = p.slack || []).push(spare);
   if (p.slack.length > 80) p.slack.shift();
+  if (l != null && Number.isFinite(+l)) { (p.trip = p.trip || []).push(+l - spare); if (p.trip.length > 80) p.trip.shift(); }
 }
+// this browser's own stalls: the main thread not getting to its timers on time (a slow or overloaded computer)
+const stall = { last: performance.now(), at: -1e9, log: [], warned: 0,
+  recent() { const t = performance.now(); return t - this.at < 250 || t - this.last > 80; },
+  busy() { const t = performance.now(); this.log = this.log.filter((x) => t - x[0] < 10000); return this.log.reduce((a, x) => a + x[1], 0) > 600; } };
+setInterval(() => {
+  const t = performance.now(), late = t - stall.last - 25; stall.last = t;
+  if (late > 40) { stall.at = t; stall.log.push([t, late]); }
+  if (S.me && room.peers.size && stall.busy() && t - stall.warned > 30000) { stall.warned = t; setStatus("Your computer is struggling to keep up: notes may sound late here. Closing other tabs or using fewer instruments helps.", 'warn'); }
+}, 25);
+// anonymous usage numbers for the admin dashboard (src/stats.js; Help explains it, ?stats=0 turns it off)
+const stats = BOT ? { use() {}, joining() {}, relayLost() {} } : startStats({ endpoint: window.MP_STATS, room, engine, clock, S, stall, pidOf,
+  modes: () => ({ compose: S.where === 'compose', talk: talk.open, lane: lane.on, song: !!songStore.song.transport?.on, listen: !!S.listener }) });
+window.JJ.stats = stats;
 function reportSlack() {
   for (const p of room.peers.values()) {
     if (!p.slack || p.slack.length < 2) continue;
-    room.send({ k: 'slack', s: Math.round(Math.min(...p.slack) * 10) / 10 }, p.id);
-    p.slack = [];
+    const trip = p.trip && p.trip.length ? Math.round(Math.max(...p.trip) * 10) / 10 : undefined;
+    room.send({ k: 'slack', s: Math.round(Math.min(...p.slack) * 10) / 10, trip, busy: stall.busy() || undefined }, p.id);
+    p.slack = []; p.trip = [];
   }
 }
 function computeAutoL() {
@@ -352,19 +411,31 @@ function adjustL() {
     if (r.used) continue;
     r.used = true;
     const hist = S.needs.get(id) || [];
-    hist.push({ need: S.lookAuto - r.s + TUNE.tm, t: now });
+    let need = r.trip != null ? r.trip + TUNE.tm : S.lookAuto - r.s + TUNE.tm;
+    // through the relay a message rides a WebSocket and a server: one held-up packet holds up everything behind it,
+    // and pings between notes rarely catch that, so playing through it needs more room than the quiet trips suggest
+    const via = room.peers.get(id);
+    if (via && via.path === 'relay') need += TUNE.relayPad;
+    // a listener whose own computer is struggling: what it needs beyond the network is its computer, not the band's
+    // lookahead, so it plays some notes late rather than making everyone wait for it
+    if (r.busy) { const pp = room.peers.get(id); if (pp && pp.rtt.length >= 3) need = Math.min(need, pct(pp.rtt, 0.9) / 2 + 60 + TUNE.tm); }
+    hist.push({ need, t: now });
     while (hist.length > TUNE.mem) hist.shift();
     S.needs.set(id, hist);
   }
-  let target = 0, any = false;
+  let target = 0, any = false, clear = true;
   for (const [id, hist] of S.needs) {
     const recent = hist.filter((x) => now - x.t < TUNE.rep * (TUNE.mem + 2));
     if (!recent.length || !room.peers.has(id)) continue;
-    any = true; target = Math.max(target, ...recent.map((x) => x.need));
+    // a spike that's over: when the last two seconds of reports all have lots of room, they speak for this listener
+    // (the full memory keeps ordinary jitter covered, since its needs stay close to the lookahead)
+    const last = recent.slice(-4), roomy = last.length >= 4 && last.every((x) => x.need < S.lookAuto * 0.6);
+    if (!roomy) clear = false;
+    any = true; target = Math.max(target, ...(roomy ? last : recent).map((x) => x.need));
   }
   if (!any) return;
   S.loopActive = true;
-  S.lookAuto = target > S.lookAuto ? target + TUNE.rise : S.lookAuto + (target - S.lookAuto) * TUNE.settle;
+  S.lookAuto = target > S.lookAuto ? target + TUNE.rise : S.lookAuto + (target - S.lookAuto) * (clear ? Math.max(TUNE.settle, 0.35) : TUNE.settle);
   S.lookAuto = Math.min(900, Math.max(5, S.lookAuto));
 }
 setInterval(() => { reportSlack(); adjustL(); }, TUNE.rep);
@@ -398,15 +469,16 @@ const selfInstant = (e) => !(e?.seq && seqAhead()) && (S.hearSelf || budgetOf(e)
 const recentEv = [];
 const REPEAT_MS = +(qs.get('repeat') ?? 20);
 let repeatGen = 0;
-function sendEvent(e, ev, instant, from) {
+function sendEvent(e, ev, instant, from, sched = false) {
   const k = key(S.me, e.r);
   if (ev.type === 'on') S.notesOn = (S.notesOn || 0) + 1;   // what you've played (the tours wait on it)
   if (S.srec && !S.srec.done) (S.srec.events.get(k) || S.srec.events.set(k, []).get(k)).push({ ...ev });
   // a take is placed where the player heard the band when they played it: their note sounds one lookahead after
   // their hands move (with a quantize or rhythm-help shift kept, since that is meant), so take the lookahead off
   logForLock(k, { ...ev, from, at: ev.at - (e.seq && seqAhead() ? 0 : partLook(e)) });   // a sequencer ahead already played for the beat it lands on
-  engine.event(k, ev, { now: instant || room.peers.size === 0 || !clock.locked });
+  engine.event(k, ev, { now: instant || (!sched && (room.peers.size === 0 || !clock.locked)) });
   if (!clock.locked) return;
+  if (!(e.seq && seqAhead())) ev.l = Math.round(partLook(e));   // the lookahead it was sent with: listeners work out the trip from it
   recentEv.push({ r: e.r, ev }); if (recentEv.length > 3) recentEv.shift();
   room.sendFast({ k: 'evs', items: recentEv });
   // one quick repeat, so a lost packet in a sparse passage is recovered within ~20 ms rather than at the next note
@@ -428,7 +500,7 @@ function receiveEvent(p, r, ev) {
   const k = key(p.id, r);
   if (!engine.ch.get(k)?.insts.length) return;
   const loose = ev.b === 'l';
-  if (!loose) noteSlack(p, ev.at - (ev.o || 0));
+  if (!loose) noteSlack(p, ev.at - (ev.o || 0), ev.l);
   engine.event(k, ev, { now: !clock.locked, loose });
   routeOut(k, ev);
   if (ev.type === 'p' && ev.id !== 'bend') { const x = S.players.get(p.id).rack.find((y) => y.r === r); if (x) x.cfg.params[ev.id] = ev.v; }
@@ -533,12 +605,15 @@ function playNote(on, note, vel, ch = 0, port = '') {
   const src = srcOf(ch, port);
   { const raw = src * 128 + note;   // the key lock: every key you press lands on a note of the room's key
     if (on) { const sn = snapNote(note, ch, port); S.snapped.set(raw, sn); note = sn; } else { note = S.snapped.get(raw) ?? note; S.snapped.delete(raw); } }
+  // Acid Line Lite's sequencer in WRITE mode: the key also goes into the selected step
+  if (on && S.acid && selEntry()?.r === S.acid.r) S.acid.keyed(note);
   const rk = src * 128 + note;
   const targets = on ? targetsFor(ch, port) : (S.route.get(rk) || []).map(entry).filter(Boolean);
   if (on && !targets.length && !S.listener) { if (!S.nudged || performance.now() - S.nudged > 4000) { S.nudged = performance.now(); setStatus('Pick an instrument first: your desk is empty.'); } }
   if (on) S.route.set(rk, targets.map((e) => e.r)); else S.route.delete(rk);
   const now = clock.now();
   for (const e of targets) {
+    if (hasArp(engine.defs.get(e.cfg.inst)) && (on ? arpOn(e) : e.arp?.running)) { arpKey(e, on, note, vel); continue; }
     const L = partLook(e);
     let at = now + L, shift = 0;
     e.shifts = e.shifts || new Map(); e.onAt = e.onAt || new Map();
@@ -564,8 +639,28 @@ function playNote(on, note, vel, ch = 0, port = '') {
   if (ch === 0) flashKey(note, on);
 }
 
+// the arpeggiator (src/arp.js): your held notes go to it, and it sends the notes it plays like quantized ones,
+// stamped on the room's grid; with nobody else here they're still scheduled ahead, so the steps stay even
+const arpLook = (e) => Math.max(partLook(e), 30);
+function arpKey(e, on, note, vel) {
+  e.arp = e.arp || new Arp({ send: (type, n, v, at) => arpSend(e, type, n, v, at), look: () => arpLook(e), tempo, now: () => clock.now() });
+  if (on) { stats.use('arp'); e.arp.press(note, vel, e.cfg.params); } else e.arp.release(note, e.cfg.params);
+  e.arp.tick(e.cfg.params);
+}
+function arpSend(e, type, note, vel, at) {
+  if (!S.me) return;
+  const L = partLook(e), on = type === 'on';
+  sendEvent(e, { type, note, vel, at, seq: ++S.seq, b: BUDGETS[budgetOf(e)].short, o: (L - lookahead()) + (at - (clock.now() + L)) }, false, undefined, true);
+  if (e.match?.on) matchNote(e, on, note, vel, at - (e.hwLatency || 0));
+  const port = outPort(e.midiOut), oc = ((e.outCh || 1) - 1) & 15;
+  if (port) sendToHardware(port, on ? [0x90 | oc, note, vel] : [0x80 | oc, note, 0], clock.toLocal(at) - (e.hwLatency || 0));
+}
+function stopArp(e) { if (e.arp) { e.arp.stop(); e.arp = null; } }
+setInterval(() => { for (const e of S.rack) if (e.arp?.running) e.arp.tick(e.cfg.params); }, 20);
+
 function setParam(e, id, v) {
   if (!e) return;
+  if ((id === 'arpMode' && v < 0.5) || (id === 'arpLatch' && v < 0.5 && e.arp && !e.arp.down)) stopArp(e);
   const k = e.r + '|' + id, was = S.pendingP.get(k)?.from ?? e.cfg.params[id];
   e.cfg.params[id] = v;
   S.pendingP.set(k, { e, id, v, from: was });
@@ -606,6 +701,7 @@ function addEntry({ inst, patch, hw, ext }) {
   return e;
 }
 function changeEntry(e, next) {
+  stopArp(e);
   const ext = e.cfg.ext;
   e.cfg = engine.resolve({ inst: next.inst ?? e.cfg.inst, patch: next.patch, hw: next.hw === undefined ? e.cfg.hw : next.hw });
   if (ext) e.cfg.ext = ext;
@@ -613,6 +709,7 @@ function changeEntry(e, next) {
   renderRack(); renderDevice(); renderCorners(); renderKeyboard();
 }
 function removeEntry(e) {
+  stopArp(e);
   S.rack = S.rack.filter((x) => x !== e);
   const k = key(S.me, e.r), at = clock.now() + lookahead() + 20;
   room.send({ k: 'unrack', r: e.r, at });
@@ -621,10 +718,18 @@ function removeEntry(e) {
   renderRack(); renderDevice(); renderCorners(); renderKeyboard();
 }
 
+// the tempo the room is going to: one you just asked for (a follower's request is on its way to the leader) or the
+// last change scheduled, so the display and the next + or - start from it, not from the tempo still playing
+const wantBpm = () => (S.tempoWant && performance.now() - S.tempoWant.t < 3000 ? S.tempoWant.bpm : tempo.target());
 function setTempo(bpm) {
   bpm = Math.max(40, Math.min(240, Math.round(bpm)));
+  S.tempoWant = { bpm, t: performance.now() }; renderTempo();
   if (!clock.isLeader) { room.send({ k: 'tempoReq', bpm }, leaderId()); return; }
-  tempo.change(clock.now() + Math.max(250, lookahead() * 2 + 100), bpm);
+  // with a drummer or the song playing, every browser has already queued up to 1.5 s of it at the current tempo: the
+  // change lands on a bar line beyond that (and beyond the trip to everyone), so they all switch on the same bar
+  const ahead = Math.max(250, lookahead() * 2 + 100), meter = songStore.song.meter || 4;
+  const queued = Object.values(songStore.song.players || {}).some((v) => v && v.on) || !!songStore.song.transport?.on;
+  if (queued) tempo.change(clock.now() + ahead + DRUM_AHEAD_MS + 100, bpm, meter); else tempo.change(clock.now() + ahead, bpm);
   room.send({ k: 'tempo', segs: tempo.toJSON() });
   engine.metro.next = -1;
   renderTempo();
@@ -660,7 +765,7 @@ setInterval(sendFingerprint, 2000);
 
 // ---------- input ----------
 const input = new Input({
-  plugged: (name, on) => { setStatus(on ? `${name} connected: play it and you'll hear your selected instrument.` : `${name} unplugged.`); renderInputStatus(); },
+  plugged: (name, on) => { if (on) stats.use('midi'); setStatus(on ? `${name} connected: play it and you'll hear your selected instrument.` : `${name} unplugged.`); renderInputStatus(); },
   note: (on, note, vel, ch, port) => { if (!compose.takeNote(on, note, vel, ch, port)) playNote(on, note, vel, ch, port); },
   heard: (port, ch, note) => gear.heard(port, ch, note),   // what a sequencer is playing, while you add it
   cc: (cc, val, ch, port) => {
@@ -791,6 +896,7 @@ function matchStatus(e) {
   return !n ? 'listening: play some single notes' : `${n} note${n > 1 ? 's' : ''} heard · ${m.fitter.renders ? Math.round(100 * m.fitter.similarity()) + '% alike' : 'fitting…'}${m.lag != null ? ` · input ${m.lag} ms late` : ''}`;
 }
 async function startMatch(e) {
+  stats.use('match');
   if (!canMatch(e)) return;
   let stream;
   try { stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: S.srecInput ? { exact: S.srecInput } : undefined, echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 2 } }); }
@@ -931,6 +1037,7 @@ const songForExport = () => { const s = JSON.parse(JSON.stringify(songStore.song
 // Export stems: every track rendered from bar 1 to the end, lined up, into a folder (a synced copy of the band's Google
 // Drive or Dropbox folder lands them with everyone else's) or a zip. o: { mine, to: 'folder' | 'zip' | 'memory' }
 async function exportStemsTo(o = {}, onProgress) {
+  stats.use('stems');
   const song = songForExport(), sr = engine.ctx?.sampleRate || 48000;
   const only = o.mine ? Object.values(song.lanes || {}).filter((t) => t.ownerName === S.name).map((t) => t.id) : null;
   if (only && !only.length) throw new Error("You don't have a track in this song yet.");
@@ -1624,6 +1731,7 @@ function restoreVariation(name) {
 }
 // the two rooms
 function goRoom(w) {
+  if (w === 'compose') stats.use('compose');
   S.where = w; document.body.classList.toggle('where-compose', w === 'compose');
   $('#hall')?.classList.add('hide');
   for (const b of $$('#roomSeg button')) b.classList.toggle('on', b.dataset.room === w);
@@ -1662,6 +1770,7 @@ const STEM_MAGIC = 0x4d455453;   // 'STEM'
 const isStemChunk = (buf) => buf.byteLength >= 16 && new DataView(buf).getUint32(0, true) === STEM_MAGIC;
 const slug = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 32) || 'part';
 async function startSync() {
+  stats.use('synctake');
   if (S.srec && !S.srec.done) { stopSync(); return; }
   const id = Math.random().toString(36).slice(2, 8), T0 = clock.now() + (room.peers.size ? 700 : 150);
   room.send({ k: 'srec', on: true, id, T0 });
@@ -2007,6 +2116,7 @@ function renderDevice() {
   knobEls = new Map();
   if (e.cfg.ext) { renderExternal(e, def); return; }
   if (skin.custom === 'machina' && def.seq && seqs.get(key(S.me, e.r))) { renderMachina(e, def, unit); return; }
+  S.acid = null;
   if (def.id === 'pads') { S.md = null; padsUI.render(e, $('#plate'), deviceFoot(e, def, unit)); return; }
   S.md = null;
   const wide = unit
@@ -2022,7 +2132,16 @@ function renderDevice() {
       h('div', { class: 'screen lcd' }, ...configFields(e, def, unit), h('div', { class: 'wide' }, wide))),
     groups.length > 1 ? h('div', { class: 'pages' }, ...groups.map((g) => h('button', { class: 'page' + (g === S.knobGroup ? ' on' : ''), onclick: () => { S.knobGroup = g; renderDevice(); } }, g))) : null,
     h('div', { class: 'encoders' }, ...shown.filter((P) => (P.group || 'Sound') === S.knobGroup).map((P, i) => paramControl(P, KNOB_COLORS[i % 4], io(P), skin))),
+    def.seq?.kind === 'acid' ? acidPanel(e) : null,
     deviceFoot(e, def, unit)].filter(Boolean));
+}
+// Acid Line Lite's step sequencer, under its knobs
+function acidPanel(e) {
+  const k = key(S.me, e.r), sq = () => seqs.get(k) || ensureSeq(k, e.cfg);
+  const p = makeAcidPanel({ h, edit: (op) => seqEdit(e, op), seq: sq, view: () => sq().view(), now: () => clock.now(), tempo,
+    playAt: () => Math.ceil(tempo.beatAt(clock.now() + editLead() + 30) / 4 - 1e-9) * 4, stopAt: () => tempo.beatAt(clock.now() + editLead() + 5) });
+  S.acid = { ...p, r: e.r };
+  return p.el;
 }
 
 // --- external MIDI gear: a synth, drum machine or DAW track on a MIDI port
@@ -2429,7 +2548,7 @@ function autoOwn(pid, r, cfg) {
 // --- tempo, lookahead, keyboard, wiring
 function renderTempo() {
   const el = $('#bpmLcd'); if (!el || el.dataset.drag) return;
-  setText(el, String(Math.round(tempo.bpm(clock.now() + 1000))).padStart(3, '0'));
+  setText(el, String(Math.round(wantBpm())).padStart(3, '0'));   // where it's going, even before the bar it lands on
   setText($('#tempoNote'), room.peers.size && !clock.isLeader ? 'set by the clock leader' : '');
 }
 function renderLook() {
@@ -2441,7 +2560,7 @@ function renderLook() {
   if (!e) return;
   const b = BUDGETS[budgetOf(e)].label.toLowerCase(), pl = partLook(e);
   setText($('#lookHelp'), !room.peers.size ? 'Alone in the studio: notes play the moment you press them.'
-    : S.quant ? `Notes snap to the next ${{ 1: 'beat', 0.5: '8th', 0.25: '16th' }[S.quant]} at least ${pl} ms away, so the band hears them land together.`
+    : S.quant ? `Notes snap to the next ${{ 1: 'beat', 0.5: '8th', 0.25: '16th', 0.125: '32nd' }[S.quant]} at least ${pl} ms away, so the band hears them land together.`
     : selfInstant(e) ? `${describe(e.cfg, true)} · ${b} timing: you hear it instantly, the band hears it ${pl} ms later, all together.`
     : `${describe(e.cfg, true)} · ${b} timing: every note, yours included, sounds ${pl} ms after you play it, at the same instant for everyone. Play a touch ahead, like an organist.`);
 }
@@ -2661,7 +2780,7 @@ function sendChat() {
 function randomCode() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < 4; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
 async function enter(code, listen = false) {
   const name = ($('#nameIn').value || '').trim().slice(0, 16) || (listen ? 'Listener' : 'Jammer');
-  S.listener = !!listen; room.listener = S.listener; document.body.classList.toggle('listener', S.listener);
+  S.listener = !!listen; room.listener = S.listener; if (listen) stats.use('listen'); document.body.classList.toggle('listener', S.listener);
   code = String(code || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
   if (code.length !== 4) { setStatus('Room codes are four letters.', 'error'); return; }
   S.name = name;
@@ -2684,7 +2803,7 @@ function leaveRoom() {
   room.leave(); lane.stopLane(); input.panic();
   for (const k of [...engine.ch.keys()]) engine.removeChannel(k);
   seqs.clear(); S.md = null;
-  S.me = null; S.players.clear(); S.sync.clear(); S.stable.clear(); S.slackRep.clear(); S.needs.clear();
+  S.me = null; S.leaderSeen = null; S.players.clear(); S.sync.clear(); S.stable.clear(); S.slackRep.clear(); S.needs.clear();
   S.loopActive = false; S.lookAuto = 0; S.chat = []; $('#chatLog').replaceChildren();
   clock.setLeader(true); clock.offset = 0;
   $('#studio').classList.add('hide'); $('#lobby').classList.remove('hide'); closePanels();
@@ -2705,7 +2824,7 @@ const tours = makeTutorial({
   inStudio: () => !$('#studio').classList.contains('hide'), where: () => S.where || 'jam', goRoom: (w) => goRoom(w),
   audio: () => (engine.ctx ? { ctx: engine.ctx, out: engine.master } : null), def: (id) => engine.defs.get(id), resolve: (cfg) => engine.resolve(cfg),
   rack: () => S.rack.map((e) => ({ r: e.r, inst: e.cfg.inst, lane: e.laneId || null })), notes: () => S.notesOn || 0,
-  key: () => S.key, setKey: (root, mode) => setKey(root, mode), bpm: () => Math.round(tempo.bpm(clock.now() + 1000)), setBpm: (b) => setTempo(b),
+  key: () => S.key, setKey: (root, mode) => setKey(root, mode), bpm: () => Math.round(tempo.target()), setBpm: (b) => setTempo(b),
   players: () => band.list().length, tapes: () => tape.takes.length, taping: () => !!tape.on, toggleTape: () => toggleTape(), closeDrawers: () => closeDrawers(), firstPick: () => !!S.firstPick, instName: (id) => engine.defs.get(id)?.name || '',
   roomCode: () => room.code, server: () => qs.get('server') || '', myChats: () => S.chat.filter((c) => c.from === S.me && !c.sys).length,
   look: () => lookahead(), tech: () => !document.body.classList.contains('simple'),
@@ -2724,16 +2843,16 @@ function wire() {
   if (pre) { $('#codeIn').value = pre; $('#joinBtn').classList.add('hot'); $('#startBtn').classList.remove('hot'); }
   if (pre && qs.get('listen') === '1') { $('#joinBtn').classList.remove('hot'); $('#listenBtn').classList.add('hot'); $('#listenBtn').classList.remove('ghost', 'small'); $('#listenBtn').textContent = 'Listen in'; }
   $('#startBtn').onclick = () => enter(randomCode());
-  $('#joinBtn').onclick = () => enter($('#codeIn').value);
-  $('#codeIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') enter($('#codeIn').value); });
+  $('#joinBtn').onclick = () => { stats.joining(); enter($('#codeIn').value); };
+  $('#codeIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') { stats.joining(); enter($('#codeIn').value); } });
   $('#leaveBtn').onclick = leaveRoom;
   // the guided tours: "New to this?" in the lobby, ? in the studio
-  $('#tourBtn').onclick = () => tours.start('jam');
-  $('#helpBtn').onclick = (e) => tours.menu(e.currentTarget);
+  $('#tourBtn').onclick = () => { stats.use('tour'); tours.start('jam'); };
+  $('#helpBtn').onclick = (e) => { stats.use('help'); tours.menu(e.currentTarget); };
   for (const b of $$('.tourbtn')) b.classList.toggle('fresh', !toured('jam'));
   if (BOT) { for (const b of $$('.tourbtn')) b.classList.add('hide'); $('#nameIn').value = (qs.get('name') || 'Robin').slice(0, 16); if (pre) setTimeout(() => enter(pre), 200); }
   $('#copyBtn').onclick = () => openInvite(`${location.origin}${location.pathname}?room=${room.code}${qs.get('server') ? '&server=' + encodeURIComponent(qs.get('server')) : ''}`);
-  const bpmNow = () => Math.round(tempo.bpm(clock.now() + 1000));
+  const bpmNow = () => Math.round(wantBpm());
   $('#bpmDown').onclick = () => setTempo(bpmNow() - 1);
   $('#bpmUp').onclick = () => setTempo(bpmNow() + 1);
   const lcd = $('#bpmLcd'); let drag = null;
@@ -2746,7 +2865,7 @@ function wire() {
     if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); setTempo(bpmNow() - (e.shiftKey ? 10 : 1)); }
   });
   $('#metroBtn').onclick = (e) => { engine.metro.on = !engine.metro.on; engine.metro.next = -1; e.currentTarget.classList.toggle('on', engine.metro.on); };
-  $$('#quantSeg button').forEach((b) => b.onclick = () => { S.quant = +b.dataset.q; $$('#quantSeg button').forEach((x) => x.classList.toggle('on', x === b)); renderLook(); });
+  $$('#quantSeg button').forEach((b) => b.onclick = () => { S.quant = +b.dataset.q; if (S.quant) stats.use('quant'); $$('#quantSeg button').forEach((x) => x.classList.toggle('on', x === b)); renderLook(); });
   $('#selfBtn').onclick = (e) => { S.hearSelf = !S.hearSelf; e.target.classList.toggle('on', S.hearSelf); renderLook(); };
   $('#lookSlider').oninput = (e) => { S.lookOverride = +e.target.value; broadcastLook(); renderLook(); };
   $('#lookAutoBtn').onclick = () => { S.lookOverride = null; broadcastLook(); renderLook(); };
@@ -2771,7 +2890,7 @@ function wire() {
   makeAirplay(engine, $('#airplayBtn'), setStatus);
   { const b = $('#talkBtn'); let downAt = 0, wasOpen = false;
     const show = () => { setCls(b, 'on', talk.open); b.setAttribute('aria-pressed', String(talk.open)); b.querySelector('span').textContent = talk.open ? 'Talking' : 'Talk'; };
-    b.addEventListener('pointerdown', async (e) => { e.preventDefault(); downAt = performance.now(); wasOpen = talk.open; if (!wasOpen) { if (!(await talk.setOpen(true))) { setStatus("Couldn't open your mic. Check the browser's permission for this page.", 'error'); return; } show(); } });
+    b.addEventListener('pointerdown', async (e) => { e.preventDefault(); stats.use('talk'); downAt = performance.now(); wasOpen = talk.open; if (!wasOpen) { if (!(await talk.setOpen(true))) { setStatus("Couldn't open your mic. Check the browser's permission for this page.", 'error'); return; } show(); } });
     b.addEventListener('pointerup', async () => { const held = performance.now() - downAt > 350; if (wasOpen || held) await talk.setOpen(false); show(); });
     b.addEventListener('keydown', async (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); await talk.setOpen(!talk.open); show(); } }); }
   $('#tapesBtn').onclick = () => { renderTapes(); openDrawer('#tapeDrawer'); };
@@ -2794,7 +2913,7 @@ function wire() {
     const btn = e.currentTarget;
     if (lane.on) { lane.stopLane(); btn.textContent = 'Go live'; btn.classList.remove('on'); }
     else {
-      try { await lane.startLane($('#laneDev').value || undefined); }
+      try { await lane.startLane($('#laneDev').value || undefined); stats.use('lane'); }
       catch (err) { $('#laneHelp').textContent = "Couldn't open that input: " + err.message; return; }
       btn.textContent = 'Stop live audio'; btn.classList.add('on'); $('#laneHelp').textContent = `Live: the band hears you ${lane.bars} bar${lane.bars > 1 ? 's' : ''} later.`;
       const devs = await lane.devices(), cur = $('#laneDev').value;
@@ -2825,7 +2944,7 @@ function wire() {
 setInterval(() => {
   if (!S.me) return;
   computeAutoL();
-  updateCorners(); renderLook(); paintRemoteKeys(); renderTempo(); renderMachinaDyn();
+  updateCorners(); renderLook(); paintRemoteKeys(); renderTempo(); renderMachinaDyn(); S.acid?.refresh();
   if (engine.ctx) {
     talk.tick();
     talk.place([S.me, ...room.peers.keys()]);
@@ -2847,6 +2966,7 @@ Object.assign(window.JJ, {
   removeEntry: (r) => removeEntry(entry(r)),
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
+  seqView: (pid, r) => { const sq = seqs.get(key(pid || S.me, r)); return sq && (sq.kind === 'acid' ? sq.view().snapshot() : sq.snapshot()); },
   own: (id, v) => setOwned(id, v),
   loopRange: (a, b) => loopRange(a, b), editTake: (sid, pid, ev, w) => editTake(sid, pid, ev, w), lockAudio: () => lockAudio(), recAll: (on) => setRecAll(on), audio: () => ({ have: [...blobs.bytes.keys()], started: AUD.started }), lane: () => lane,
   addVirtual: (kind, style) => band.add(kind, style), setVirtual: (id, p) => band.set(id, p), removeVirtual: (id) => band.remove(id), lockVirtual: (id, sid) => band.lock(id, sid), vplan: (id) => band.plan.get(id), players: () => songStore.song.players || {},

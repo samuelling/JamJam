@@ -228,7 +228,7 @@
 <div class="tablewrap"><table>
 <tr><th>Instrument</th><th>What it is</th></tr>
 <tr><td>Juniper</td><td>A six-voice polysynth in the spirit of the classic early-80s Japanese poly: saw and pulse with PWM, sub, noise, a resonant filter and lush chorus. Keys, pads, brass, strings, bass.</td></tr>
-<tr><td>Monolith</td><td>A three-oscillator mono synth in the spirit of the 70s American classic: fat basses and leads, with glide.</td></tr>
+<tr><td>Monolith</td><td>A three-oscillator mono synth in the spirit of the 70s American classic: fat basses and leads, with glide, and an arpeggiator on its <b>Arp</b> page (<a href="#playing">Chapter 5</a>). Try the <b>Arp</b> patch.</td></tr>
 <tr><td>Machina</td><td>A synthesis drum machine with nine drum slots, each its own little synth, plus two LFOs and a step sequencer (<a href="#machina">Chapter 8</a>). By Sam.</td></tr>
 <tr><td>Poly</td><td>A light two-oscillator polysynth with a mono/glide mode.</td></tr>
 <tr><td>Tine</td><td>FM keys: electric pianos, bells, FM bass, plucks.</td></tr>
@@ -237,7 +237,8 @@
 <tr><td>Big Macro</td><td>A macro oscillator with 24 synthesis models behind three knobs (harmonics, timbre, morph): analog, FM, chords, speech, strings, drums and more. DSP from Plaits by Émilie Gillet / Mutable Instruments (MIT licence).</td></tr>
 <tr><td>Pads</td><td>Sixteen sample pads, MPC style (<a href="#pads">Chapter 7</a>).</td></tr>
 <tr><td>Studio Kit</td><td>A recorded acoustic drum kit.</td></tr>
-<tr><td>The "Lite" instruments</td><td>Pared-down instruments after Matt's SynthLand: Tonewheel (organ), Hammerwork (piano), Blown (clarinet, flute, reed), Chip (sound-chip voice), Complex Osc (west-coast) and Analog Drums. Their tiles say "by Matt".</td></tr>
+<tr><td>Ensemble</td><td>A 70s string machine: four sections (violins, violas, cellos, basses) you mix like drawbars, a slow swell, tone, and the ensemble chorus that turns one thin sawtooth into a whole string section. It's the twin for string machines.</td></tr>
+<tr><td>The "Lite" instruments</td><td>Pared-down instruments after Matt's SynthLand: Tonewheel (organ), Hammerwork (piano), Blown (clarinet, flute, reed), Chip (sound-chip voice), Complex Osc (west-coast), Analog Drums and Acid Line (a squelchy bass line machine with its own 16-step sequencer, <a href="#machina">Chapter 8</a>: play hard to accent, play legato to slide; the twin for 303-style boxes). Their tiles say "by Matt".</td></tr>
 <tr><td>Acoustic</td><td>Sam's physically modelled acoustic guitar, with a strumming hand: every browser strums the same chord the same way.</td></tr>
 </table></div>
 <h3>Libraries</h3>
@@ -275,6 +276,16 @@
 </ul>
 <h3>Rhythm help</h3>
 <p><span class="ui">Rhythm help</span> pulls notes you play slightly off the beat part of the way onto it. Your own timing still counts; it just tidies.</p>
+<h3>The arpeggiator</h3>
+<p>Monolith has an arpeggiator on its <b>Arp</b> page. Hold a chord and it plays the notes one at a time, on the band's beat.</p>
+<dl>
+  <dt>Arp</dt><dd>Off, Up, Down, Up-down (turning at the ends without repeating them), As played (the order you pressed the keys) or Random.</dd>
+  <dt>Rate</dt><dd>1/4, 1/8, 1/8 triplets, 1/16, 1/16 triplets or 1/32 of the room's tempo. It follows tempo changes.</dd>
+  <dt>Octaves</dt><dd>Run the pattern over one to four octaves.</dd>
+  <dt>Gate</dt><dd>How long each note sounds, as a share of a step. All the way up ties the notes together, so the synth glides from one to the next.</dd>
+  <dt>Latch</dt><dd>On: it keeps going after you let go, until you play a new chord or switch it off.</dd>
+</dl>
+<p>Your browser plays the arpeggio and sends the notes themselves, lined up on the room's grid like quantized notes, so the band hears exactly what you hear, in step with the drummer. Recordings and takes get the notes.</p>
 <h3>Panic</h3>
 <p><span class="ui">Panic</span> stops every note. Use it if something gets stuck.</p>
 <a class="top" href="#top">↑ Contents</a>
@@ -326,8 +337,8 @@
 
 <!-- ======================================================================= -->
 <section class="ch" id="machina">
-<h2><span class="num">Chapter 8</span>Machina and its sequencer</h2>
-<p class="lede">Machina is a synthesis drum machine: nine slots (kick, snare, toms, hats, clap and more), each a small synth. No samples.</p>
+<h2><span class="num">Chapter 8</span>Sequencers: Machina and Acid Line</h2>
+<p class="lede">Two instruments carry their own sequencers. Machina is a synthesis drum machine: nine slots (kick, snare, toms, hats, clap and more), each a small synth, no samples. Acid Line Lite is a bass line machine with a 303-style pattern sequencer.</p>
 <h3>The sound</h3>
 <ul>
   <li>Each slot runs a machine (analog circuits, FM percussion, modal physics or raw sources) with pitch, decay, tone, snap, crush, level and pan.</li>
@@ -344,6 +355,26 @@
   <li>That one step now plays with that setting: a higher snare, a longer hat.</li>
 </ol></div>
 <p>The sequencer runs in every browser from the shared pattern and clock, so it sends no notes at all, only your edits. Everyone hears exactly the same hits.</p>
+<h3>Acid Line's bass line sequencer</h3>
+<p>Acid Line Lite has a 16-step sequencer under its knobs, in the tradition of the little silver bass box: every step has a note, a gate, an accent and a slide.</p>
+<dl>
+  <dt>Note</dt><dd>C up to the C above it. Click ▲ ▼, or scroll on the note. The octave switch under it moves the step down, to the middle or up.</dd>
+  <dt>NOTE / REST / TIE</dt><dd>Play a note, leave the step silent, or hold the note before it through this step.</dd>
+  <dt>ACC</dt><dd>Accent: the step plays louder, with a sharper filter sweep. Accents in a row climb higher and higher.</dd>
+  <dt>SLD</dt><dd>Slide: the note holds into the next step and glides to its pitch without restarting.</dd>
+  <dt>KEY − +</dt><dd>Transpose the whole pattern by semitones.</dd>
+  <dt>Length</dt><dd>1 to 16 steps; odd lengths drift against the bar for those rolling, never-quite-repeating lines.</dd>
+  <dt>RANDOM / CLEAR</dt><dd>A new random acid line in a minor key, or a blank pattern.</dd>
+</dl>
+<div class="walk"><b>Walkthrough: write a bass line</b>
+<ol>
+  <li>Add Acid Line Lite to your corner, and press <span class="ui">▶ PLAY</span>: a starter pattern plays from the next bar.</li>
+  <li>Click <span class="ui">WRITE</span>, then click step 1's note.</li>
+  <li>Play notes on the keyboard: each goes into the selected step and moves on to the next.</li>
+  <li>Click <span class="ui">WRITE</span> again to stop writing. Add a few accents and slides, and set a step or two to REST or TIE.</li>
+  <li>Turn <b>Cutoff</b>, <b>Resonance</b> and <b>Env mod</b> while it plays: that's the sound.</li>
+</ol></div>
+<p>Like Machina's, it runs in every browser from the shared pattern, so only your edits travel. Press <span class="ui">■ STOP</span> to stop it for everyone. If you own a 303-style box, add it from My gear (Acid Line Lite is its twin) and pick its MIDI output on the faceplate: the sequencer plays your real one in step too (<a href="#gear">Chapter 13</a>).</p>
 <a class="top" href="#top">↑ Contents</a>
 </section>
 
@@ -385,7 +416,7 @@
 <dl>
   <dt>Look</dt><dd>The lookahead in milliseconds, with a meter. Drag the slider to set it by hand; <span class="ui">AUTO</span> goes back to the measured value.</dd>
   <dt>Hear myself</dt><dd>Off (the default): you hear your notes at the same moment the band does, a lookahead after you play them, like playing a pipe organ. On: you hear yourself instantly, and the band hears you a lookahead later. Try both; for slow sounds, on feels nicer.</dd>
-  <dt>Quant</dt><dd>Quantize: snaps your notes to the next 1/16, 1/8 or 1/4 at least a lookahead away, so the delay disappears into the grid.</dd>
+  <dt>Quant</dt><dd>Quantize: snaps your notes to the next 1/32, 1/16, 1/8 or 1/4 at least a lookahead away, so the delay disappears into the grid.</dd>
   <dt>Timing (per instrument)</dt><dd>On the faceplate. <b>Tight</b> (never late: the lookahead plus 10 ms, for drums, bass and plucks), <b>Balanced</b> (the lookahead) or <b>Loose</b> (about 40% of it, and you hear yourself instantly; a far player may get a note a touch late, hidden by a slow attack, for pads and strings). <b>Auto</b> picks from the sound.</dd>
 </dl>
 <h3>The wiring view</h3>
@@ -648,7 +679,9 @@
   <dt>The band hears an echo of themselves when I talk.</dt>
   <dd>Wear headphones, so the music doesn't go back out through your mic.</dd>
   <dt>Someone left, but their corner is still there.</dt>
-  <dd>If they closed the tab without leaving, the room waits up to about twelve seconds to be sure they've gone.</dd>
+  <dd>If they closed the tab without leaving, their corner usually goes within a few seconds, as soon as their link closes.</dd>
+  <dt>Does MEGAjam send anything about my jams?</dt>
+  <dd>Yes: anonymous numbers that show how well jams work, so we can fix what doesn't. They cover how long joining took, whether links were direct or through the server, round-trip times, the lookahead, clock error, late notes, stalls, your kind of device and browser, which instruments you used, and any errors the page hit. MEGAjam never sends names, chat, the notes you play, audio, or your room code (only a scrambled version of it, so one jam's numbers can be grouped). The stats server also notes your country, but not your IP address, and keeps reports for 90 days. To turn it off in this browser, open MEGAjam once with <code>?stats=0</code> at the end of the address (<code>?stats=1</code> turns it back on).</dd>
 </dl>
 <a class="top" href="#top">↑ Contents</a>
 </section>
