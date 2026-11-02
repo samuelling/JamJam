@@ -41,6 +41,13 @@ const PARAMS = [
   { id: 'lfoRate', name: 'Vibrato rate', min: 0.5, max: 12, def: 5.5, unit: 'Hz', group: 'Performance' },
   { id: 'velAmt', name: 'Velocity', min: 0, max: 1, def: 0.25, group: 'Performance' },
   { id: 'level', name: 'Level', min: 0, max: 1, def: 0.7, cc: 7, group: 'Performance' },
+  // the arpeggiator: run by MEGAjam itself (src/arp.js), which plays the held notes one at a time on the room's
+  // grid and sends them as ordinary notes; the sound engine below stores these and ignores them
+  { id: 'arpMode', name: 'Arp', options: ['Off', 'Up', 'Down', 'Up-down', 'As played', 'Random'], min: 0, max: 5, def: 0, step: 1, group: 'Arp' },
+  { id: 'arpRate', name: 'Rate', options: ['1/4', '1/8', '1/8T', '1/16', '1/16T', '1/32'], min: 0, max: 5, def: 3, step: 1, group: 'Arp' },
+  { id: 'arpOct', name: 'Octaves', options: ['1', '2', '3', '4'], min: 0, max: 3, def: 0, step: 1, group: 'Arp' },
+  { id: 'arpGate', name: 'Gate', min: 0.05, max: 1, def: 0.5, group: 'Arp' },
+  { id: 'arpLatch', name: 'Latch', options: ['Off', 'On'], min: 0, max: 1, def: 0, step: 1, group: 'Arp' },
 ];
 
 const PRESETS = {
@@ -48,6 +55,7 @@ const PRESETS = {
   bass:  { osc1Range: 1, osc2Range: 1, osc3Range: 0, osc1Wave: 2, osc2Wave: 4, osc3Wave: 2, osc2Detune: 0.05, mix3: 0.7, cutoff: 380, emphasis: 0.3, contour: 0.65, kbd: 0.33, fAttack: 0.001, fDecay: 0.32, fSustain: 0.12, attack: 0.002, decay: 0.4, sustain: 0.8, release: 0.08, glide: 0, priority: 0, drive: 0.55 },
   brass: { osc1Wave: 2, osc2Wave: 2, osc3Wave: 2, osc2Detune: 0.12, osc3Detune: -0.1, cutoff: 600, emphasis: 0.15, contour: 0.6, fAttack: 0.09, fDecay: 0.7, fSustain: 0.55, attack: 0.04, decay: 0.8, sustain: 0.85, release: 0.25, glide: 0.02, drive: 0.3 },
   pluck: { osc1Wave: 3, osc2Wave: 2, osc3Wave: 0, osc3Range: 3, mix3: 0.3, cutoff: 300, emphasis: 0.55, contour: 0.85, fAttack: 0.001, fDecay: 0.2, fSustain: 0, attack: 0.001, decay: 0.35, sustain: 0, release: 0.2, drive: 0.25 },
+  arp:   { osc1Wave: 3, osc2Wave: 2, osc3Wave: 2, osc2Detune: 0.06, osc3Range: 1, mix3: 0.45, cutoff: 520, emphasis: 0.5, contour: 0.7, kbd: 0.5, fAttack: 0.001, fDecay: 0.22, fSustain: 0.1, attack: 0.001, decay: 0.3, sustain: 0.5, release: 0.1, drive: 0.4, arpMode: 1, arpRate: 3, arpOct: 1, arpGate: 0.45 },
   soft:  { osc1Wave: 0, osc2Wave: 0, osc3Wave: 1, osc2Range: 3, mix2: 0.4, mix3: 0.25, noise: 0.04, cutoff: 1400, emphasis: 0.1, contour: 0.2, fAttack: 0.12, fDecay: 1, fSustain: 0.7, attack: 0.08, decay: 1, sustain: 0.9, release: 0.5, glide: 0.12, priority: 1, vibrato: 0.25, drive: 0.1 },
 };
 
@@ -172,7 +180,7 @@ export default {
   id: 'monolith',
   name: 'Monolith',
   family: 'Three-oscillator mono (ladder filter)',
-  blurb: "Three oscillators in footage ranges, a mixer that overdrives, the 4-pole ladder filter, glide and single-trigger envelopes. Leads and bass that sit on top.",
+  blurb: "Three oscillators in footage ranges, a mixer that overdrives, the 4-pole ladder filter, glide and single-trigger envelopes, and an arpeggiator locked to the band's beat. Leads and bass that sit on top.",
   params: PARAMS,
   presets: PRESETS,
   async init(ctx) {
