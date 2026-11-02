@@ -368,7 +368,8 @@ setInterval(() => {
   if (S.me && room.peers.size && stall.busy() && t - stall.warned > 30000) { stall.warned = t; setStatus("Your computer is struggling to keep up: notes may sound late here. Closing other tabs or using fewer instruments helps.", 'warn'); }
 }, 25);
 // anonymous usage numbers for the admin dashboard (src/stats.js; Help explains it, ?stats=0 turns it off)
-const stats = BOT ? { use() {}, joining() {}, relayLost() {} } : startStats({ endpoint: window.MP_STATS, room, engine, clock, S, stall, pidOf });
+const stats = BOT ? { use() {}, joining() {}, relayLost() {} } : startStats({ endpoint: window.MP_STATS, room, engine, clock, S, stall, pidOf,
+  modes: () => ({ compose: S.where === 'compose', talk: talk.open, lane: lane.on, song: !!songStore.song.transport?.on, listen: !!S.listener }) });
 window.JJ.stats = stats;
 function reportSlack() {
   for (const p of room.peers.values()) {

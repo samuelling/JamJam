@@ -119,7 +119,7 @@ function s(tag, attrs = {}, ...kids) { const el = document.createElementNS(NS, t
 const fmt = (n, d = 0) => (n == null || !Number.isFinite(n) ? '–' : n.toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d }));
 const pct = (x, d = 0) => (x == null || !Number.isFinite(x) ? '–' : (x * 100).toFixed(d) + '%');
 const ms = (x) => (x == null || !Number.isFinite(x) ? '–' : x >= 10000 ? (x / 1000).toFixed(0) + ' s' : x >= 1000 ? (x / 1000).toFixed(1) + ' s' : Math.round(x) + ' ms');
-const hrs = (sec) => (sec >= 3600 ? (sec / 3600).toFixed(1) + ' h' : Math.round(sec / 60) + ' min');
+const hrs = (sec) => (sec >= 3600 ? (sec / 3600).toFixed(1) + ' h' : sec >= 60 ? Math.round(sec / 60) + ' min' : Math.round(sec) + ' s');
 const median = (a) => { const v = a.filter((x) => x != null && Number.isFinite(x)).sort((x, y) => x - y); return v.length ? v[Math.floor(v.length / 2)] : null; };
 const sum = (a) => a.reduce((x, y) => x + (y || 0), 0);
 const ago = (t) => { const s = (Date.now() - t) / 1000; return s < 90 ? 'just now' : s < 5400 ? Math.round(s / 60) + ' min ago' : s < 129600 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' d ago'; };
@@ -244,8 +244,8 @@ function render() {
   const errored = all.filter((x) => x.errors.length).length;
   out.append(h('div', { class: 'tiles' },
     tile('Sessions', fmt(all.length), `${fmt(roomed.length)} went into a room`),
-    tile('Jams', fmt(jams.length), `${fmt(band.length)} sessions with a bandmate`),
-    tile('Time jamming', hrs(sum(band.map((x) => x.bandSec))), `${hrs(sum(roomed.map((x) => x.roomSec)))} in rooms`),
+    tile('Typical session', hrs(median(all.map((x) => x.dur)) || 0), `median open; jams ${hrs(median(band.map((x) => x.bandSec)) || 0)}`),
+    tile('Jams', fmt(jams.length), `${hrs(sum(band.map((x) => x.bandSec)))} jamming across ${fmt(band.length)} sessions`),
     tile('Joining takes', ms(median(all.map((x) => x.joinMs))), `median; slowest ${ms(Math.max(0, ...all.map((x) => x.joinMs || 0)))}`),
     tile('Late notes', heard ? pct(late / heard, 2) : '–', `${fmt(late)} of ${fmt(heard)} heard`),
     tile('Sessions with errors', all.length ? pct(errored / all.length, 1) : '–', `${fmt(sum(all.flatMap((x) => x.errors.map((e) => e.n))))} errors in all`)));
@@ -271,7 +271,35 @@ function render() {
     shareBar([{ name: 'Direct', v: dSec, color: 'var(--series-1)' }, { name: 'Through the server', v: rSec, color: 'var(--series-2)' }]),
     bars({ labels: edgeLabels(RTT_EDGES), series: [{ name: 'Direct', values: share(rttD), color: 'var(--series-1)' }, { name: 'Through the server', values: share(rttR), color: 'var(--series-2)' }], yfmt: (v) => pct(v), legend: false, tipFmt: (v, se, i) => `${pct(v, 1)} (${fmt((se.name === 'Direct' ? rttD : rttR)[i])} samples)` }),
     h('p', { class: 'note' }, 'Round trip in ms. ', `${fmt(sum(band.map((x) => x.net.drops)))} direct links fell back to the server; the handshake server dropped ${fmt(sum(all.map((x) => x.net.relayLost)))} times.`))));
-  out.append(g1);
+  // how people use it: session length, kinds of session, where the time goes, and how far people get
+  const g0 = h('div', { class: 'grid' });
+  const LEN = [[60, '< 1 min'], [300, '1–5 min'], [900, '5–15 min'], [1800, '15–30 min'], [3600, '30–60 min'], [7200, '1–2 h'], [Infinity, '2 h+']];
+  const lenBins = (vals) => LEN.map(([hi], i) => vals.filter((v) => v < hi && v >= (i ? LEN[i - 1][0] : 0)).length);
+  g0.append(card('How long sessions last', 'Time the page was open, and time spent jamming with someone (sessions that did)', bars({ labels: LEN.map((l) => l[1]), series: [
+    { name: 'Page open', values: lenBins(all.map((x) => x.dur)), color: 'var(--series-1)' },
+    { name: 'Jamming with someone', values: lenBins(band.map((x) => x.bandSec)), color: 'var(--series-2)' }], tipFmt: (v, se) => `${fmt(v)} sessions (${pct(v / Math.max(1, se.name === 'Page open' ? all.length : band.length))})` })));
+  const KINDS = [
+    ['Left from the lobby', (x) => !x.roomSec],
+    ['Listened in', (x) => (x.secs?.listen || 0) > 0 || x.used.includes('listen')],
+    ['Composed', (x) => (x.secs?.compose || 0) >= 60],
+    ['Jammed in a band (3+)', (x) => x.peak >= 2],
+    ['Jammed as a duo', (x) => x.peak === 1],
+    ['Played alone', (x) => x.notes.played > 0],
+    ['Looked around alone', () => true]];
+  const kindOf = (x) => KINDS.find(([, f]) => f(x))[0];
+  const kinds = KINDS.map(([k]) => { const l = all.filter((x) => kindOf(x) === k); return { label: k, v: l.length, len: median(l.map((x) => x.dur)), play: median(l.map((x) => x.secs?.active || 0)), mob: l.filter((x) => x.dev.mobile).length }; });
+  g0.append(card('Kinds of session', 'Each session counted once, by the first that fits from the top', hbars({ rows: kinds, tipFmt: (r) => `${fmt(r.v)} sessions (${pct(r.v / Math.max(1, all.length))})<br>median ${hrs(r.len || 0)} open, ${hrs(r.play || 0)} playing<br>${pct(r.mob / Math.max(1, r.v))} on phones or tablets` })));
+  const T = (k) => sum(roomed.map((x) => x.secs?.[k] || 0)), roomT = sum(roomed.map((x) => x.roomSec));
+  const where = [
+    { label: 'In a room', v: roomT }, { label: 'With a bandmate', v: sum(band.map((x) => x.bandSec)) }, { label: 'Playing', v: T('active') },
+    { label: 'Compose Room', v: T('compose') }, { label: 'Song playing', v: T('song') }, { label: 'Talk open', v: T('talk') },
+    { label: 'Sending live audio', v: T('lane') }, { label: 'Listening in', v: T('listen') }, { label: 'Tab in the background', v: sum(all.map((x) => x.secs?.hidden || 0)) }];
+  g0.append(card('Where the time goes', 'Hours across all sessions; these overlap (playing happens in a room, with or without a bandmate)', hbars({ rows: where, vfmt: (v) => hrs(v), tipFmt: (r) => `${hrs(r.v)} · ${pct(r.v / Math.max(1, roomT))} of time in rooms` })));
+  const steps = [
+    ['Opened MEGAjam', all.length], ['Went into a room', roomed.length], ['Played a note', all.filter((x) => x.notes.played > 0).length],
+    ['Jammed with someone', band.length], ['Jammed 15 min or more', band.filter((x) => x.bandSec >= 900).length], ['Composed', all.filter((x) => (x.secs?.compose || 0) >= 60).length]];
+  g0.append(card('How far people get', 'Sessions reaching each step, as a share of everyone who opened it', hbars({ rows: steps.map(([k, v]) => ({ label: k, v })), vfmt: (v) => pct(v / Math.max(1, all.length)), tipFmt: (r) => `${fmt(r.v)} sessions · ${pct(r.v / Math.max(1, all.length), 1)}` })));
+  out.append(g1, g0);
 
   // timing
   const g2 = h('div', { class: 'grid' });
@@ -320,7 +348,7 @@ function render() {
 
   // recent sessions
   out.append(h('div', { class: 'grid' }, card('Recent sessions', 'Newest first; click a row for its full report', table([
-    { t: 'Last report', f: (x) => ago(x.last) }, { t: 'Open', n: 1, f: (x) => hrs(x.dur) }, { t: 'Jamming', n: 1, f: (x) => (x.bandSec ? hrs(x.bandSec) : '–') },
+    { t: 'Last report', f: (x) => ago(x.last) }, { t: 'Open', n: 1, f: (x) => hrs(x.dur) }, { t: 'Jamming', n: 1, f: (x) => (x.bandSec ? hrs(x.bandSec) : '–') }, { t: 'Playing', n: 1, f: (x) => (x.secs?.active ? hrs(x.secs.active) : '–') }, { t: 'Kind', f: kindOf },
     { t: 'Band', n: 1, f: (x) => (x.roomSec ? x.peak + 1 : '–') }, { t: 'Join', n: 1, f: (x) => ms(x.joinMs) }, { t: 'Link', f: (x) => (!x.bandSec ? '–' : x.net.relaySec > x.net.directSec ? 'server' : 'direct') },
     { t: 'Round trip max', n: 1, f: (x) => (x.bandSec ? ms(x.net.rttMax) : '–') }, { t: 'Late', n: 1, f: (x) => (x.notes.heard ? `${fmt(x.notes.late)}/${fmt(x.notes.heard)}` : '–') },
     { t: 'Errors', n: 1, f: (x) => fmt(sum(x.errors.map((e) => e.n))) }, { t: 'Device', f: devName }, { t: 'Country', f: (x) => x.country || '–' }],
@@ -355,7 +383,8 @@ function demo() {
         look: peak ? hist(RTT_EDGES, base / 2 + 30, 0.5) : Array(9).fill(0), lookMax: peak ? base + 60 : 0, clockErr: peak ? hist(CLOCK_EDGES, relay ? 6 : 1.5, 1.2) : Array(8).fill(0), clockErrMax: peak ? 4 : 0, relayLost: rnd() < 0.03 ? 1 : 0, drops: rnd() < 0.05 ? 1 : 0 },
       notes: { played: Math.round(heard * 0.8), heard, late: Math.round(heard * lateRate), lateWorst: lateRate ? 4 + rnd() * 60 : 0 },
       stalls: Math.round(rnd() * (mobile ? 30 : 6)), stallMs: 0, inst: inRoom ? [...new Set([pick(insts), pick(insts), pick(insts)])].slice(0, 1 + Math.floor(rnd() * 3)) : [], hw: 0,
-      used: ['compose', 'talk', 'tour', 'help', 'quant', 'midi', 'lane'].filter(() => rnd() < 0.2), errors: rnd() < 0.06 ? [{ m: pick(["Cannot read properties of undefined (reading 'gain')", 'The AudioContext was not allowed to start.', 'NotAllowedError: play() failed']), s: '/JamJam/src/main.js:' + Math.floor(rnd() * 3000), n: 1 + Math.floor(rnd() * 3) }] : [] });
+      used: ['compose', 'talk', 'tour', 'help', 'quant', 'midi', 'lane'].filter(() => rnd() < 0.2),
+      secs: { active: roomSec * rnd() * 0.6, hidden: rnd() < 0.3 ? roomSec * rnd() * 0.3 : 0, compose: rnd() < 0.25 ? roomSec * rnd() * 0.7 : 0, talk: peak && rnd() < 0.4 ? bandSec * rnd() : 0, lane: rnd() < 0.05 ? bandSec * 0.5 : 0, song: rnd() < 0.3 ? roomSec * rnd() * 0.5 : 0, listen: 0 }, errors: rnd() < 0.06 ? [{ m: pick(["Cannot read properties of undefined (reading 'gain')", 'The AudioContext was not allowed to start.', 'NotAllowedError: play() failed']), s: '/JamJam/src/main.js:' + Math.floor(rnd() * 3000), n: 1 + Math.floor(rnd() * 3) }] : [] });
   }
   sessions.sort((a, b) => b.last - a.last);
   return { now, days, sessions };

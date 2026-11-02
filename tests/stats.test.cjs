@@ -88,6 +88,7 @@ function fakeD1() {
   check(sb.joinMs > 0 && sb.joinMs < 20000 && sa.joinMs == null, `join time for the one who joined (${sb.joinMs} ms)`);
   check(sa.net.directSec > 0 && sa.net.rttDirect.reduce((x, y) => x + y) > 0 && sb.net.look.reduce((x, y) => x + y) > 0 && sb.net.clockErr.reduce((x, y) => x + y) > 0, 'link time, round trips, lookahead and clock error sampled');
   check(sa.notes.played === 16 && sb.notes.heard === 16 && sa.notes.heard === 16, `notes played and heard (${sa.notes.played} played, ${sb.notes.heard} and ${sa.notes.heard} heard)`);
+  check(sa.secs.active > 0 && sb.secs.active > 0 && sa.secs.compose > 0 && sa.dur >= sa.roomSec, `session length and where the time went (open ${sa.dur} s, playing ${sa.secs.active} s, Compose Room ${sa.secs.compose} s)`);
   check(sa.inst.includes('monolith') && sb.inst.includes('tine') && sa.used.includes('compose'), 'instruments and features used');
   check(sb.errors.length === 1 && /boom from the stats test/.test(sb.errors[0].m) && !sa.errors.length, 'the error, from the browser that had it');
   check(!JSON.stringify(S).includes('Sam') && !JSON.stringify(S).includes('Matt'), 'no names anywhere');
@@ -112,7 +113,9 @@ function fakeD1() {
   await P.fill('form.key input', KEY); await P.click('form.key button');
   await P.waitForSelector('.tile', { timeout: 5000 });
   const tiles = await P.$$eval('.tile', (t) => t.map((x) => x.innerText.replace(/\s+/g, ' ')));
-  check(/Sessions 2/.test(tiles[0]) && /Jams 1/.test(tiles[1]) && /Sessions with errors 50/.test(tiles[5]), `the dashboard shows them (${tiles.slice(0, 2).join(' | ')} | ${tiles[5]})`);
+  check(/Sessions 2/.test(tiles[0]) && tiles.some((t) => /Jams 1/.test(t)) && tiles.some((t) => /Sessions with errors 50/.test(t)), `the dashboard shows them (${tiles.join(' | ')})`);
+  const kinds = await P.$$eval('.card', (cs) => cs.find((c) => /Kinds of session/.test(c.textContent))?.textContent || '');
+  check(/Jammed as a duo/.test(kinds), 'kinds of session drawn');
   check(await P.$$eval('.card svg', (s) => s.length) >= 7 && await P.$$eval('tbody tr', (r) => r.length) >= 4, 'charts and tables drawn');
 
   check(!errors.length, 'no page errors' + (errors.length ? ': ' + errors.slice(0, 3).join(' | ') : ''));

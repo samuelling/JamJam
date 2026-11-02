@@ -1,7 +1,8 @@
 // Usage stats: anonymous numbers about how real jams go, sent to MEGAjam's own stats Worker (stats/worker.js) for
 // the admin dashboard (admin.html). Like the fleet test, but from real use: how long joining takes, direct vs
-// relayed links, round trips, the lookahead, clock error, late notes, stalls, devices, which instruments get
-// played, and JavaScript errors.
+// relayed links, round trips, the lookahead, clock error, late notes, stalls, devices, how long sessions last and
+// where the time goes (playing, Compose Room, Talk, live audio, the song), which instruments get played, and
+// JavaScript errors.
 //
 // What is sent: those numbers, the kind of device and browser, instrument ids, error messages, and a one-way hash
 // of the room code (so the sessions of one jam can be grouped). Never names, chat, the notes you play, audio, or
@@ -55,9 +56,12 @@ export function startStats(h) {
       look: Array(RTT_EDGES.length + 1).fill(0), lookMax: 0, clockErr: Array(CLOCK_EDGES.length + 1).fill(0), clockErrMax: 0, relayLost: 0, drops: 0 },
     notes: { played: 0, heard: 0, late: 0, lateWorst: 0 },
     stalls: 0, stallMs: 0, inst: [], hw: 0, used: [], errors: [],
+    // where the time goes: seconds playing (a note in that 5 s), in the background, in the Compose Room, with Talk
+    // open, sending live audio, with the song playing, listening in
+    secs: { active: 0, hidden: 0, compose: 0, talk: 0, lane: 0, song: 0, listen: 0 },
   };
   const seenCh = new Map(), lastPath = new Map(), used = new Set(), inst = new Set();
-  let lastTick = performance.now(), joinT = null, stallSeen = 0, dirty = true, live = false;
+  let lastTick = performance.now(), joinT = null, stallSeen = 0, dirty = true, live = false, lastPlayed = 0;
 
   const err = (m, s) => {
     m = String(m || 'error').slice(0, 200); s = String(s || '').replace(location.origin, '').slice(0, 80);
@@ -75,8 +79,11 @@ export function startStats(h) {
     if (!R.dev.sr && engine.ctx) R.dev = device(engine.ctx);
     // the main thread's stalls (the app's own detector logs them)
     for (const [t, ms] of h.stall.log) if (t > stallSeen) { R.stalls++; R.stallMs += Math.round(ms); stallSeen = t; dirty = true; }
+    if (document.visibilityState === 'hidden') R.secs.hidden += dt;
     if (!S.me) return;
     R.roomSec += dt;
+    if ((S.notesOn || 0) > lastPlayed) { R.secs.active += dt; lastPlayed = S.notesOn; }
+    try { const m = h.modes ? h.modes() : {}; for (const k of ['compose', 'talk', 'lane', 'song', 'listen']) if (m[k]) R.secs[k] += dt; } catch (_) {}
     if (room.code && !R.room) R.room = fnv('megajam:' + room.code + ':' + new Date().toISOString().slice(0, 10));
     R.notes.played = S.notesOn || 0;
     for (const e of S.rack) { inst.add(e.cfg.inst); if (e.cfg.hw) R.hw = Math.max(R.hw, S.rack.filter((x) => x.cfg.hw).length); }
@@ -114,7 +121,8 @@ export function startStats(h) {
   function send(final) {
     if (!live || (!dirty && !final)) return;
     dirty = false;
-    const body = JSON.stringify({ ...R, roomSec: Math.round(R.roomSec), bandSec: Math.round(R.bandSec), net: { ...R.net, directSec: Math.round(R.net.directSec), relaySec: Math.round(R.net.relaySec) } });
+    const secs = Object.fromEntries(Object.entries(R.secs).map(([k, v]) => [k, Math.round(v)]));
+    const body = JSON.stringify({ ...R, secs, roomSec: Math.round(R.roomSec), bandSec: Math.round(R.bandSec), net: { ...R.net, directSec: Math.round(R.net.directSec), relaySec: Math.round(R.net.relaySec) } });
     const url = endpoint + '/report' + (final ? '?final=1' : '');
     try {
       if (navigator.sendBeacon && navigator.sendBeacon(url, new Blob([body], { type: 'text/plain' }))) return;

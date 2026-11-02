@@ -56,6 +56,7 @@ export function clean(r) {
     inst: Array.isArray(r.inst) ? [...new Set(r.inst.map((x) => str(x, 40)).filter((x) => WORD.test(x)))].slice(0, 24) : [],
     hw: num(r.hw, 0, 64),
     used: Array.isArray(r.used) ? [...new Set(r.used.map((x) => str(x, 16)).filter((x) => WORD.test(x)))].slice(0, 16) : [],
+    secs: Object.fromEntries(['active', 'hidden', 'compose', 'talk', 'lane', 'song', 'listen'].map((k) => [k, num(r.secs?.[k], 0, 86400 * 3)])),
     errors: Array.isArray(r.errors) ? r.errors.slice(0, 20).map((e) => ({ m: str(e?.m, 200), s: str(e?.s, 80), n: num(e?.n, 0, 1e6) })) : [],
   };
 }
