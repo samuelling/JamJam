@@ -723,8 +723,8 @@ export function makeCompose(x) {
     if (sel === id) sel = null;
   }
   function move(i, d) { const o = [...x.store.song.order]; const [v] = o.splice(i, 1); o.splice(i + d, 0, v); x.setSong('order', o); const l = [...(x.store.song.labels || [])]; const [lv] = l.splice(i, 1); l.splice(i + d, 0, lv || ''); x.setSong('labels', l.map((q) => q || '')); }
-  function addSection(name) {
-    const prev = x.store.sections().slice(-1)[0], sec = newSection(name, name === 'Intro' || name === 'Outro' ? 4 : 8);
+  function addSection(name, bars) {
+    const prev = x.store.sections().slice(-1)[0], sec = newSection(name, bars || (name === 'Intro' || name === 'Outro' ? 4 : 8));
     if (prev && !name.match(/intro|outro|break/i)) sec.chords = [...prev.chords].slice(0, sec.bars);
     x.setSong('sec:' + sec.id, { name: sec.name, bars: sec.bars, chords: sec.chords.concat(Array(Math.max(0, sec.bars - sec.chords.length)).fill('')), notes: '' });
     x.setSong('order', [...x.store.song.order, sec.id]); sel = sec.id;
