@@ -406,7 +406,8 @@ export function makeCompose(x) {
       h('input', { class: 'rmlabel tname', value: t.name, maxlength: 40, 'aria-label': 'Track name', onkeydown: (e) => { e.stopPropagation(); if (e.key === 'Enter') e.target.blur(); }, onchange: (e) => x.setLane(t.id, { name: e.target.value.trim().slice(0, 40) || t.name }) }),
       t.kind === 'audio' ? h('span', { class: 'help' }, 'live audio') : h('select', { class: 'lcdsel', 'aria-label': 'Instrument', title: "The track's instrument: every take on the track plays on it", onchange: (e) => x.setLane(t.id, { inst: e.target.value }) }, ...insts.map((i) => h('option', { value: i.id, selected: i.id === t.inst }, i.name))),
       t.kind === 'audio' || !cur || cur.patches.length < 2 ? null : h('select', { class: 'lcdsel', 'aria-label': 'Patch', onchange: (e) => x.setLane(t.id, { patch: e.target.value }) }, ...cur.patches.map(([v, n]) => h('option', { value: v, selected: v === t.patch }, n))),
-      t.kind === 'audio' ? null : h('button', { class: 'btn small', title: "Put this track's instrument on your desk: the takes you lock with it go into this track", onclick: () => x.jamLane(t.id) }, 'Jam it'),
+      t.kind === 'audio' ? h('button', { class: 'btn small', title: 'Your live audio locks into this track from now on', onclick: () => x.jamLane(t.id) }, 'Record into it') : h('button', { class: 'btn small', title: "Put this track's instrument on your desk: the takes you lock with it go into this track", onclick: () => x.jamLane(t.id) }, 'Jam it'),
+      t.ext ? h('span', { class: 'help', title: 'An external MIDI synth: you hear it, the band hears the instrument picked here' }, `${t.ext.name} (MIDI) ·`) : null,
       fader(t), panner(t),
       h('span', { style: 'flex:1' }),
       h('button', { class: 'btn small ghost danger', title: 'Delete this track and its takes, for everyone (Undo brings it back)', onclick: () => delTrack(t.id, t.name) }, 'Delete track'));
@@ -433,18 +434,38 @@ export function makeCompose(x) {
     const insts = x.instruments?.() || [];
     const name = h('input', { class: 'rmlabel', placeholder: 'name (optional)', maxlength: 40, 'aria-label': 'Track name', onkeydown: (e) => e.stopPropagation() });
     const patch = h('select', { class: 'lcdsel', 'aria-label': 'Patch' });
-    const inst = h('select', { class: 'lcdsel', 'aria-label': 'Instrument', onchange: () => fill() }, ...insts.map((i) => h('option', { value: i.id }, i.name)));
-    const fill = () => { const i = insts.find((q) => q.id === inst.value); patch.replaceChildren(...(i?.patches || []).map(([v, n]) => h('option', { value: v }, n))); patch.classList.toggle('hide', !i || i.patches.length < 2); };
+    // besides the software instruments: an external MIDI synth, or audio (a mic or line in)
+    const inst = h('select', { class: 'lcdsel', 'aria-label': 'Instrument', onchange: () => fill() }, ...insts.map((i) => h('option', { value: i.id }, i.name)),
+      h('optgroup', { label: 'Not in the browser' }, h('option', { value: '@ext' }, 'External instrument (MIDI)…'), h('option', { value: '@audio' }, 'Audio: mic or line in')));
+    // an external synth: type its name; one from the catalogue is heard by the band as its twin, any other through a stand-in
+    const hwList = x.hardware?.() || [];
+    const findHw = (v) => { v = v.trim().toLowerCase(); return v ? hwList.find((u) => u.label.toLowerCase() === v || u.model.toLowerCase() === v) : null; };
+    const dl = h('datalist', { id: 'hwmodels' }, ...hwList.map((u) => h('option', { value: u.label }, u.own ? 'yours' : '')));
+    const model = h('input', { class: 'rmlabel', list: 'hwmodels', placeholder: 'which synth? e.g. Sequential OB-6', maxlength: 40, 'aria-label': 'External synth', onkeydown: (e) => e.stopPropagation(), oninput: () => fill() });
+    const stand = h('select', { class: 'lcdsel', 'aria-label': 'Stand-in instrument', title: 'What the band hears for this synth (they don\'t have it)' }, ...insts.filter((i) => !i.drums).map((i) => h('option', { value: i.id, selected: i.id === 'juniper' }, 'stand-in: ' + i.name)));
+    const note = h('span', { class: 'help' });
+    const fill = () => {
+      const ext = inst.value === '@ext', audio = inst.value === '@audio', i = insts.find((q) => q.id === inst.value);
+      patch.replaceChildren(...(i?.patches || []).map(([v, n]) => h('option', { value: v }, n))); patch.classList.toggle('hide', !i || i.patches.length < 2);
+      model.classList.toggle('hide', !ext); const u = ext && findHw(model.value); stand.classList.toggle('hide', !ext || !!u || !model.value.trim());
+      name.placeholder = audio ? 'name, e.g. Vocals or Guitar' : 'name (optional)';
+      note.textContent = audio ? 'Real audio: record it from the Jam Room with Live audio, and lock takes in.'
+        : !ext ? '' : u ? `Plays on your ${u.model}${u.twin ? `; the band hears its twin, ${u.twin}` : ''}.` : model.value.trim() ? 'Not in the catalogue: you hear your synth, the band hears the stand-in.' : 'Type to search 559 synths, or any name.';
+    };
     fill();
     const add = () => {
-      const id = x.addLane({ inst: inst.value, patch: patch.value, name: name.value.trim() }); adding = false; if (!id) { render(); return; }
+      let o;
+      if (inst.value === '@audio') o = { audio: true, name: name.value.trim() };
+      else if (inst.value === '@ext') { const u = findHw(model.value); if (!model.value.trim()) { model.focus(); return; } o = u ? { hw: u.id, name: name.value.trim() } : { inst: stand.value, ext: { name: model.value.trim() }, name: name.value.trim() }; }
+      else o = { inst: inst.value, patch: patch.value, name: name.value.trim() };
+      const id = x.addLane(o); adding = false; if (!id) { render(); return; }
       fresh = id; freshT = Date.now(); freshShown = false;
       open = true; try { localStorage.setItem('megajam.lanes', '1'); } catch (_) {}
       const at = sel || x.store.song.order[0];
-      if (at) writeFor(at, { lane: id }); else render();
+      if (at && !o.audio) writeFor(at, { lane: id }); else render();
     };
-    return h('div', { class: 'addtrack open' }, h('b', {}, '+ New track'), inst, patch, name,
-      h('button', { class: 'btn small hot', onclick: add }, 'Add'), h('button', { class: 'btn small ghost', onclick: () => { adding = false; render(); } }, 'Cancel'),
+    return h('div', { class: 'addtrack open' }, h('b', {}, '+ New track'), inst, patch, model, dl, stand, name,
+      h('button', { class: 'btn small hot', onclick: add }, 'Add'), h('button', { class: 'btn small ghost', onclick: () => { adding = false; render(); } }, 'Cancel'), note,
       hasSections ? null : h('span', { class: 'help' }, 'Add a section to the song, then write in it.'));
   }
   function SONG_TAKE(p, id) { return takesOf(p).find((t) => t.id === id); }
@@ -673,7 +694,7 @@ export function makeCompose(x) {
         (song.labels || [])[i] ? h('i', { class: 'help' }, song.labels[i]) : null,
         h('span', { style: 'flex:1' }),
         h('button', { class: 'btn small' + (live ? ' on' : ''), onclick: () => (live ? x.stop() : x.play('loop', s.id)) }, live ? '■ Stop' : '↻ Loop it'),
-        h('button', { class: 'btn hot', onclick: () => x.jamThis(s.id) }, 'Jam this section'),
+        h('button', { class: 'btn hot', title: 'Loop this section in the Jam Room, with the track you\'re working on here on your desk', onclick: () => x.jamThis(s.id, (cell && cell.sid === s.id && (cell.pid || cell.lane)) || fresh || null) }, 'Jam this section'),
         h('button', { class: 'btn small ghost danger', title: `Remove ${s.name} from the song`, onclick: () => removeAt(i) }, 'Remove')),
       chart,
       lp ? laneView(s, lp, laneColor(Math.max(0, lanes().findIndex((l) => l.lane === laneOf(lp))))) : writeRow(s, c),

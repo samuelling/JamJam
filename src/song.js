@@ -350,7 +350,7 @@ export function pickCurrent(p, rule, votes = p.votes || {}) {
 // Songs from before tracks named lanes by a label ("Sam · Juniper · Keys"); upgradeLanes turns those into tracks.
 export const laneOf = (p) => p.laneId || p.lane || p.name || p.id;   // which track a part belongs to
 export const laneName = (song, p) => song?.lanes?.[p.laneId]?.name || p.lane || p.name || p.id;
-const CFG = ['inst', 'patch', 'params', 'drums', 'hw', 'kind'];
+const CFG = ['inst', 'patch', 'params', 'drums', 'hw', 'kind', 'ext'];   // ext: { name } for an external MIDI synth not in the catalogue
 export function laneCfg(song, p) { const t = song?.lanes?.[p.laneId]; if (!t) return {}; const o = {}; for (const k of CFG) if (t[k] !== undefined) o[k] = t[k]; return o; }
 const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'track';
 // an older song (or an import) with label-named lanes: one track per label, each section's blocks for it merged into

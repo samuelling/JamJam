@@ -30,7 +30,7 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     // + Add track: Monolith, named Bass
     await A.click('.addtrack button'); await sleep(200);
     await A.selectOption('.addtrack.open select[aria-label="Instrument"]', 'monolith');
-    await A.fill('.addtrack.open input', 'Bass');
+    await A.fill('.addtrack.open input[aria-label="Track name"]', 'Bass');
     await A.click('.addtrack.open button.hot'); await sleep(400);
     const lanes = (p) => p.evaluate(() => Object.values(JJ.song().lanes || {}).map((t) => ({ id: t.id, name: t.name, inst: t.inst, patch: t.patch, owner: t.ownerName, muted: !!t.muted })));
     let la = await lanes(A);
