@@ -333,7 +333,7 @@ function render() {
   g3.append(card('Countries', 'From Cloudflare; no addresses are kept', table([{ t: 'Country', f: (r) => r.k }, { t: 'Sessions', n: 1, f: (r) => fmt(r.n) }, { t: 'Median worst round trip', n: 1, f: (r) => ms(r.rtt) }], ctry)));
   const inst = countList(roomed.flatMap((x) => x.inst)).slice(0, 15);
   g3.append(card('Instruments', 'Sessions that put each one in their corner', inst.length ? hbars({ rows: inst.map(([k, v]) => ({ label: k, v })), tipFmt: (r) => `${fmt(r.v)} sessions (${pct(r.v / Math.max(1, roomed.length))})` }) : h('div', { class: 'empty' }, 'Nothing yet')));
-  const NAMES = { compose: 'Compose Room', talk: 'Talk', lane: 'Live audio', synctake: 'Sync take', match: 'Sound match', stems: 'Stem export', listen: 'Listen-in', midi: 'MIDI device', tour: 'Tour', help: 'Help menu', quant: 'Quantize', arp: 'Arpeggiator' };
+  const NAMES = { compose: 'Compose Room', talk: 'Talk', lane: 'Live audio', synctake: 'Sync take', match: 'Sound match', stems: 'Stem export', listen: 'Listen-in', midi: 'MIDI device', tour: 'Tour', help: 'Help menu', quant: 'Quantize', arp: 'Arpeggiator', studio: 'Band studio' };
   const feats = countList(all.flatMap((x) => x.used)).map(([k, v]) => ({ label: NAMES[k] || k, v }));
   g3.append(card('Features used', 'Sessions that used each at least once', feats.length ? hbars({ rows: feats, tipFmt: (r) => `${fmt(r.v)} sessions (${pct(r.v / Math.max(1, all.length))})` }) : h('div', { class: 'empty' }, 'Nothing yet')));
   out.append(g3);
