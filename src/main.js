@@ -2947,6 +2947,8 @@ const tours = makeTutorial({
   pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 'tour' + i); else padUp('tour' + i); },
   addInstrument: (inst, patch) => addEntry({ inst, patch }), jamLane: (id) => jamLane(id), lockIn: (r) => lockIn(entry(r)),
   draftPart: (spec) => draftPart(spec), editTake: (sid, pid, ev, what, base) => editTake(sid, pid, ev, what, base), setSong: (k, v) => setSong(k, v),
+  studio: () => (studio.id ? { id: studio.id, name: studio.name, ...(studio.takesHome || {}) } : null), canStudio: () => !!STUDIO_SERVER, canDropbox: () => dropbox.configured,
+  keepAsStudio: (name) => keepAsStudio(name), studioFolder: () => studio.takesHome?.home?.folder || '',
 }, { h, $ });
 window.JJ.tours = tours;
 

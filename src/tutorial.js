@@ -1,5 +1,5 @@
-// Guided tours for someone who has never used a DAW: "Your first jam" (the Jam Room) and "Write your first song"
-// (the Compose Room). Each step points at one thing (the rest of the page dims), says what it is and what to do, and
+// Guided tours for someone who has never used a DAW: "Your first jam" (the Jam Room), "Write your first song"
+// (the Compose Room), "Jam with a friend" and "Your band's studio" (keeping a song, and its takes in Dropbox). Each step points at one thing (the rest of the page dims), says what it is and what to do, and
 // waits until you've done it; "Show me" does it for you. The last step lets go: "You're all set".
 //
 // Nothing is blocked: the page works as usual under the tour, and the tour just watches. Steps check the app's
@@ -10,7 +10,8 @@
 // key() {root, mode}, setKey(root, mode), bpm(), setBpm(bpm), players() (virtual bandmates), tapes(), taping(),
 // toggleTape(), closeDrawers(), firstPick(), instName(inst), lockOn(), song(), transport(), play(mode, sid), stop(), playNote(on, note, vel), pad(i, down),
 // addInstrument(inst, patch), jamLane(id), lockIn(r), draftPart(spec), editTake(sid, pid, events, what, base),
-// setSong(k, v), audio() {ctx, out}, def(inst), resolve({inst, patch, hw})
+// setSong(k, v), audio() {ctx, out}, def(inst), resolve({inst, patch, hw}),
+// studio() {id, name, home, mine, waiting, kept} | null, canStudio(), canDropbox(), keepAsStudio(name), studioFolder()
 
 import { Fitter, analyze } from './match.js';
 
@@ -75,7 +76,7 @@ export function makeTutorial(api, { h, $ }) {
       show: async (c) => { if (api.tapes() <= c.t0) { if (!api.taping()) await api.toggleTape(); await phrase([57, 60, 64, 67, 64, 60], 300); await sleep(600); if (api.taping()) await api.toggleTape(); await sleep(400); } api.closeDrawers(); } },
     { id: 'invite', title: 'Bring your friends', text: 'Invite copies a link to this studio. Send it to up to three friends: they click it and walk into the empty corners, and you all play together.',
       target: () => $('#copyBtn'), next: true },
-    { id: 'end', title: 'You\'re all set!', text: 'That\'s a jam: an instrument, a key, a drummer, a tempo and a recording. Everything else is yours to explore. Two more tours wait under Help, up here, whenever you want them: Write your first song turns a jam into a song, and Jam with a friend shows how playing together works. There\'s a written manual there too, if you\'d rather read.',
+    { id: 'end', title: 'You\'re all set!', text: 'That\'s a jam: an instrument, a key, a drummer, a tempo and a recording. Everything else is yours to explore. More tours wait under Help, up here, whenever you want them: Write your first song turns a jam into a song, Jam with a friend shows how playing together works, and Your band\'s studio keeps a song (and its takes) for the band. There\'s a written manual there too, if you\'d rather read.',
       target: () => $('#helpBtn'), end: true, nextTour: 'compose' },
   ];
   const COMPOSE = [
@@ -264,7 +265,40 @@ export function makeTutorial(api, { h, $ }) {
       target: () => $('#copyBtn'), setup: () => { friend.say('gotta run, that was fun! 👋'); setTimeout(() => friend.leave(), 1500); }, next: true },
     { id: 'end', title: 'You\'re all set!', text: 'You know how jamming together works: notes travel, a shared clock keeps everyone together, twins stand in for gear your friends don\'t have, and the chat and Talk keep you talking. Now go find your band.', end: true },
   ];
-  const TOURS = { jam: { title: 'Your first jam', steps: JAM }, compose: { title: 'Write your first song', steps: COMPOSE }, friends: { title: 'Jam with a friend', steps: FRIENDS } };
+  // ---------- your band's studio: keeping a song, and its takes in the band's Dropbox ----------
+  const opts = () => $('#compose .songopts');
+  const openOpts = async () => { if (api.where() !== 'compose') { api.goRoom('compose'); await sleep(400); } if (!visible(opts())) { $('#compose .moretoggle')?.click(); await sleep(300); } };
+  const band = () => api.studio();
+  const STUDIO = [
+    { id: 'why', title: 'Your band\'s studio', text: 'A jam\'s song lasts while someone\'s in the room. A band studio keeps it: the song, every take, and the audio of every live-audio take, saved as you go. Anyone in the band can walk in any day, alone or together, and find everything where the band left it.',
+      target: () => $('#roomCode'), next: true },
+    { id: 'room', title: 'Songs live in the Compose Room', text: 'Go into the Compose Room.',
+      skip: () => api.where() === 'compose', target: () => $('#roomSeg [data-room="compose"]'), wait: () => api.where() === 'compose', show: () => api.goRoom('compose') },
+    { id: 'opts', title: 'Song options', text: 'Studio settings are under Song options. Open it.',
+      target: () => $('#compose .moretoggle'), setup: () => { if (api.where() !== 'compose') api.goRoom('compose'); }, wait: () => visible(opts()), show: openOpts },
+    { id: 'keep', title: 'Keep it as a studio', text: 'Keep as a studio… turns this room into the band\'s studio, song and all. Give it the band\'s name. Everyone in the room comes along.',
+      skip: () => !!band(), target: () => btnText(opts(), /Keep as a studio/), setup: openOpts, wait: () => !!band(), show: () => api.keepAsStudio('Our studio') },
+    { id: 'name', title: 'It has a name now', live: true, text: () => `Up here, the studio's name (${band()?.name || 'your studio'}) replaces the room code. It saves by itself, a moment after every change, and keeps a copy of the song from the start of each day for two weeks, in case a session goes wrong.`,
+      target: () => $('#roomCode'), setup: () => api.closeDrawers(), next: true },
+    { id: 'link', title: 'The studio\'s key', text: 'Studio link gives the link that opens this studio. Anyone with it can walk in and hear everything, so send it only to the band. The lobby also lists Your studios, the ones this browser has been in.',
+      target: () => btnText(opts(), /Studio link/), setup: openOpts, next: true },
+    { id: 'alone', title: 'Work alone, leave it for the band', text: 'Walk in on your own, lock in a few takes, and leave. The others find them next time they walk in: they hear your takes, pick the one they like, or rearrange the sections. Live-audio takes are stored in the studio, so they play even when whoever recorded them isn\'t there.',
+      target: () => opts(), next: true },
+    // the band's Dropbox: only when this site has a Dropbox app set up
+    { id: 'dbx', title: 'Keep takes in the band\'s Dropbox', text: 'A studio holds up to 2 GB of takes. For more, and to own your recordings, keep them in Dropbox: the studio then holds each new take for two weeks while it\'s carried to Dropbox, and plays it from there afterwards. One person in the band links their Dropbox; nobody else needs to sign in to anything.',
+      skip: () => !api.canDropbox(), target: () => $('#compose .takeshome'), setup: openOpts, next: true },
+    { id: 'dbxlink', title: 'Link Dropbox', live: true, text: () => (band()?.home ? (band().mine ? 'Linked: takes from this studio now go to your Dropbox.' : `This studio already keeps its takes in ${band().home.by}'s Dropbox. Only they need to link it.`) : 'Press Keep takes in Dropbox…. A small Dropbox window opens: sign in and press Allow. MEGAjam only ever sees its own folder in your Dropbox, never the rest. Or press Next to do it later.'),
+      skip: () => !api.canDropbox(), target: () => $('#compose .takeshome'), setup: openOpts, wait: () => !!band()?.home, next: true },
+    { id: 'folder', title: 'Where the files go', live: true, text: () => `In the Dropbox of whoever linked it: Dropbox › Apps › MEGAjam's folder › ${api.studioFolder() || 'the studio\'s name (and code)'}. Each take is a WAV named for its section, track and take, like "Verse - Sam - Live audio - take 2 by Sam". They arrive within a minute while that person is in the studio; takes recorded while they're away are carried over on their next visit. The folder syncs to their computer like any Dropbox folder, so takes drag straight into a DAW.`,
+      skip: () => !api.canDropbox(), target: () => $('#compose .takeshome'), setup: openOpts, next: true },
+    { id: 'band', title: 'Getting the files to the band', text: 'Dropbox doesn\'t let app folders be shared as shared folders, so the files live in one person\'s Dropbox. Everyone still hears every take in MEGAjam. For the files themselves, the person who linked can send a view-only link to the studio\'s folder (in Dropbox: the folder\'s Share › Copy link), or anyone can use Save song, which makes a .zip of the song with every take as a WAV.',
+      skip: () => !api.canDropbox(), target: () => btnText(opts(), /Save song/) || opts(), setup: openOpts, next: true },
+    { id: 'care', title: 'Look after the files', text: 'Moving or renaming the takes inside Dropbox is fine. Deleting one leaves that take silent in the studio once its two weeks are up, so keep them. To stop, press Stop next to the Dropbox line: new takes stay in the studio, and the ones in Dropbox stay there.',
+      skip: () => !api.canDropbox(), target: () => $('#compose .takeshome'), setup: openOpts, next: true },
+    { id: 'end', title: 'You\'re all set!', text: 'Your band has a studio: send the band its link, and come back any time from the lobby\'s Your studios. The manual\'s Compose chapter has all of this in writing, under Help.', target: () => $('#helpBtn'), end: true },
+  ];
+
+  const TOURS = { jam: { title: 'Your first jam', steps: JAM }, compose: { title: 'Write your first song', steps: COMPOSE }, friends: { title: 'Jam with a friend', steps: FRIENDS }, studio: { title: 'Your band\'s studio', steps: STUDIO } };
 
   // a short Verse to work in: the song's first section, cut to 4 bars when it's still empty
   function tidySection() {
@@ -396,7 +430,7 @@ export function makeTutorial(api, { h, $ }) {
     const st = tour.steps[tour.i], c = tour.ctx;
     if (st.lobby && api.inStudio()) { go(tour.i + 1); return; }
     if (st.live && typeof st.text === 'function') { const t = tour.el.bubble.querySelector('p'); const s = st.text(c); if (t && t.textContent !== s) t.textContent = s; }
-    if (!st.next && !st.end && !c.passed) {
+    if ((!st.next || st.wait) && !st.end && !c.passed) {   // a step with Next and a wait also moves on by itself once done
       let ok = false; try { ok = !!st.wait?.(c); } catch (_) {}
       if (ok) { c.passed = true; render(); const at = tour.i; setTimeout(() => { if (tour && tour.i === at) go(at + 1); }, 900); }
     }
@@ -405,6 +439,7 @@ export function makeTutorial(api, { h, $ }) {
   function start(name) {
     stop(false, true);
     if (name === 'friends' && !api.inStudio()) return;   // Robin needs a room to walk into
+    if (name === 'studio' && (!api.inStudio() || !api.canStudio())) return;   // needs a room, and a studio server
     const T = TOURS[name]; if (!T) return;
     tour = { name, steps: T.steps, i: 0, ctx: {}, el: build(), skipLobby: api.inStudio() };
     document.body.classList.add('touring');
@@ -427,7 +462,7 @@ export function makeTutorial(api, { h, $ }) {
     document.querySelector('.tour-menu')?.remove();
     const m = h('div', { class: 'tour-menu', role: 'menu' },
       h('b', {}, 'Guided tours'),
-      ...Object.entries(TOURS).map(([k, T]) => h('button', { class: 'btn small' + (toured(k) ? '' : ' hot'), role: 'menuitem', onclick: () => { m.remove(); start(k); } }, `${T.title}${toured(k) ? ' ✓' : ''}`)),
+      ...Object.entries(TOURS).filter(([k]) => k !== 'studio' || api.canStudio()).map(([k, T]) => h('button', { class: 'btn small' + (toured(k) ? '' : ' hot'), role: 'menuitem', onclick: () => { m.remove(); start(k); } }, `${T.title}${toured(k) ? ' ✓' : ''}`)),
       h('small', { class: 'help' }, 'Step by step, about five minutes each. Leave any time with ×.'),
       h('a', { class: 'btn small ghost tour-manual', role: 'menuitem', href: 'help.html', target: '_blank', rel: 'noopener', onclick: () => m.remove() }, 'Read the manual ↗'));
     document.body.append(m);
