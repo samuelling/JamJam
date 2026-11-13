@@ -7,7 +7,8 @@
 //     the song's tempo. An unwarped clip plays as recorded; a warped clip is time-stretched (keeping its pitch) to
 //     follow its warp markers, however many there are, so nothing needs consolidating first. Mono at 48 kHz, or (in
 //     a studio set to high fidelity) stereo where the file is stereo.
-//   - muted tracks come in muted. Devices, automation, sends and Session view clips stay behind (warnings say so).
+//   - each track keeps Live's mute, fader and pan. Devices, automation, sends and Session view clips stay behind
+//     (warnings say so).
 //
 // The set itself is gzipped XML (Live 10 to 12 share this layout). Times are in beats; a warped audio clip's loop and
 // markers are in the sample's own beats, which its warp markers (seconds ↔ beats) turn into seconds in the file; an
@@ -57,7 +58,7 @@ export function readLiveSet(xml) {
     sessionClips += all(kid(dc, 'MainSequencer/ClipSlotList'), 'MidiClip').length + all(kid(dc, 'MainSequencer/ClipSlotList'), 'AudioClip').length;
     const seq = t.tagName === 'MidiTrack' ? kid(dc, 'MainSequencer/ClipTimeable/ArrangerAutomation/Events') : kid(dc, 'MainSequencer/Sample/ArrangerAutomation/Events');
     const clips = [...(seq?.children || [])].filter((c) => !on(c, 'Disabled')).map((c) => readClip(c));
-    tracks.push({ name, kind: t.tagName === 'MidiTrack' ? 'midi' : 'audio', muted, devices: devices.map((d) => d.tagName), pads: drumPads(devices), clips, gain: num(dc, 'Mixer/Volume/Manual', 1) });
+    tracks.push({ name, kind: t.tagName === 'MidiTrack' ? 'midi' : 'audio', muted, devices: devices.map((d) => d.tagName), pads: drumPads(devices), clips, gain: num(dc, 'Mixer/Volume/Manual', 1), pan: num(dc, 'Mixer/Pan/Manual', 0) });
   }
   if (sessionClips) warnings.push(`${sessionClips} Session view clip${sessionClips === 1 ? '' : 's'} stayed behind: only the Arrangement comes in.`);
   return { bpm, meter, locators, tracks, warnings };
@@ -229,9 +230,17 @@ function peaksOf(pcm) { const n = 120, out = []; for (let p = 0; p < n; p++) { l
 // files: [{ name (path inside the project, or just a file name), data: Uint8Array | () => Promise<Uint8Array> }]
 // o: { progress(text), stereo (keep stereo files stereo: a studio set to high fidelity) }
 // -> { song, clips: [{ id, pcm16 (interleaved when ch is 2), sr, ch }], warnings: [] }
+// the Live sets in a project (a project folder often holds several, plus older ones in Backup): newest first
+export function liveSets(files) {
+  return files.filter((f) => /\.als$/i.test(f.name) && !/(^|\/)Backup\//i.test(f.name) && !/(^|\/)\._/.test(f.name))
+    .sort((a, b) => (b.mtime || 0) - (a.mtime || 0) || a.name.split('/').length - b.name.split('/').length || a.name.localeCompare(b.name));
+}
+// o.set: which set, by name (a project with several: the newest, unless the person picked one)
 export async function songFromLive(files, o = {}) {
   const say = o.progress || (() => {});
-  const alsFile = files.find((f) => /\.als$/i.test(f.name)); if (!alsFile) throw new Error('there is no Live set (.als) in that project');
+  const sets = liveSets(files), alsFile = (o.set && sets.find((f) => f.name === o.set)) || sets[0] || files.find((f) => /\.als$/i.test(f.name));
+  if (!alsFile) throw new Error('there is no Live set (.als) in that project');
+  const setDir = alsFile.name.includes('/') ? alsFile.name.slice(0, alsFile.name.lastIndexOf('/') + 1).toLowerCase() : '';
   const bytesOf = async (f) => (typeof f.data === 'function' ? await f.data() : f.data);
   let raw = await bytesOf(alsFile); if (raw[0] === 0x1f && raw[1] === 0x8b) raw = await gunzip(raw);
   const set = readLiveSet(new TextDecoder().decode(raw)), { meter } = set, warnings = [...set.warnings];
@@ -251,17 +260,19 @@ export async function songFromLive(files, o = {}) {
 
   // the audio files the set uses, found in the project
   const norm = (s) => s.replace(/\\/g, '/').toLowerCase();
-  const findFile = (ref) => { const rel = norm(ref.rel || ''), base = norm((ref.rel || ref.path || ref.name || '').split(/[\\/]/).pop()); return files.find((f) => rel && norm(f.name).endsWith(rel)) || files.find((f) => norm(f.name).split('/').pop() === base) || null; };
-  const audioCache = new Map(), missing = new Set();
+  const findFile = (ref) => {   // where the set says (next to it), then anywhere with that path, then by name
+    const rel = norm(ref.rel || ''), base = norm((ref.rel || ref.path || ref.name || '').split(/[\\/]/).pop());
+    return (rel && files.find((f) => norm(f.name) === setDir + rel)) || files.find((f) => rel && norm(f.name).endsWith('/' + rel)) || files.find((f) => rel && norm(f.name) === rel) || files.find((f) => norm(f.name).split('/').pop() === base) || null; };
+  const audioCache = new Map(), missing = new Set(), homes = new Set();
   const audioOf = async (ref) => {
-    const f = findFile(ref), key = f?.name || ref.rel || ref.path; if (!f) { missing.add((ref.rel || ref.path || ref.name).split(/[\\/]/).pop()); return null; }
+    const f = findFile(ref), key = f?.name || ref.rel || ref.path; if (!f) { missing.add((ref.rel || ref.path || ref.name).split(/[\\/]/).pop()); const h = homeOf(ref.path); if (h) homes.add(h); return null; }
     if (!audioCache.has(key)) { say(`Reading ${f.name.split('/').pop()}…`); try { audioCache.set(key, decodeAudio(await bytesOf(f))); } catch (e) { warnings.push(`${f.name.split('/').pop()}: ${e.message}.`); audioCache.set(key, null); } }
     return audioCache.get(key);
   };
 
   const clips = [], used = new Set();
   for (const t of set.tracks) {
-    let pid = 'l-' + slug(t.name); for (let k = 2; used.has(pid); k++) pid = `l-${slug(t.name)}-${k}`; used.add(pid);
+    let pid = 'l-' + slug(t.name); for (let k = 2; used.has(pid); k++) pid = `l-${slug(t.name)}-${k}`; used.add(pid); t.pid = pid;
     if (t.kind === 'midi') {
       const drums = !!t.pads;
       // a Drum Rack plays on Machina, with the kit its pads' names or samples suggest
@@ -276,7 +287,6 @@ export async function songFromLive(files, o = {}) {
       for (const { sec, a, z } of secs) {
         const ev = sliceEvents(events, a, z); if (!ev.some((e) => e.type === 'on')) continue;
         const p = { id: pid, name: t.name, lane: t.name, role: guessRole({ name: t.name, ...g }), inst: g.inst, patch: g.patch, drums: !!g.drums, takes: [{ id: 'live', events: ev, by: 'import', byName: 'Ableton Live', at: 0 }], current: 'live', by: 'import' };
-        if (t.muted) p.muted = true;
         sec.parts[pid] = p;
       }
       continue;
@@ -303,12 +313,36 @@ export async function songFromLive(files, o = {}) {
       const id = rid8(); clips.push({ id, pcm16, sr: OUT_SR, ch });
       const p = { id: pid, name: t.name, lane: t.name, role: 'texture', kind: 'audio', inst: 'audio', patch: '', drums: false,
         takes: [{ id: 'live', events: [], audio: { id, sr: OUT_SR, ...(ch === 2 ? { ch: 2 } : {}), frames, from: lo - a, beats: hi - lo, bpm, peaks: peaksOf(mono) }, by: 'import', byName: 'Ableton Live', at: 0 }], current: 'live', by: 'import' };
-      if (t.muted) p.muted = true;
       sec.parts[pid] = p;
     }
   }
-  if (missing.size) warnings.push(`${missing.size} audio file${missing.size === 1 ? '' : 's'} weren't in the project (${[...missing].slice(0, 3).join(', ')}${missing.size > 3 ? '…' : ''}): in Live, File › Collect All and Save, then bring the project in again.`);
+  if (missing.size) {
+    const where = homes.size ? ` ${missing.size === 1 ? "It's" : "They're"} in ${[...homes].slice(0, 2).map((x) => `“${x}”`).join(' and ')}${homes.size > 2 ? ' and elsewhere' : ''} on the computer that made the set.` : '';
+    const fix = `Pick the whole project folder that holds them with Import from Ableton Live… (or, in Live, File › Collect All and Save first).`;
+    const audioTracks = set.tracks.filter((t) => t.kind === 'audio' && t.clips.length).length, gotAudio = clips.length > 0, gotNotes = secs.some(({ sec }) => Object.keys(sec.parts).length);
+    // nothing came in: say so plainly instead of bringing in empty sections
+    if (!gotAudio && !gotNotes && audioTracks) throw new Error(`none of the recordings in "${title}" came with it (${audioTracks} audio track${audioTracks === 1 ? '' : 's'}, ${missing.size} file${missing.size === 1 ? '' : 's'}).${where} ${fix}`);
+    warnings.push(`${missing.size} audio file${missing.size === 1 ? " wasn't" : "s weren't"} in what you picked (${[...missing].slice(0, 3).join(', ')}${missing.size > 3 ? '…' : ''}), so ${missing.size === 1 ? 'its clip is' : 'their clips are'} silent.${where} ${fix}`);
+  }
   for (const { sec } of secs) { sec.chords = chartFromParts(Object.values(sec.parts).filter((p) => !p.drums && p.kind !== 'audio'), sec.bars, meter); song.sections[sec.id] = sec; song.order.push(sec.id); }
   song.key = keyFromParts(set.tracks.filter((t) => t.kind === 'midi' && !t.pads).map((t) => ({ events: t.clips.flatMap((c) => clipNotes(c).map((n) => ({ b: n.a, type: 'on', note: n.key }))) })));
-  return { song, clips, warnings, tracks: set.tracks.length, bpm };
+  // one track per Live track (two with the same name stay two), with Live's mute, fader and pan
+  let at = 0;
+  for (const t of set.tracks) {
+    const p = secs.map(({ sec }) => sec.parts[t.pid]).find(Boolean); if (!p) continue;
+    for (const { sec } of secs) if (sec.parts[t.pid]) Object.assign(sec.parts[t.pid], { laneId: t.pid, lane: t.name });
+    const lane = song.lanes[t.pid] = { id: t.pid, name: t.name, ownerName: '', by: 'import', inst: p.inst, patch: p.patch, params: null, drums: !!p.drums, hw: null, kind: p.kind || 'midi', role: p.role, at: at++ };
+    const db = t.gain > 0 ? Math.round(Math.max(-60, Math.min(6, 20 * Math.log10(t.gain))) * 2) / 2 : -60;
+    if (Math.abs(db) >= 0.5) lane.vol = db;
+    if (Math.abs(t.pan) >= 0.01) lane.pan = Math.round(t.pan * 100) / 100;
+    if (t.muted) lane.muted = true;
+  }
+  return { song, clips, warnings, tracks: set.tracks.length, bpm, set: alsFile.name, sets: sets.map((f) => f.name) };
+}
+// the project folder a missing file lives in, from the absolute path the set keeps ("BeepBlimBlop Project/Samples/Recorded")
+function homeOf(path) {
+  const parts = String(path || '').split(/[\\/]/).filter(Boolean); if (parts.length < 2) return '';
+  const i = parts.findIndex((x) => / Project$/i.test(x));
+  const j = parts.findIndex((x) => /^samples$/i.test(x));   // no "… Project" folder: from the one that holds Samples
+  return parts.slice(i >= 0 ? i : j > 0 ? j - 1 : Math.max(0, parts.length - 3), -1).join('/');
 }

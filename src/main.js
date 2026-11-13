@@ -25,7 +25,7 @@ import { startStats } from './stats.js';
 import { AcidSeq, makeAcidPanel } from './acidseq.js';
 import { makeStudio, studioRoom, isStudioId, myStudios, forgetStudio } from './studio.js';
 import { makeDropbox } from './dropbox.js';
-import { songFromLive } from './liveimport.js';
+import { songFromLive, liveSets } from './liveimport.js';
 import * as ZIP from './songzip.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
 // ?bot=1: a pretend bandmate the tours run in a hidden frame (src/tutorial.js). It shares this browser's storage, so
@@ -1098,9 +1098,12 @@ async function exportSong() {
 function download(blob, name) { const a = h('a', { href: URL.createObjectURL(blob), download: name }); document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
 // bring in a sketch: a MIDI file or a SynthLand Tracker song (or a saved MEGAjam song)
 // an Ableton Live project (src/liveimport.js): files [{ name: path in the project, data: bytes or () => bytes }]
-async function importLive(files) {
+async function importLive(files, set) {
+  // a project folder with several sets: which one? (newest first)
+  const sets = liveSets(files);
+  if (!set && sets.length > 1) return pickLiveSet(sets, (name) => importLive(files, name));
   try {
-    const r = await songFromLive(files, { progress: (t) => setStatus(t), stereo: hifi() });
+    const r = await songFromLive(files, { progress: (t) => setStatus(t), stereo: hifi(), set });
     for (const c of r.clips) blobs.put(c.id, c.pcm16, c.sr);
     loadSong(r.song); goRoom('compose');
     const n = Object.keys(songStore.song.lanes || {}).length;
@@ -1109,8 +1112,19 @@ async function importLive(files) {
     stats.use('liveimport');
   } catch (err) { setStatus("Couldn't bring in that Live project: " + err.message, 'error'); }
 }
+function pickLiveSet(sets, go) {
+  document.querySelector('.liveprompt')?.remove();
+  const short = (n) => n.split('/').slice(1).join('/').replace(/\.als$/i, '') || n.replace(/\.als$/i, '');
+  const when = (f) => (f.mtime ? ` · ${new Date(f.mtime).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}` : '');
+  const box = h('div', { class: 'gearprompt liveprompt', role: 'dialog', 'aria-label': 'Which Live set?' },
+    h('b', {}, `This project has ${sets.length} Live sets. Which one?`),
+    ...sets.slice(0, 12).map((f, i) => h('button', { class: 'btn small' + (i === 0 ? ' hot' : ''), onclick: () => { box.remove(); go(f.name); } }, short(f.name) + when(f) + (i === 0 && f.mtime ? ' (newest)' : ''))),
+    sets.length > 12 ? h('span', { class: 'help' }, `…and ${sets.length - 12} more: pick the set's own folder to narrow it down.`) : null,
+    h('button', { class: 'btn small ghost', onclick: () => box.remove() }, 'Cancel'));
+  document.body.append(box);
+}
 // a folder picked with <input webkitdirectory>: only the files the set uses are read
-const liveFolder = (list) => [...list].filter((f) => /\.(als|wav|wave|aif|aiff|aifc)$/i.test(f.name) && !/(^|\/)Backup\//i.test(f.webkitRelativePath || '')).map((f) => ({ name: f.webkitRelativePath || f.name, data: async () => new Uint8Array(await f.arrayBuffer()) }));
+const liveFolder = (list) => [...list].filter((f) => /\.(als|wav|wave|aif|aiff|aifc)$/i.test(f.name) && !/(^|\/)Backup\//i.test(f.webkitRelativePath || '')).map((f) => ({ name: f.webkitRelativePath || f.name, mtime: f.lastModified, data: async () => new Uint8Array(await f.arrayBuffer()) }));
 async function importSketch(file) {
   try {
     const buf = new Uint8Array(await file.arrayBuffer());
