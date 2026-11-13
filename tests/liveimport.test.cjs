@@ -7,7 +7,10 @@
 //   - audio: an unwarped 44.1 kHz stereo 24-bit WAV (mixed to mono, at 48 kHz, its length as recorded); a 16-bit AIFF
 //     warped as if recorded at 120 bpm in a 100 bpm song (stretched by 1.2, still 440 Hz); the same AIFF with three
 //     warp segments (each part where its markers put it, still 440 Hz); a clip that crosses a section line (split)
-//   - a muted track comes in muted; a Session view clip and a missing audio file are reported
+//   - a muted track comes in muted, a track keeps Live's fader and pan; a Session view clip and a missing audio file
+//     are reported
+//   - a project folder with two sets asks which one (newest first; Backup skipped)
+//   - a set on its own whose recordings live in another project: a plain error naming that folder, the song untouched
 //   node server/dev.js &  (8787)        node tests/liveimport.test.cjs
 const { chromium } = require('playwright'); const fs = require('fs'), path = require('path'), os = require('os'), zlib = require('zlib');
 const BASE = 'http://localhost:8787/';
@@ -31,14 +34,14 @@ const loopX = (s, e, on, rel = 0) => `<Loop>${V('LoopStart', s)}${V('LoopEnd', e
 const midiClip = (start, end, loop, notes) => `<MidiClip Id="0" Time="${start}">${V('CurrentStart', start)}${V('CurrentEnd', end)}${loop}${V('Name', '')}${V('Disabled', 'false')}<Notes><KeyTracks>${
   Object.entries(notes.reduce((m, n) => ((m[n[1]] = m[n[1]] || []).push(n), m), {})).map(([k, ns]) => `<KeyTrack Id="0"><Notes>${ns.map(([t, , d]) => `<MidiNoteEvent Time="${t}" Duration="${d}" Velocity="100" IsEnabled="true" />`).join('')}</Notes>${V('MidiKey', k)}</KeyTrack>`).join('')}</KeyTracks></Notes></MidiClip>`;
 const audioClip = (start, end, loop, warped, file, markers) => `<AudioClip Id="0" Time="${start}">${V('CurrentStart', start)}${V('CurrentEnd', end)}${loop}${V('Name', 'Audio')}${V('Disabled', 'false')}<WarpMarkers>${markers.map(([s, b]) => `<WarpMarker Id="0" SecTime="${s}" BeatTime="${b}" />`).join('')}</WarpMarkers>${V('IsWarped', warped)}${V('SampleVolume', 1)}${V('PitchCoarse', 0)}${V('PitchFine', 0)}<SampleRef><FileRef>${V('RelativePathType', 3)}${V('RelativePath', file)}${V('Path', '/Users/someone/Music/Proj/' + file)}</FileRef></SampleRef></AudioClip>`;
-const track = (tag, name, muted, devices, events, session = '') => `<${tag} Id="0"><Name>${V('EffectiveName', name)}${V('UserName', name)}</Name><DeviceChain><Mixer><Speaker>${V('Manual', muted ? 'false' : 'true')}</Speaker><Volume>${V('Manual', 1)}</Volume></Mixer><MainSequencer><ClipSlotList>${session}</ClipSlotList>${
+const track = (tag, name, muted, devices, events, session = '', vol = 1, pan = 0) => `<${tag} Id="0"><Name>${V('EffectiveName', name)}${V('UserName', name)}</Name><DeviceChain><Mixer><Speaker>${V('Manual', muted ? 'false' : 'true')}</Speaker><Volume>${V('Manual', vol)}</Volume><Pan>${V('Manual', pan)}</Pan></Mixer><MainSequencer><ClipSlotList>${session}</ClipSlotList>${
   tag === 'MidiTrack' ? `<ClipTimeable><ArrangerAutomation><Events>${events}</Events></ArrangerAutomation></ClipTimeable>` : `<Sample><ArrangerAutomation><Events>${events}</Events></ArrangerAutomation></Sample>`}</MainSequencer><DeviceChain><Devices>${devices}</Devices></DeviceChain></DeviceChain></${tag}>`;
 const rack = `<DrumGroupDevice Id="0"><Branches>${[[60, 'Kick'], [62, 'Snare'], [64, 'Closed Hat']].map(([n, nm]) => `<DrumBranch Id="0"><Name>${V('EffectiveName', nm)}${V('UserName', '')}</Name><BranchInfo>${V('ReceivingNote', 128 - n)}${V('SendingNote', 60)}</BranchInfo></DrumBranch>`).join('')}</Branches></DrumGroupDevice>`;
 const sec = 60 / BPM;   // seconds a beat
 const set = `<?xml version="1.0" encoding="UTF-8"?>
 <Ableton MajorVersion="5" MinorVersion="11.0_11300" Creator="Ableton Live 11.3.13"><LiveSet><Tracks>
 ${track('MidiTrack', 'Drums', false, rack, midiClip(0, 32, loopX(0, 4, 'true'), [[0, 60, 0.25], [2, 60, 0.25], [1, 62, 0.25], [3, 62, 0.25], [0, 64, 0.25], [1, 64, 0.25], [2, 64, 0.25], [3, 64, 0.25]]), '<ClipSlot Id="0"><MidiClip Id="9" Time="0" /></ClipSlot>')}
-${track('MidiTrack', 'Keys', false, '<Drift Id="0" />', midiClip(32, 40, loopX(0, 16, 'false'), [[0, 60, 4], [0, 64, 4], [0, 67, 4], [4, 57, 4], [4, 60, 4], [4, 64, 4], [12, 62, 2]]))}
+${track('MidiTrack', 'Keys', false, '<Drift Id="0" />', midiClip(32, 40, loopX(0, 16, 'false'), [[0, 60, 4], [0, 64, 4], [0, 67, 4], [4, 57, 4], [4, 60, 4], [4, 64, 4], [12, 62, 2]]), '', 0.1737800837, -0.5)}
 ${track('MidiTrack', 'Old idea', true, '<Drift Id="0" />', midiClip(0, 8, loopX(0, 8, 'false'), [[0, 72, 1]]))}
 ${track('AudioTrack', 'Vox', false, '', audioClip(4, 4 + 3 / sec, loopX(0, 3, 'false'), 'false', 'Samples/Recorded/vox.wav', [[0, 0], [0.01, 0.02]]))}
 ${track('AudioTrack', 'Loop', false, '', audioClip(32, 40, loopX(0, 8, 'false'), 'true', 'Samples/Imported/loop.aif', [[0, 0], [0.5, 1]]) + audioClip(36, 44, loopX(0, 8, 'false'), 'true', 'Samples/Imported/gone.wav', [[0, 0], [0.5, 1]]))}
@@ -49,6 +52,11 @@ const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-')), proj = path.join(di
 fs.mkdirSync(path.join(proj, 'Samples/Recorded'), { recursive: true }); fs.mkdirSync(path.join(proj, 'Samples/Imported'), { recursive: true }); fs.mkdirSync(path.join(proj, 'Backup'));
 fs.writeFileSync(path.join(proj, 'Test Song.als'), zlib.gzipSync(set));
 fs.writeFileSync(path.join(proj, 'Backup/Test Song [old].als'), zlib.gzipSync(set.replace('Verse', 'WRONG')));   // Live's backups are skipped
+fs.writeFileSync(path.join(proj, 'Test Song sketch.als'), zlib.gzipSync(set.replace('Verse', 'Sketch')));   // an older second set in the same project
+fs.utimesSync(path.join(proj, 'Test Song sketch.als'), new Date('2024-01-02'), new Date('2024-01-02'));
+// a set on its own, its recordings in another project's folder
+const lone = path.join(dir, 'Lone.als');
+fs.writeFileSync(lone, zlib.gzipSync(set.replace(/<Tracks>[\s\S]*<\/Tracks>/, `<Tracks>${track('AudioTrack', '1-Audio', false, '', audioClip(0, 16, loopX(0, 16, 'false'), 'true', 'Samples/Recorded/1-Audio 0001.aif', [[0, 0], [0.6, 1]]).replace(/<Path Value="[^"]*"/, '<Path Value="/Users/someone/Music/Ableton/Elsewhere Project/Samples/Recorded/1-Audio 0001.aif"'))}</Tracks>`)));
 fs.writeFileSync(path.join(proj, 'Samples/Recorded/vox.wav'), wav24stereo(sine(SR * 3, SR, 220), SR));
 fs.writeFileSync(path.join(proj, 'Samples/Imported/loop.aif'), aiff16(sine(48000 * 4, 48000, 440), 48000));
 
@@ -59,6 +67,11 @@ fs.writeFileSync(path.join(proj, 'Samples/Imported/loop.aif'), aiff16(sine(48000
   await p.evaluate(() => JJ.goRoom('compose')); await p.waitForTimeout(400);
   check(await p.isVisible('#compose button:has-text("Import from Ableton Live")'), 'Compose offers "Import from Ableton Live…"');
   await p.setInputFiles('#compose input[webkitdirectory]', proj);
+  await p.waitForSelector('.liveprompt', { timeout: 10000 });
+  const choice = await p.$$eval('.liveprompt button', (bs) => bs.map((b) => b.textContent + (b.classList.contains('hot') ? ' [hot]' : '')));
+  console.log('  ', JSON.stringify(choice));
+  check(choice.length === 3 && /^Test Song · .*\(newest\) \[hot\]$/.test(choice[0]) && /^Test Song sketch · /.test(choice[1]) && choice[2] === 'Cancel', 'two sets in the project: it asks which, newest first, Backup left out');
+  await p.click('.liveprompt button.hot');
   await p.waitForFunction(() => JJ.song().title === 'Test Song', null, { timeout: 30000 });
   const r = await p.evaluate(() => {
     const S = JJ.song(), secs = S.order.map((id) => S.sections[id]);
@@ -69,7 +82,7 @@ fs.writeFileSync(path.join(proj, 'Samples/Imported/loop.aif'), aiff16(sine(48000
     return { bpm: Math.round(JJ.tempo.bpm(JJ.clock.now() + 5000)), meter: S.meter || 4, sections: secs.map((s) => `${s.name}:${s.bars}`), status: document.querySelector('#status')?.textContent || '',
       drums: secs.map((s) => { const d = part(s, 'Drums'); return d ? [...new Set(ons(d).map((e) => e.note))].sort().join(',') + '/' + ons(d).length : null; }),
       drumInst: part(secs[0], 'Drums')?.inst, keys: part(secs[1], 'Keys') && ons(part(secs[1], 'Keys')).map((e) => `${e.b}:${e.note}`).join(' '), chords: secs[1].chords.slice(0, 2).join(' '),
-      muted: part(secs[0], 'Old idea')?.muted, vox: au(secs[0], 'Vox'), loop: au(secs[1], 'Loop'), bent: au(secs[1], 'Bent'), bent2: au(secs[2] || {}, 'Bent'), lanes: Object.values(S.lanes).map((t) => `${t.name}:${t.kind || 'midi'}`).sort().join(' ') };
+      muted: Object.values(S.lanes).find((t) => t.name === 'Old idea')?.muted, keysMix: (({ vol, pan } = {}) => ({ vol, pan }))(Object.values(S.lanes).find((t) => t.name === 'Keys')), partMuted: part(secs[0], 'Old idea')?.muted || false, vox: au(secs[0], 'Vox'), loop: au(secs[1], 'Loop'), bent: au(secs[1], 'Bent'), bent2: au(secs[2] || {}, 'Bent'), lanes: Object.values(S.lanes).map((t) => `${t.name}:${t.kind || 'midi'}`).sort().join(' ') };
   });
   console.log('  ', JSON.stringify(r));
   check(r.bpm === 100 && r.meter === 4, 'tempo 100, 4/4');
@@ -77,12 +90,25 @@ fs.writeFileSync(path.join(proj, 'Samples/Imported/loop.aif'), aiff16(sine(48000
   check(r.drumInst === 'machina' && r.drums[0] === '36,38,42/64', `the Drum Rack's Kick, Snare and Closed Hat (pads 60, 62, 64) play as 36, 38, 42; the 1-bar loop unrolled over 8 bars (${r.drums[0]})`);
   check(r.keys === '0:60 0:64 0:67 4:57 4:60 4:64', `the Keys clip stops at its end, 2 bars in (the note at bar 4 of its 4-bar content is cut): ${r.keys}`);
   check(/^C Am$/.test(r.chords), `chords from the keys part: ${r.chords}`);
-  check(r.muted === true, 'the muted track comes in muted');
+  check(r.muted === true && r.partMuted === false, 'the muted track comes in muted (the track, as in Live, not its blocks)');
+  check(r.keysMix.vol === -15 && r.keysMix.pan === -0.5, `Live's fader and pan come along: Keys at ${r.keysMix.vol} dB, pan ${r.keysMix.pan}`);
   check(r.vox && r.vox.from === 4 && r.vox.sr === 48000 && Math.abs(r.vox.secs - 3) < 0.01 && Math.abs(r.vox.hz - 220) <= 2, `unwarped 44.1 kHz stereo WAV: 1 bar in, 3 s long as recorded, at 48 kHz, still 220 Hz (${JSON.stringify(r.vox)})`);
   check(r.loop && Math.abs(r.loop.secs - 8 * 0.6) < 0.01 && Math.abs(r.loop.hz - 440) <= 3, `simple warp (120 bpm loop in a 100 bpm song): 8 beats = 4.8 s, stretched, still 440 Hz (${r.loop?.secs.toFixed(2)} s, ${r.loop?.hz} Hz)`);
   check(r.bent && r.bent.from === 8 && r.bent.beats === 8 && r.bent2 && r.bent2.from === 0 && r.bent2.beats === 4 && Math.abs(r.bent.hz - 440) <= 4, `complex warp (3 segments) across the Chorus/Outro line: split into two takes (8 + 4 beats), still 440 Hz (${r.bent?.hz} Hz)`);
   check(/Session view clip/.test(r.status) && /gone\.wav/.test(r.status) && /Collect All and Save/.test(r.status), 'the Session view clip and the missing file are reported');
   check(r.lanes.includes('Vox:audio') && r.lanes.includes('Keys:midi'), `tracks: ${r.lanes}`);
+  // the other set, picked
+  p.on('dialog', (d) => d.accept());
+  await p.setInputFiles('#compose input[webkitdirectory]', proj); await p.waitForSelector('.liveprompt');
+  await p.click('.liveprompt button:has-text("Test Song sketch")');
+  await p.waitForFunction(() => JJ.song().title === 'Test Song sketch', null, { timeout: 30000 });
+  check(await p.evaluate(() => JJ.song().order.map((id) => JJ.song().sections[id].name)[0]) === 'Sketch', 'picking the other set brings in that one');
+  // a lone set whose recordings aren't with it
+  await p.setInputFiles('#compose input[accept*=".als"]', lone);
+  await p.waitForFunction(() => /Live project/.test(document.querySelector('#status')?.textContent || ''), null, { timeout: 15000 });
+  const st = await p.evaluate(() => ({ status: document.querySelector('#status').textContent, title: JJ.song().title }));
+  console.log('  ', st.status);
+  check(/none of the recordings in "Lone" came with it/.test(st.status) && /“Elsewhere Project\/Samples\/Recorded”/.test(st.status) && st.title === 'Test Song sketch', 'a set without its recordings: a plain error that says where they are, and the song stays as it was');
   check(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
   fs.rmSync(dir, { recursive: true, force: true });
   await b.close(); console.log(fails ? `${fails} FAILED` : 'ALL PASS'); process.exit(fails ? 1 : 0);
