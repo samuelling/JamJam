@@ -5,7 +5,8 @@
 //     Snare, Closed Hat…, from the pad or its sample) onto the drum notes MEGAjam's kits play.
 //   - each audio track becomes an audio track: in every section it plays in, one take rendered from its clips at
 //     the song's tempo. An unwarped clip plays as recorded; a warped clip is time-stretched (keeping its pitch) to
-//     follow its warp markers, however many there are, so nothing needs consolidating first.
+//     follow its warp markers, however many there are, so nothing needs consolidating first. Mono at 48 kHz, or (in
+//     a studio set to high fidelity) stereo where the file is stereo.
 //   - muted tracks come in muted. Devices, automation, sends and Session view clips stay behind (warnings say so).
 //
 // The set itself is gzipped XML (Live 10 to 12 share this layout). Times are in beats; a warped audio clip's loop and
@@ -14,7 +15,7 @@
 // (Collect All and Save puts them all inside it), or failing that by file name.
 import { emptySong, newSection, sliceEvents, chartFromParts, guessInstrument, guessRole, keyFromParts } from './song.js';
 
-const OUT_SR = 48000;   // imported audio: mono at 48 kHz (MEGAjam's own takes are 24 kHz)
+const OUT_SR = 48000;   // imported audio: 48 kHz (mono, or stereo when asked for)
 
 // ---------- small XML helpers (DOM from DOMParser) ----------
 const kid = (e, path) => { let n = e; for (const t of path.split('/')) { if (!n) return null; n = [...n.children].find((c) => c.tagName === t) || null; } return n; };
@@ -113,7 +114,7 @@ export function clipNotes(clip) {
 }
 
 // ---------- audio files ----------
-// WAV (PCM 8/16/24/32-bit, float) and AIFF/AIFC (PCM, sowt, fl32): -> { sr, data: Float32Array (mono) }
+// WAV (PCM 8/16/24/32-bit, float) and AIFF/AIFC (PCM, sowt, fl32): -> { sr, data: Float32Array (mono mix), stereo: [L, R] | null }
 export function decodeAudio(bytes) {
   const u = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), dv = new DataView(u.buffer, u.byteOffset, u.byteLength);
   const tag = (o) => String.fromCharCode(u[o], u[o + 1], u[o + 2], u[o + 3]);
@@ -140,7 +141,7 @@ export function decodeAudio(bytes) {
     }
   } else throw new Error('not a WAV or AIFF file');
   if (!data || !sr) throw new Error('that audio file has no sound in it');
-  const B = bits / 8, frames = Math.floor(data[1] / (B * ch)), out = new Float32Array(frames);
+  const B = bits / 8, frames = Math.floor(data[1] / (B * ch)), out = new Float32Array(frames), L = ch > 1 ? new Float32Array(frames) : null, R = ch > 1 ? new Float32Array(frames) : null;
   for (let i = 0, p = data[0]; i < frames; i++) {
     let s = 0;
     for (let c = 0; c < ch; c++, p += B) {
@@ -150,11 +151,12 @@ export function decodeAudio(bytes) {
       else if (B === 2) v = dv.getInt16(p, le) / 32768;
       else if (B === 3) { const x = le ? u[p] | (u[p + 1] << 8) | (u[p + 2] << 16) : (u[p] << 16) | (u[p + 1] << 8) | u[p + 2]; v = ((x << 8) >> 8) / 8388608; }
       else v = dv.getInt32(p, le) / 2147483648;
-      s += v;
+      s += v; if (c === 0 && L) L[i] = v; else if (c === 1 && R) R[i] = v;
     }
     out[i] = s / ch;
   }
-  return { sr, data: out };
+  let differ = false; if (L) { let d = 0, pk = 0; for (let i = 0; i < frames; i++) { d = Math.max(d, Math.abs(L[i] - R[i])); pk = Math.max(pk, Math.abs(L[i])); } differ = d > pk * 0.01; }
+  return { sr, data: out, stereo: differ ? [L, R] : null };   // data: the mono mix; stereo: the first two channels, if they differ
 }
 function resample(x, from, to) {
   if (from === to) return x;
@@ -177,10 +179,10 @@ function sourceMap(clip, bpm) {
   if (clip.warped) return (d) => secAt(clip.markers, content(d));
   return (d) => content((d * 60) / bpm);   // unwarped: the loop is in seconds; d beats are d·60/bpm seconds
 }
-// WSOLA: an overlap-add of short windows taken where `at` says, each nudged to line up with the last (keeps the pitch)
-function render(src, sr, frames, at, gain) {
-  const N = Math.max(256, Math.round(sr * 0.04) & ~1), H = N >> 1, tol = H >> 1, out = new Float32Array(frames + N), w = new Float32Array(N);
-  for (let i = 0; i < N; i++) w[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N);
+// WSOLA: an overlap-add of short windows taken where `at` says, each nudged to line up with the last (keeps the
+// pitch). The windows are chosen once, on the mono mix, and the same ones taken from each channel (stereo stays put).
+function wsola(src, sr, frames, at) {
+  const N = Math.max(256, Math.round(sr * 0.04) & ~1), H = N >> 1, tol = H >> 1, plan = [];
   let prev = -1;
   for (let o = 0; o < frames; o += H) {
     let p = Math.round(at(o));
@@ -194,23 +196,29 @@ function render(src, sr, frames, at, gain) {
       }
       p = best;
     }
-    for (let i = 0; i < N; i++) { const s = src[p + i]; if (s !== undefined && p + i >= 0) out[o + i] += s * w[i] * gain; }
-    prev = p;
+    plan.push(p); prev = p;
   }
+  return { N, H, plan };
+}
+function overlapAdd(src, frames, { N, H, plan }, gain) {
+  const out = new Float32Array(frames + N), w = new Float32Array(N);
+  for (let i = 0; i < N; i++) w[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N);
+  plan.forEach((p, k) => { const o = k * H; for (let i = 0; i < N; i++) { const s = src[p + i]; if (s !== undefined && p + i >= 0) out[o + i] += s * w[i] * gain; } });
   return out.subarray(0, frames);
 }
-export function renderClip(clip, audio, bpm) {
-  const src = resample(audio.data, audio.sr, OUT_SR), sr = OUT_SR, beats = clip.end - clip.start, frames = Math.max(0, Math.round((beats * 60 * sr) / bpm));
+// -> [mono] or [L, R] (stereo: when asked for and the file has two channels), at OUT_SR and the song's tempo
+export function renderClip(clip, audio, bpm, stereo = false) {
+  const sr = OUT_SR, chans = (stereo && audio.stereo ? audio.stereo : [audio.data]).map((x) => resample(x, audio.sr, sr)), mix = chans.length > 1 ? resample(audio.data, audio.sr, sr) : chans[0];
+  const beats = clip.end - clip.start, frames = Math.max(0, Math.round((beats * 60 * sr) / bpm));
   const map = sourceMap(clip, bpm), at = (o) => map((o * bpm) / (60 * sr)) * sr;   // output frame -> source frame
   // a steady 1:1 rate (unwarped, or warped at the song's tempo): copy, sample for sample; otherwise stretch
   const rate = (at(Math.min(frames, sr)) - at(0)) / Math.min(frames, sr), steady = frames < 2 || [0.25, 0.5, 0.75, 1].every((f) => { const a = Math.floor(frames * f) - 1; return Math.abs(at(a + 1) - at(a) - 1) < 1e-3; });
-  let out;
-  if (steady && Math.abs(rate - 1) < 1e-3) { out = new Float32Array(frames); for (let i = 0; i < frames; i++) { const s = src[Math.round(at(i))]; out[i] = (s || 0) * clip.gain; } }
-  else out = render(src, sr, frames, at, clip.gain);
-  if (clip.reversed) out.reverse();
+  let outs;
+  if (steady && Math.abs(rate - 1) < 1e-3) outs = chans.map((src) => { const o = new Float32Array(frames); for (let i = 0; i < frames; i++) o[i] = (src[Math.round(at(i))] || 0) * clip.gain; return o; });
+  else { const pl = wsola(mix, sr, frames, at); outs = chans.map((src) => overlapAdd(src, frames, pl, clip.gain)); }
   const f = Math.min(Math.round(sr * 0.003), frames >> 1);   // no clicks at the edges
-  for (let i = 0; i < f; i++) { out[i] *= i / f; out[frames - 1 - i] *= i / f; }
-  return out;
+  for (const out of outs) { if (clip.reversed) out.reverse(); for (let i = 0; i < f; i++) { out[i] *= i / f; out[frames - 1 - i] *= i / f; } }
+  return outs;
 }
 
 // ---------- the song ----------
@@ -219,7 +227,8 @@ const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g
 function peaksOf(pcm) { const n = 120, out = []; for (let p = 0; p < n; p++) { let m = 0; for (let i = Math.floor((p * pcm.length) / n); i < Math.floor(((p + 1) * pcm.length) / n); i++) m = Math.max(m, Math.abs(pcm[i])); out.push(Math.round(m * 100) / 100); } return out; }
 
 // files: [{ name (path inside the project, or just a file name), data: Uint8Array | () => Promise<Uint8Array> }]
-// -> { song, clips: [{ id, pcm16, sr }], warnings: [] }
+// o: { progress(text), stereo (keep stereo files stereo: a studio set to high fidelity) }
+// -> { song, clips: [{ id, pcm16 (interleaved when ch is 2), sr, ch }], warnings: [] }
 export async function songFromLive(files, o = {}) {
   const say = o.progress || (() => {});
   const alsFile = files.find((f) => /\.als$/i.test(f.name)); if (!alsFile) throw new Error('there is no Live set (.als) in that project');
@@ -279,20 +288,21 @@ export async function songFromLive(files, o = {}) {
       const audio = await audioOf(c.file); if (!audio) continue;
       say(`Rendering ${t.name}${c.warped && c.markers.length > 2 ? ' (following its warp markers)' : c.warped ? ' (warped to the tempo)' : ''}…`);
       await new Promise((r) => setTimeout(r, 0));
-      rendered.push({ c, pcm: renderClip(c, audio, bpm) });
+      rendered.push({ c, pcm: renderClip(c, audio, bpm, !!o.stereo) });   // [mono] or [L, R]
     }
     for (const { sec, a, z } of secs) {
       const here = rendered.filter(({ c }) => c.start < z && c.end > a); if (!here.length) continue;
       const lo = Math.max(a, Math.min(...here.map(({ c }) => c.start))), hi = Math.min(z, Math.max(...here.map(({ c }) => c.end)));
-      const frames = Math.round(((hi - lo) * 60 * OUT_SR) / bpm), mix = new Float32Array(frames);
+      const frames = Math.round(((hi - lo) * 60 * OUT_SR) / bpm), ch = here.some(({ pcm }) => pcm.length === 2) ? 2 : 1, mixes = Array.from({ length: ch }, () => new Float32Array(frames));
       for (const { c, pcm } of here) {
         const from = Math.round(((Math.max(lo, c.start) - c.start) * 60 * OUT_SR) / bpm), to = Math.round(((Math.max(lo, c.start) - lo) * 60 * OUT_SR) / bpm);
-        for (let i = 0; to + i < frames && from + i < pcm.length; i++) mix[to + i] += pcm[from + i];
+        for (let k = 0; k < ch; k++) { const src = pcm[Math.min(k, pcm.length - 1)], dst = mixes[k]; for (let i = 0; to + i < frames && from + i < src.length; i++) dst[to + i] += src[from + i]; }   // a mono clip in a stereo take: both sides
       }
-      const pcm16 = new Int16Array(frames); for (let i = 0; i < frames; i++) pcm16[i] = Math.max(-32768, Math.min(32767, Math.round(mix[i] * 32767)));
-      const id = rid8(); clips.push({ id, pcm16, sr: OUT_SR });
+      const pcm16 = new Int16Array(frames * ch); for (let i = 0; i < frames; i++) for (let k = 0; k < ch; k++) pcm16[i * ch + k] = Math.max(-32768, Math.min(32767, Math.round(mixes[k][i] * 32767)));
+      const mono = ch === 2 ? Float32Array.from(mixes[0], (v, i) => (v + mixes[1][i]) / 2) : mixes[0];
+      const id = rid8(); clips.push({ id, pcm16, sr: OUT_SR, ch });
       const p = { id: pid, name: t.name, lane: t.name, role: 'texture', kind: 'audio', inst: 'audio', patch: '', drums: false,
-        takes: [{ id: 'live', events: [], audio: { id, sr: OUT_SR, frames, from: lo - a, beats: hi - lo, bpm, peaks: peaksOf(mix) }, by: 'import', byName: 'Ableton Live', at: 0 }], current: 'live', by: 'import' };
+        takes: [{ id: 'live', events: [], audio: { id, sr: OUT_SR, ...(ch === 2 ? { ch: 2 } : {}), frames, from: lo - a, beats: hi - lo, bpm, peaks: peaksOf(mono) }, by: 'import', byName: 'Ableton Live', at: 0 }], current: 'live', by: 'import' };
       if (t.muted) p.muted = true;
       sec.parts[pid] = p;
     }

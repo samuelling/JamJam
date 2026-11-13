@@ -17,7 +17,7 @@
 // A studio's link (?studio=<id>) is its key: anyone with it can walk in. This browser remembers the studios it has
 // been in, for the lobby.
 
-import { monoWav, readPcmWav } from './songzip.js';
+import { wav, readPcmWav } from './songzip.js';
 import { fetchDirect, safeName } from './dropbox.js';
 
 const SKIP = (k) => k === 'transport' || k === 'studio' || k.startsWith('vp:');   // live-only state stays in the room
@@ -37,7 +37,7 @@ export function rememberStudio(id, name) {
 export function forgetStudio(id) { try { localStorage.setItem(LIST_KEY, JSON.stringify(myStudios().filter((s) => s.id !== id))); } catch (_) {} }
 
 // o: { endpoint, songStore, isLeader(), blobs, clipIds() -> [id], extras() -> { bpm, key }, say(text, kind), onSaved(),
-//      dropbox (src/dropbox.js), clipName(id) -> a file name for a take }
+//      dropbox (src/dropbox.js), clipName(id) -> a file name for a take, clipCh(id) -> its channels (2: stereo) }
 export function makeStudio(o) {
   const st = { id: null, name: '', loaded: false, pending: new Set(), sentWhole: false, server: null, busy: false, failing: 0, lastOk: 0,
     home: null, homes: {}, parked: [], porting: null, portErr: '' };
@@ -116,7 +116,7 @@ export function makeStudio(o) {
         if (!p) { p = await api.fetchClip(clip); if (p) o.blobs.put(clip, p.pcm16, p.sr); }
         if (!p) continue;
         const path = `/${st.home.folder}/${safeName(o.clipName?.(clip) || 'take', 110)} ${clip}.wav`;
-        await o.dropbox.upload(path, monoWav(p.pcm16, p.sr));
+        await o.dropbox.upload(path, wav(p.pcm16, p.sr, o.clipCh?.(clip) || 1));
         const url = await o.dropbox.shareLink(path);
         const r = await call(`/${st.id}/clips/${clip}/home`, { method: 'POST', body: JSON.stringify({ url }) });
         st.homes[clip] = r.home;
