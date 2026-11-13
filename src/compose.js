@@ -484,7 +484,7 @@ export function makeCompose(x) {
       h('select', { class: 'lcdsel', 'aria-label': 'Versions', onchange: (e) => { const v = e.target.value; e.target.value = ''; if (v === '__save') { const n = prompt('Name this version of the song', `Version ${vars.length + 1}`); if (n) x.saveVariation(n.slice(0, 40)); } else if (v) x.restoreVariation(v); } },
         h('option', { value: '' }, vars.length ? `Versions (${vars.length})` : 'Versions'), h('option', { value: '__save' }, 'Save this version…'), ...vars.map((v) => h('option', { value: v.name }, `Go to “${v.name}”`))),
       empty ? null : importBtn('btn small'), empty ? null : presetPick('presets'), h('button', { class: 'btn small', onclick: () => x.exportMidi() }, 'Save MIDI'), h('button', { class: 'btn small', title: 'The song as a file: with audio takes it\'s a .zip of the song and each take as a WAV (keep it in the band\'s Dropbox or Drive, and import it back any time)', onclick: () => x.exportJson() }, 'Save song'),
-      studioCtl(),
+      studioCtl(), x.studio?.() ? takesCtl() : null,
       h('label', { class: 'help', title: 'Knob moves are always recorded with takes; this shows them as lanes you can edit' }, h('input', { type: 'checkbox', class: 'autotoggle', checked: showAuto, onchange: (e) => { showAuto = e.target.checked; remember('auto', showAuto); render(); } }), ' Show automation'),
       x.exportStems && !empty ? h('button', { class: 'btn small' + (stemsOpen ? ' on' : ''), 'aria-expanded': String(stemsOpen), onclick: () => { stemsOpen = !stemsOpen; render(); } }, 'Export stems…') : null,
       h('span', { class: 'help mono' }, `${x.bpm()} bpm · ${x.keyName()}`),
@@ -738,6 +738,18 @@ export function makeCompose(x) {
         try { await x.keepAsStudio(nm.slice(0, 40)); studioSay = ''; x.inviteStudio(); } catch (e) { studioSay = "Couldn't make the studio: " + e.message; }
         render();
       } }, 'Keep as a studio…'), studioSay ? h('span', { class: 'help' }, ' ' + studioSay) : null);
+  }
+  // where the studio's takes live long-term: parked in the studio, or in the band's Dropbox (src/studio.js)
+  function takesCtl() {
+    const th = x.takesHome?.(); if (!th) return null;
+    const busy = (f) => async () => { studioSay = ''; try { await f(); } catch (e) { studioSay = e.message; } render(); };
+    const waiting = th.waiting ? ` · ${th.waiting} on the way` : '';
+    let line;
+    if (th.home && th.mine) line = [`📦 Takes go to your Dropbox (Apps folder › ${th.home.folder})${waiting}`, ' ', h('button', { class: 'btn small', title: 'New takes stay in the studio for now; the ones in Dropbox stay there', onclick: busy(() => x.stopDropbox()) }, 'Stop')];
+    else if (th.home) line = [`📦 Takes are kept in ${th.home.by}'s Dropbox${th.waiting ? ` (${th.waiting} waiting for their next visit)` : ''}`];
+    else line = [h('button', { class: 'btn small', title: "Keep this studio's takes in the band's Dropbox: the studio parks each new take for two weeks, and your browser carries it to a MEGAjam folder in your Dropbox whenever you're here. Bandmates hear every take without signing in to anything.",
+      onclick: busy(async () => { await x.keepInDropbox(); }) }, x.dropboxName?.() ? `Keep takes in ${x.dropboxName()}` : 'Keep takes in Dropbox…'), h('span', {}, ' (otherwise they stay in the studio, up to 2 GB)')];
+    return h('span', { class: 'studioctl takeshome' }, ...line, th.error ? h('span', { class: 'help' }, ` · ${th.error}`) : null, studioSay ? h('span', { class: 'help' }, ' ' + studioSay) : null);
   }
   function addSection(name) {
     const prev = x.store.sections().slice(-1)[0], sec = newSection(name, name === 'Intro' || name === 'Outro' ? 4 : 8);
