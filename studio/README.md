@@ -52,7 +52,8 @@ Setup, once, by the account owner, at dropbox.com/developers/apps:
 
 1. **Create app** › **Scoped access** › **App folder**, named e.g. *MEGAjam Studio*.
 2. **Permissions:** `files.content.write`, `files.content.read`, `sharing.write`, `sharing.read` (and Submit).
-3. **Settings:** Redirect URIs `https://samuelling.github.io/JamJam/dropbox.html` and `http://localhost:8787/dropbox.html`;
+3. **Settings:** Redirect URIs `https://samuelling.github.io/JamJam/` and `http://localhost:8787/` (index.html hands
+   the pop-up on to dropbox.html);
    "Allow public clients (Implicit Grant & PKCE)": Allow.
-4. Put the **App key** (public; the secret is never used) in `../mp-config.js` as `MP_DROPBOX_KEY`. Without it there is
+4. Put the **App key** (public; the secret is never used) in `../mp-config.js` as `MP_DROPBOX_KEY` (MEGAjam's is `ef7jrsv13huhd2e`). Without it there is
    no Dropbox option. Until Dropbox approves the app for production, only a limited number of people can link it.

@@ -24,6 +24,12 @@
 <link rel="stylesheet" href="styles/compose.css">
 <link rel="stylesheet" href="styles/tutorial.css">
 <script src="mp-config.js"></script>
+<script>
+// Dropbox sends the linking pop-up back here (the app's registered address): hand it to dropbox.html, which passes
+// the answer to the MEGAjam window that opened it (src/dropbox.js) and closes, before this page starts anything.
+(function () { var q = new URLSearchParams(location.search);
+  if (window.opener && q.get('state') && (q.get('code') || q.get('error'))) { document.documentElement.style.display = 'none'; location.replace('dropbox.html' + location.search); } })();
+</script>
 </head>
 <body class="simple">
 <section id="lobby">

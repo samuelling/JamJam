@@ -114,7 +114,7 @@ function memDropbox() {
     await ctx.route(/^https:\/\/(www\.dropbox\.com|api\.dropboxapi\.com|content\.dropboxapi\.com|dl\.dropboxusercontent\.com)\//, async (route) => {
       const rq = route.request(), u = new URL(rq.url());
       if (rq.method() === 'OPTIONS') return route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS' } });
-      if (u.hostname === 'www.dropbox.com' && u.pathname === '/oauth2/authorize') return route.fulfill({ status: 302, headers: { location: new URL(`dropbox.html?code=c0de&state=${u.searchParams.get('state')}`, BASE).href } });
+      if (u.hostname === 'www.dropbox.com' && u.pathname === '/oauth2/authorize') return route.fulfill({ status: 302, headers: { location: `${u.searchParams.get('redirect_uri')}?code=c0de&state=${u.searchParams.get('state')}` } });
       if (u.hostname === 'www.dropbox.com') return route.fulfill({ status: 302, headers: { location: 'https://uc0.dl.dropboxusercontent.com/cd/0/inline/x/file' } });   // no CORS: blocked
       if (u.pathname === '/oauth2/token') { const b = new URLSearchParams(rq.postData() || ''); return b.get('client_id') === 'testkey' && (b.get('code') === 'c0de' || b.get('refresh_token') === 'rt') ? json(route, { access_token: 'at', expires_in: 14400, refresh_token: 'rt', account_id: ACCOUNT }) : json(route, { error: 'invalid_grant' }, 400); }
       if (rq.headers().authorization !== 'Bearer at' && u.hostname !== 'dl.dropboxusercontent.com') return json(route, { error_summary: 'invalid_access_token/' }, 401);

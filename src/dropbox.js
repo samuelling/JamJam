@@ -1,6 +1,6 @@
 // The band's Dropbox, linked in this browser: where a studio's takes live long-term (studio/home.js says how the
 // pieces fit). MEGAjam is a Dropbox "app folder" app, so it only ever sees Dropbox/Apps/<app name>/, never the rest
-// of anyone's Dropbox. Linking happens in a small pop-up (dropbox.html), with PKCE: no secret anywhere, and the
+// of anyone's Dropbox. Linking happens in a small pop-up (Dropbox returns it to the app's address; index.html passes it to dropbox.html), with PKCE: no secret anywhere, and the
 // sign-in itself is between the person and Dropbox. What this browser keeps: a refresh token and which account it
 // is, in localStorage. Nothing about it is sent to MEGAjam's servers except the account id (so bandmates' browsers
 // know whose Dropbox a studio uses) and the share links of the takes.

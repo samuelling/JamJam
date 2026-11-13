@@ -1641,7 +1641,7 @@ globalThis.MEGAJAM_SAMPLES = { pcm: (id) => blobs.pcm(id) };   // what the Pads 
 // the band's studio, when this room is one (src/studio.js): the song and its audio kept on the studio server
 const STUDIO_SERVER = (qs.get('studios') && /^https?:\/\//.test(qs.get('studios')) ? qs.get('studios') : window.MP_STUDIO) || '';
 // the band's Dropbox, where a studio's takes can live long-term (src/dropbox.js): MP_DROPBOX_KEY, or ?dropbox=<app key>
-const dropbox = makeDropbox({ key: qs.get('dropbox') || window.MP_DROPBOX_KEY || '', redirect: new URL('dropbox.html', location.href.split(/[?#]/)[0]).href });
+const dropbox = makeDropbox({ key: qs.get('dropbox') || window.MP_DROPBOX_KEY || '', redirect: new URL('./', location.href.split(/[?#]/)[0]).href });
 const clipName = (id) => { const f = audioTakes().find(({ t }) => t.audio.id === id); if (!f) return 'take'; const n = SONG.takesOf(f.p).indexOf(f.t) + 1; return `${f.s.name} - ${f.p.name || 'Live audio'} - take ${n} by ${f.t.byName || 'someone'}`; };
 const studio = makeStudio({ endpoint: STUDIO_SERVER, songStore, blobs, dropbox, clipName, isLeader: () => !!S.me && clock.isLeader && !S.listener,
   clipIds: () => audioTakes().map(({ t }) => t.audio.id), extras: () => ({ bpm: Math.round(tempo.target()), key: S.key.mode ? { root: S.key.root, mode: S.key.mode } : null }),
