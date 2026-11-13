@@ -9,6 +9,9 @@ A band's permanent room. Anyone with a studio's link can walk in, alone or toget
 - **`api.js`:** the HTTP API (routes are listed at the top of `worker.js`).
 - **`worker.js`:** the Cloudflare Worker and the Durable Object class.
 - **`../src/studio.js`:** the app side. The room's clock leader mirrors every change a moment later; a new leader sends the whole song once. Whoever walks into an empty studio loads the song from here. Audio a browser is missing comes from here first.
+- **`home.js`:** the band's Dropbox as the long-term home of takes: share-link checks, and clearing parked copies
+  (a Durable Object alarm) once a take has been home for 14 days and its link serves the whole WAV.
+- **`../src/dropbox.js`, `../dropbox.html`:** linking a Dropbox in the browser (PKCE in a pop-up), uploads, share links.
 - **`../src/songzip.js`:** **Save song** with audio takes makes a .zip of the song plus a WAV per take, for keeping in Dropbox or Drive; **Import** brings it back.
 
 ## Who can get in
@@ -38,3 +41,19 @@ npx wrangler deploy        # → https://megajam-studio.samuelling.workers.dev (
 ## Test
 
 `node tests/studio.test.cjs` runs this code in Node with in-memory storage and walks several browsers in and out. To try the real thing locally: `npx wrangler dev --local --port 8791` here, then open the app with `?studios=http://localhost:8791`.
+
+## The band's Dropbox (optional)
+
+Takes are parked in R2 and, for a studio whose band has linked Dropbox, carried there by that bandmate's browser.
+Browsers read a take that has gone home through the share link's `dl.dropboxusercontent.com` form (CORS allowed,
+undocumented), and fall back to `GET /studios/:id/clips/:clip?via=home`, where this Worker fetches the official link.
+
+Setup, once, by the account owner, at dropbox.com/developers/apps:
+
+1. **Create app** › **Scoped access** › **App folder**, named e.g. *MEGAjam Studio*.
+2. **Permissions:** `files.content.write`, `files.content.read`, `sharing.write`, `sharing.read` (and Submit).
+3. **Settings:** Redirect URIs `https://samuelling.github.io/JamJam/` and `http://localhost:8787/` (index.html hands
+   the pop-up on to dropbox.html);
+   "Allow public clients (Implicit Grant & PKCE)": Allow.
+4. Put the **App key** (public; the secret is never used) in `../mp-config.js` as `MP_DROPBOX_KEY` (MEGAjam's is `ef7jrsv13huhd2e`). Without it there is
+   no Dropbox option. Until Dropbox approves the app for production, only a limited number of people can link it.

@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MEGAjam · Dropbox</title>
+<style>body{font:16px/1.5 system-ui,sans-serif;background:#16141a;color:#eee;display:grid;place-items:center;min-height:90vh;margin:0;text-align:center;padding:1em}</style>
+</head><body><p id="msg">Linking your Dropbox…</p>
+<script>
+// Where Dropbox sends the pop-up back after you allow (or don't allow) MEGAjam: hand the answer to the MEGAjam
+// window that opened this one (src/dropbox.js), on this site only, and close.
+(function () {
+  var q = new URLSearchParams(location.search), msg = { type: 'megajam-dropbox', code: q.get('code'), state: q.get('state'), error: q.get('error') };
+  history.replaceState(null, '', location.pathname);
+  if (window.opener && !window.opener.closed) { window.opener.postMessage(msg, location.origin); setTimeout(function () { window.close(); }, 150); }
+  document.getElementById('msg').textContent = msg.error ? 'Dropbox wasn’t linked. You can close this window.' : 'Done: you can close this window and go back to MEGAjam.';
+})();
+</script></body></html>

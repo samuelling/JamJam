@@ -19,3 +19,5 @@
 .readout .lcd.studioname, .lcd.studioname { max-width: 22ch; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: .02em; }
 .bigcode.studioname { font-size: 28px; letter-spacing: .02em; }
 .studioctl { display: inline-flex; align-items: center; gap: 4px; }
+.studioctl { white-space: nowrap; }
+.studioctl.takeshome { order: 99; flex-basis: 100%; flex-wrap: wrap; white-space: normal; font-size: 12px; opacity: .9; }

@@ -24,6 +24,7 @@ import { Arp, hasArp, arpOn } from './arp.js';
 import { startStats } from './stats.js';
 import { AcidSeq, makeAcidPanel } from './acidseq.js';
 import { makeStudio, studioRoom, isStudioId, myStudios, forgetStudio } from './studio.js';
+import { makeDropbox } from './dropbox.js';
 import * as ZIP from './songzip.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
 // ?bot=1: a pretend bandmate the tours run in a hidden frame (src/tutorial.js). It shares this browser's storage, so
@@ -1027,6 +1028,9 @@ const compose = makeCompose({
   play: (mode, sid) => startTransport(mode, sid), stop: () => stopTransport(), loopRange: (a, b) => loopRange(a, b), jamThis: (sid) => { startTransport('loop', sid); goRoom('jam'); },
   studio: () => (studio.id ? { id: studio.id, name: studio.name, saved: studio.saved, link: studio.link() } : null), canStudio: () => !!STUDIO_SERVER,
   keepAsStudio: (name) => keepAsStudio(name), inviteStudio: () => openInvite(studio.link()),
+  takesHome: () => (dropbox.configured ? studio.takesHome : null), dropboxName: () => (dropbox.linked ? dropbox.name || 'your Dropbox' : ''),
+  keepInDropbox: async () => { if (!dropbox.linked) await dropbox.connect(); return studio.keepInDropbox(); },
+  stopDropbox: () => studio.stopDropbox(), unlinkDropbox: async () => { await studio.stopDropbox().catch(() => {}); await dropbox.disconnect(); },
   importFile: (f) => importSketch(f), exportMidi: () => download(new Blob([SONG.songToMidi(songForExport())], { type: 'audio/midi' }), slugName() + '.mid'), exportJson: () => exportSong(),
   removePart: (sid, pid) => setSong(`part:${sid}:${pid}`, null), choose, vote, saveVariation, restoreVariation, editTake,
   paramsOf: (inst) => engine.defs.get(inst)?.params || [], baseOf: (p) => partCfg({ ...p, ...SONG.laneCfg(songStore.song, p) }).params,
@@ -1636,7 +1640,10 @@ const blobs = new Blobs(room, (id) => { AUD.bufs.delete(id); compose.render(); i
 globalThis.MEGAJAM_SAMPLES = { pcm: (id) => blobs.pcm(id) };   // what the Pads instrument plays from
 // the band's studio, when this room is one (src/studio.js): the song and its audio kept on the studio server
 const STUDIO_SERVER = (qs.get('studios') && /^https?:\/\//.test(qs.get('studios')) ? qs.get('studios') : window.MP_STUDIO) || '';
-const studio = makeStudio({ endpoint: STUDIO_SERVER, songStore, blobs, isLeader: () => !!S.me && clock.isLeader && !S.listener,
+// the band's Dropbox, where a studio's takes can live long-term (src/dropbox.js): MP_DROPBOX_KEY, or ?dropbox=<app key>
+const dropbox = makeDropbox({ key: qs.get('dropbox') || window.MP_DROPBOX_KEY || '', redirect: new URL('./', location.href.split(/[?#]/)[0]).href });
+const clipName = (id) => { const f = audioTakes().find(({ t }) => t.audio.id === id); if (!f) return 'take'; const n = SONG.takesOf(f.p).indexOf(f.t) + 1; return `${f.s.name} - ${f.p.name || 'Live audio'} - take ${n} by ${f.t.byName || 'someone'}`; };
+const studio = makeStudio({ endpoint: STUDIO_SERVER, songStore, blobs, dropbox, clipName, isLeader: () => !!S.me && clock.isLeader && !S.listener,
   clipIds: () => audioTakes().map(({ t }) => t.audio.id), extras: () => ({ bpm: Math.round(tempo.target()), key: S.key.mode ? { root: S.key.root, mode: S.key.mode } : null }),
   say: (t, k) => setStatus(t, k), onSaved: () => { if (S.where === 'compose') compose.render(); } });
 blobs.remote = (id) => studio.fetchClip(id);
@@ -2940,6 +2947,8 @@ const tours = makeTutorial({
   pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 'tour' + i); else padUp('tour' + i); },
   addInstrument: (inst, patch) => addEntry({ inst, patch }), jamLane: (id) => jamLane(id), lockIn: (r) => lockIn(entry(r)),
   draftPart: (spec) => draftPart(spec), editTake: (sid, pid, ev, what, base) => editTake(sid, pid, ev, what, base), setSong: (k, v) => setSong(k, v),
+  studio: () => (studio.id ? { id: studio.id, name: studio.name, ...(studio.takesHome || {}) } : null), canStudio: () => !!STUDIO_SERVER, canDropbox: () => dropbox.configured,
+  keepAsStudio: (name) => keepAsStudio(name), studioFolder: () => studio.takesHome?.home?.folder || '',
 }, { h, $ });
 window.JJ.tours = tours;
 
@@ -3074,7 +3083,7 @@ Object.assign(window.JJ, {
   removeEntry: (r) => removeEntry(entry(r)),
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
-  studio, blobs, enterStudio: (id) => enterStudio(id), keepAsStudio: (n) => keepAsStudio(n), leave: () => leaveRoom(), exportSong: () => exportSong(), importFile: (f) => importSketch(f),
+  studio, blobs, dropbox, enterStudio: (id) => enterStudio(id), keepAsStudio: (n) => keepAsStudio(n), leave: () => leaveRoom(), exportSong: () => exportSong(), importFile: (f) => importSketch(f),
   seqView: (pid, r) => { const sq = seqs.get(key(pid || S.me, r)); return sq && (sq.kind === 'acid' ? sq.view().snapshot() : sq.snapshot()); },
   own: (id, v) => setOwned(id, v),
   loopRange: (a, b) => loopRange(a, b), editTake: (sid, pid, ev, w) => editTake(sid, pid, ev, w), lockAudio: () => lockAudio(), recAll: (on) => setRecAll(on), audio: () => ({ have: [...blobs.bytes.keys()], started: AUD.started }), lane: () => lane,
