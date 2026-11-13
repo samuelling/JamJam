@@ -25,6 +25,7 @@ import { startStats } from './stats.js';
 import { AcidSeq, makeAcidPanel } from './acidseq.js';
 import { makeStudio, studioRoom, isStudioId, myStudios, forgetStudio } from './studio.js';
 import { makeDropbox } from './dropbox.js';
+import { demoSong, DEMO_TITLE } from './demo.js';
 import * as ZIP from './songzip.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
 // ?bot=1: a pretend bandmate the tours run in a hidden frame (src/tutorial.js). It shares this browser's storage, so
@@ -2830,7 +2831,7 @@ function sendChat() {
 // ---------- entering and leaving ----------
 // ---------- studios ----------
 // walk into a band's studio: its song comes from the server (or from whoever is already in), its audio as needed
-async function enterStudio(id) {
+async function enterStudio(id, seed = null) {
   if (!isStudioId(id)) { setStatus("That isn't a studio link.", 'error'); return; }
   if (!STUDIO_SERVER) { setStatus('No studio server is set up (MP_STUDIO in mp-config.js).', 'error'); return; }
   setStatus('Opening the studio…');
@@ -2840,7 +2841,7 @@ async function enterStudio(id) {
   stats.use('studio');
   if (studio.id && studio.id !== id) studio.detach();
   songStore.reset(); songChanged('*');
-  S.studio = { id, name: state.name, song: state.song };
+  S.studio = { id, name: state.name, song: state.song, seed };
   studio.attach(id, state.name);
   await enter(studioRoom(id), false, true);
 }
@@ -2854,11 +2855,30 @@ function studioArrive() {
     if (song.bpm) setTempo(song.bpm);
     if (song.key?.mode && MODES[song.key.mode]) setKey(song.key.root, song.key.mode);
     studio.markLoaded(); songChanged('*');
+    if (sv.seed === 'demo' && !(songStore.song.order || []).length) { seedDemo(); sv.seed = null; return; }
     const n = (songStore.song.order || []).length;
     setStatus(n ? `Welcome back to ${sv.name}: the song is where the band left it.` : `${sv.name} is ready. Whatever you make here stays for the band.`);
   } else setTimeout(() => { if (S.studio === sv) studio.markLoaded(); }, 5000);   // the band's song arrives in their hello
   sv.song = null;
   setTimeout(wantAudio, 300);
+}
+// the demo studio (src/demo.js): a studio of your own with a whole little song in it, then its tour
+async function openDemo() {
+  if (!STUDIO_SERVER) { setStatus('No studio server is set up (MP_STUDIO in mp-config.js).', 'error'); return; }
+  try {
+    setStatus('Building your demo studio…');
+    const r = await studio.create('Demo studio');
+    stats.use('demo');
+    await enterStudio(r.id, 'demo');
+  } catch (e) { setStatus("Couldn't make the demo studio: " + e.message, 'error'); }
+}
+function seedDemo() {
+  const d = demoSong();
+  for (const c of d.clips) blobs.put(c.id, c.pcm16, c.sr);
+  loadSong(d.song);
+  goRoom('compose');
+  setStatus('This is your own demo studio: a whole song to explore. Change anything; it\'s yours, and it stays in Your studios.');
+  setTimeout(() => { if (songStore.song.title === DEMO_TITLE) tours.start('demo'); }, 1200);
 }
 // make the song in this room a studio: it's kept from now on, and the link brings the band back to it
 async function keepAsStudio(name) {
@@ -2880,6 +2900,7 @@ function renderStudios() {
     pre && isStudioId(pre) && !list.some((s) => s.id === pre) ? walk(pre, 'the studio', true) : null,
     list.length ? h('div', { class: 'legend' }, 'Your studios') : null,
     ...list.slice(0, 6).map((s) => walk(s.id, s.name, s.id === pre)),
+    STUDIO_SERVER ? h('button', { class: 'btn small ghost', title: 'New here? A studio of your own with a whole little song in it to explore, change and pull apart, with a guided tour', onclick: () => openDemo() }, '🎓 Try the demo studio') : null,
     STUDIO_SERVER ? h('button', { class: 'btn small ghost', title: 'A permanent room for your band: the song, every take and its audio stay there between sessions, and its link brings anyone in, alone or together',
       onclick: async () => {
         const nm = (prompt('Name your studio', `${($('#nameIn').value || '').trim() || 'Our'}'s studio`) || '').trim(); if (!nm) return;
@@ -2949,6 +2970,7 @@ const tours = makeTutorial({
   draftPart: (spec) => draftPart(spec), editTake: (sid, pid, ev, what, base) => editTake(sid, pid, ev, what, base), setSong: (k, v) => setSong(k, v),
   studio: () => (studio.id ? { id: studio.id, name: studio.name, ...(studio.takesHome || {}) } : null), canStudio: () => !!STUDIO_SERVER, canDropbox: () => dropbox.configured,
   keepAsStudio: (name) => keepAsStudio(name), studioFolder: () => studio.takesHome?.home?.folder || '',
+  isDemo: () => songStore.song.title === DEMO_TITLE, choose: (sid, pid, t) => choose(sid, pid, t),
 }, { h, $ });
 window.JJ.tours = tours;
 
@@ -3083,7 +3105,7 @@ Object.assign(window.JJ, {
   removeEntry: (r) => removeEntry(entry(r)),
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
-  studio, blobs, dropbox, enterStudio: (id) => enterStudio(id), keepAsStudio: (n) => keepAsStudio(n), leave: () => leaveRoom(), exportSong: () => exportSong(), importFile: (f) => importSketch(f),
+  studio, blobs, dropbox, openDemo: () => openDemo(), enterStudio: (id) => enterStudio(id), keepAsStudio: (n) => keepAsStudio(n), leave: () => leaveRoom(), exportSong: () => exportSong(), importFile: (f) => importSketch(f),
   seqView: (pid, r) => { const sq = seqs.get(key(pid || S.me, r)); return sq && (sq.kind === 'acid' ? sq.view().snapshot() : sq.snapshot()); },
   own: (id, v) => setOwned(id, v),
   loopRange: (a, b) => loopRange(a, b), editTake: (sid, pid, ev, w) => editTake(sid, pid, ev, w), lockAudio: () => lockAudio(), recAll: (on) => setRecAll(on), audio: () => ({ have: [...blobs.bytes.keys()], started: AUD.started }), lane: () => lane,
