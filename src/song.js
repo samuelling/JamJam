@@ -224,7 +224,7 @@ export function sliceEvents(events, a, z) {
   for (const [n, c] of open) for (let i = 0; i < c; i++) out.push({ b: z - a - 0.01, type: 'off', note: n });
   return out;
 }
-function keyFromParts(parts) {
+export function keyFromParts(parts) {
   const w = new Array(12).fill(0);
   for (const p of parts) if (!p.drums) for (const e of p.events) if (e.type === 'on') w[e.note % 12] += 1;
   const MAJ = [0, 2, 4, 5, 7, 9, 11]; let best = { root: 0, mode: 'major' }, bs = -1;
