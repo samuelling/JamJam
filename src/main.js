@@ -23,6 +23,8 @@ import { makeTutorial, toured } from './tutorial.js';
 import { Arp, hasArp, arpOn } from './arp.js';
 import { startStats } from './stats.js';
 import { AcidSeq, makeAcidPanel } from './acidseq.js';
+import { makeStudio, studioRoom, isStudioId, myStudios, forgetStudio } from './studio.js';
+import * as ZIP from './songzip.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
 // ?bot=1: a pretend bandmate the tours run in a hidden frame (src/tutorial.js). It shares this browser's storage, so
 // it writes nothing there and reads none of your gear; it plays nothing out loud (?silent=1 too) and skips the welcome.
@@ -185,7 +187,7 @@ function leaderId() {
 function updateLeader() {
   const was = clock.isLeader, lid = leaderId();
   clock.setLeader(lid === room.id);
-  if (clock.isLeader && !was) S.lockedAt = performance.now();
+  if (clock.isLeader && !was) { S.lockedAt = performance.now(); studio.leader(); }
   if (!clock.isLeader) S.lockedAt = 0;
   // a new leader: it tells the band the tempo it has, and followers ask it, so nobody keeps a tempo the old leader set
   // or misses one the new leader set while they still thought the old one was in charge
@@ -204,6 +206,7 @@ function onEntered() {
   if (!S.pickedOnce && !S.listener && !BOT && (!navigator.webdriver || PICKS)) { S.pickedOnce = true; S.firstPick = true; S.pickWhenJam = true; }
   updateLeader();
   if (clock.isLeader) { tempo.start(clock.now(), 96); S.lockedAt = performance.now(); }
+  if (S.studio) studioArrive();
   for (const e of S.rack) { engine.setCfg(key(S.me, e.r), e.cfg, -Infinity); ensureSeq(key(S.me, e.r), e.cfg); S.stable.set(key(S.me, e.r), performance.now()); applyVolume(key(S.me, e.r)); }
   showStudio();
 }
@@ -823,10 +826,18 @@ function setStatus(text, kind = '') {
   if (kind === 'error') setTimeout(() => { for (const el of [$('#status'), $('#lobbyStatus')]) if (el && el.textContent === text) el.textContent = ''; }, 5000);
 }
 
+// the readout shows the room's code, or the studio's name
+function renderRoomName() {
+  const el = $('#roomCode'); if (!el) return;
+  const sv = studio.id ? { id: studio.id, name: studio.name } : null;
+  el.textContent = sv ? sv.name : room.code; el.title = sv ? 'Your band\'s studio: its link always opens it, with everything the band left in it' : 'Room code';
+  el.classList.toggle('studioname', !!sv);
+}
 function showStudio() {
   $('#lobby').classList.add('hide'); $('#studio').classList.remove('hide');
-  $('#roomCode').textContent = room.code;
-  history.replaceState(null, '', `${location.pathname}?room=${room.code}${qs.get('server') ? '&server=' + encodeURIComponent(qs.get('server')) : ''}${qs.get('p2p') === '0' ? '&p2p=0' : ''}`);
+  renderRoomName();
+  const extra = `${qs.get('server') ? '&server=' + encodeURIComponent(qs.get('server')) : ''}${qs.get('studios') ? '&studios=' + encodeURIComponent(qs.get('studios')) : ''}${qs.get('p2p') === '0' ? '&p2p=0' : ''}`;
+  history.replaceState(null, '', `${location.pathname}?${S.studio ? 'studio=' + S.studio.id : 'room=' + room.code}${extra}`);
   renderRack(); renderDevice(); renderCorners(); renderTempo(); renderKeyboard(); renderInputStatus();
 }
 
@@ -991,7 +1002,7 @@ function takeBig(p, m) {
   if (b.got < m.n) return;
   bigIn.delete(key);
   let obj; try { obj = JSON.parse(b.parts.join('')); } catch (_) { return; }
-  if (m.kind === 'songsnap') { songStore.load(obj); songChanged('*'); }
+  if (m.kind === 'songsnap') { songStore.load(obj); songChanged('*'); if (S.studio) studio.markLoaded(); }
   else if (m.kind === 'song') { if (songStore.apply(obj.key, obj.v, obj.at, obj.by)) songChanged(obj.key, p.id); }
 }
 function setSong(k, v) {
@@ -1002,6 +1013,7 @@ function setSong(k, v) {
   songChanged(k, S.me);
 }
 function songChanged(k, from) {
+  if (k === 'studio' || k === '*') { const sv = songStore.song.studio; if (sv?.id && studio.id !== sv.id) { studio.attach(sv.id, sv.name, true); S.studio = S.studio || { id: sv.id, name: sv.name }; renderRoomName(); } }
   if (k === 'transport' || k === '*') { const tr = songStore.song.transport; if (tr && tr.on && from && from !== S.me && k === 'transport') { const sec = songStore.song.sections[tr.sid]; addChat({ sys: true, text: `${S.players.get(from)?.name || 'A bandmate'} ${tr.mode === 'song' ? 'is playing the song' : `is looping ${sec ? sec.name : 'a section'}`}`, t: Date.now() }); } }
   if (k.startsWith?.('part:')) { const [, sid, pid] = k.split(':'), p = songStore.song.sections[sid]?.parts?.[pid]; dropBounce(sid, pid, p); if (p && from && from !== S.me) addChat({ sys: true, text: `${S.players.get(from)?.name || 'A bandmate'} locked ${p.name} into ${songStore.song.sections[sid]?.name || 'a section'}`, t: Date.now() }); }
   if (k.startsWith?.('vp:') || k === 'transport' || k === '*') renderCorners();
@@ -1013,7 +1025,9 @@ const compose = makeCompose({
   playersOf: () => [{ name: S.name || 'You', where: S.where }, ...[...S.players.values()].filter((p) => p.role !== 'listener').map((p) => ({ name: p.name || '…', where: p.where }))],
   setSong, transport: () => songStore.song.transport, keyName: () => keyName(), bpm: () => Math.round(tempo.bpm(clock.now() + 1000)),
   play: (mode, sid) => startTransport(mode, sid), stop: () => stopTransport(), loopRange: (a, b) => loopRange(a, b), jamThis: (sid) => { startTransport('loop', sid); goRoom('jam'); },
-  importFile: (f) => importSketch(f), exportMidi: () => download(new Blob([SONG.songToMidi(songForExport())], { type: 'audio/midi' }), slugName() + '.mid'), exportJson: () => download(new Blob([JSON.stringify(songForExport(), null, 1)], { type: 'application/json' }), slugName() + '.megajam.json'),
+  studio: () => (studio.id ? { id: studio.id, name: studio.name, saved: studio.saved, link: studio.link() } : null), canStudio: () => !!STUDIO_SERVER,
+  keepAsStudio: (name) => keepAsStudio(name), inviteStudio: () => openInvite(studio.link()),
+  importFile: (f) => importSketch(f), exportMidi: () => download(new Blob([SONG.songToMidi(songForExport())], { type: 'audio/midi' }), slugName() + '.mid'), exportJson: () => exportSong(),
   removePart: (sid, pid) => setSong(`part:${sid}:${pid}`, null), choose, vote, saveVariation, restoreVariation, editTake,
   paramsOf: (inst) => engine.defs.get(inst)?.params || [], baseOf: (p) => partCfg({ ...p, ...SONG.laneCfg(songStore.song, p) }).params,
   now: () => clock.now(),   exportStems: (o, prog) => exportStemsTo(o, prog), canFolder: () => typeof window.showDirectoryPicker === 'function',
@@ -1033,7 +1047,7 @@ const compose = makeCompose({
 });
 const band = makeBand({ h, $, engine, tempo, clock, songStore, setSong, S, segmentsIn, positionAt, setStatus: (t, k) => setStatus(t, k), iconEl, setText, setCls, closeDrawers: () => closeDrawers(), renderLibrary: () => renderLibrary() });
 const slugName = () => (songStore.song.title || 'song').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'song';
-const songForExport = () => { const s = JSON.parse(JSON.stringify(songStore.song)); delete s.transport; delete s.players; s.bpm = Math.round(tempo.bpm(clock.now() + 1000)); s.key = S.key.mode ? { root: S.key.root, mode: S.key.mode } : s.key; return s; };
+const songForExport = () => { const s = JSON.parse(JSON.stringify(songStore.song)); delete s.transport; delete s.players; delete s.studio; s.bpm = Math.round(tempo.bpm(clock.now() + 1000)); s.key = S.key.mode ? { root: S.key.root, mode: S.key.mode } : s.key; return s; };
 // Export stems: every track rendered from bar 1 to the end, lined up, into a folder (a synced copy of the band's Google
 // Drive or Dropbox folder lands them with everyone else's) or a zip. o: { mine, to: 'folder' | 'zip' | 'memory' }
 async function exportStemsTo(o = {}, onProgress) {
@@ -1060,6 +1074,21 @@ async function exportStemsTo(o = {}, onProgress) {
   setSong('share', { ...(songStore.song.share || {}), last: { by: S.name, at: clock.now(), files: r.files, mine: !!o.mine, to: o.to } });
   return { ...r, files: files.map((f) => ({ name: f.name, size: f.size ?? f.data.length })) };
 }
+// Save song: the song as JSON, or, when it has audio takes, a .zip of the song and each take's WAV
+async function exportSong() {
+  const song = songForExport(), ids = [...new Set(audioTakes().map(({ t }) => t.audio.id))];
+  if (!ids.length) { download(new Blob([JSON.stringify(song, null, 1)], { type: 'application/json' }), slugName() + '.megajam.json'); return { files: 1 }; }
+  const files = [{ name: 'song.megajam.json', data: new TextEncoder().encode(JSON.stringify(song, null, 1)) }], missing = [];
+  for (const id of ids) {
+    if (!blobs.has(id)) await blobs.fromCache(id);
+    const p = blobs.pcm(id); if (!p) { missing.push(id); continue; }
+    files.push({ name: `audio/${id}.wav`, data: ZIP.monoWav(p.pcm16, p.sr) });
+  }
+  download(SR.zip(files), slugName() + '.megajam.zip');
+  if (missing.length) setStatus(`Saved, but ${missing.length} take${missing.length > 1 ? "s'" : "'s"} audio hasn't reached this browser yet: save again in a moment.`, 'error');
+  window.JJ.lastSongZip = files.map((f) => f.name);
+  return { files: files.length, missing: missing.length };
+}
 function download(blob, name) { const a = h('a', { href: URL.createObjectURL(blob), download: name }); document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
 // bring in a sketch: a MIDI file or a SynthLand Tracker song (or a saved MEGAjam song)
 async function importSketch(file) {
@@ -1067,7 +1096,16 @@ async function importSketch(file) {
     const buf = new Uint8Array(await file.arrayBuffer());
     let song;
     if (buf[0] === 0x4d && buf[1] === 0x54) song = SONG.songFromMidi(buf, file.name);
-    else { const j = JSON.parse(new TextDecoder().decode(buf)); song = j.format === 'tracker-song/0.1' ? SONG.songFromTracker(j) : j.format === 'megajam.song/1' ? j : null; }
+    else if (buf[0] === 0x50 && buf[1] === 0x4b) {
+      // a song saved with its audio: the song, and each take's WAV back into this browser (and from here to the band)
+      const files = await ZIP.unzip(buf), jf = files.find((f) => /\.megajam\.json$|(^|\/)song\.json$/i.test(f.name));
+      if (!jf) throw new Error('there is no MEGAjam song in that zip');
+      song = JSON.parse(new TextDecoder().decode(jf.data)); if (song.format !== 'megajam.song/1') song = null;
+      for (const f of files) {
+        const m = f.name.match(/(?:^|\/)audio\/([a-z0-9]{8})\.wav$/i); if (!m) continue;
+        const w = ZIP.readPcmWav(f.data); if (w) blobs.put(m[1].toLowerCase(), w.pcm16, w.sr);
+      }
+    } else { const j = JSON.parse(new TextDecoder().decode(buf)); song = j.format === 'tracker-song/0.1' ? SONG.songFromTracker(j) : j.format === 'megajam.song/1' ? j : null; }
     if (!song) throw new Error("MEGAjam reads MIDI files and SynthLand Tracker songs");
     loadSong(song);
     addChat({ sys: true, text: `${S.name} brought in "${song.title}": ${song.order.length} sections`, t: Date.now() }); room.send({ k: 'chat', text: `brought in "${song.title}" (${song.order.length} sections)` });
@@ -1596,6 +1634,12 @@ const AUD_SR = 24000;
 const AUD = { bufs: new Map(), played: new Set(), started: 0 };   // decoded audio takes here, and what has been started
 const blobs = new Blobs(room, (id) => { AUD.bufs.delete(id); compose.render(); if (selEntry()?.cfg.inst === 'pads') renderDevice(); });
 globalThis.MEGAJAM_SAMPLES = { pcm: (id) => blobs.pcm(id) };   // what the Pads instrument plays from
+// the band's studio, when this room is one (src/studio.js): the song and its audio kept on the studio server
+const STUDIO_SERVER = (qs.get('studios') && /^https?:\/\//.test(qs.get('studios')) ? qs.get('studios') : window.MP_STUDIO) || '';
+const studio = makeStudio({ endpoint: STUDIO_SERVER, songStore, blobs, isLeader: () => !!S.me && clock.isLeader && !S.listener,
+  clipIds: () => audioTakes().map(({ t }) => t.audio.id), extras: () => ({ bpm: Math.round(tempo.target()), key: S.key.mode ? { root: S.key.root, mode: S.key.mode } : null }),
+  say: (t, k) => setStatus(t, k), onSaved: () => { if (S.where === 'compose') compose.render(); } });
+blobs.remote = (id) => studio.fetchClip(id);
 const padsUI = makePadsUI({
   h, blobs, status: (t, k) => setStatus(t, k), liveOn: () => lane.on,
   kits: (e) => engine.patchTypes(e.cfg).map((t) => [t, patchName(engine.defs.get('pads'), t)]), pickKit: (e, id) => changeEntry(e, { patch: id }),
@@ -1954,8 +1998,8 @@ async function openInvite(url) {
   const qr = h('div', { class: 'qr' }); qr.innerHTML = `<svg viewBox="0 0 ${size} ${size}" role="img" aria-label="QR code for the invite link"><rect width="${size}" height="${size}" fill="#ECEBE5"/><path d="${d}" fill="#18181B"/></svg>`;
   const copy = h('button', { class: 'btn hot', onclick: async () => { try { await navigator.clipboard.writeText(url); copy.textContent = 'Copied'; } catch (_) { prompt('Invite link', url); } setTimeout(() => { copy.textContent = 'Copy link'; }, 1500); } }, 'Copy link');
   $('#inviteBody').replaceChildren(
-    h('div', { class: 'bigcode', 'aria-label': 'Room code ' + room.code.split('').join(' ') }, room.code),
-    h('p', { class: 'help', style: 'margin:0' }, 'Read them the code, send the link, or let them scan this with a phone camera.'),
+    studio.id ? h('div', { class: 'bigcode studioname' }, studio.name) : h('div', { class: 'bigcode', 'aria-label': 'Room code ' + room.code.split('').join(' ') }, room.code),
+    h('p', { class: 'help', style: 'margin:0' }, studio.id ? 'This is your band\'s studio: the link always opens it, with the song and every take where you left them. Anyone with the link can walk in, so share it only with the band.' : 'Read them the code, send the link, or let them scan this with a phone camera.'),
     qr,
     h('div', { class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap;justify-content:center' }, copy,
       navigator.share ? h('button', { class: 'btn', onclick: () => navigator.share({ title: 'Jam with me on MEGAjam', text: `Room ${room.code}`, url }).catch(() => {}) }, 'Share…') : null),
@@ -2777,12 +2821,73 @@ function sendChat() {
 }
 
 // ---------- entering and leaving ----------
+// ---------- studios ----------
+// walk into a band's studio: its song comes from the server (or from whoever is already in), its audio as needed
+async function enterStudio(id) {
+  if (!isStudioId(id)) { setStatus("That isn't a studio link.", 'error'); return; }
+  if (!STUDIO_SERVER) { setStatus('No studio server is set up (MP_STUDIO in mp-config.js).', 'error'); return; }
+  setStatus('Opening the studio…');
+  let state;
+  try { state = await studio.open(id); }
+  catch (e) { if (e.status === 404) forgetStudio(id); setStatus(e.status === 404 ? "That studio doesn't exist. Check the link." : "Couldn't reach the studio: " + e.message, 'error'); renderStudios(); return; }
+  stats.use('studio');
+  if (studio.id && studio.id !== id) studio.detach();
+  songStore.reset(); songChanged('*');
+  S.studio = { id, name: state.name, song: state.song };
+  studio.attach(id, state.name);
+  await enter(studioRoom(id), false, true);
+}
+// first one in loads the song; anyone else gets it from the band
+function studioArrive() {
+  const sv = S.studio; if (!sv) return;
+  if (clock.isLeader) {
+    const at = clock.now(), song = sv.song || {};
+    for (const [k, v] of Object.entries(song)) if (k !== 'bpm' && k !== 'key' && v != null) songStore.apply(k, v, at, S.me);
+    songStore.apply('studio', { id: sv.id, name: sv.name }, at, S.me);
+    if (song.bpm) setTempo(song.bpm);
+    if (song.key?.mode && MODES[song.key.mode]) setKey(song.key.root, song.key.mode);
+    studio.markLoaded(); songChanged('*');
+    const n = (songStore.song.order || []).length;
+    setStatus(n ? `Welcome back to ${sv.name}: the song is where the band left it.` : `${sv.name} is ready. Whatever you make here stays for the band.`);
+  } else setTimeout(() => { if (S.studio === sv) studio.markLoaded(); }, 5000);   // the band's song arrives in their hello
+  sv.song = null;
+  setTimeout(wantAudio, 300);
+}
+// make the song in this room a studio: it's kept from now on, and the link brings the band back to it
+async function keepAsStudio(name) {
+  if (!STUDIO_SERVER) throw new Error('No studio server is set up.');
+  const r = await studio.create(name || `${S.name}'s studio`);
+  studio.attach(r.id, r.name, true);
+  S.studio = { id: r.id, name: r.name };
+  setSong('studio', { id: r.id, name: r.name });   // everyone in the room attaches too
+  stats.use('studio');
+  renderRoomName();
+  return { id: r.id, name: r.name, link: studio.link(r.id) };
+}
+// the lobby's list of studios this browser has been in, and the way to start one
+function renderStudios() {
+  const box = $('#studioList'); if (!box) return;
+  const list = myStudios(), pre = qs.get('studio');
+  const walk = (id, name, hot) => h('button', { class: 'btn small' + (hot ? ' hot' : ''), onclick: () => enterStudio(id) }, hot ? `Walk into ${name}` : name);
+  box.replaceChildren(
+    pre && isStudioId(pre) && !list.some((s) => s.id === pre) ? walk(pre, 'the studio', true) : null,
+    list.length ? h('div', { class: 'legend' }, 'Your studios') : null,
+    ...list.slice(0, 6).map((s) => walk(s.id, s.name, s.id === pre)),
+    STUDIO_SERVER ? h('button', { class: 'btn small ghost', title: 'A permanent room for your band: the song, every take and its audio stay there between sessions, and its link brings anyone in, alone or together',
+      onclick: async () => {
+        const nm = (prompt('Name your studio', `${($('#nameIn').value || '').trim() || 'Our'}'s studio`) || '').trim(); if (!nm) return;
+        try { setStatus('Building the studio…'); const r = await studio.create(nm.slice(0, 40)); await enterStudio(r.id); } catch (e) { setStatus("Couldn't make a studio: " + e.message, 'error'); }
+      } }, '+ New studio') : null);
+}
 function randomCode() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < 4; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
-async function enter(code, listen = false) {
+async function enter(code, listen = false, raw = false) {
   const name = ($('#nameIn').value || '').trim().slice(0, 16) || (listen ? 'Listener' : 'Jammer');
   S.listener = !!listen; room.listener = S.listener; if (listen) stats.use('listen'); document.body.classList.toggle('listener', S.listener);
-  code = String(code || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
-  if (code.length !== 4) { setStatus('Room codes are four letters.', 'error'); return; }
+  if (!raw) {
+    code = String(code || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
+    if (code.length !== 4) { setStatus('Room codes are four letters.', 'error'); return; }
+    if (S.studio || songStore.song.studio) { studio.detach(); S.studio = null; songStore.reset(); }   // a plain jam starts clean
+  }
   S.name = name;
   try { store.set('name', name); } catch (_) {}
   setStatus('Loading the library…');
@@ -2800,6 +2905,7 @@ async function enter(code, listen = false) {
   room.join(code, name);
 }
 function leaveRoom() {
+  if (studio.id) { studio.detach(); S.studio = null; songStore.reset(); compose.render(); }   // the studio keeps the song; this browser lets go of it
   room.leave(); lane.stopLane(); input.panic();
   for (const k of [...engine.ch.keys()]) engine.removeChannel(k);
   seqs.clear(); S.md = null;
@@ -2843,6 +2949,8 @@ function wire() {
   if (pre) { $('#codeIn').value = pre; $('#joinBtn').classList.add('hot'); $('#startBtn').classList.remove('hot'); }
   if (pre && qs.get('listen') === '1') { $('#joinBtn').classList.remove('hot'); $('#listenBtn').classList.add('hot'); $('#listenBtn').classList.remove('ghost', 'small'); $('#listenBtn').textContent = 'Listen in'; }
   $('#startBtn').onclick = () => enter(randomCode());
+  renderStudios();
+  if (isStudioId(qs.get('studio'))) { $('#startBtn').classList.remove('hot'); if (BOT) setTimeout(() => enterStudio(qs.get('studio')), 200); }
   $('#joinBtn').onclick = () => { stats.joining(); enter($('#codeIn').value); };
   $('#codeIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') { stats.joining(); enter($('#codeIn').value); } });
   $('#leaveBtn').onclick = leaveRoom;
@@ -2851,7 +2959,7 @@ function wire() {
   $('#helpBtn').onclick = (e) => { stats.use('help'); tours.menu(e.currentTarget); };
   for (const b of $$('.tourbtn')) b.classList.toggle('fresh', !toured('jam'));
   if (BOT) { for (const b of $$('.tourbtn')) b.classList.add('hide'); $('#nameIn').value = (qs.get('name') || 'Robin').slice(0, 16); if (pre) setTimeout(() => enter(pre), 200); }
-  $('#copyBtn').onclick = () => openInvite(`${location.origin}${location.pathname}?room=${room.code}${qs.get('server') ? '&server=' + encodeURIComponent(qs.get('server')) : ''}`);
+  $('#copyBtn').onclick = () => openInvite(studio.id ? studio.link() + (qs.get('studios') ? '&studios=' + encodeURIComponent(qs.get('studios')) : '') : `${location.origin}${location.pathname}?room=${room.code}${qs.get('server') ? '&server=' + encodeURIComponent(qs.get('server')) : ''}`);
   const bpmNow = () => Math.round(wantBpm());
   $('#bpmDown').onclick = () => setTempo(bpmNow() - 1);
   $('#bpmUp').onclick = () => setTempo(bpmNow() + 1);
@@ -2966,6 +3074,7 @@ Object.assign(window.JJ, {
   removeEntry: (r) => removeEntry(entry(r)),
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
+  studio, blobs, enterStudio: (id) => enterStudio(id), keepAsStudio: (n) => keepAsStudio(n), leave: () => leaveRoom(), exportSong: () => exportSong(), importFile: (f) => importSketch(f),
   seqView: (pid, r) => { const sq = seqs.get(key(pid || S.me, r)); return sq && (sq.kind === 'acid' ? sq.view().snapshot() : sq.snapshot()); },
   own: (id, v) => setOwned(id, v),
   loopRange: (a, b) => loopRange(a, b), editTake: (sid, pid, ev, w) => editTake(sid, pid, ev, w), lockAudio: () => lockAudio(), recAll: (on) => setRecAll(on), audio: () => ({ have: [...blobs.bytes.keys()], started: AUD.started }), lane: () => lane,

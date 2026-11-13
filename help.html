@@ -158,6 +158,7 @@
   <li>If you got a link, just open it. If you got a code, type your name, type the code in <span class="ui">CODE</span>, and click <span class="ui">Walk in</span>.</li>
   <li>You arrive in the same studio, in a corner of your own.</li>
 </ol></div>
+<p>A jam's room lasts while someone's in it. For a band that keeps working on songs, make a <b>band studio</b> instead: it keeps the song, every take and its audio between sessions (<a href="#compose">Chapter 15</a>).</p>
 <h3>Just listening</h3>
 <p>Click <span class="ui">or just listen in</span> in the lobby (or open a listener link) to hear the band without playing. Your browser still plays every instrument itself, so it sounds exactly like being in the room. Listeners don't take a player's corner, and the band sees how many people are listening.</p>
 <h3>"Tap to hear the room"</h3>
@@ -525,6 +526,16 @@
 <section class="ch" id="compose">
 <h2><span class="num">Chapter 15</span>The Compose Room: building a song</h2>
 <p class="lede">The Compose Room turns jams into a song. It's laid out like a DAW: sections across the top, one row per track, time running left to right. Everything in it is shared: every change shows up for the whole band at once.</p>
+<h3>Your band's studio: songs that keep</h3>
+<p>A plain jam's song lasts as long as someone is in the room. A <b>band studio</b> keeps it: the song, every take and the audio of every live-audio take, saved as you go. Walk in any day, alone or together, and everything is where the band left it. Lock in a few takes on your own, and the others find them the next time they walk in; they can pick the take they like, vote, or rearrange the sections.</p>
+<ul>
+  <li><b>Make one:</b> in the lobby, <span class="ui">+ New studio</span>, or keep the song you're working on with <span class="ui">Song options</span> › <span class="ui">Keep as a studio…</span>. Everyone in the room comes along.</li>
+  <li><b>Come back:</b> the studio's link always opens it, and the lobby lists <b>Your studios</b> (the ones this browser has been in). The readout at the top shows the studio's name instead of a room code.</li>
+  <li><b>Bring the band:</b> <span class="ui">Invite</span> (or <span class="ui">Studio link</span> in Song options) gives the link. Anyone with it can walk in and hear everything, so share it only with the band.</li>
+  <li><b>Saving:</b> automatic, a moment after each change. Song options shows when it last saved. The studio also keeps a copy of the song as it was at the start of each day, for two weeks, in case a session goes badly wrong.</li>
+  <li><b>Audio:</b> live-audio takes are stored with the studio, so a take plays for everyone even when whoever recorded it isn't there.</li>
+</ul>
+<p>Your instruments and gear are yours, not the studio's: each person brings their own corner every time.</p>
 <h3>The board</h3>
 <ul>
   <li><b>Sections</b> run across the top: Intro, Verse, Chorus and so on, each sized by its bars, with its chords. Drag a section by its name to move it; its × removes it.</li>
@@ -613,7 +624,7 @@
 <ul>
   <li><span class="ui">♪ Song presets…</span> starts a song from a form, chord changes and a basic band (drums, bass, chords): five each in twenty genres.</li>
   <li><span class="ui">Import a sketch…</span> takes a MIDI file (tracks become parts, markers become sections, tempo and key come along) or a song from SynthLand's Tracker.</li>
-  <li><span class="ui">Save MIDI</span> and <span class="ui">Save song</span> export the song as a MIDI file or a MEGAjam song file.</li>
+  <li><span class="ui">Save MIDI</span> and <span class="ui">Save song</span> export the song as a MIDI file or a MEGAjam song file. With live-audio takes in it, <span class="ui">Save song</span> makes a .zip of the song and each take as a WAV: a good way to keep a song in the band's Dropbox or Google Drive folder. <span class="ui">Import a sketch…</span> brings the .zip back, audio and all.</li>
 </ul>
 <h3>Exporting stems</h3>
 <div class="walk"><b>Walkthrough: export stems for your DAW</b>
@@ -681,7 +692,7 @@
   <dt>Someone left, but their corner is still there.</dt>
   <dd>If they closed the tab without leaving, their corner usually goes within a few seconds, as soon as their link closes.</dd>
   <dt>Does MEGAjam send anything about my jams?</dt>
-  <dd>Yes: anonymous numbers that show how well jams work, so we can fix what doesn't. They cover how long joining took, whether links were direct or through the server, round-trip times, the lookahead, clock error, late notes, stalls, your kind of device and browser, which instruments you used, and any errors the page hit. MEGAjam never sends names, chat, the notes you play, audio, or your room code (only a scrambled version of it, so one jam's numbers can be grouped). The stats server also notes your country, but not your IP address, and keeps reports for 90 days. To turn it off in this browser, open MEGAjam once with <code>?stats=0</code> at the end of the address (<code>?stats=1</code> turns it back on).</dd>
+  <dd>Yes: anonymous numbers that show how well jams work, so we can fix what doesn't. They cover how long joining took, whether links were direct or through the server, round-trip times, the lookahead, clock error, late notes, stalls, your kind of device and browser, which instruments you used, and any errors the page hit. MEGAjam never sends names, chat, the notes you play, audio, or your room code (only a scrambled version of it, so one jam's numbers can be grouped). The stats server also notes your country, but not your IP address, and keeps reports for 90 days. (Band studios are separate: they keep your song and its audio on purpose, for the band; see <a href="#compose">Chapter 15</a>.) To turn it off in this browser, open MEGAjam once with <code>?stats=0</code> at the end of the address (<code>?stats=1</code> turns it back on).</dd>
 </dl>
 <a class="top" href="#top">↑ Contents</a>
 </section>
@@ -697,6 +708,7 @@
   <dt>Lockstep</dt><dd>Every browser runs everyone's instruments and plays every note at the same moment on a shared clock. Only the notes travel.</dd>
   <dt>Lookahead</dt><dd>How far in the future notes are scheduled, so they reach everyone in time.</dd>
   <dt>Patch</dt><dd>A saved setting of an instrument's knobs: a starting sound.</dd>
+  <dt>Studio (band studio)</dt><dd>A permanent room for a band, opened by its link: it keeps the song, the takes and their audio between sessions.</dd>
   <dt>Section</dt><dd>A part of the song (Verse, Chorus…), with a length in bars and chords.</dd>
   <dt>Stem</dt><dd>One track (or group of tracks) rendered to its own audio file.</dd>
   <dt>Take</dt><dd>One recorded or written version of a block.</dd>

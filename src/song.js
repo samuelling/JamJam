@@ -17,8 +17,17 @@ export function newSection(name = 'Verse', bars = 8) { return { id: rid(), name,
 export const sectionBeats = (song, s) => s.bars * (song.meter || 4);
 
 // ---------- the shared store: key -> value, with (at, by) stamps ----------
+function valueIn(s, k) {
+  if (k.startsWith('sec:')) { const sec = s.sections[k.slice(4)]; return sec ? { name: sec.name, bars: sec.bars, chords: sec.chords, notes: sec.notes } : null; }
+  if (k.startsWith('part:')) { const [, sid, pid] = k.split(':'); return s.sections[sid]?.parts?.[pid] ?? null; }
+  if (k.startsWith('lane:')) return s.lanes?.[k.slice(5)] ?? null;
+  if (k.startsWith('var:')) return s.variations?.[k.slice(4)] ?? null;
+  if (k.startsWith('vp:')) return s.players?.[k.slice(3)] ?? null;
+  return s[k];
+}
 export class SongStore {
   constructor() { this.song = emptySong(); this.stamps = {}; this.listeners = new Set(); }
+  reset() { this.song = emptySong(); this.stamps = {}; }
   // keys: 'master' ({vol: dB}: the song's master fader) | 'share' ({url}: the band's shared folder) | 'title' | 'bpm' | 'key' | 'meter' | 'order' | 'transport' ({on, mode: 'loop' | 'song', sid, start (room beat)}) | 'sec:<id>' (name, bars, chords, notes; null = gone)
   //       | 'lane:<id>' (a track: name, owner, instrument and its settings, muted) | 'part:<sid>:<pid>' (a track's block in a section; pid = the track id)
   apply(k, v, at, by) {
@@ -26,7 +35,7 @@ export class SongStore {
     if (st && (st[0] > at || (st[0] === at && String(st[1]) >= String(by)))) return false;
     this.stamps[k] = [at, by];
     const s = this.song;
-    if (['title', 'bpm', 'key', 'meter', 'order', 'labels', 'rule', 'transport', 'master', 'share'].includes(k)) s[k] = v;
+    if (['title', 'bpm', 'key', 'meter', 'order', 'labels', 'rule', 'transport', 'master', 'share', 'studio'].includes(k)) s[k] = v;
     else if (k.startsWith('vp:')) { s.players = s.players || {}; if (v == null) delete s.players[k.slice(3)]; else s.players[k.slice(3)] = { ...v, id: k.slice(3) }; }
     else if (k.startsWith('lane:')) { s.lanes = s.lanes || {}; if (v == null) delete s.lanes[k.slice(5)]; else s.lanes[k.slice(5)] = { ...v, id: k.slice(5) }; }
     else if (k.startsWith('var:')) { s.variations = s.variations || {}; if (v == null) delete s.variations[k.slice(4)]; else s.variations[k.slice(4)] = v; }
@@ -41,17 +50,12 @@ export class SongStore {
     // merge: newer stamps win key by key
     const keys = Object.keys(snap.stamps || {});
     for (const k of keys) {
-      const [at, by] = snap.stamps[k], s = snap.song;
-      let v;
-      if (k.startsWith('sec:')) { const sec = s.sections[k.slice(4)]; v = sec ? { name: sec.name, bars: sec.bars, chords: sec.chords, notes: sec.notes } : null; }
-      else if (k.startsWith('part:')) { const [, sid, pid] = k.split(':'); v = s.sections[sid]?.parts?.[pid] ?? null; }
-      else if (k.startsWith('lane:')) v = s.lanes?.[k.slice(5)] ?? null;
-      else if (k.startsWith('var:')) v = s.variations?.[k.slice(4)] ?? null;
-      else if (k.startsWith('vp:')) v = s.players?.[k.slice(3)] ?? null;
-      else v = s[k];
-      this.apply(k, v, at, by);
+      const [at, by] = snap.stamps[k];
+      this.apply(k, valueIn(snap.song, k), at, by);
     }
   }
+  // the value a key holds now (what apply was last given for it)
+  valueOf(k) { const v = valueIn(this.song, k); return v === undefined ? null : JSON.parse(JSON.stringify(v)); }
   sections() { return this.song.order.map((id) => this.song.sections[id]).filter(Boolean); }
   // section start beats in arrangement order (sections can repeat)
   timeline() { let b = 0; return this.song.order.map((id) => { const s = this.song.sections[id]; const t = { id, start: b, beats: s ? sectionBeats(this.song, s) : 0 }; b += t.beats; return t; }).filter((t) => t.beats > 0); }

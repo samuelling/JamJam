@@ -458,7 +458,7 @@ export function makeCompose(x) {
     const L = lanes(), work = x.working();
     if (!sel || !song.sections[sel]) sel = order[0] || null;
     const totalBars = order.reduce((a, id) => a + song.sections[id].bars, 0), mins = (totalBars * meter) / x.bpm();
-    const file = h('input', { type: 'file', accept: '.mid,.midi,.json,audio/midi,application/json', style: 'display:none', onchange: (e) => { const f = e.target.files[0]; if (f) x.importFile(f); e.target.value = ''; } });
+    const file = h('input', { type: 'file', accept: '.mid,.midi,.json,.zip,audio/midi,application/json,application/zip', style: 'display:none', onchange: (e) => { const f = e.target.files[0]; if (f) x.importFile(f); e.target.value = ''; } });
     const vars = Object.values(song.variations || {});
     const playing = tr?.on && tr.mode === 'song', empty = !order.length || !L.length;
     const importBtn = (cls) => h('button', { class: cls, onclick: () => file.click(), title: "Bring in a sketch: a MIDI file, or a song from SynthLand's Tracker (.json)" }, 'Import a sketch…');
@@ -483,7 +483,8 @@ export function makeCompose(x) {
         h('select', { class: 'lcdsel', onchange: (e) => x.setSong('rule', e.target.value) }, ...[['newest', 'take over'], ['owner', 'wait for the owner'], ['vote', 'go to a vote']].map(([v, t]) => h('option', { value: v, selected: (song.rule || 'newest') === v }, t)))),
       h('select', { class: 'lcdsel', 'aria-label': 'Versions', onchange: (e) => { const v = e.target.value; e.target.value = ''; if (v === '__save') { const n = prompt('Name this version of the song', `Version ${vars.length + 1}`); if (n) x.saveVariation(n.slice(0, 40)); } else if (v) x.restoreVariation(v); } },
         h('option', { value: '' }, vars.length ? `Versions (${vars.length})` : 'Versions'), h('option', { value: '__save' }, 'Save this version…'), ...vars.map((v) => h('option', { value: v.name }, `Go to “${v.name}”`))),
-      empty ? null : importBtn('btn small'), empty ? null : presetPick('presets'), h('button', { class: 'btn small', onclick: () => x.exportMidi() }, 'Save MIDI'), h('button', { class: 'btn small', onclick: () => x.exportJson() }, 'Save song'),
+      empty ? null : importBtn('btn small'), empty ? null : presetPick('presets'), h('button', { class: 'btn small', onclick: () => x.exportMidi() }, 'Save MIDI'), h('button', { class: 'btn small', title: 'The song as a file: with audio takes it\'s a .zip of the song and each take as a WAV (keep it in the band\'s Dropbox or Drive, and import it back any time)', onclick: () => x.exportJson() }, 'Save song'),
+      studioCtl(),
       h('label', { class: 'help', title: 'Knob moves are always recorded with takes; this shows them as lanes you can edit' }, h('input', { type: 'checkbox', class: 'autotoggle', checked: showAuto, onchange: (e) => { showAuto = e.target.checked; remember('auto', showAuto); render(); } }), ' Show automation'),
       x.exportStems && !empty ? h('button', { class: 'btn small' + (stemsOpen ? ' on' : ''), 'aria-expanded': String(stemsOpen), onclick: () => { stemsOpen = !stemsOpen; render(); } }, 'Export stems…') : null,
       h('span', { class: 'help mono' }, `${x.bpm()} bpm · ${x.keyName()}`),
@@ -723,6 +724,21 @@ export function makeCompose(x) {
     if (sel === id) sel = null;
   }
   function move(i, d) { const o = [...x.store.song.order]; const [v] = o.splice(i, 1); o.splice(i + d, 0, v); x.setSong('order', o); const l = [...(x.store.song.labels || [])]; const [lv] = l.splice(i, 1); l.splice(i + d, 0, lv || ''); x.setSong('labels', l.map((q) => q || '')); }
+  // the band's studio: where this song is kept between sessions (Song options)
+  let studioSay = '';
+  function studioCtl() {
+    if (!x.canStudio?.()) return null;
+    const st = x.studio();
+    if (st) return h('span', { class: 'studioctl help' }, '🏠 ', h('b', {}, st.name), st.saved ? ` · saved ${new Date(st.saved).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : ' · saving…', ' ',
+      h('button', { class: 'btn small', title: 'The link that brings anyone back to this studio, alone or together', onclick: () => x.inviteStudio() }, 'Studio link'));
+    return h('span', { class: 'studioctl' }, h('button', { class: 'btn small', title: 'Keep this song for the band: it, every take and its audio stay in a studio whose link brings anyone back, alone or together',
+      onclick: async () => {
+        const nm = (prompt('Name the studio', 'Our studio') || '').trim(); if (!nm) return;
+        studioSay = 'Building the studio…'; render();
+        try { await x.keepAsStudio(nm.slice(0, 40)); studioSay = ''; x.inviteStudio(); } catch (e) { studioSay = "Couldn't make the studio: " + e.message; }
+        render();
+      } }, 'Keep as a studio…'), studioSay ? h('span', { class: 'help' }, ' ' + studioSay) : null);
+  }
   function addSection(name) {
     const prev = x.store.sections().slice(-1)[0], sec = newSection(name, name === 'Intro' || name === 'Outro' ? 4 : 8);
     if (prev && !name.match(/intro|outro|break/i)) sec.chords = [...prev.chords].slice(0, sec.bars);

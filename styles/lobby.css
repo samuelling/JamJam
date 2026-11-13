@@ -11,3 +11,11 @@
 .door input { width: 100%; }
 #codeIn { letter-spacing: .5em; text-transform: uppercase; font-size: 18px; text-align: center; }
 .or { text-align: center; font: 10px var(--mono); color: var(--faint); letter-spacing: .2em; }
+
+/* the band's studios (src/studio.js): the ones this browser has been in, and + New studio */
+.studiolist { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; }
+.studiolist:empty { display: none; }
+.studiolist .legend { flex-basis: 100%; text-align: center; margin-top: 4px; }
+.readout .lcd.studioname, .lcd.studioname { max-width: 22ch; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: .02em; }
+.bigcode.studioname { font-size: 28px; letter-spacing: .02em; }
+.studioctl { display: inline-flex; align-items: center; gap: 4px; }
