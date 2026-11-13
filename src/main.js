@@ -1029,6 +1029,7 @@ const compose = makeCompose({
   play: (mode, sid) => startTransport(mode, sid), stop: () => stopTransport(), loopRange: (a, b) => loopRange(a, b), jamThis: (sid) => { startTransport('loop', sid); goRoom('jam'); },
   studio: () => (studio.id ? { id: studio.id, name: studio.name, saved: studio.saved, link: studio.link() } : null), canStudio: () => !!STUDIO_SERVER,
   keepAsStudio: (name) => keepAsStudio(name), inviteStudio: () => openInvite(studio.link()),
+  takeQuality: () => (hifi() ? 'hifi' : 'standard'), setTakeQuality: (q) => setTakeQuality(q),
   takesHome: () => (dropbox.configured ? studio.takesHome : null), dropboxName: () => (dropbox.linked ? dropbox.name || 'your Dropbox' : ''),
   keepInDropbox: async () => { if (!dropbox.linked) await dropbox.connect(); return studio.keepInDropbox(); },
   stopDropbox: () => studio.stopDropbox(), unlinkDropbox: async () => { await studio.stopDropbox().catch(() => {}); await dropbox.disconnect(); },
@@ -1073,7 +1074,7 @@ async function exportStemsTo(o = {}, onProgress) {
       files.push({ name, size: data.length });
     };
   } else write = async (name, data) => { files.push({ name: `${folder}/${name}`, data: typeof data === 'string' ? new TextEncoder().encode(data) : data }); };
-  const r = await STEMS.exportStems({ song, bpm: song.bpm, sr, defs: engine.defs, resolve: (c) => engine.resolve(c), clip: (id) => blobs.pcm(id), only, master: song.master?.vol ?? 0, by: S.name, onProgress, write });
+  const r = await STEMS.exportStems({ song, bpm: song.bpm, sr, defs: engine.defs, resolve: (c) => engine.resolve(c), clip: (id) => { const c = blobs.pcm(id); return c && { ...c, ch: chOf(id) }; }, only, master: song.master?.vol ?? 0, by: S.name, onProgress, write });
   if (o.to === 'zip') download(SR.zip(files), folder + '.zip');
   if (o.to === 'memory') window.JJ.lastStems = files;
   setSong('share', { ...(songStore.song.share || {}), last: { by: S.name, at: clock.now(), files: r.files, mine: !!o.mine, to: o.to } });
@@ -1087,7 +1088,7 @@ async function exportSong() {
   for (const id of ids) {
     if (!blobs.has(id)) await blobs.fromCache(id);
     const p = blobs.pcm(id); if (!p) { missing.push(id); continue; }
-    files.push({ name: `audio/${id}.wav`, data: ZIP.monoWav(p.pcm16, p.sr) });
+    files.push({ name: `audio/${id}.wav`, data: ZIP.wav(p.pcm16, p.sr, chOf(id)) });
   }
   download(SR.zip(files), slugName() + '.megajam.zip');
   if (missing.length) setStatus(`Saved, but ${missing.length} take${missing.length > 1 ? "s'" : "'s"} audio hasn't reached this browser yet: save again in a moment.`, 'error');
@@ -1099,7 +1100,7 @@ function download(blob, name) { const a = h('a', { href: URL.createObjectURL(blo
 // an Ableton Live project (src/liveimport.js): files [{ name: path in the project, data: bytes or () => bytes }]
 async function importLive(files) {
   try {
-    const r = await songFromLive(files, { progress: (t) => setStatus(t) });
+    const r = await songFromLive(files, { progress: (t) => setStatus(t), stereo: hifi() });
     for (const c of r.clips) blobs.put(c.id, c.pcm16, c.sr);
     loadSong(r.song); goRoom('compose');
     const n = Object.keys(songStore.song.lanes || {}).length;
@@ -1147,7 +1148,7 @@ function loadSong(song) {
   for (const t of Object.values(song.lanes)) setSong('lane:' + t.id, t);
   setSong('title', song.title);
   for (const id of song.order) { const sec = song.sections[id]; if (!sec) continue; setSong('sec:' + id, { name: sec.name, bars: sec.bars, chords: sec.chords || [], notes: sec.notes || '' }); for (const p of Object.values(sec.parts || {})) setSong(`part:${id}:${p.id}`, p); }
-  setSong('order', song.order.filter((id) => song.sections[id])); setSong('labels', song.labels || []); setSong('master', song.master || {});
+  setSong('order', song.order.filter((id) => song.sections[id])); setSong('labels', song.labels || []); setSong('master', { ...(hifi() && !song.master?.takes ? { takes: 'hifi' } : {}), ...(song.master || {}) });   // the studio's take quality stays
   if (song.bpm) setTempo(song.bpm);
   if (song.key && MODES[song.key.mode]) setKey(song.key.root, song.key.mode);
 }
@@ -1661,7 +1662,7 @@ const STUDIO_SERVER = (qs.get('studios') && /^https?:\/\//.test(qs.get('studios'
 // the band's Dropbox, where a studio's takes can live long-term (src/dropbox.js): MP_DROPBOX_KEY, or ?dropbox=<app key>
 const dropbox = makeDropbox({ key: qs.get('dropbox') || window.MP_DROPBOX_KEY || '', redirect: new URL('./', location.href.split(/[?#]/)[0]).href });
 const clipName = (id) => { const f = audioTakes().find(({ t }) => t.audio.id === id); if (!f) return 'take'; const n = SONG.takesOf(f.p).indexOf(f.t) + 1; return `${f.s.name} - ${f.p.name || 'Live audio'} - take ${n} by ${f.t.byName || 'someone'}`; };
-const studio = makeStudio({ endpoint: STUDIO_SERVER, songStore, blobs, dropbox, clipName, isLeader: () => !!S.me && clock.isLeader && !S.listener,
+const studio = makeStudio({ endpoint: STUDIO_SERVER, songStore, blobs, dropbox, clipName, clipCh: (id) => chOf(id), isLeader: () => !!S.me && clock.isLeader && !S.listener,
   clipIds: () => audioTakes().map(({ t }) => t.audio.id), extras: () => ({ bpm: Math.round(tempo.target()), key: S.key.mode ? { root: S.key.root, mode: S.key.mode } : null }),
   say: (t, k) => setStatus(t, k), onSaved: () => { if (S.where === 'compose') compose.render(); } });
 blobs.remote = (id) => studio.fetchClip(id);
@@ -1675,12 +1676,20 @@ const padsUI = makePadsUI({
 });
 const audioTakes = () => songStore.sections().flatMap((s) => Object.values(s.parts || {}).flatMap((p) => SONG.takesOf(p).filter((t) => t.audio).map((t) => ({ s, p, t }))));
 // a clip as an AudioBuffer in this browser's audio (made the first time it's needed)
-function clipBuffer(id) {
+function clipBuffer(id, ch = chOf(id)) {
   if (AUD.bufs.has(id)) return AUD.bufs.get(id);
   const c = blobs.pcm(id); if (!c || !engine.ctx) return null;
-  const buf = engine.ctx.createBuffer(1, c.pcm16.length, c.sr), ch = buf.getChannelData(0);
-  for (let i = 0; i < c.pcm16.length; i++) ch[i] = c.pcm16[i] / 32768;
+  const buf = ZIP.pcmBuffer(engine.ctx, c.pcm16, c.sr, ch);
   AUD.bufs.set(id, buf); return buf;
+}
+// a take's channel count (its samples are interleaved when it's 2): from the take, since the bytes don't say
+function chOf(id) { return audioTakes().find(({ t }) => t.audio.id === id)?.t.audio.ch === 2 ? 2 : 1; }
+// the studio's take quality: 'hifi' keeps locked takes at 48 kHz, in stereo from a two-channel input; the live stream
+// to the band stays lean either way
+const hifi = () => songStore.song.master?.takes === 'hifi';
+function setTakeQuality(q) {
+  setSong('master', { ...(songStore.song.master || {}), takes: q === 'hifi' ? 'hifi' : undefined });
+  if (lane.on && lane.wantStereo !== (q === 'hifi')) lane.startLane($('#laneDev')?.value || undefined, q === 'hifi').catch(() => {});
 }
 function lockAudio(opts = {}) {
   const tr = opts.tr || songStore.song.transport, say = (t) => { if (!opts.auto) setStatus(t, 'error'); };
@@ -1698,12 +1707,13 @@ function lockAudio(opts = {}) {
   }
   const t = audioLane(), pid = t.id; let n = 0;
   for (const pc of pieces) {
-    const t0 = tempo.timeOf(pc.start + pc.lo), t1 = tempo.timeOf(pc.start + pc.hi), pcm = lane.slice(t0, t1, AUD_SR); if (!pcm) continue;
-    const id = Math.random().toString(36).slice(2, 10).padEnd(8, '0'), pcm16 = toPcm16(pcm);
+    // standard: 24 kHz mono; a studio set to high fidelity: 48 kHz, stereo when the input really is
+    const t0 = tempo.timeOf(pc.start + pc.lo), t1 = tempo.timeOf(pc.start + pc.hi), sr = hifi() ? 48000 : AUD_SR, got = lane.sliceTake(t0, t1, sr, hifi()); if (!got) continue;
+    const id = Math.random().toString(36).slice(2, 10).padEnd(8, '0'), pcm16 = toPcm16(got.pcm), pcm = got.mono;
     const peaks = Array.from({ length: 120 }, (_, k) => { let m = 0; for (let i = Math.floor((k * pcm.length) / 120); i < Math.floor(((k + 1) * pcm.length) / 120); i++) m = Math.max(m, Math.abs(pcm[i])); return Math.round(m * 100) / 100; });
-    blobs.put(id, pcm16, AUD_SR);
+    blobs.put(id, pcm16, sr);
     const sec = songStore.song.sections[pc.sid], old = sec.parts?.[pid];
-    const take = { id: Math.random().toString(36).slice(2, 7), events: [], audio: { id, sr: AUD_SR, frames: pcm.length, from: pc.lo, beats: pc.hi - pc.lo, bpm: tempo.bpm(t0), peaks }, by: S.me, byName: S.name, at: clock.now() };
+    const take = { id: Math.random().toString(36).slice(2, 7), events: [], audio: { id, sr, ...(got.ch === 2 ? { ch: 2 } : {}), frames: pcm.length, from: pc.lo, beats: pc.hi - pc.lo, bpm: tempo.bpm(t0), peaks }, by: S.me, byName: S.name, at: clock.now() };
     const takes = [...SONG.takesOf(old || {}), take].slice(-TAKES_MAX);
     commitTake(pc.sid, pid, partBase(t, old), take, takes, old, pos, opts);
     blobs.send(id);
@@ -1760,7 +1770,7 @@ function wantAudio() {
 setInterval(() => { if (S.me) wantAudio(); }, 3000);
 // play an audio take where its section (or the part of it the loop covers) sounds
 function playAudioTake(p, take, seg, b0, b1, end) {
-  const A = take.audio, buf = clipBuffer(A.id); if (!buf) return;
+  const A = take.audio, buf = clipBuffer(A.id, A.ch); if (!buf) return;
   const a0 = seg.start + A.from, lo = Math.max(seg.lo ?? seg.start, a0), hi = Math.min(seg.hi ?? seg.start + seg.beats, a0 + A.beats, Number.isFinite(end) ? end : Infinity);
   if (hi <= lo || lo >= b1 || hi <= b0) return;
   const tag = `${p.id}.${take.id}@${seg.start.toFixed(3)}`; if (AUD.played.has(tag)) return; AUD.played.add(tag);
@@ -3048,7 +3058,7 @@ function wire() {
     const btn = e.currentTarget;
     if (lane.on) { lane.stopLane(); btn.textContent = 'Go live'; btn.classList.remove('on'); }
     else {
-      try { await lane.startLane($('#laneDev').value || undefined); stats.use('lane'); }
+      try { await lane.startLane($('#laneDev').value || undefined, hifi()); stats.use('lane'); }
       catch (err) { $('#laneHelp').textContent = "Couldn't open that input: " + err.message; return; }
       btn.textContent = 'Stop live audio'; btn.classList.add('on'); $('#laneHelp').textContent = `Live: the band hears you ${lane.bars} bar${lane.bars > 1 ? 's' : ''} later.`;
       const devs = await lane.devices(), cur = $('#laneDev').value;
@@ -3066,7 +3076,7 @@ function wire() {
   };
   $('#addLiveBtn').onclick = openLive;
   S.openLive = openLive;
-  $('#laneDev').onchange = async () => { if (lane.on) await lane.startLane($('#laneDev').value || undefined); };
+  $('#laneDev').onchange = async () => { if (lane.on) await lane.startLane($('#laneDev').value || undefined, hifi()); };
   $('#laneBars').onchange = (e) => { lane.bars = +e.target.value; room.send({ k: 'lane', lane: { on: lane.on, bars: lane.bars } }); };
   $('#laneQ').onchange = (e) => { lane.quality = e.target.value; };
   $('#laneOff').oninput = (e) => { lane.offsetMs = +e.target.value; $('#laneOffVal').textContent = `${lane.offsetMs > 0 ? '+' : ''}${lane.offsetMs} ms`; };
@@ -3101,7 +3111,7 @@ Object.assign(window.JJ, {
   removeEntry: (r) => removeEntry(entry(r)),
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
-  studio, blobs, dropbox, enterStudio: (id) => enterStudio(id), keepAsStudio: (n) => keepAsStudio(n), leave: () => leaveRoom(), exportSong: () => exportSong(), importFile: (f) => importSketch(f), importLive: (files) => importLive(files),
+  studio, blobs, dropbox, setTakeQuality: (q) => setTakeQuality(q), chOf: (id) => chOf(id), enterStudio: (id) => enterStudio(id), keepAsStudio: (n) => keepAsStudio(n), leave: () => leaveRoom(), exportSong: () => exportSong(), importFile: (f) => importSketch(f), importLive: (files) => importLive(files),
   seqView: (pid, r) => { const sq = seqs.get(key(pid || S.me, r)); return sq && (sq.kind === 'acid' ? sq.view().snapshot() : sq.snapshot()); },
   own: (id, v) => setOwned(id, v),
   loopRange: (a, b) => loopRange(a, b), editTake: (sid, pid, ev, w) => editTake(sid, pid, ev, w), lockAudio: () => lockAudio(), recAll: (on) => setRecAll(on), audio: () => ({ have: [...blobs.bytes.keys()], started: AUD.started }), lane: () => lane,

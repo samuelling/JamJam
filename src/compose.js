@@ -487,7 +487,7 @@ export function makeCompose(x) {
       h('select', { class: 'lcdsel', 'aria-label': 'Versions', onchange: (e) => { const v = e.target.value; e.target.value = ''; if (v === '__save') { const n = prompt('Name this version of the song', `Version ${vars.length + 1}`); if (n) x.saveVariation(n.slice(0, 40)); } else if (v) x.restoreVariation(v); } },
         h('option', { value: '' }, vars.length ? `Versions (${vars.length})` : 'Versions'), h('option', { value: '__save' }, 'Save this version…'), ...vars.map((v) => h('option', { value: v.name }, `Go to “${v.name}”`))),
       empty ? null : importBtn('btn small'), empty ? null : liveBtn('btn small'), empty ? null : presetPick('presets'), h('button', { class: 'btn small', onclick: () => x.exportMidi() }, 'Save MIDI'), h('button', { class: 'btn small', title: 'The song as a file: with audio takes it\'s a .zip of the song and each take as a WAV (keep it in the band\'s Dropbox or Drive, and import it back any time)', onclick: () => x.exportJson() }, 'Save song'),
-      studioCtl(), x.studio?.() ? takesCtl() : null,
+      studioCtl(), x.studio?.() ? takesCtl() : null, x.studio?.() ? qualityCtl() : null,
       h('label', { class: 'help', title: 'Knob moves are always recorded with takes; this shows them as lanes you can edit' }, h('input', { type: 'checkbox', class: 'autotoggle', checked: showAuto, onchange: (e) => { showAuto = e.target.checked; remember('auto', showAuto); render(); } }), ' Show automation'),
       x.exportStems && !empty ? h('button', { class: 'btn small' + (stemsOpen ? ' on' : ''), 'aria-expanded': String(stemsOpen), onclick: () => { stemsOpen = !stemsOpen; render(); } }, 'Export stems…') : null,
       h('span', { class: 'help mono' }, `${x.bpm()} bpm · ${x.keyName()}`),
@@ -741,6 +741,16 @@ export function makeCompose(x) {
         try { await x.keepAsStudio(nm.slice(0, 40)); studioSay = ''; x.inviteStudio(); } catch (e) { studioSay = "Couldn't make the studio: " + e.message; }
         render();
       } }, 'Keep as a studio…'), studioSay ? h('span', { class: 'help' }, ' ' + studioSay) : null);
+  }
+  // the studio's take quality: what a locked live-audio take keeps (the live stream to the band is lean either way)
+  function qualityCtl() {
+    if (!x.takeQuality) return null;
+    const q = x.takeQuality();
+    return h('span', { class: 'studioctl takeshome', title: "What live-audio takes keep when they're locked in. Jamming stays lean either way: the band always hears your live audio as a light mono stream." },
+      '🎚 Takes: ', h('select', { class: 'lcdsel', 'aria-label': 'Take quality', onchange: (e) => x.setTakeQuality(e.target.value) },
+        h('option', { value: 'standard', selected: q !== 'hifi' }, 'Standard (24 kHz mono, quick to share)'),
+        h('option', { value: 'hifi', selected: q === 'hifi' }, 'High fidelity (48 kHz, stereo from a stereo input)')),
+      q === 'hifi' ? h('span', { class: 'help' }, ' · about 4× the size: fine for a studio, slower to reach bandmates on a weak connection') : null);
   }
   // where the studio's takes live long-term: parked in the studio, or in the band's Dropbox (src/studio.js)
   function takesCtl() {
