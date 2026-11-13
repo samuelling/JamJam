@@ -25,6 +25,7 @@ import { startStats } from './stats.js';
 import { AcidSeq, makeAcidPanel } from './acidseq.js';
 import { makeStudio, studioRoom, isStudioId, myStudios, forgetStudio } from './studio.js';
 import { makeDropbox } from './dropbox.js';
+import { songFromLive } from './liveimport.js';
 import * as ZIP from './songzip.js';
 // this browser's saved settings; reads fall back to the keys from before the rename to MEGAjam
 // ?bot=1: a pretend bandmate the tours run in a hidden frame (src/tutorial.js). It shares this browser's storage, so
@@ -1031,7 +1032,7 @@ const compose = makeCompose({
   takesHome: () => (dropbox.configured ? studio.takesHome : null), dropboxName: () => (dropbox.linked ? dropbox.name || 'your Dropbox' : ''),
   keepInDropbox: async () => { if (!dropbox.linked) await dropbox.connect(); return studio.keepInDropbox(); },
   stopDropbox: () => studio.stopDropbox(), unlinkDropbox: async () => { await studio.stopDropbox().catch(() => {}); await dropbox.disconnect(); },
-  importFile: (f) => importSketch(f), exportMidi: () => download(new Blob([SONG.songToMidi(songForExport())], { type: 'audio/midi' }), slugName() + '.mid'), exportJson: () => exportSong(),
+  importFile: (f) => importSketch(f), importLiveFolder: (list) => importLive(liveFolder(list)), exportMidi: () => download(new Blob([SONG.songToMidi(songForExport())], { type: 'audio/midi' }), slugName() + '.mid'), exportJson: () => exportSong(),
   removePart: (sid, pid) => setSong(`part:${sid}:${pid}`, null), choose, vote, saveVariation, restoreVariation, editTake,
   paramsOf: (inst) => engine.defs.get(inst)?.params || [], baseOf: (p) => partCfg({ ...p, ...SONG.laneCfg(songStore.song, p) }).params,
   now: () => clock.now(),   exportStems: (o, prog) => exportStemsTo(o, prog), canFolder: () => typeof window.showDirectoryPicker === 'function',
@@ -1095,14 +1096,31 @@ async function exportSong() {
 }
 function download(blob, name) { const a = h('a', { href: URL.createObjectURL(blob), download: name }); document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
 // bring in a sketch: a MIDI file or a SynthLand Tracker song (or a saved MEGAjam song)
+// an Ableton Live project (src/liveimport.js): files [{ name: path in the project, data: bytes or () => bytes }]
+async function importLive(files) {
+  try {
+    const r = await songFromLive(files, { progress: (t) => setStatus(t) });
+    for (const c of r.clips) blobs.put(c.id, c.pcm16, c.sr);
+    loadSong(r.song); goRoom('compose');
+    const n = Object.keys(songStore.song.lanes || {}).length;
+    setStatus(`Brought in "${r.song.title}" from Ableton Live: ${r.song.order.length} section${r.song.order.length === 1 ? '' : 's'}, ${n} track${n === 1 ? '' : 's'}${r.clips.length ? `, ${r.clips.length} audio take${r.clips.length === 1 ? '' : 's'}` : ''}. Instruments are MEGAjam's guesses: change them on each track.${r.warnings.length ? ' ' + r.warnings.join(' ') : ''}`, r.warnings.length ? 'error' : undefined);
+    addChat({ sys: true, text: `${S.name} brought in "${r.song.title}" from Ableton Live`, t: Date.now() }); room.send({ k: 'chat', text: `brought in "${r.song.title}" from Ableton Live (${r.song.order.length} sections)` });
+    stats.use('liveimport');
+  } catch (err) { setStatus("Couldn't bring in that Live project: " + err.message, 'error'); }
+}
+// a folder picked with <input webkitdirectory>: only the files the set uses are read
+const liveFolder = (list) => [...list].filter((f) => /\.(als|wav|wave|aif|aiff|aifc)$/i.test(f.name) && !/(^|\/)Backup\//i.test(f.webkitRelativePath || '')).map((f) => ({ name: f.webkitRelativePath || f.name, data: async () => new Uint8Array(await f.arrayBuffer()) }));
 async function importSketch(file) {
   try {
     const buf = new Uint8Array(await file.arrayBuffer());
     let song;
+    if (buf[0] === 0x1f && buf[1] === 0x8b && /\.als$/i.test(file.name)) return importLive([{ name: file.name, data: buf }]);   // a Live set on its own: no audio
     if (buf[0] === 0x4d && buf[1] === 0x54) song = SONG.songFromMidi(buf, file.name);
     else if (buf[0] === 0x50 && buf[1] === 0x4b) {
       // a song saved with its audio: the song, and each take's WAV back into this browser (and from here to the band)
-      const files = await ZIP.unzip(buf), jf = files.find((f) => /\.megajam\.json$|(^|\/)song\.json$/i.test(f.name));
+      const files = await ZIP.unzip(buf);
+      if (files.some((f) => /\.als$/i.test(f.name)) && !files.some((f) => /\.megajam\.json$/i.test(f.name))) return importLive(files.filter((f) => !/(^|\/)Backup\//i.test(f.name)));   // a zipped Live project
+      const jf = files.find((f) => /\.megajam\.json$|(^|\/)song\.json$/i.test(f.name));
       if (!jf) throw new Error('there is no MEGAjam song in that zip');
       song = JSON.parse(new TextDecoder().decode(jf.data)); if (song.format !== 'megajam.song/1') song = null;
       for (const f of files) {
@@ -1110,7 +1128,7 @@ async function importSketch(file) {
         const w = ZIP.readPcmWav(f.data); if (w) blobs.put(m[1].toLowerCase(), w.pcm16, w.sr);
       }
     } else { const j = JSON.parse(new TextDecoder().decode(buf)); song = j.format === 'tracker-song/0.1' ? SONG.songFromTracker(j) : j.format === 'megajam.song/1' ? j : null; }
-    if (!song) throw new Error("MEGAjam reads MIDI files and SynthLand Tracker songs");
+    if (!song) throw new Error('MEGAjam reads MIDI files, Ableton Live sets (a project folder or a zip of one), MEGAjam songs and SynthLand Tracker songs');
     loadSong(song);
     addChat({ sys: true, text: `${S.name} brought in "${song.title}": ${song.order.length} sections`, t: Date.now() }); room.send({ k: 'chat', text: `brought in "${song.title}" (${song.order.length} sections)` });
   } catch (err) { setStatus("Couldn't read that sketch: " + err.message, 'error'); }
@@ -3083,7 +3101,7 @@ Object.assign(window.JJ, {
   removeEntry: (r) => removeEntry(entry(r)),
   setParam: (id, v) => { setParam(selEntry(), id, v); knobSet(id); },
   setTempo: (b) => setTempo(b),
-  studio, blobs, dropbox, enterStudio: (id) => enterStudio(id), keepAsStudio: (n) => keepAsStudio(n), leave: () => leaveRoom(), exportSong: () => exportSong(), importFile: (f) => importSketch(f),
+  studio, blobs, dropbox, enterStudio: (id) => enterStudio(id), keepAsStudio: (n) => keepAsStudio(n), leave: () => leaveRoom(), exportSong: () => exportSong(), importFile: (f) => importSketch(f), importLive: (files) => importLive(files),
   seqView: (pid, r) => { const sq = seqs.get(key(pid || S.me, r)); return sq && (sq.kind === 'acid' ? sq.view().snapshot() : sq.snapshot()); },
   own: (id, v) => setOwned(id, v),
   loopRange: (a, b) => loopRange(a, b), editTake: (sid, pid, ev, w) => editTake(sid, pid, ev, w), lockAudio: () => lockAudio(), recAll: (on) => setRecAll(on), audio: () => ({ have: [...blobs.bytes.keys()], started: AUD.started }), lane: () => lane,

@@ -458,10 +458,13 @@ export function makeCompose(x) {
     const L = lanes(), work = x.working();
     if (!sel || !song.sections[sel]) sel = order[0] || null;
     const totalBars = order.reduce((a, id) => a + song.sections[id].bars, 0), mins = (totalBars * meter) / x.bpm();
-    const file = h('input', { type: 'file', accept: '.mid,.midi,.json,.zip,audio/midi,application/json,application/zip', style: 'display:none', onchange: (e) => { const f = e.target.files[0]; if (f) x.importFile(f); e.target.value = ''; } });
+    const file = h('input', { type: 'file', accept: '.mid,.midi,.json,.zip,.als,audio/midi,application/json,application/zip', style: 'display:none', onchange: (e) => { const f = e.target.files[0]; if (f) x.importFile(f); e.target.value = ''; } });
+    // an Ableton Live project folder, as it is (the .als and its Samples): only what the set uses is read
+    const folder = h('input', { type: 'file', webkitdirectory: '', style: 'display:none', onchange: (e) => { const l = e.target.files; if (l?.length) { if (L.length && !confirm('Replace this song with the Live set, for everyone in the room?')) { e.target.value = ''; return; } x.importLiveFolder(l); } e.target.value = ''; } });
     const vars = Object.values(song.variations || {});
     const playing = tr?.on && tr.mode === 'song', empty = !order.length || !L.length;
-    const importBtn = (cls) => h('button', { class: cls, onclick: () => file.click(), title: "Bring in a sketch: a MIDI file, or a song from SynthLand's Tracker (.json)" }, 'Import a sketch…');
+    const importBtn = (cls) => h('button', { class: cls, onclick: () => file.click(), title: "Bring in a sketch: a MIDI file, a zipped Ableton Live project or .als, a MEGAjam song, or a song from SynthLand's Tracker (.json)" }, 'Import a sketch…');
+    const liveBtn = (cls) => h('button', { class: cls, onclick: () => folder.click(), title: 'Bring in an Ableton Live project: pick its folder (the one with the .als and Samples; File › Collect All and Save in Live first). Locators become sections, MIDI tracks keep their notes, audio clips become takes at this tempo.' }, 'Import from Ableton Live…');
     // a form, changes and a basic band to start from, by genre
     const presetPick = (cls) => h('select', { class: 'lcdsel ' + cls, 'aria-label': 'Song presets', title: 'Start from a song: a form, chord changes, drums, bass and chords', onchange: (e) => {
       const [g, i] = e.target.value.split(':'); e.target.value = ''; if (!g) return;
@@ -471,19 +474,19 @@ export function makeCompose(x) {
     const head = h('div', { class: 'songhead' },
       h('input', { class: 'songtitle', value: song.title, maxlength: 60, 'aria-label': 'Song title', onkeydown: (e) => e.stopPropagation(), onchange: (e) => x.setSong('title', e.target.value.trim() || 'Untitled') }),
       order.length ? h('button', { class: 'btn playsong' + (playing ? ' on' : ' hot'), onclick: () => (playing ? x.stop() : x.play('song')) }, playing ? '■ Stop' : '▶ Play the song') : null,
-      empty ? importBtn('btn') : null, empty ? presetPick('presets') : null,
+      empty ? importBtn('btn') : null, empty ? liveBtn('btn') : null, empty ? presetPick('presets') : null,
       h('span', { class: 'help mono songstats' }, `${order.length} sections · ${totalBars} bars · ${Math.floor(mins)}:${String(Math.round((mins % 1) * 60)).padStart(2, '0')}`),
       order.length ? masterFader(song) : null,
       order.length ? h('button', { class: 'btn small ghost masterbtn' + (masterOpen ? ' on' : ''), 'aria-expanded': String(masterOpen), title: 'Stem Console: automatic levels and mastering for the whole room', onclick: () => { masterOpen = !masterOpen; x.masterStart?.(); render(); } }, `${masterOpen ? '▾' : '▸'} Mastering${masterSettings(song).on ? '' : ' off'}`) : null,
       h('span', { style: 'flex:1' }),
       h('span', { class: 'presence' }, ...x.playersOf().map((p) => h('span', { class: 'who' + (p.where === 'compose' ? ' here' : ''), title: `${p.name}: ${p.where === 'compose' ? 'in the Compose Room' : 'in the Jam Room'}` }, p.name.slice(0, 1).toUpperCase()))),
-      h('button', { class: 'btn small ghost moretoggle', 'aria-expanded': String(songMore), onclick: () => { songMore = !songMore; remember('songMore', songMore); render(); } }, songMore ? '▾ Song options' : '▸ Song options'), file);
+      h('button', { class: 'btn small ghost moretoggle', 'aria-expanded': String(songMore), onclick: () => { songMore = !songMore; remember('songMore', songMore); render(); } }, songMore ? '▾ Song options' : '▸ Song options'), file, folder);
     const opts = !songMore ? null : h('div', { class: 'songopts' },
       h('label', { class: 'help', title: 'What happens when someone locks in a new take of a lane' }, 'New takes ',
         h('select', { class: 'lcdsel', onchange: (e) => x.setSong('rule', e.target.value) }, ...[['newest', 'take over'], ['owner', 'wait for the owner'], ['vote', 'go to a vote']].map(([v, t]) => h('option', { value: v, selected: (song.rule || 'newest') === v }, t)))),
       h('select', { class: 'lcdsel', 'aria-label': 'Versions', onchange: (e) => { const v = e.target.value; e.target.value = ''; if (v === '__save') { const n = prompt('Name this version of the song', `Version ${vars.length + 1}`); if (n) x.saveVariation(n.slice(0, 40)); } else if (v) x.restoreVariation(v); } },
         h('option', { value: '' }, vars.length ? `Versions (${vars.length})` : 'Versions'), h('option', { value: '__save' }, 'Save this version…'), ...vars.map((v) => h('option', { value: v.name }, `Go to “${v.name}”`))),
-      empty ? null : importBtn('btn small'), empty ? null : presetPick('presets'), h('button', { class: 'btn small', onclick: () => x.exportMidi() }, 'Save MIDI'), h('button', { class: 'btn small', title: 'The song as a file: with audio takes it\'s a .zip of the song and each take as a WAV (keep it in the band\'s Dropbox or Drive, and import it back any time)', onclick: () => x.exportJson() }, 'Save song'),
+      empty ? null : importBtn('btn small'), empty ? null : liveBtn('btn small'), empty ? null : presetPick('presets'), h('button', { class: 'btn small', onclick: () => x.exportMidi() }, 'Save MIDI'), h('button', { class: 'btn small', title: 'The song as a file: with audio takes it\'s a .zip of the song and each take as a WAV (keep it in the band\'s Dropbox or Drive, and import it back any time)', onclick: () => x.exportJson() }, 'Save song'),
       studioCtl(), x.studio?.() ? takesCtl() : null,
       h('label', { class: 'help', title: 'Knob moves are always recorded with takes; this shows them as lanes you can edit' }, h('input', { type: 'checkbox', class: 'autotoggle', checked: showAuto, onchange: (e) => { showAuto = e.target.checked; remember('auto', showAuto); render(); } }), ' Show automation'),
       x.exportStems && !empty ? h('button', { class: 'btn small' + (stemsOpen ? ' on' : ''), 'aria-expanded': String(stemsOpen), onclick: () => { stemsOpen = !stemsOpen; render(); } }, 'Export stems…') : null,
