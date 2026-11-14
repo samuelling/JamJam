@@ -224,7 +224,38 @@ export function sliceEvents(events, a, z) {
   for (const [n, c] of open) for (let i = 0; i < c; i++) out.push({ b: z - a - 0.01, type: 'off', note: n });
   return out;
 }
-function keyFromParts(parts) {
+// ---------- join and split (Compose) ----------
+const inTime = (x, y) => x.b - y.b || (x.type === 'off' ? -1 : y.type === 'off' ? 1 : 0);
+// a take's events cut at beat `cut` into [before, after] (after starts at 0). A note ringing across the cut ends just
+// before it and sounds again at the top of the second half; each knob starts the second half where it was.
+export function splitEvents(events, cut) {
+  const a = [], b = [], held = new Map(), knob = new Map();
+  for (const e of [...(events || [])].sort(inTime)) {
+    if (e.b < cut) {
+      a.push(e);
+      if (e.type === 'on') (held.get(e.note) || held.set(e.note, []).get(e.note)).push(e);
+      else if (e.type === 'off') held.get(e.note)?.shift();
+      else if (e.type === 'p') knob.set(e.id, e);
+    } else b.push({ ...e, b: e.b - cut });
+  }
+  const top = [];
+  for (const [n, ons] of held) for (const on of ons) { a.push({ b: cut - 0.01, type: 'off', note: n }); top.push({ ...on, b: 0 }); }
+  for (const [id, k] of knob) if (!b.some((e) => e.type === 'p' && e.id === id && e.b <= 1e-6)) top.push({ ...k, b: 0 });
+  return [a.sort(inTime), [...top, ...b].sort(inTime)];
+}
+// several takes' events end to end: [{events, at}] with `at` the beat each one starts on
+export const joinEvents = (list) => list.flatMap(({ events, at }) => (events || []).map((e) => ({ ...e, b: e.b + at }))).sort(inTime);
+// the name of sections joined into one: their shared name, or the names in a row
+export function joinedName(names) {
+  const u = [...new Set(names)];
+  if (u.length === 1) return u[0];
+  const all = u.join(' + ');
+  return all.length <= 24 ? all : `${u[0]} … ${u[u.length - 1]}`.slice(0, 24);
+}
+// the second half of a split section: "Verse" -> "Verse 2", "Part 3" -> "Part 3b"
+export const splitName = (name) => (/\d$/.test(name) ? `${name}b` : `${name} 2`).slice(0, 24);
+
+export function keyFromParts(parts) {
   const w = new Array(12).fill(0);
   for (const p of parts) if (!p.drums) for (const e of p.events) if (e.type === 'on') w[e.note % 12] += 1;
   const MAJ = [0, 2, 4, 5, 7, 9, 11]; let best = { root: 0, mode: 'major' }, bs = -1;
