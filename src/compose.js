@@ -814,8 +814,8 @@ export function makeCompose(x) {
       onclick: busy(async () => { await x.keepInDropbox(); }) }, x.dropboxName?.() ? `Keep takes in ${x.dropboxName()}` : 'Keep takes in Dropbox…'), h('span', {}, ' (otherwise they stay in the studio, up to 2 GB)')];
     return h('span', { class: 'studioctl takeshome' }, ...line, th.error ? h('span', { class: 'help' }, ` · ${th.error}`) : null, studioSay ? h('span', { class: 'help' }, ' ' + studioSay) : null);
   }
-  function addSection(name) {
-    const prev = x.store.sections().slice(-1)[0], sec = newSection(name, name === 'Intro' || name === 'Outro' ? 4 : 8);
+  function addSection(name, bars) {
+    const prev = x.store.sections().slice(-1)[0], sec = newSection(name, bars || (name === 'Intro' || name === 'Outro' ? 4 : 8));
     if (prev && !name.match(/intro|outro|break/i)) sec.chords = [...prev.chords].slice(0, sec.bars);
     x.setSong('sec:' + sec.id, { name: sec.name, bars: sec.bars, chords: sec.chords.concat(Array(Math.max(0, sec.bars - sec.chords.length)).fill('')), notes: '' });
     x.setSong('order', [...x.store.song.order, sec.id]); sel = sec.id;

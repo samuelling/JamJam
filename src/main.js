@@ -1958,7 +1958,7 @@ function goRoom(w) {
   $('#hall')?.classList.add('hide');
   for (const b of $$('#roomSeg button')) b.classList.toggle('on', b.dataset.room === w);
   room.send({ k: 'where', w });
-  if (w === 'compose') { if (!songStore.song.order.length) compose.addSection('Verse'); compose.render(); }
+  if (w === 'compose') { if (!songStore.song.order.length) compose.addSection('Verse', 4); compose.render(); }
   if (w === 'jam' && S.pickWhenJam && S.firstPick) { S.pickWhenJam = false; setTimeout(() => { if (S.firstPick) { renderLibrary(); openDrawer('#libDrawer'); } }, 400); }
   renderHall();
 }
