@@ -199,3 +199,9 @@
 @media (max-width: 760px) { .details.lane { grid-template-columns: minmax(0, 1fr); gap: 10px; } .vsplit { display: none; } }
 .chord.bad { color: #ff8a8a; }
 .chord.now { background: var(--sc); color: #18181b; }
+/* join, split and the cue */
+.looptrack .cuemark { position: absolute; top: -2px; bottom: -2px; width: 0; border-left: 2px solid #3ddc84; pointer-events: none; }
+.looptrack .cuemark::before { content: ''; position: absolute; top: 0; left: -6px; border: 5px solid transparent; border-top: 7px solid #3ddc84; }
+.cell.take.insel { outline: 2px solid #ffcf26; outline-offset: -2px; }
+.joinbar { background: #3ddc8414; outline-color: #3ddc8460; }
+.cuetop { padding: 2px 8px; }

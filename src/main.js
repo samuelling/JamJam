@@ -873,8 +873,20 @@ function renderCorners() {
     const vps = band.list();
     box.replaceChildren(...ids.map((id) => cornerCard(id, rackOf(id))), ...vps.map((vp) => band.card(vp)));
     for (let i = ids.length + vps.length; i < MAX; i++) box.append(h('div', { class: 'corner empty' }, h('div', { class: 'legend' }, 'Empty corner'), h('div', { class: 'help' }, 'Copy the invite to bring someone in')));
+    box.append(cornersToggle());
   }
   updateCorners();
+}
+// In the Compose Room the corners fold into a row of name tags so the arranger gets the room; this opens them (and
+// remembers which you like)
+let cornersFull = (() => { try { return localStorage.getItem('megajam.cornersFull') === '1'; } catch (_) { return false; } })();
+document.body.classList.toggle('corners-full', cornersFull);
+function cornersToggle() {
+  const b = h('button', { class: 'btn small ghost cornerstoggle', 'aria-expanded': String(cornersFull), title: cornersFull ? 'Fold the band into a row of name tags (more room for the song)' : 'Show the band\'s corners in full: their gear, link and volume', onclick: () => {
+    cornersFull = !cornersFull; try { localStorage.setItem('megajam.cornersFull', cornersFull ? '1' : '0'); } catch (_) {}
+    document.body.classList.toggle('corners-full', cornersFull); b.setAttribute('aria-expanded', String(cornersFull)); b.textContent = cornersFull ? '▴ Fold the band' : '▾ Band'; b.title = cornersFull ? 'Fold the band into a row of name tags (more room for the song)' : 'Show the band\'s corners in full: their gear, link and volume';
+  } }, cornersFull ? '▴ Fold the band' : '▾ Band');
+  return b;
 }
 function cornerCard(id, rack) {
   const pl = S.players.get(id) || {}, mine = id === S.me, peer = room.peers.get(id), c = colorOf(id);
@@ -1016,7 +1028,7 @@ function setSong(k, v) {
 }
 function songChanged(k, from) {
   if (k === 'studio' || k === '*') { const sv = songStore.song.studio; if (sv?.id && studio.id !== sv.id) { studio.attach(sv.id, sv.name, true); S.studio = S.studio || { id: sv.id, name: sv.name }; renderRoomName(); } }
-  if (k === 'transport' || k === '*') { const tr = songStore.song.transport; if (tr && tr.on && from && from !== S.me && k === 'transport') { const sec = songStore.song.sections[tr.sid]; addChat({ sys: true, text: `${S.players.get(from)?.name || 'A bandmate'} ${tr.mode === 'song' ? 'is playing the song' : `is looping ${sec ? sec.name : 'a section'}`}`, t: Date.now() }); } }
+  if (k === 'transport' || k === '*') { const tr = songStore.song.transport; if (tr && tr.on && from && from !== S.me && k === 'transport') { const sec = songStore.song.sections[tr.sid]; addChat({ sys: true, text: `${S.players.get(from)?.name || 'A bandmate'} ${tr.mode === 'song' ? (tr.from ? `is playing the song from bar ${tr.from / (songStore.song.meter || 4) + 1}` : 'is playing the song') : `is looping ${sec ? sec.name : 'a section'}`}`, t: Date.now() }); } }
   if (k.startsWith?.('part:')) { const [, sid, pid] = k.split(':'), p = songStore.song.sections[sid]?.parts?.[pid]; dropBounce(sid, pid, p); if (p && from && from !== S.me) addChat({ sys: true, text: `${S.players.get(from)?.name || 'A bandmate'} locked ${p.name} into ${songStore.song.sections[sid]?.name || 'a section'}`, t: Date.now() }); }
   if (k.startsWith?.('vp:') || k === 'transport' || k === '*') renderCorners();
   if (k.startsWith?.('part:') || k === '*') setTimeout(wantAudio, 400);
@@ -1026,7 +1038,8 @@ const compose = makeCompose({
   h, $, store: songStore,
   playersOf: () => [{ name: S.name || 'You', where: S.where }, ...[...S.players.values()].filter((p) => p.role !== 'listener').map((p) => ({ name: p.name || '…', where: p.where }))],
   setSong, transport: () => songStore.song.transport, keyName: () => keyName(), bpm: () => Math.round(tempo.bpm(clock.now() + 1000)),
-  play: (mode, sid) => startTransport(mode, sid), stop: () => stopTransport(), loopRange: (a, b) => loopRange(a, b), jamThis: (sid) => { startTransport('loop', sid); goRoom('jam'); },
+  play: (mode, sid, from) => startTransport(mode, sid, from), stop: () => stopTransport(), loopRange: (a, b) => loopRange(a, b), jamThis: (sid) => { startTransport('loop', sid); goRoom('jam'); },
+  joinSections: (i, j) => joinSections(i, j), splitSection: (i, bar) => splitSection(i, bar), arrangeUndo: (u) => arrangeUndo(u),
   studio: () => (studio.id ? { id: studio.id, name: studio.name, saved: studio.saved, link: studio.link() } : null), canStudio: () => !!STUDIO_SERVER,
   keepAsStudio: (name) => keepAsStudio(name), inviteStudio: () => openInvite(studio.link()),
   takeQuality: () => (hifi() ? 'hifi' : 'standard'), setTakeQuality: (q) => setTakeQuality(q),
@@ -1167,11 +1180,14 @@ function loadSong(song) {
   if (song.key && MODES[song.key.mode]) setKey(song.key.root, song.key.mode);
 }
 // the transport: a section looping, or the song from the top, starting on the next bar for everyone
-function startTransport(mode, sid) {
+// The song can start part way in: `from` is the song beat it starts on (bar-aligned), for the cue set in Compose.
+function startTransport(mode, sid, from = 0) {
   const ids = songStore.song.order; if (!ids.length) return;
   sid = sid || ids[0];
   const lead = (room.peers.size ? lookahead() + 250 : 120), b = tempo.beatAt(clock.now() + lead), meter = songStore.song.meter || 4;
-  setSong('transport', { on: true, mode, sid, start: Math.ceil(b / meter - 1e-9) * meter });
+  const total = songStore.timeline().reduce((a, t) => Math.max(a, t.start + t.beats), 0);
+  from = mode === 'song' ? Math.max(0, Math.min(total - meter, Math.round((from || 0) / meter) * meter)) : 0;
+  setSong('transport', { on: true, mode, sid, start: Math.ceil(b / meter - 1e-9) * meter, ...(from > 0 ? { from } : {}) });
 }
 // drag a loop over the arrangement: [a, b) in song beats. While looping already, the change lands on the next bar line
 // and keeps the music going where it was, if that's still inside the loop.
@@ -1205,7 +1221,11 @@ function segmentsIn(tr, b0, b1) {
   } else if (tr.mode === 'loop') {
     const s = song.sections[tr.sid]; if (!s) return out; const L = SONG.sectionBeats(song, s), idx = songStore.timeline().findIndex((t) => t.id === s.id);
     for (let k = Math.max(0, Math.floor((b0 - tr.start) / L)); tr.start + k * L < b1; k++) out.push({ sid: s.id, start: tr.start + k * L, beats: L, k, idx, pass: tr.start + k * L, passBeats: L });
-  } else songStore.timeline().forEach((t, idx) => { const st = tr.start + t.start; if (st < b1 && st + t.beats > b0) out.push({ sid: t.id, start: st, beats: t.beats, idx }); });
+  } else {
+    // the song, from its top or from the cue (tr.from beats in): a section the cue lands inside plays from there (lo)
+    const f = tr.from || 0;
+    songStore.timeline().forEach((t, idx) => { if (t.start + t.beats <= f) return; const st = tr.start + t.start - f; if (st < b1 && st + t.beats > b0) out.push({ sid: t.id, start: st, beats: t.beats, idx, ...(st < tr.start ? { lo: tr.start } : {}) }); });
+  }
   return out;
 }
 function positionAt(tr, b) {
@@ -1735,6 +1755,115 @@ function lockAudio(opts = {}) {
   }
   if (!n) say("Nothing to lock in: there's no live audio from that pass here.");
   return n;
+}
+
+// ---------- join sections into one, split one in two (Compose) ----------
+// Both keep the song sounding as it did: the timeline is the same length, every track's notes land where they were
+// and audio takes are cut or spliced into new clips. Joining keeps the take each block plays now; splitting keeps
+// every take on both sides. Either can be undone (arrangeUndo) while the bar says so.
+const tid = () => Math.random().toString(36).slice(2, 7);
+// a new clip made from pieces of others on one section's beats [w0, w1): each piece is a take's audio whose section
+// started at beat `at` here. Same tempo and rate copy straight across; otherwise it resamples (linear).
+function spliceClip(pieces, w0, w1) {
+  const got = pieces.map((q) => ({ ...q, s0: q.at + q.A.from, d: blobs.pcm(q.A.id) }));
+  const lost = got.find((q) => !q.d); if (lost) throw new Error('an audio take isn\'t on this computer yet: wait for it to arrive, then try again');
+  const lo = Math.max(w0, Math.min(...got.map((q) => q.s0))), hi = Math.min(w1, Math.max(...got.map((q) => q.s0 + q.A.beats)));
+  if (!(hi - lo > 1e-6)) return null;
+  const sr = Math.max(...got.map((q) => q.A.sr || q.d.sr)), ch = Math.max(...got.map((q) => (q.A.ch === 2 ? 2 : 1))), bpm = got[0].A.bpm;
+  const frames = Math.round((((hi - lo) * 60) / bpm) * sr), mix = new Float32Array(frames * ch);
+  for (const q of got) {
+    const A = q.A, ac = A.ch === 2 ? 2 : 1, src = q.d.pcm16, n = Math.floor(src.length / ac), asr = A.sr || q.d.sr;
+    const a = Math.max(lo, q.s0), z = Math.min(hi, q.s0 + A.beats); if (z <= a) continue;
+    const i0 = Math.ceil((((a - lo) * 60) / bpm) * sr - 1e-6), i1 = Math.min(frames, Math.floor((((z - lo) * 60) / bpm) * sr));
+    const same = asr === sr && Math.abs(A.bpm - bpm) < 1e-9, k = ((asr / sr) * bpm) / A.bpm, off = (((lo - q.s0) * 60) / A.bpm) * asr;
+    for (let i = i0; i < i1; i++) {
+      const t = off + i * (same ? 1 : k), j = Math.floor(t), f = t - j; if (j < 0 || j >= n) continue;
+      for (let c = 0; c < ch; c++) { const sc = Math.min(c, ac - 1), v0 = src[j * ac + sc], v1 = j + 1 < n ? src[(j + 1) * ac + sc] : v0; mix[i * ch + c] += same ? v0 : v0 + (v1 - v0) * f; }
+    }
+  }
+  const pcm16 = new Int16Array(mix.length); for (let i = 0; i < mix.length; i++) pcm16[i] = Math.max(-32768, Math.min(32767, Math.round(mix[i])));
+  const peaks = Array.from({ length: 120 }, (_, b) => { let m = 0; for (let i = Math.floor((b * frames) / 120); i < Math.floor(((b + 1) * frames) / 120); i++) for (let c = 0; c < ch; c++) m = Math.max(m, Math.abs(pcm16[i * ch + c]) / 32768); return Math.round(m * 100) / 100; });
+  const id = Math.random().toString(36).slice(2, 10).padEnd(8, '0');
+  return { id, pcm16, sr, audio: { id, sr, ...(ch === 2 ? { ch: 2 } : {}), frames, from: lo - w0, beats: hi - lo, bpm, peaks } };
+}
+const sectionValue = (s) => ({ name: s.name, bars: s.bars, chords: Array.from({ length: s.bars }, (_, b) => s.chords?.[b] || ''), notes: s.notes || '' });
+const freshPart = (p, patch) => { const q = { ...p, ...patch }; delete q.events; delete q.recording; return q; };
+// put the new sections in, drop the old ones nothing plays any more, and keep what undo needs
+function arrange(made, order, labels, clips, what) {
+  const song = songStore.song, before = { order: [...song.order], labels: Array.from({ length: song.order.length }, (_, k) => (song.labels || [])[k] || ''), secs: [] };
+  const gone = [...new Set(song.order)].filter((id) => !order.includes(id));
+  for (const id of gone) before.secs.push(JSON.parse(JSON.stringify(song.sections[id])));
+  const tr = song.transport; if (tr?.on && tr.mode === 'loop' && gone.includes(tr.sid)) stopTransport();
+  for (const c of clips) blobs.put(c.id, c.pcm16, c.sr);
+  for (const { sec, parts } of made) { setSong('sec:' + sec.id, sectionValue(sec)); for (const p of parts) setSong(`part:${sec.id}:${p.id}`, p); }
+  setSong('order', order); setSong('labels', labels);
+  for (const id of gone) setSong('sec:' + id, null);
+  for (const c of clips) blobs.send(c.id);
+  return { ...before, made: made.map(({ sec }) => sec.id), what };
+}
+function arrangeUndo(u) {
+  if (!u) return;
+  const tr = songStore.song.transport; if (tr?.on && tr.mode === 'loop' && u.made.includes(tr.sid)) stopTransport();
+  for (const s of u.secs) { setSong('sec:' + s.id, sectionValue(s)); for (const p of Object.values(s.parts || {})) setSong(`part:${s.id}:${p.id}`, p); }
+  setSong('order', u.order); setSong('labels', u.labels);
+  for (const id of u.made) if (!u.order.includes(id)) setSong('sec:' + id, null);
+}
+// sections at positions i..j of the song, as one: each track's block plays what it played, end to end
+function joinSections(i, j) {
+  const song = songStore.song, meter = song.meter || 4, ids = song.order.slice(i, j + 1), secs = ids.map((id) => song.sections[id]);
+  if (ids.length < 2 || secs.some((s) => !s)) return null;
+  const at = []; let total = 0; for (const s of secs) { at.push(total); total += s.bars * meter; }
+  const sec = SONG.newSection(SONG.joinedName(secs.map((s) => s.name)), secs.reduce((a, s) => a + s.bars, 0));
+  sec.chords = secs.flatMap((s) => Array.from({ length: s.bars }, (_, b) => s.chords?.[b] || ''));
+  sec.notes = [...new Set(secs.map((s) => (s.notes || '').trim()).filter(Boolean))].join('\n').slice(0, 2000);
+  const tracks = new Map();
+  secs.forEach((s, k) => { for (const p of Object.values(s.parts || {})) { const key = SONG.laneOf(p); (tracks.get(key) || tracks.set(key, []).get(key)).push({ p, k, t: SONG.currentTake(p) }); } });
+  const parts = [], clips = [];
+  for (const list of tracks.values()) {
+    const cur = list.filter((q) => q.t), au = cur.filter((q) => q.t.audio), notes = cur.filter((q) => !q.t.audio && q.t.events?.length);
+    if (au.length && notes.length) throw new Error(`${SONG.laneName(song, list[0].p)} is audio in one section and notes in another, so it can't become one block`);
+    let take;
+    if (au.length) { const c = spliceClip(au.map((q) => ({ A: q.t.audio, at: at[q.k] })), 0, total); if (!c) continue; clips.push(c); take = { id: tid(), events: [], audio: c.audio }; }
+    else if (notes.length) take = { id: tid(), events: SONG.joinEvents(notes.map((q) => ({ events: q.t.events, at: at[q.k] }))) };
+    else continue;
+    Object.assign(take, { by: S.me, byName: S.name, at: clock.now() });
+    const base = list[0].p;
+    parts.push(freshPart(base, { takes: [take], current: take.id, votes: {}, prev: null, switchAt: null, muted: list.every((q) => q.p.muted) || false }));
+  }
+  const order = [...song.order], labels = Array.from({ length: order.length }, (_, k) => (song.labels || [])[k] || '');
+  order.splice(i, ids.length, sec.id); labels.splice(i, ids.length, labels.slice(i, j + 1).filter(Boolean).join(' · ').slice(0, 30));
+  const u = arrange([{ sec, parts }], order, labels, clips, `Joined ${ids.length} sections into “${sec.name}”`);
+  addChat({ sys: true, text: `${S.name} joined ${secs.map((s) => s.name).join(', ')} into one section`, t: Date.now() }); room.send({ k: 'chat', text: `joined ${secs.map((s) => s.name).join(', ')} into one section` });
+  return { ...u, sid: sec.id };
+}
+// the section at position i, cut at the top of bar `bar` (1 = after its first bar) into two; every place it repeats
+// in the song splits the same way
+function splitSection(i, bar) {
+  const song = songStore.song, meter = song.meter || 4, id = song.order[i], s = song.sections[id];
+  if (!s || !(bar > 0 && bar < s.bars)) return null;
+  const cut = bar * meter, end = s.bars * meter;
+  const A = SONG.newSection(s.name, bar), B = SONG.newSection(SONG.splitName(s.name), s.bars - bar);
+  A.chords = Array.from({ length: bar }, (_, b) => s.chords?.[b] || ''); B.chords = Array.from({ length: s.bars - bar }, (_, b) => s.chords?.[bar + b] || '');
+  A.notes = s.notes || '';
+  const pa = [], pb = [], clips = [];
+  for (const p of Object.values(s.parts || {})) {
+    const ta = [], tb = [];
+    for (const t of SONG.takesOf(p)) {
+      if (t.audio) {
+        const ca = spliceClip([{ A: t.audio, at: 0 }], 0, cut), cb = spliceClip([{ A: t.audio, at: -cut }], 0, end - cut);
+        for (const c of [ca, cb]) if (c) clips.push(c);
+        ta.push({ ...t, events: [], audio: ca ? ca.audio : undefined }); tb.push({ ...t, events: [], audio: cb ? cb.audio : undefined });
+      } else { const [ea, eb] = SONG.splitEvents(t.events, cut); ta.push({ ...t, events: ea }); tb.push({ ...t, events: eb }); }
+    }
+    const has = (ts) => ts.some((t) => t.audio || t.events.length);
+    if (has(ta)) pa.push(freshPart(p, { takes: ta }));
+    if (has(tb)) pb.push(freshPart(p, { takes: tb }));
+  }
+  const order = [], labels = [];
+  song.order.forEach((q, k) => { const l = (song.labels || [])[k] || ''; if (q === id) { order.push(A.id, B.id); labels.push(l, ''); } else { order.push(q); labels.push(l); } });
+  const u = arrange([{ sec: A, parts: pa }, { sec: B, parts: pb }], order, labels, clips, `Split “${s.name}” after bar ${bar}`);
+  addChat({ sys: true, text: `${S.name} split ${s.name} in two after bar ${bar}`, t: Date.now() }); room.send({ k: 'chat', text: `split ${s.name} in two after bar ${bar}` });
+  return { ...u, sids: [A.id, B.id] };
 }
 
 // ---------- Record every pass: arm it, play, and each full pass you play on is kept as a take ----------
@@ -3130,7 +3259,7 @@ Object.assign(window.JJ, {
   own: (id, v) => setOwned(id, v),
   loopRange: (a, b) => loopRange(a, b), editTake: (sid, pid, ev, w) => editTake(sid, pid, ev, w), lockAudio: () => lockAudio(), recAll: (on) => setRecAll(on), audio: () => ({ have: [...blobs.bytes.keys()], started: AUD.started }), lane: () => lane,
   addVirtual: (kind, style) => band.add(kind, style), setVirtual: (id, p) => band.set(id, p), removeVirtual: (id) => band.remove(id), lockVirtual: (id, sid) => band.lock(id, sid), vplan: (id) => band.plan.get(id), players: () => songStore.song.players || {},
-  setKey: (root, mode) => setKey(root, mode), choose: (sid, pid, t) => choose(sid, pid, t), vote: (sid, pid, t) => vote(sid, pid, t), saveVar: (n) => saveVariation(n), restoreVar: (n) => restoreVariation(n), song: () => songStore.song, setSong: (k, v) => setSong(k, v), loadSong: (sg) => loadSong(sg), songFromTracker: (j) => SONG.songFromTracker(j), songFromMidi: (b) => SONG.songFromMidi(b), songMidi: () => Array.from(SONG.songToMidi(songForExport())), play: (mode, sid) => startTransport(mode, sid), stopSong: () => stopTransport(), lockIn: (r) => lockIn(entry(r)), goRoom: (w) => goRoom(w), bounced: () => [...songPlay.bounce].filter(([, v]) => v.buf).map(([k]) => k), bounceKeys: () => [...songPlay.bounce].map(([k, v]) => [k, v.key]), match: (r, on) => { const e = entry(r); if (e) return on ? startMatch(e) : stopMatch(e); }, matchScore: async (r, params) => { const m = entry(r)?.match; return m && m.fitter.scoreAll(params); }, matchObs: (r) => entry(r)?.match?.fitter.obs.map((o) => ({ note: o.note, held: o.held, att: o.att, noise: +o.noise.toFixed(2), hSus: o.hSus && o.hSus.map(Math.round).join(' '), curve: o.curve.slice(0, 40).map(Math.round).join(' ') })),
+  setKey: (root, mode) => setKey(root, mode), choose: (sid, pid, t) => choose(sid, pid, t), vote: (sid, pid, t) => vote(sid, pid, t), saveVar: (n) => saveVariation(n), restoreVar: (n) => restoreVariation(n), song: () => songStore.song, setSong: (k, v) => setSong(k, v), loadSong: (sg) => loadSong(sg), songFromTracker: (j) => SONG.songFromTracker(j), songFromMidi: (b) => SONG.songFromMidi(b), songMidi: () => Array.from(SONG.songToMidi(songForExport())), play: (mode, sid, from) => startTransport(mode, sid, from), where: () => positionAt(songStore.song.transport, tempo.beatAt(clock.now())), joinSections: (i, j) => joinSections(i, j), splitSection: (i, bar) => splitSection(i, bar), stopSong: () => stopTransport(), lockIn: (r) => lockIn(entry(r)), goRoom: (w) => goRoom(w), bounced: () => [...songPlay.bounce].filter(([, v]) => v.buf).map(([k]) => k), bounceKeys: () => [...songPlay.bounce].map(([k, v]) => [k, v.key]), match: (r, on) => { const e = entry(r); if (e) return on ? startMatch(e) : stopMatch(e); }, matchScore: async (r, params) => { const m = entry(r)?.match; return m && m.fitter.scoreAll(params); }, matchObs: (r) => entry(r)?.match?.fitter.obs.map((o) => ({ note: o.note, held: o.held, att: o.att, noise: +o.noise.toFixed(2), hSus: o.hSus && o.hSus.map(Math.round).join(' '), curve: o.curve.slice(0, 40).map(Math.round).join(' ') })),
   matchState: (r) => { const m = entry(r)?.match; return m && { why: m.why, on: m.on, obs: m.fitter.obs.length, renders: m.fitter.renders, ms: m.fitter.ms, lag: m.lag, sim: m.sim, applied: m.applied, d: m.fitter.bestD, params: entry(r).cfg.params }; }, react: (r) => react(r), listen: (code) => enter(code, true), assist: (v) => { S.assist = v; },
   tape: () => toggleTape(), sync: () => startSync(), syncState: () => { const r = S.srec; return r && { id: r.id, done: r.done, files: r.files.map((f) => f.name + ':' + f.data.length), got: [...r.got.keys()], zip: r.zip && r.zip.url, T0: r.T0, T1: r.T1 }; }, talk: (on) => talk.setOpen(on), voices: () => [...talk.voices.entries()].map(([id, v]) => ({ id, level: v.level, pan: v.pan.pan.value })), ducked: () => talk.ducked, tapes: () => tape.takes.map((t) => ({ seconds: t.seconds, size: t.blob.size, url: t.url })),
   pad: (i, down) => { const c = padChords()[i]; if (!c) return; if (down) padDown(c, 't' + i); else padUp('t' + i); },
