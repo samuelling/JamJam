@@ -1,0 +1,2 @@
+# wrangler dev / deploy scratch (cache, bundles, local state)
+.wrangler/

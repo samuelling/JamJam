@@ -68,7 +68,8 @@ const pad = (a, n) => { if (a.length >= n) return a; const b = new Float32Array(
 function timeline(song) { let b = 0; return (song.order || []).map((id) => { const s = song.sections[id]; const t = { id, start: b, beats: s ? SONG.sectionBeats(song, s) : 0 }; b += t.beats; return t; }).filter((t) => t.beats > 0); }
 function audioInto(ctx, out, c, A, t, spb) {
   if (!c) return;
-  const buf = ctx.createBuffer(1, c.pcm16.length, c.sr), ch = buf.getChannelData(0); for (let i = 0; i < c.pcm16.length; i++) ch[i] = c.pcm16[i] / 32768;
+  const ch = c.ch === 2 ? 2 : 1, n = Math.floor(c.pcm16.length / ch), buf = ctx.createBuffer(ch, Math.max(1, n), c.sr);   // stereo takes: interleaved
+  for (let k = 0; k < ch; k++) { const d = buf.getChannelData(k); for (let i = 0; i < n; i++) d[i] = c.pcm16[i * ch + k] / 32768; }
   const a0 = t.start + A.from, lo = Math.max(t.start, a0), hi = Math.min(t.start + t.beats, a0 + A.beats); if (hi <= lo) return;
   const into = ((lo - a0) * 60) / A.bpm; if (into >= buf.duration) return;
   const src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = buf; src.connect(g).connect(out);
