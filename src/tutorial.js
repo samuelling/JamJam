@@ -1,5 +1,6 @@
 // Guided tours for someone who has never used a DAW: "Your first jam" (the Jam Room), "Write your first song"
-// (the Compose Room), "Jam with a friend" and "Your band's studio" (keeping a song, and its takes in Dropbox). Each step points at one thing (the rest of the page dims), says what it is and what to do, and
+// (the Compose Room), "Jam with a friend", "Your band's studio" (keeping a song, and its takes in Dropbox) and
+// "Explore the demo song" (the demo studio's song, src/demo.js: how a finished song is put together). Each step points at one thing (the rest of the page dims), says what it is and what to do, and
 // waits until you've done it; "Show me" does it for you. The last step lets go: "You're all set".
 //
 // Nothing is blocked: the page works as usual under the tour, and the tour just watches. Steps check the app's
@@ -11,7 +12,8 @@
 // toggleTape(), closeDrawers(), firstPick(), instName(inst), lockOn(), song(), transport(), play(mode, sid), stop(), playNote(on, note, vel), pad(i, down),
 // addInstrument(inst, patch), jamLane(id), lockIn(r), draftPart(spec), editTake(sid, pid, events, what, base),
 // setSong(k, v), audio() {ctx, out}, def(inst), resolve({inst, patch, hw}),
-// studio() {id, name, home, mine, waiting, kept} | null, canStudio(), canDropbox(), keepAsStudio(name), studioFolder()
+// studio() {id, name, home, mine, waiting, kept} | null, canStudio(), canDropbox(), keepAsStudio(name), studioFolder(),
+// isDemo(), choose(sid, pid, takeId)
 
 import { Fitter, analyze } from './match.js';
 
@@ -298,7 +300,41 @@ export function makeTutorial(api, { h, $ }) {
     { id: 'end', title: 'You\'re all set!', text: 'Your band has a studio: send the band its link, and come back any time from the lobby\'s Your studios. The manual\'s Compose chapter has all of this in writing, under Help.', target: () => $('#helpBtn'), end: true },
   ];
 
-  const TOURS = { jam: { title: 'Your first jam', steps: JAM }, compose: { title: 'Write your first song', steps: COMPOSE }, friends: { title: 'Jam with a friend', steps: FRIENDS }, studio: { title: 'Your band\'s studio', steps: STUDIO } };
+  // ---------- the demo song: how a finished song is put together ----------
+  const secNamed = (n) => { const S2 = api.song(); return (S2.order || []).find((id) => S2.sections[id]?.name === n) || null; };
+  const leadPart = () => { const id = secNamed('Chorus'); return id ? Object.values(api.song().sections[id].parts || {}).find((p) => /^Lead/.test(p.name || p.lane || '')) : null; };
+  const cellOf = (re) => [...document.querySelectorAll('#compose .cell.take')].find((c) => re.test(c.title || ''));
+  const tracksOpen = () => $('#compose .lanetoggle')?.getAttribute('aria-expanded') === 'true';
+  const comp = () => { if (api.where() !== 'compose') api.goRoom('compose'); };
+  const openRow = async (re) => { comp(); if (!tracksOpen()) { $('#compose .lanetoggle')?.click(); await sleep(250); } cellOf(re)?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); };
+  const takesFor = (re) => visible($('#compose .pane.takes')) && re.test($('#compose .pane.takes')?.textContent || '');
+  const DEMO = [
+    { id: 'song', title: 'A whole song to explore', text: 'This demo studio is yours: a short pop song, built the way any MEGAjam song is. The coloured blocks are its sections, in the order they play: Intro, Verse, Chorus, Verse again, Chorus again, Outro. A section that comes back is the same section, so change one Verse and both change.',
+      target: () => $('#compose .arranger'), setup: comp, next: true },
+    { id: 'tracks', title: 'One row per instrument', text: 'Open the tracks: each row is one instrument (a track), and each block in it is what that track plays in that section.',
+      target: () => $('#compose .lanetoggle'), setup: comp, wait: tracksOpen, show: () => $('#compose .lanetoggle')?.click() },
+    { id: 'rows', title: 'The band', text: 'Drums keep time, Bass holds the low end, Chords fill in the harmony, and the Lead (only in the Chorus) plays the tune. Guitar (recorded) is different: it\'s real recorded audio, in the Verse. Rows that are empty in a section stay quiet there.',
+      target: () => $('#compose .arranger'), setup: comp, next: true },
+    { id: 'play', title: 'Play it', text: 'Press Play the song: every section in order, start to finish (about a minute and a half). The line moving across shows where you are.',
+      target: () => $('#compose .playsong'), setup: comp, wait: () => api.transport()?.on && api.transport().mode === 'song', show: () => api.play('song') },
+    { id: 'chorus', title: 'Open a section', text: 'Click the Chorus heading. Below the board you get that section: its chords bar by bar, its notes (a tip from us), and its buttons.',
+      target: () => document.querySelector(`#compose .shead[data-sec="${secNamed('Chorus')}"]`), setup: comp, wait: () => !!document.querySelector(`#compose .shead.sel[data-sec="${secNamed('Chorus')}"]`), show: () => document.querySelector(`#compose .shead[data-sec="${secNamed('Chorus')}"]`)?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })) },   // a heading is picked on press (it drags too), or Enter
+    { id: 'loop', title: 'Loop just the Chorus', text: 'Loop it plays only this section, round and round, for everyone in the room. It\'s how a band works on one part at a time.',
+      target: () => btnText($('#compose'), /Loop it/), setup: comp, wait: () => api.transport()?.on && api.transport().mode === 'loop' && api.transport().sid === secNamed('Chorus'), show: () => api.play('loop', secNamed('Chorus')) },
+    { id: 'lead', title: 'Two takes of the Lead', text: 'Every time someone records a part, it\'s kept as a take. Robin and Kai each played the Lead. Click the Lead\'s block in the Chorus to see both takes.',
+      target: () => cellOf(/^Lead in Chorus/), setup: () => openRow(/^Lead in Chorus/), wait: () => takesFor(/Lead in Chorus/), show: () => cellOf(/^Lead in Chorus/)?.click() },
+    { id: 'pick', title: 'Pick one', text: 'Robin\'s take is sounding. Press Use this take on Kai\'s: the loop plays Kai\'s version from its next pass. Swap back any time. With the band, you can vote on takes instead (Song options › New takes).',
+      target: () => $('#compose .pane.takes'), wait: () => /kai/.test(leadPart()?.current || ''), show: () => { const sid = secNamed('Chorus'), p = leadPart(); if (sid && p) api.choose(sid, p.id, 'demo-kai'); } },
+    { id: 'guitar', title: 'A recorded take', text: 'The Guitar in the Verse is real audio, recorded once and kept in the studio, so it plays for everyone even when whoever played it isn\'t here. Plug in a mic or guitar with Live audio and your takes land in the song the same way.',
+      target: () => cellOf(/^Guitar \(recorded\) in Verse/), setup: () => openRow(/^Guitar \(recorded\) in Verse/), next: true },
+    { id: 'templates', title: 'Where songs start', text: 'This song started from a template: Song presets builds a form, chords and a basic band (drums, bass, chords) in any of twenty styles, ready to jam over. Try one in a new jam; here, it would replace the demo.',
+      target: () => $('#compose select.presets') || $('#compose .moretoggle'), setup: async () => { comp(); const o = $('#compose .songopts'); if (!visible(o) && !$('#compose select.presets')) { $('#compose .moretoggle')?.click(); await sleep(300); } }, next: true },
+    { id: 'yours', title: 'Make it yours', text: 'Change anything: type new chords, + Add track, Jam this section to play along on your keys and lock in your own take, or drag a section to move it. It saves by itself, and you can come back to it from Your studios in the lobby.',
+      target: () => btnText($('#compose'), /Jam this section/) || $('#compose .arranger'), next: true },
+    { id: 'end', title: 'You\'re all set!', text: 'That\'s how a song is put together here: sections, tracks, takes, recorded audio, and templates to start from. Stop the music with the same button you started it with. Write your first song shows how to build one from scratch.', target: () => $('#helpBtn'), end: true, nextTour: 'compose' },
+  ];
+
+  const TOURS = { jam: { title: 'Your first jam', steps: JAM }, compose: { title: 'Write your first song', steps: COMPOSE }, friends: { title: 'Jam with a friend', steps: FRIENDS }, studio: { title: 'Your band\'s studio', steps: STUDIO }, demo: { title: 'Explore the demo song', steps: DEMO } };
 
   // a short Verse to work in: the song's first section, cut to 4 bars when it's still empty
   function tidySection() {
@@ -440,6 +476,7 @@ export function makeTutorial(api, { h, $ }) {
     stop(false, true);
     if (name === 'friends' && !api.inStudio()) return;   // Robin needs a room to walk into
     if (name === 'studio' && (!api.inStudio() || !api.canStudio())) return;   // needs a room, and a studio server
+    if (name === 'demo' && (!api.inStudio() || !api.isDemo())) return;   // the demo studio's song
     const T = TOURS[name]; if (!T) return;
     tour = { name, steps: T.steps, i: 0, ctx: {}, el: build(), skipLobby: api.inStudio() };
     document.body.classList.add('touring');
@@ -462,7 +499,7 @@ export function makeTutorial(api, { h, $ }) {
     document.querySelector('.tour-menu')?.remove();
     const m = h('div', { class: 'tour-menu', role: 'menu' },
       h('b', {}, 'Guided tours'),
-      ...Object.entries(TOURS).filter(([k]) => k !== 'studio' || api.canStudio()).map(([k, T]) => h('button', { class: 'btn small' + (toured(k) ? '' : ' hot'), role: 'menuitem', onclick: () => { m.remove(); start(k); } }, `${T.title}${toured(k) ? ' ✓' : ''}`)),
+      ...Object.entries(TOURS).filter(([k]) => (k !== 'studio' || api.canStudio()) && (k !== 'demo' || api.isDemo())).map(([k, T]) => h('button', { class: 'btn small' + (toured(k) ? '' : ' hot'), role: 'menuitem', onclick: () => { m.remove(); start(k); } }, `${T.title}${toured(k) ? ' ✓' : ''}`)),
       h('small', { class: 'help' }, 'Step by step, about five minutes each. Leave any time with ×.'),
       h('a', { class: 'btn small ghost tour-manual', role: 'menuitem', href: 'help.html', target: '_blank', rel: 'noopener', onclick: () => m.remove() }, 'Read the manual ↗'));
     document.body.append(m);

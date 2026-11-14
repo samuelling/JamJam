@@ -257,8 +257,9 @@ export const GENRES = [
 ];
 
 // the song a preset makes; ids are new each time, so it never lands on an earlier copy of itself
-export function presetSong(gi, si) {
-  const g = GENRES[gi], [title, keyName, bpm, form, secs] = g.songs[si], key = parseKey(keyName), song = emptySong();
+// spec: a song in the same form as the lists above, built with genre gi's band (the demo studio's song, src/demo.js)
+export function presetSong(gi, si, spec) {
+  const g = GENRES[gi], [title, keyName, bpm, form, secs] = spec || g.songs[si], key = parseKey(keyName), song = emptySong();
   Object.assign(song, { title, bpm, key, meter: 4, master: { style: STYLE_OF[g.name] || 'band' } });
   const made = new Map();
   for (const L of form) {
