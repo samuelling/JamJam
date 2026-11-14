@@ -1,0 +1,24 @@
+# MEGAjam studios Worker (see README.md in this folder). Separate from the handshake relay and the stats Worker.
+name = "megajam-studio"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true      # https://megajam-studio.samuelling.workers.dev
+preview_urls = false
+
+# Sites allowed to write (localhost is always allowed, for testing)
+[vars]
+ORIGINS = "https://samuelling.github.io"
+
+# One Durable Object per studio holds its song
+[[durable_objects.bindings]]
+name = "STUDIO"
+class_name = "Studio"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Studio"]
+
+# The audio takes
+[[r2_buckets]]
+binding = "CLIPS"
+bucket_name = "megajam-clips"

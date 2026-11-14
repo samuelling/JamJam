@@ -24,6 +24,12 @@
 <link rel="stylesheet" href="styles/compose.css">
 <link rel="stylesheet" href="styles/tutorial.css">
 <script src="mp-config.js"></script>
+<script>
+// Dropbox sends the linking pop-up back here (the app's registered address): hand it to dropbox.html, which passes
+// the answer to the MEGAjam window that opened it (src/dropbox.js) and closes, before this page starts anything.
+(function () { var q = new URLSearchParams(location.search);
+  if (window.opener && q.get('state') && (q.get('code') || q.get('error'))) { document.documentElement.style.display = 'none'; location.replace('dropbox.html' + location.search); } })();
+</script>
 </head>
 <body class="simple">
 <section id="lobby">
@@ -42,6 +48,7 @@
         <div class="or">or join a friend</div>
         <div class="joinrow"><input id="codeIn" type="text" maxlength="4" placeholder="CODE" autocomplete="off" aria-label="Room code"><button id="joinBtn" class="btn">Walk in</button></div>
         <button id="listenBtn" class="btn small ghost" title="Hear the band without playing: your browser plays their instruments, so it sounds like you're in the room">or just listen in</button>
+        <div id="studioList" class="studiolist"></div>
         <p id="lobbyStatus" class="help" style="margin:0;min-height:1em" role="status"></p>
         <p class="help" style="margin:0">Headphones help. Chrome or Edge works best. <a class="manuallink" href="help.html" target="_blank" rel="noopener">Read the manual</a></p>
       </div>

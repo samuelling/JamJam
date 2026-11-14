@@ -64,3 +64,18 @@ body.looping:not(.where-compose) .corner .gearitem .ico { width: 40px; height: 2
 .presence { display: inline-flex; gap: 4px; }
 .presence .who { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 700 11px var(--sans); background: #2a2c31; color: var(--mz-muted); }
 .presence .who.here { background: var(--mz-blue); color: #0a1a30; }
+/* the Compose Room: the band's corners fold into one row of name tags (name, gear, link), so the song gets the room;
+   "▾ Band" opens them in full */
+.cornerstoggle { display: none; }
+body.where-compose .cornerstoggle { display: inline-flex; }
+body.where-compose.corners-full #corners { position: relative; }
+body.where-compose.corners-full .cornerstoggle { position: absolute; right: 6px; bottom: -30px; z-index: 2; }
+body.where-compose:not(.corners-full) #corners { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+body.where-compose:not(.corners-full) .corner { min-height: 0; display: flex; align-items: center; gap: 10px; padding: 3px 12px 3px 10px; border-radius: 99px; flex: 0 1 auto; max-width: 340px; }
+body.where-compose:not(.corners-full) .corner::before { left: 20%; right: 20%; height: 2px; }
+body.where-compose:not(.corners-full) .corner.empty, body.where-compose:not(.corners-full) .corner .cstats, body.where-compose:not(.corners-full) .corner .cfoot, body.where-compose:not(.corners-full) .corner .vpctl, body.where-compose:not(.corners-full) .corner .gearitem small { display: none; }
+body.where-compose:not(.corners-full) .chead { flex-wrap: nowrap; }
+body.where-compose:not(.corners-full) .cname { font-size: 13px; }
+body.where-compose:not(.corners-full) .gearrow { min-height: 0; gap: 3px; align-items: center; }
+body.where-compose:not(.corners-full) .gearitem { width: auto; }
+body.where-compose:not(.corners-full) .gearitem .ico { width: 26px; height: 18px; }

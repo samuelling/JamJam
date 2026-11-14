@@ -23,6 +23,7 @@ export class Blobs {
     this.room = room; this.onReady = onReady;
     this.bytes = new Map(); this.rate = new Map(); this.inbound = new Map(); this.asked = new Map();
     this.db = null;
+    this.remote = null;   // async (id) -> { pcm16, sr } | null: a studio's server
     try {
       const req = indexedDB.open('megajam', 1);
       req.onupgradeneeded = () => req.result.createObjectStore('blobs');
@@ -64,8 +65,11 @@ export class Blobs {
     for (const { id, from } of list) {
       if (!id || this.bytes.has(id) || this.inbound.has(id) || now - (this.asked.get(id) || -1e9) < 8000) continue;
       this.asked.set(id, now);
-      this.fromCache(id).then((ok) => {
+      this.fromCache(id).then(async (ok) => {
         if (ok) { this.onReady(id); return; }
+        // a studio keeps its audio on its server: ask there first, so a take plays without whoever recorded it
+        const got = this.remote && await this.remote(id).catch(() => null);
+        if (got && !this.bytes.has(id)) { this.put(id, got.pcm16, got.sr); this.onReady(id); return; }
         if (!this.room.peers.size) return;
         if (from && this.room.peers.has(from)) this.room.send({ k: 'aud-get', id }, from); else this.room.send({ k: 'aud-get', id });
       });
