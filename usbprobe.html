@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MEGAjam · multichannel input check</title>
+<meta name="robots" content="noindex">
+<style>
+  :root { color-scheme: dark; --bg: #121418; --card: #1b1e24; --line: #ffffff22; --ink: #ECEBE5; --dim: #ECEBE599; --hot: #FF68BA; --ok: #3ddc84; --warn: #ffcf26; --bad: #ff5c5c; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 18px 60px; }
+  h1 { font-size: 22px; margin: 0 0 6px; } h2 { font-size: 16px; margin: 22px 0 8px; }
+  p { margin: 6px 0; color: var(--dim); } b, strong { color: var(--ink); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  button, select { font: inherit; background: #2a2e36; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+  button.hot { background: var(--hot); color: #111; border-color: transparent; font-weight: 600; }
+  button:disabled { opacity: 0.45; cursor: default; }
+  .verdict { font-size: 17px; font-weight: 600; padding: 10px 12px; border-radius: 8px; margin-top: 10px; }
+  .verdict.ok { background: #3ddc8422; color: var(--ok); } .verdict.warn { background: #ffcf2622; color: var(--warn); } .verdict.bad { background: #ff5c5c22; color: var(--bad); }
+  .meters { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin-top: 10px; }
+  .meter { background: #0c0d10; border: 1px solid var(--line); border-radius: 8px; padding: 6px; text-align: center; font-size: 12px; }
+  .meter .bar { height: 120px; background: #ffffff10; border-radius: 4px; position: relative; overflow: hidden; margin: 4px auto; width: 26px; }
+  .meter .fill { position: absolute; left: 0; right: 0; bottom: 0; background: var(--ok); height: 0; }
+  .meter .peak { font-variant-numeric: tabular-nums; color: var(--dim); }
+  .meter.live .fill { background: var(--hot); }
+  pre { background: #0c0d10; border: 1px solid var(--line); border-radius: 8px; padding: 10px; white-space: pre-wrap; font-size: 12px; max-height: 260px; overflow: auto; }
+  ol { color: var(--dim); padding-left: 20px; } li { margin: 4px 0; }
+  .midilog { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--dim); min-height: 1.4em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Multichannel input check</h1>
+  <p>Does this browser hand MEGAjam every channel of your audio interface, or just two? This page finds out, and checks MIDI too. Nothing leaves your computer.</p>
+  <div class="card">
+    <ol>
+      <li>Plug in the interface first (OP–XY: COM › USB, pick the <b>8 channel</b> output), then open this page, ideally in <b>Firefox</b>.</li>
+      <li>Press <b>Start</b> and allow the microphone (it means "audio inputs"). Pick the interface below.</li>
+      <li>Play something on each track. Every channel that moves its own meter is getting through on its own.</li>
+      <li>Press <b>Copy report</b> and paste it back to Claude (or Sam). <b>Record 5 s</b> saves a WAV with every channel, to check in a DAW.</li>
+    </ol>
+    <div class="row"><button class="hot" id="start">Start</button><select id="dev" disabled aria-label="Audio input"><option>(press Start first)</option></select>
+      <button id="rec" disabled>Record 5 s</button><button id="copy" disabled>Copy report</button></div>
+    <div id="verdict" class="verdict" hidden></div>
+    <div id="meters" class="meters" aria-label="Channel meters"></div>
+  </div>
+  <h2>MIDI</h2>
+  <div class="card">
+    <div class="row"><button id="midi">Check MIDI</button><span id="midisay"></span></div>
+    <div id="midilog" class="midilog"></div>
+  </div>
+  <h2>Report</h2>
+  <pre id="report">(nothing yet)</pre>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const R = { browser: navigator.userAgent, when: new Date().toISOString(), audio: {}, midi: null };
+let ctx = null, stream = null, node = null, src = null, chans = 0, peaks = [], live = [], rec = null;
+const report = () => { $('report').textContent = JSON.stringify(R, null, 2); };
+const say = (cls, text) => { const v = $('verdict'); v.hidden = false; v.className = 'verdict ' + cls; v.textContent = text; };
+
+// the worklet: counts the channels it's actually given and measures each one
+const WORKLET = `class Probe extends AudioWorkletProcessor {
+  constructor() { super(); this.n = 0; this.pk = []; this.rec = null; this.dead = false; this.port.onmessage = (e) => { if (e.data.rec) this.rec = { left: e.data.rec, bufs: [] }; if (e.data.stop) this.dead = true; }; }
+  process(inputs) {
+    if (this.dead) return false;
+    const ins = inputs[0] || []; this.n++;
+    for (let c = 0; c < ins.length; c++) { let m = 0; const x = ins[c]; for (let i = 0; i < x.length; i++) { const v = Math.abs(x[i]); if (v > m) m = v; } this.pk[c] = Math.max(this.pk[c] || 0, m); }
+    if (this.rec) { this.rec.bufs.push(ins.map((x) => x.slice())); this.rec.left -= (ins[0] ? ins[0].length : 128); if (this.rec.left <= 0) { this.port.postMessage({ recorded: this.rec.bufs }); this.rec = null; } }
+    if (this.n % 8 === 0) { this.port.postMessage({ ch: ins.length, pk: this.pk.slice(0, ins.length) }); this.pk = []; }
+    return true;
+  }
+}
+registerProcessor('probe', Probe);`;
+
+async function open(deviceId) {
+  stop();
+  // ask for as many channels as there are, with the voice processing off (it folds everything to mono)
+  const base = { echoCancellation: false, noiseSuppression: false, autoGainControl: false, ...(deviceId ? { deviceId: { exact: deviceId } } : {}) };
+  const tries = [{ ...base, channelCount: { ideal: 32 } }, { ...base, channelCount: { ideal: 8 } }, base];
+  let err = null;
+  for (const c of tries) { try { stream = await navigator.mediaDevices.getUserMedia({ audio: c }); R.audio.asked = c.channelCount || 'any'; break; } catch (e) { err = e; } }
+  if (!stream) { say('bad', `The browser wouldn't open the input: ${err?.name || ''} ${err?.message || ''}`); R.audio.error = String(err); report(); return; }
+  const tr = stream.getAudioTracks()[0], st = tr.getSettings ? tr.getSettings() : {};
+  R.audio.device = tr.label; R.audio.settings = st;
+  ctx = ctx || new AudioContext({ latencyHint: 'interactive' });
+  await Promise.race([ctx.resume(), new Promise((r) => setTimeout(r, 1500))]);
+  if (ctx.state !== 'running') say('warn', 'The browser is holding sound back: click anywhere on the page.');
+  R.audio.engine = ctx.state;
+  if (!ctx.audioWorklet) { say('bad', 'This browser has no AudioWorklet.'); return; }
+  if (!open.loaded) { await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET], { type: 'text/javascript' }))); open.loaded = true; }
+  src = ctx.createMediaStreamSource(stream);
+  R.audio.sourceChannels = src.channelCount; R.audio.sampleRate = ctx.sampleRate;
+  // the node takes whatever count arrives (explicit, so nothing is down-mixed on the way in)
+  const want = Math.max(2, Math.min(32, st.channelCount || 8));
+  node = new AudioWorkletNode(ctx, 'probe', { numberOfInputs: 1, numberOfOutputs: 0, channelCount: want, channelCountMode: 'explicit', channelInterpretation: 'discrete' });
+  node.port.onmessage = (e) => onData(e.data);
+  src.connect(node);
+  $('rec').disabled = false; $('copy').disabled = false;
+  chans = 0; peaks = []; live = [];
+  report();
+}
+function stop() { try { src && src.disconnect(); } catch (_) {} if (node) { node.port.onmessage = null; node.port.postMessage({ stop: true }); } try { node && node.disconnect(); } catch (_) {} if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; src = null; node = null; }
+
+function onData(d) {
+  if (d.recorded) return saveWav(d.recorded);
+  if (d.ch !== chans) { chans = d.ch; drawMeters(); }
+  d.pk.forEach((p, c) => {
+    peaks[c] = Math.max(peaks[c] || 0, p);
+    if (p > 0.01) live[c] = true;
+    const m = $('meters').children[c]; if (!m) return;
+    m.querySelector('.fill').style.height = `${Math.min(100, Math.round(Math.sqrt(p) * 100))}%`;
+    m.querySelector('.peak').textContent = peaks[c] > 0 ? `${(20 * Math.log10(peaks[c])).toFixed(0)} dB` : '–';
+    m.classList.toggle('live', !!live[c]);
+  });
+  // are the channels really separate? (a stereo pair duplicated to fill 8 would move together)
+  const moving = live.filter(Boolean).length;
+  R.audio.channelsDelivered = chans; R.audio.channelsWithSignal = moving; R.audio.peaksDb = peaks.map((p) => (p > 0 ? Math.round(20 * Math.log10(p)) : null));
+  if (chans > 2) say('ok', `${chans} channels are coming through. ${moving ? `${moving} have had signal so far.` : 'Play something on each track to check they are separate.'} Multitrack recording can work in this browser.`);
+  else say(chans === 2 ? 'warn' : 'bad', `Only ${chans} channel${chans === 1 ? '' : 's'} came through. ${/Firefox/.test(navigator.userAgent) ? 'Check the interface is set to its multichannel output, then press Start again.' : 'This browser caps inputs at stereo; try this page in Firefox.'}`);
+  if (!onData.t || performance.now() - onData.t > 1000) { onData.t = performance.now(); report(); }
+}
+function drawMeters() {
+  $('meters').replaceChildren(...Array.from({ length: chans }, (_, c) => { const d = document.createElement('div'); d.className = 'meter'; d.innerHTML = `<div>ch ${c + 1}</div><div class="bar"><div class="fill"></div></div><div class="peak">–</div>`; return d; }));
+}
+
+// 5 seconds of every channel as one WAV (16-bit), to open in a DAW
+function saveWav(bufs) {
+  const n = chans || (bufs[0] ? bufs[0].length : 1), frames = bufs.reduce((s, b) => s + (b[0] ? b[0].length : 0), 0), sr = ctx.sampleRate;
+  const data = new DataView(new ArrayBuffer(44 + frames * n * 2)), w = (o, s) => [...s].forEach((c, i) => data.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); data.setUint32(4, 36 + frames * n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); data.setUint32(16, 16, true); data.setUint16(20, 1, true); data.setUint16(22, n, true);
+  data.setUint32(24, sr, true); data.setUint32(28, sr * n * 2, true); data.setUint16(32, n * 2, true); data.setUint16(34, 16, true); w(36, 'data'); data.setUint32(40, frames * n * 2, true);
+  let o = 44; for (const b of bufs) for (let i = 0; i < (b[0] ? b[0].length : 0); i++) for (let c = 0; c < n; c++) { const v = Math.max(-1, Math.min(1, b[c] ? b[c][i] : 0)); data.setInt16(o, Math.round(v * 32767), true); o += 2; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type: 'audio/wav' })); a.download = `megajam-${n}ch-check.wav`; a.click();
+  $('rec').disabled = false; $('rec').textContent = 'Record 5 s'; R.audio.recordedWav = `${n} channels, ${(frames / sr).toFixed(1)} s`; report();
+}
+
+$('start').onclick = async () => {
+  if (!navigator.mediaDevices?.getUserMedia) { say('bad', 'This browser has no audio input access here (it needs https).'); return; }
+  ctx = ctx || new AudioContext({ latencyHint: 'interactive' }); ctx.resume();   // right on the click: browsers only start sound from one
+  await open(null);
+  if (!stream) return;
+  const devs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audioinput');
+  R.audio.inputs = devs.map((d) => d.label || '(unnamed)');
+  const sel = $('dev'), cur = stream.getAudioTracks()[0].getSettings?.().deviceId;
+  sel.replaceChildren(...devs.map((d) => { const o = document.createElement('option'); o.value = d.deviceId; o.textContent = d.label || 'input'; if (d.deviceId === cur) o.selected = true; return o; }));
+  sel.disabled = false; $('start').textContent = 'Restart';
+  // the OP–XY (or anything with "op-xy" in its name) first, if it isn't already
+  const xy = devs.find((d) => /op.?xy/i.test(d.label)); if (xy && xy.deviceId !== cur) { sel.value = xy.deviceId; await open(xy.deviceId); }
+  report();
+};
+$('dev').onchange = (e) => open(e.target.value);
+$('rec').onclick = () => { if (!node) return; $('rec').disabled = true; $('rec').textContent = 'Recording…'; node.port.postMessage({ rec: Math.round(ctx.sampleRate * 5) }); };
+$('copy').onclick = async () => { report(); try { await navigator.clipboard.writeText($('report').textContent); $('copy').textContent = 'Copied'; } catch (_) { $('copy').textContent = 'Select the report below and copy it'; } setTimeout(() => ($('copy').textContent = 'Copy report'), 2000); };
+$('midi').onclick = async () => {
+  if (!navigator.requestMIDIAccess) { $('midisay').textContent = 'No Web MIDI in this browser.'; R.midi = { supported: false }; report(); return; }
+  try {
+    const m = await navigator.requestMIDIAccess({ sysex: false });
+    const ins = [...m.inputs.values()], outs = [...m.outputs.values()];
+    R.midi = { supported: true, inputs: ins.map((i) => i.name), outputs: outs.map((o) => o.name), heard: 0 };
+    $('midisay').textContent = `MIDI works: ${ins.length} input${ins.length === 1 ? '' : 's'} (${ins.map((i) => i.name).join(', ') || 'none'}), ${outs.length} output${outs.length === 1 ? '' : 's'}. Play a key to see it arrive.`;
+    ins.forEach((i) => (i.onmidimessage = (e) => { R.midi.heard++; $('midilog').textContent = `${i.name}: ${[...e.data].map((b) => b.toString(16).padStart(2, '0')).join(' ')}`; }));
+  } catch (e) { $('midisay').textContent = `MIDI was refused: ${e.message}${/Firefox/.test(navigator.userAgent) ? ' (Firefox asks to add a small site permission add-on the first time; MIDI gear has to be plugged in before Firefox starts)' : ''}`; R.midi = { supported: true, error: e.message }; }
+  report();
+};
+document.addEventListener('pointerdown', () => { if (ctx && ctx.state !== 'running') ctx.resume(); });
+report();
+</script>
+</body>
+</html>
