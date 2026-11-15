@@ -21,6 +21,9 @@ import { wav, readPcmWav } from './songzip.js';
 import { fetchDirect, safeName } from './dropbox.js';
 
 const SKIP = (k) => k === 'transport' || k === 'studio' || k.startsWith('vp:');   // live-only state stays in the room
+// the keys the studio keeps (studio/core.js KEY_RE): anything else would make the server refuse the whole batch, so
+// it stays in the room (a version saved under a name with spaces, by an older MEGAjam)
+const KEEPS = /^(title|bpm|key|meter|order|labels|rule|master|share|studio|(sec|part|lane|var):[A-Za-z0-9_.:-]{1,80})$/;
 const LIST_KEY = 'megajam.studios';
 
 export const studioRoom = (id) => 'st-' + id;            // the relay room a studio's band meets in
@@ -56,7 +59,7 @@ export function makeStudio(o) {
   async function flush(keepalive = false) {
     if (!st.id || !st.loaded || st.busy || !o.isLeader()) return;   // never send a song that isn't the studio's yet
     const whole = !st.sentWhole;
-    const keys = whole ? Object.keys(o.songStore.stamps).filter((k) => !SKIP(k)) : [...st.pending];
+    const keys = (whole ? Object.keys(o.songStore.stamps).filter((k) => !SKIP(k)) : [...st.pending]).filter((k) => KEEPS.test(k));
     // the room's tempo and key aren't song keys: they ride along whenever they change
     const ex = o.extras ? o.extras() : {}, exSig = JSON.stringify(ex), exOps = whole || exSig !== st.exSig ? Object.entries(ex) : [];
     if (whole && !keys.length) { st.sentWhole = true; return; }   // nothing here yet: never wipe the studio with an empty song

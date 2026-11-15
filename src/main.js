@@ -1040,7 +1040,7 @@ const compose = makeCompose({
   playersOf: () => [{ name: S.name || 'You', where: S.where }, ...[...S.players.values()].filter((p) => p.role !== 'listener').map((p) => ({ name: p.name || '…', where: p.where }))],
   setSong, transport: () => songStore.song.transport, keyName: () => keyName(), bpm: () => Math.round(tempo.bpm(clock.now() + 1000)),
   play: (mode, sid, from) => startTransport(mode, sid, from), stop: () => stopTransport(), recButton: (cls, sid) => recButton(cls, sid), canRecord: () => !S.listener && (S.rack.length > 0 || lane.on), loopRange: (a, b) => loopRange(a, b), jamThis: (sid, lane) => jamSection(sid, lane),
-  joinSections: (i, j) => joinSections(i, j), splitSection: (i, bar) => splitSection(i, bar), arrangeUndo: (u) => arrangeUndo(u),
+  joinSections: (i, j) => joinSections(i, j), splitSection: (i, bar) => splitSection(i, bar), arrangeUndo: (u) => arrangeUndo(u), clearSong: () => clearSong(), unclearSong: (s) => unclearSong(s),
   studio: () => (studio.id ? { id: studio.id, name: studio.name, saved: studio.saved, link: studio.link() } : null), canStudio: () => !!STUDIO_SERVER,
   keepAsStudio: (name) => keepAsStudio(name), inviteStudio: () => openInvite(studio.link()),
   takeQuality: () => (hifi() ? 'hifi' : 'standard'), setTakeQuality: (q) => setTakeQuality(q),
@@ -2049,12 +2049,32 @@ function vote(sid, pid, takeId) {
   const cur = SONG.pickCurrent(p, 'vote', votes), pos = positionAt(songStore.song.transport, tempo.beatAt(clock.now()));
   setSong(`part:${sid}:${pid}`, { ...p, votes, prev: cur !== p.current ? SONG.currentTake(p)?.id : p.prev, current: cur, switchAt: cur !== p.current ? (pos && pos.sid === sid ? nextBoundary(pos) : tempo.beatAt(clock.now() + 300)) : p.switchAt });
 }
+// ---------- clear the song: a blank page for everyone ----------
+// Every section, track, take and saved version goes; the room's tempo, key, new-take rule and studio settings stay.
+// Audio clips aren't deleted anywhere, so the copy this returns brings it all back (unclearSong) while it's kept.
+function clearSong() {
+  const snap = JSON.parse(JSON.stringify(songStore.song)); delete snap.transport;
+  const blank = SONG.emptySong(); delete blank.bpm; delete blank.key; blank.rule = songStore.song.rule || 'newest'; blank.master = songStore.song.master || {};
+  loadSong(blank);
+  for (const k of Object.keys(songStore.stamps)) if (k.startsWith('var:') && songStore.song.variations?.[k.slice(4)]) setSong(k, null);
+  addChat({ sys: true, text: `${S.name} cleared the song`, t: Date.now() }); room.send({ k: 'chat', text: 'cleared the song' });
+  return snap;
+}
+function unclearSong(snap) {
+  if (!snap) return;
+  loadSong(snap);
+  for (const [k, v] of Object.entries(snap.variations || {})) setSong('var:' + k, v);
+  addChat({ sys: true, text: `${S.name} brought the song back`, t: Date.now() }); room.send({ k: 'chat', text: 'brought the song back' });
+}
+// a version's key: its name made safe for the studio (letters, digits, _ . -); the name itself rides in the value
+const varKey = (name) => String(name).normalize('NFKD').replace(/[^A-Za-z0-9_.-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'version';
 function saveVariation(name) {
   const picks = {}; for (const s of songStore.sections()) for (const p of Object.values(s.parts || {})) picks[`${s.id}:${p.id}`] = { take: SONG.currentTake(p)?.id, muted: !!p.muted };
-  setSong('var:' + name, { name, by: S.name, at: Date.now(), picks });
+  for (const [k, v] of Object.entries(songStore.song.variations || {})) if (v?.name === name && k !== varKey(name)) setSong('var:' + k, null);   // saved again: one copy
+  setSong('var:' + varKey(name), { name, by: S.name, at: Date.now(), picks });
 }
 function restoreVariation(name) {
-  const v = songStore.song.variations?.[name]; if (!v) return;
+  const vs = songStore.song.variations || {}, v = Object.values(vs).find((q) => q?.name === name) || vs[name]; if (!v) return;
   const at = tempo.beatAt(clock.now() + 400);
   for (const [k, x] of Object.entries(v.picks)) { const [sid, pid] = k.split(':'), p = songStore.song.sections[sid]?.parts?.[pid]; if (!p) continue; if (p.current !== x.take || !!p.muted !== x.muted) setSong(`part:${sid}:${pid}`, { ...p, prev: SONG.currentTake(p)?.id, current: x.take, muted: x.muted, switchAt: at }); }
 }
