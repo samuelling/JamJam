@@ -25,8 +25,8 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     await A.evaluate(() => JJ.play('loop', 'v1'));
     const passMs = await A.evaluate(() => 8 * 60000 / JJ.tempo.bpm(JJ.clock.now()));
     await sleep(passMs * 2.3 + 1000);
-    check((await A.$('#secbar button >> text=Lock in my live audio')) !== null, 'the section bar offers to lock in his live audio');
-    await A.evaluate(() => JJ.lockAudio());
+    check((await A.$('#secbar button.recall')) !== null && (await A.$('#secbar button.keeplast')) !== null, 'the section bar offers Arm takes, and Keep last pass for what he just played');
+    await A.evaluate(() => document.querySelector('#secbar button.keeplast').click());
     await sleep(600);
     const part = await B.evaluate(() => Object.values(JJ.song().sections.v1.parts).find((p) => p.kind === 'audio'));
     const take = part && part.takes.find((t) => t.id === part.current);

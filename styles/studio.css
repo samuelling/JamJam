@@ -78,6 +78,7 @@ body.simple .vpmore { display: none; }
 #copyBtn.alone { background: var(--mz-pink, #FF68BA); color: #18181b; border-color: #18181b; font-weight: 700; box-shadow: 0 0 0 3px #ff68ba33; }
 .micico { display: grid; place-items: center; width: 34px; height: 24px; border-radius: 4px; background: #2a2412; color: #ffcf26; font-size: 14px; }
 .btn.recall.on { background: #e5383b; color: #fff; border-color: #18181b; animation: recpulse 1.4s ease-in-out infinite; }
+.btn.recall.counting { background: #ffcf26; color: #111; border-color: #18181b; animation: none; }
 @keyframes recpulse { 50% { box-shadow: 0 0 0 4px #e5383b44; } }
 .sidetab.techtab { margin-top: auto; opacity: .7; }
 .sidetab.techtab[aria-pressed="true"] { opacity: 1; color: var(--mz-toner); box-shadow: inset 0 0 0 1px #ffcf2666; }

@@ -388,11 +388,14 @@ export class Engine {
   metronome() {
     if (!this.ctx) return;
     const m = this.metro, now = this.clock.now(), horizon = now + 140;
-    if (!m.on) { m.next = -1; return; }
+    // a count-in clicks even with the metronome off: every beat before m.countTo (a room beat), then stops
+    const counting = m.countTo != null && this.tempo.beatAt(now) < m.countTo;
+    if (!m.on && !counting) { m.next = -1; if (m.countTo != null) m.countTo = null; return; }
     let b = m.next >= 0 ? m.next : Math.ceil(this.tempo.beatAt(now + 30));
     for (;;) {
       const at = this.tempo.timeOf(b);
       if (at > horizon) break;
+      if (!m.on && b >= m.countTo) break;
       if (at >= now) this.click(this.audioTime(at), b % 4 === 0);
       b++;
     }
