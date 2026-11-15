@@ -1044,6 +1044,7 @@ const compose = makeCompose({
   studio: () => (studio.id ? { id: studio.id, name: studio.name, saved: studio.saved, link: studio.link() } : null), canStudio: () => !!STUDIO_SERVER,
   keepAsStudio: (name) => keepAsStudio(name), inviteStudio: () => openInvite(studio.link()),
   takeQuality: () => (hifi() ? 'hifi' : 'standard'), setTakeQuality: (q) => setTakeQuality(q),
+  clipPcm: (id) => blobs.pcm(id), saveAudioEdit: (sid, pid, tid, d) => saveAudioEdit(sid, pid, tid, d), audioOut: () => (engine.ctx ? { ctx: engine.ctx, out: engine.master } : null),
   takesHome: () => (dropbox.configured ? studio.takesHome : null), dropboxName: () => (dropbox.linked ? dropbox.name || 'your Dropbox' : ''),
   keepInDropbox: async () => { if (!dropbox.linked) await dropbox.connect(); return studio.keepInDropbox(); },
   stopDropbox: () => studio.stopDropbox(), unlinkDropbox: async () => { await studio.stopDropbox().catch(() => {}); await dropbox.disconnect(); },
@@ -1757,6 +1758,25 @@ function clipBuffer(id, ch = chOf(id)) {
   const c = blobs.pcm(id); if (!c || !engine.ctx) return null;
   const buf = ZIP.pcmBuffer(engine.ctx, c.pcm16, c.sr, ch);
   AUD.bufs.set(id, buf); return buf;
+}
+// The audio editor's save (src/audioedit.js): the edited audio becomes a new clip and a new take on the block, "Sam's
+// edit of Matt's take", sounding from the next bar; the original stays in the take list.
+function saveAudioEdit(sid, pid, takeId, { chs, sr }) {
+  const s = songStore.song.sections[sid], p = s?.parts?.[pid], t = p && SONG.takesOf(p).find((q) => q.id === takeId);
+  if (!t?.audio) throw new Error('that take is gone');
+  const ch = chs.length === 2 ? 2 : 1, frames = chs[0].length, pcm16 = new Int16Array(frames * ch);
+  for (let i = 0; i < frames; i++) for (let c = 0; c < ch; c++) pcm16[i * ch + c] = Math.max(-32768, Math.min(32767, Math.round(chs[c][i] * 32768)));
+  const peaks = Array.from({ length: 120 }, (_, b) => { let m = 0; for (let i = Math.floor((b * frames) / 120); i < Math.floor(((b + 1) * frames) / 120); i++) for (let c = 0; c < ch; c++) m = Math.max(m, Math.abs(chs[c][i])); return Math.round(Math.min(1, m) * 100) / 100; });
+  const A = t.audio, beats = Math.max(0.01, Math.min(s.bars * (songStore.song.meter || 4) - A.from, (frames / sr) * (A.bpm / 60)));
+  const id = Math.random().toString(36).slice(2, 10).padEnd(8, '0'), tid = Math.random().toString(36).slice(2, 7);
+  blobs.put(id, pcm16, sr);
+  const who = t.by === S.me ? 'your take' : `${(t.byName || 'a take').replace(/'s edit of .*/, '')}'s take`;
+  const take = { id: tid, events: [], audio: { id, sr, ...(ch === 2 ? { ch: 2 } : {}), frames, from: A.from, beats, bpm: A.bpm, peaks }, by: S.me, byName: `${S.name}'s edit of ${who}`, edit: true, of: t.id, at: clock.now() };
+  const tr = songStore.song.transport, pos = positionAt(tr, tempo.beatAt(clock.now()));
+  setSong(`part:${sid}:${pid}`, { ...p, takes: [...SONG.takesOf(p), take].slice(-TAKES_MAX), prev: SONG.currentTake(p)?.id, current: take.id, switchAt: pos && pos.sid === sid ? nextBoundary(pos) : tempo.beatAt(clock.now() + 300) });
+  blobs.send(id);
+  setStatus(`Saved your edit as a new take on ${SONG.laneName(songStore.song, p)} in ${s.name}. The original is still in the list.`);
+  return take;
 }
 // a take's channel count (its samples are interleaved when it's 2): from the take, since the bytes don't say
 function chOf(id) { return audioTakes().find(({ t }) => t.audio.id === id)?.t.audio.ch === 2 ? 2 : 1; }

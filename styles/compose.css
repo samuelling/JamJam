@@ -205,3 +205,12 @@
 .cell.take.insel { outline: 2px solid #ffcf26; outline-offset: -2px; }
 .joinbar { background: #3ddc8414; outline-color: #3ddc8460; }
 .cuetop { padding: 2px 8px; }
+/* the audio editor */
+.aeveil { position: fixed; inset: 0; z-index: 60; background: #000a; display: flex; align-items: center; justify-content: center; }
+.aedit { width: min(1400px, 96vw); max-height: 92vh; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; background: #1b1e24; border: 1px solid #ffffff26; border-radius: 12px; box-shadow: 0 20px 60px #000c; }
+.aehead, .aetools, .aefoot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.aehead b { font-size: 15px; }
+.aeinfo, .aemsg { font-size: 12px; opacity: 0.75; }
+.aesep { width: 1px; height: 20px; background: #ffffff26; margin: 0 4px; }
+.aewave { width: 100%; height: min(46vh, 360px); border-radius: 8px; cursor: text; touch-action: none; outline: none; }
+.aewave:focus-visible { box-shadow: 0 0 0 2px #3d8bff; }
