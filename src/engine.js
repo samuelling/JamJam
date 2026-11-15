@@ -1,6 +1,7 @@
 // The sound side: loads the shared instruments, keeps one channel per jammer, and plays every timestamped event at its
 // room time. Each jammer's browser runs every jammer's instrument, so nobody's audio crosses the network
 // (except the optional audio lane, which is played back a fixed number of bars late).
+import { withArp } from './arp.js';
 
 const sha = async (text) => {
   if (!crypto.subtle) return 'nohash';
@@ -70,12 +71,12 @@ export class Engine {
       URL.revokeObjectURL(url);
       const def = { ...mod.default, hash, file: it.file };
       if (def.init) await def.init(this.ctx);
-      this.defs.set(it.id, def);
+      this.defs.set(it.id, withArp(def));
       this.hashes[it.id] = hash;
     }
     // "No twin": a silent stand-in for a part that only plays on external MIDI gear
-    this.defs.set('none', { id: 'none', name: 'No twin', family: 'MIDI only', internal: true, params: [], presets: { midi: {} }, hash: 'none',
-      create: () => ({ noteOn() {}, noteOff() {}, set() {}, allOff() {}, dispose() {} }) });
+    this.defs.set('none', withArp({ id: 'none', name: 'No twin', family: 'MIDI only', internal: true, params: [], presets: { midi: {} }, hash: 'none',
+      create: () => ({ noteOn() {}, noteOff() {}, set() {}, allOff() {}, dispose() {} }) }));   // an external synth gets the arp too
     const hwText = await (await fetch(`${base}/instruments/hardware.json`, { cache: 'no-cache' })).text();
     this.hardware = JSON.parse(hwText);
     this.hashes.hardware = await sha(hwText);
@@ -150,9 +151,10 @@ export class Engine {
       def.hash = await sha(src + (def.contentHash || ''));
       if (!def.presets || !Object.keys(def.presets).length) def.presets = { init: {} };
       if (def.init) await def.init(this.ctx);
-      this.defs.set(fullId, def);
+      const full = withArp(def);   // the arpeggiator, as every instrument gets it
+      this.defs.set(fullId, full);
       this.hashes[fullId] = def.hash;
-      return def;
+      return full;
     })();
     this.loading.set(fullId, job);
     job.catch(() => this.loading.delete(fullId));

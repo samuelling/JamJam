@@ -12,6 +12,32 @@
 const RATE_BEATS = [1, 1 / 2, 1 / 3, 1 / 4, 1 / 6, 1 / 8];
 
 export const hasArp = (def) => !!def && def.params.some((p) => p.id === 'arpMode');
+
+// Every instrument that plays notes gets the arpeggiator: an instrument that doesn't declare the Arp group gets it
+// added when it loads (drum machines don't: an arp on drums only retriggers them). Its sound engine never sees the arp
+// knobs, so an instrument written without them keeps working unchanged.
+export const ARP_PARAMS = [
+  { id: 'arpMode', name: 'Arp', options: ['Off', 'Up', 'Down', 'Up-down', 'As played', 'Random'], min: 0, max: 5, def: 0, step: 1, group: 'Arp' },
+  { id: 'arpRate', name: 'Rate', options: ['1/4', '1/8', '1/8T', '1/16', '1/16T', '1/32'], min: 0, max: 5, def: 3, step: 1, group: 'Arp' },
+  { id: 'arpOct', name: 'Octaves', options: ['1', '2', '3', '4'], min: 0, max: 3, def: 0, step: 1, group: 'Arp' },
+  { id: 'arpGate', name: 'Gate', min: 0.05, max: 1, def: 0.5, group: 'Arp' },
+  { id: 'arpLatch', name: 'Latch', options: ['Off', 'On'], min: 0, max: 1, def: 0, step: 1, group: 'Arp' },
+];
+const ARP_IDS = new Set(ARP_PARAMS.map((p) => p.id));
+export function withArp(def) {
+  if (!def || def.drums || hasArp(def) || !Array.isArray(def.params) || typeof def.create !== 'function') return def;
+  const create = def.create;
+  const quiet = (inst) => {   // the sound engine never hears the arp knobs
+    if (inst && typeof inst.set === 'function') { const set = inst.set.bind(inst); inst.set = (id, ...rest) => (ARP_IDS.has(id) ? undefined : set(id, ...rest)); }
+    return inst;
+  };
+  return { ...def, params: [...def.params, ...ARP_PARAMS], arpAdded: true,
+    create(ctx, out, init = {}, ...rest) {
+      const clean = {}; for (const [k, v] of Object.entries(init || {})) if (!ARP_IDS.has(k)) clean[k] = v;
+      const r = create.call(def, ctx, out, clean, ...rest);
+      return r && typeof r.then === 'function' ? r.then(quiet) : quiet(r);
+    } };
+}
 export const arpOn = (e) => (e.cfg.params.arpMode ?? 0) >= 0.5;
 
 // the notes to step through, in order, for the held notes and settings
