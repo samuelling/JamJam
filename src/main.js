@@ -2719,7 +2719,7 @@ function openGear() { renderHardware(); openDrawer('#hwDrawer'); }
 function closeDrawers() { $$('.drawer').forEach((d) => d.classList.add('hide')); }
 // the shared studio: every instrument hung on a pegboard. One click puts it on your desk.
 const FEATURED = ['github:samuelling/Acoustic@b540fd3b83f83014073f4a90e2ec769b34374763',   // pinned, so every jammer loads the identical code
-  'github:samuelling/BanJo@f6890514e092d30cb28a92acbf0145256a098908'];
+  'github:samuelling/BanJo@48418a168a719da15aed6291f145e6d9df9cb602'];
 let featuredTried = false;
 async function loadFeatured() {
   if (featuredTried) return; featuredTried = true;
