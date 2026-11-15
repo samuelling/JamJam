@@ -3,6 +3,7 @@
 // or play the whole song; "Jam this" takes everyone to the Jam Room with that section looping.
 import { STYLES as MASTER_STYLES, STEMS as MIX_STEMS, stemOf, masterSettings } from './console.js';
 import { SECTION_NAMES, NOTE_NAMES, newSection, parseChord, takesOf, currentTake, laneOf, laneName, ROLES, movesOf, lineOf } from './song.js';
+import { openAudioEditor } from './audioedit.js';
 
 const COLORS = { Intro: '#7DB0FF', Verse: '#ECEBE5', 'Pre-chorus': '#D8A83A', Chorus: '#FF68BA', Bridge: '#9b8cff', Solo: '#3ddc84', Breakdown: '#8a8f98', Drop: '#ff7a3d', Outro: '#7DB0FF' };
 export const colorOfSection = (name) => COLORS[Object.keys(COLORS).find((k) => String(name).toLowerCase().startsWith(k.toLowerCase()))] || '#A0A6AF';
@@ -605,12 +606,13 @@ export function makeCompose(x) {
           : cell && cell.draft && cell.sid === c.id && cell.lane === ln.lane ? h('div', { class: 'cell empty sel writing', style: `width:${c.w}px`, title: `Writing ${ln.name}'s notes in ${c.s.name}: the roll is below` }, h('span', {}, '✎ writing here ↓'))
           : h('div', { class: 'cell empty', style: `width:${c.w}px`, title: `Nothing here yet: write ${ln.name}'s notes on an empty roll, or jam it and lock a take in`, onclick: () => writeFor(c.id, { lane: ln.lane }) }, h('span', {}, '+ write or jam'));
         const take = currentTake(p), n = takesOf(p).length, beats = c.s.bars * meter;
-        const blk = h('div', { class: 'cell take' + (p.muted ? ' muted' : '') + (wk ? ' retake' : '') + (cell && cell.sid === c.id && cell.pid === p.id ? ' sel' : '') + (inSpan(c.i) ? ' insel' : ''), style: `width:${c.w}px;--lc:${laneColor(li)}`, title: `${ln.name} in ${c.s.name}: ${n} take${n > 1 ? 's' : ''}, playing ${take?.byName || '?'}'s${p.muted ? ' (muted)' : ''}. Click: open it and cue Play there; shift-click: pick a run of sections`,
+        const blk = h('div', { class: 'cell take' + (p.muted ? ' muted' : '') + (wk ? ' retake' : '') + (cell && cell.sid === c.id && cell.pid === p.id ? ' sel' : '') + (inSpan(c.i) ? ' insel' : ''), style: `width:${c.w}px;--lc:${laneColor(li)}`, title: `${ln.name} in ${c.s.name}: ${n} take${n > 1 ? 's' : ''}, playing ${take?.byName || '?'}'s${p.muted ? ' (muted)' : ''}. Click: open it and cue Play there; shift-click: pick a run of sections${take?.audio ? '; double-click: edit the audio' : ''}`,
           onclick: (e) => {
             pickAt(c.i, e.shiftKey); if (e.shiftKey) { render(); return; }
             const r = e.currentTarget.getBoundingClientRect(), bar = Math.max(0, Math.min(c.s.bars - 1, Math.floor(((e.clientX - r.left) / Math.max(1, r.width)) * c.s.bars)));
             setCue((tl[c.i]?.start || 0) + bar * meter); sel = c.id; cell = { sid: c.id, pid: p.id, lane: ln.lane }; render();
-          } });
+          },
+          ondblclick: () => { if (take?.audio && x.audioReady?.(take.audio.id)) editAudio(c.s, p, take); } });
         blk.innerHTML = miniRoll(take, beats, c.w - 4, 30, '#18181b', p.drums);
         blk.append(...[h('span', { class: 'lock', 'aria-hidden': 'true' }, '🔒'), movesOf(take?.events) ? h('span', { class: 'automark', title: 'This take moves knobs too (Song options › Show automation to see them)' }, '◇') : null, n > 1 ? h('span', { class: 'ntakes' }, `${n} takes`) : null, wk ? h('span', { class: 'retaking', style: `--c:${wk.color}` }, `${wk.who} trying a new take`) : null].filter(Boolean));
         return blk;
@@ -760,6 +762,7 @@ export function makeCompose(x) {
           const votes = (p.votes?.[t.id] || []).length, on = cur && cur.id === t.id;
           return h('div', { class: 'takerow' + (on ? ' on' : '') }, h('span', { class: 'tno' }, `take ${ts.length - k}`), h('span', {}, `${t.byName || 'someone'}${t.at ? ' · ' + new Date(t.at > 1e12 ? t.at : Date.now()).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''} · ${t.audio ? `${(t.audio.frames / t.audio.sr).toFixed(1)} s of audio${x.audioReady?.(t.audio.id) ? '' : ' · on its way…'}` : `${t.events.filter((e) => e.type === 'on').length} notes`}`),
             rule === 'vote' ? h('span', { class: 'help' }, `${votes} vote${votes === 1 ? '' : 's'}`) : null, h('span', { style: 'flex:1' }),
+            t.audio ? h('button', { class: 'btn small aeopen', disabled: !x.audioReady?.(t.audio.id), title: 'Open it in the audio editor: cut, copy, paste, fades, volume… with undo. Saving makes a new take; this one stays', onclick: () => editAudio(s, p, t) }, '✎ Edit audio') : null,
             on ? h('b', { class: 'curtag' }, 'sounding') : h('button', { class: 'btn small', onclick: () => (rule === 'vote' ? x.vote(s.id, p.id, t.id) : x.choose(s.id, p.id, t.id)) }, rule === 'vote' ? 'Vote for it' : 'Use this take'));
         }));
     }
@@ -772,6 +775,14 @@ export function makeCompose(x) {
     return det;
   }
   // move the section at position i to position j (the road-map labels move with it)
+  // the audio editor on one audio take (src/audioedit.js); saving adds the edit as a new take
+  function editAudio(s, p, t) {
+    const pcm = x.clipPcm?.(t.audio.id); if (!pcm) return;
+    const song = x.store.song, li = Math.max(0, lanes().findIndex((l) => l.lane === laneOf(p))), au = x.audioOut?.() || {};
+    const ts = takesOf(p), n = ts.findIndex((q) => q.id === t.id) + 1;
+    return openAudioEditor({ h, take: t, pcm, title: `${laneName(song, p)} in ${s.name}, take ${n} (${t.byName || 'someone'})`, meter: song.meter || 4, sectionBeats: s.bars * (song.meter || 4), color: laneColor(li), ctx: au.ctx, out: au.out,
+      save: (d) => x.saveAudioEdit(s.id, p.id, t.id, d), onClose: () => render() });
+  }
   // cut a section in two: at the cue when it's inside this section, or after any bar
   function splitCtl(s, i0) {
     if (s.bars < 2) return null;
