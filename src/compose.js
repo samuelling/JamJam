@@ -513,7 +513,7 @@ export function makeCompose(x) {
     // an Ableton Live project folder, as it is (the .als and its Samples): only what the set uses is read
     const folder = h('input', { type: 'file', webkitdirectory: '', style: 'display:none', onchange: (e) => { const l = e.target.files; if (l?.length) { if (L.length && !confirm('Replace this song with the Live set, for everyone in the room?')) { e.target.value = ''; return; } x.importLiveFolder(l); } e.target.value = ''; } });
     const vars = Object.values(song.variations || {});
-    const playing = tr?.on && tr.mode === 'song', empty = !order.length || !L.length;
+    const playing = !!tr?.on, empty = !order.length || !L.length;
     const importBtn = (cls) => h('button', { class: cls, onclick: () => file.click(), title: "Bring in a sketch: a MIDI file, a zipped Ableton Live project or .als, a MEGAjam song, or a song from SynthLand's Tracker (.json)" }, 'Import a sketch…');
     const liveBtn = (cls) => h('button', { class: cls, onclick: () => folder.click(), title: 'Bring in an Ableton Live project: pick its folder (the one with the .als and Samples; File › Collect All and Save in Live first). Locators become sections, MIDI tracks keep their notes, audio clips become takes at this tempo.' }, 'Import from Ableton Live…');
     // a form, changes and a basic band to start from, by genre
@@ -525,6 +525,7 @@ export function makeCompose(x) {
     const head = h('div', { class: 'songhead' },
       h('input', { class: 'songtitle', value: song.title, maxlength: 60, 'aria-label': 'Song title', onkeydown: (e) => e.stopPropagation(), onchange: (e) => x.setSong('title', e.target.value.trim() || 'Untitled') }),
       order.length ? h('button', { class: 'btn playsong' + (playing ? ' on' : ' hot'), title: 'Play starts at the cue: click the strip above the sections, or a block, to move it', onclick: () => (playing ? x.stop() : x.play('song', null, cue)) }, playing ? '■ Stop' : cue > 0 ? `▶ Play from bar ${cue / meter + 1}` : '▶ Play the song') : null,
+      order.length && x.recButton ? (x.canRecord?.() ? x.recButton('btn recbtn', () => sel || order[0]) : h('button', { class: 'btn recbtn', disabled: true, title: 'To record takes, put an instrument on your desk in the Jam Room, or turn on Live audio' }, '⏺ Arm takes')) : null,
       order.length && cue > 0 && !playing ? h('button', { class: 'btn small ghost cuetop', title: 'Back to the top: Play starts at bar 1', 'aria-label': 'Cue to the top of the song', onclick: () => { setCue(0); render(); } }, '⏮') : null,
       empty ? importBtn('btn') : null, empty ? liveBtn('btn') : null, empty ? presetPick('presets') : null,
       h('span', { class: 'help mono songstats' }, `${order.length} sections · ${totalBars} bars · ${Math.floor(mins)}:${String(Math.round((mins % 1) * 60)).padStart(2, '0')}`),
@@ -670,7 +671,7 @@ export function makeCompose(x) {
       loopNow ? h('button', { class: 'btn small on loopbtn', onclick: () => x.stop() }, '■ Stop loop') : region ? h('button', { class: 'btn small hot loopbtn', onclick: () => x.loopRange(region[0], region[1]) }, '↻ Loop') : h('small', {}, 'Click to cue · drag to loop ⟶')), track);
     const grid = h('div', { class: 'arranger' + (open ? '' : ' folded') }, looprow, ruler, ...summary, ...rows, ...(open ? ghosts : []), h('div', { class: 'playhead hide', 'data-playhead': '' }),
       adding ? h('div', { class: 'arow addform' }, addTrackRow(order.length)) : null,
-      h('div', { class: 'arow' }, h('div', { class: 'lhead addl' }, adding ? null : addTrackRow(order.length), L.length ? null : h('small', {}, 'Or jam a section and lock it in.')),
+      h('div', { class: 'arow' }, h('div', { class: 'lhead addl' }, adding ? null : addTrackRow(order.length), L.length ? null : h('small', {}, 'Or arm takes and play over a section.')),
         h('div', { class: 'addsec' }, h('select', { class: 'lcdsel addsel', 'aria-label': 'Add a section', onchange: (e) => { if (e.target.value) addSection(e.target.value); e.target.value = ''; } }, h('option', { value: '' }, '+ Add a section'), ...SECTION_NAMES.map((nm) => h('option', { value: nm }, nm))))));
     const panes = 'arranger', was = [...box.querySelectorAll(`.${panes},.details .pane`)].map((e) => [e.scrollLeft, e.scrollTop]);
     const det = details(sel, cell);
@@ -828,7 +829,7 @@ export function makeCompose(x) {
   function qualityCtl() {
     if (!x.takeQuality) return null;
     const q = x.takeQuality();
-    return h('span', { class: 'studioctl takeshome', title: "What live-audio takes keep when they're locked in. Jamming stays lean either way: the band always hears your live audio as a light mono stream." },
+    return h('span', { class: 'studioctl takeshome', title: "What live-audio takes keep when they're recorded. Jamming stays lean either way: the band always hears your live audio as a light mono stream." },
       '🎚 Takes: ', h('select', { class: 'lcdsel', 'aria-label': 'Take quality', onchange: (e) => x.setTakeQuality(e.target.value) },
         h('option', { value: 'standard', selected: q !== 'hifi' }, 'Standard (24 kHz mono, quick to share)'),
         h('option', { value: 'hifi', selected: q === 'hifi' }, 'High fidelity (48 kHz, stereo from a stereo input)')),

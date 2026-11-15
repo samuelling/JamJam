@@ -1,5 +1,5 @@
-// Record every pass: Matt arms it and jams over a looping section; every full pass he plays becomes a take without
-// a click, his lane stays quiet in the song while he records (nobody hears old takes over him), and when he stops,
+// Arm takes: Matt arms them from the section bar and jams over a looping section; every full pass he plays becomes a
+// take without a click, his lane stays quiet in the song while he records (nobody hears old takes over him), and when he stops,
 // the newest take sounds for both of them. Sam sees all the takes.
 //   node server/dev.js &  (8787)        node tests/recall.test.cjs
 const { chromium } = require('playwright');
@@ -22,7 +22,7 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     await A.evaluate(() => JJ.play('loop', 'v1'));
     await sleep(1500);
     await B.click('#secbar button.recall'); await sleep(200);
-    check(await B.evaluate(() => /Recording every pass/.test(document.querySelector('#secbar .recall').textContent)), 'Matt arms Record every pass from the section bar');
+    check(await B.evaluate(() => /Count in|Recording takes/.test(document.querySelector('#secbar .recall').textContent)), 'Matt arms takes from the section bar (it counts in to the next pass)');
     const passMs = await B.evaluate(() => 4 * 60000 / JJ.tempo.bpm(JJ.clock.now()));
     // he plays for about four passes
     await B.evaluate(async (ms) => { const s = (t) => new Promise((r) => setTimeout(r, t)); const end = Date.now() + ms; let i = 0; while (Date.now() < end) { const n = [62, 65, 69, 72, 74][i++ % 5]; JJ.input.press(n, 100); await s(180); JJ.input.release(n); await s(60); } }, passMs * 4.4);
@@ -37,7 +37,7 @@ const check = (ok, msg) => { console.log((ok ? 'PASS ' : 'FAIL ') + msg); if (!o
     check(quiet === 0, `while he records, his takes stay quiet in the song (${quiet} song notes)`);
     await B.click('#secbar button.recall'); await sleep(600);
     const after = await A.evaluate(() => Object.values(JJ.song().sections.v1.parts).find((p) => p.byName === 'Matt'));
-    check(after && !after.recording && after.current === after.takes[after.takes.length - 1].id, 'stopping makes the newest take the one that sounds');
+    check(after && !after.recording && after.current === after.takes[after.takes.length - 1].id, 'disarming makes the newest take the one that sounds');
     const t1 = await A.evaluate(() => JJ.clock.now());
     await sleep(passMs * 2 + 1500);
     const plays = await Promise.all([A, B].map((p) => p.evaluate(({ t1 }) => JJ.engine.log.filter((e) => e.pid.startsWith('song:') && e.type === 'on' && e.at > t1).length + JJ.bounced().length, { t1 })));

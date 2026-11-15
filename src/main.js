@@ -1039,7 +1039,7 @@ const compose = makeCompose({
   h, $, store: songStore,
   playersOf: () => [{ name: S.name || 'You', where: S.where }, ...[...S.players.values()].filter((p) => p.role !== 'listener').map((p) => ({ name: p.name || '…', where: p.where }))],
   setSong, transport: () => songStore.song.transport, keyName: () => keyName(), bpm: () => Math.round(tempo.bpm(clock.now() + 1000)),
-  play: (mode, sid, from) => startTransport(mode, sid, from), stop: () => stopTransport(), loopRange: (a, b) => loopRange(a, b), jamThis: (sid, lane) => jamSection(sid, lane),
+  play: (mode, sid, from) => startTransport(mode, sid, from), stop: () => stopTransport(), recButton: (cls, sid) => recButton(cls, sid), canRecord: () => !S.listener && (S.rack.length > 0 || lane.on), loopRange: (a, b) => loopRange(a, b), jamThis: (sid, lane) => jamSection(sid, lane),
   joinSections: (i, j) => joinSections(i, j), splitSection: (i, bar) => splitSection(i, bar), arrangeUndo: (u) => arrangeUndo(u),
   studio: () => (studio.id ? { id: studio.id, name: studio.name, saved: studio.saved, link: studio.link() } : null), canStudio: () => !!STUDIO_SERVER,
   keepAsStudio: (name) => keepAsStudio(name), inviteStudio: () => openInvite(studio.link()),
@@ -1184,13 +1184,13 @@ function loadSong(song) {
 }
 // the transport: a section looping, or the song from the top, starting on the next bar for everyone
 // The song can start part way in: `from` is the song beat it starts on (bar-aligned), for the cue set in Compose.
-function startTransport(mode, sid, from = 0) {
+function startTransport(mode, sid, from = 0, countBars = 0) {
   const ids = songStore.song.order; if (!ids.length) return;
   sid = sid || ids[0];
   const lead = (room.peers.size ? lookahead() + 250 : 120), b = tempo.beatAt(clock.now() + lead), meter = songStore.song.meter || 4;
   const total = songStore.timeline().reduce((a, t) => Math.max(a, t.start + t.beats), 0);
   from = mode === 'song' ? Math.max(0, Math.min(total - meter, Math.round((from || 0) / meter) * meter)) : 0;
-  setSong('transport', { on: true, mode, sid, start: Math.ceil(b / meter - 1e-9) * meter, ...(from > 0 ? { from } : {}) });
+  setSong('transport', { on: true, mode, sid, start: Math.ceil(b / meter - 1e-9) * meter + countBars * meter, ...(from > 0 ? { from } : {}) });
 }
 // drag a loop over the arrangement: [a, b) in song beats. While looping already, the change lands on the next bar line
 // and keeps the music going where it was, if that's still inside the loop.
@@ -1408,7 +1408,7 @@ function renderSecbar(full) {
   const bar = $('#secbar'); if (!bar) return;
   const tr = songStore.song.transport, pos = positionAt(tr, tempo.beatAt(clock.now()));
   bar.classList.toggle('hide', !(tr && tr.on)); document.body.classList.toggle('looping', !!(tr && tr.on));
-  compose.tick(pos && tr.on ? pos : null);
+  compose.tick(pos && tr.on ? pos : null); setRecButtons();
   if (!tr || !tr.on) return;
   const song = songStore.song, sec = pos ? song.sections[pos.sid] : song.sections[tr.sid];
   if (!sec) return;
@@ -1420,11 +1420,11 @@ function renderSecbar(full) {
       h('span', { class: 'secchip' }, sec.name), h('span', { class: 'barno', 'data-barno': '' }), h('span', { class: 'chordnow', 'data-chordnow': '' }), h('span', { class: 'chordnext', 'data-chordnext': '' }),
       h('span', { class: 'help' }, `${Object.values(sec.parts || {}).filter((p) => !p.muted).length} locked`),
       h('span', { style: 'flex:1' }),
-      e && !S.listener ? h('button', { class: 'btn small hot', onclick: () => lockIn(selEntry()) }, `Lock in my ${describe(e.cfg, true)}`) : null,
-      lane.on && !S.listener ? h('button', { class: 'btn small hot', title: 'Keep your last full pass of live audio as a take everyone plays from the song', onclick: () => lockAudio() }, '🎙 Lock in my live audio') : null,
-      !S.listener && (e || lane.on) ? h('button', { class: 'btn small recall' + (S.recAll ? ' on' : ''), 'aria-pressed': String(!!S.recAll), title: 'Keep every full pass you play as a take, without clicking. Your lanes stay quiet while you record.', onclick: () => setRecAll(!S.recAll) }, S.recAll ? `⏺ Recording every pass${S.recCount ? ` · ${S.recCount} kept` : ''}` : '⏺ Record every pass') : null,
+      !S.listener && (e || lane.on) ? recButton('btn small') : null,
+      !S.listener && !S.recAll && (e || lane.on) ? h('button', { class: 'btn small ghost keeplast', title: `Not armed, but that last pass was the one? Keep it as a take: ${[e ? `your ${describe(e.cfg, true)}` : '', lane.on ? 'your live audio' : ''].filter(Boolean).join(' and ')}`, onclick: () => keepLast() }, 'Keep last pass') : null,
       h('button', { class: 'btn small', onclick: () => goRoom('compose') }, 'Song board'), h('button', { class: 'btn small ghost', onclick: stopTransport }, '■ Stop'));
   }
+  setRecButtons();
   buildMeter(bar, tr);
   if (pos) { const ch = chordAt(pos.bar).replace(/#/g, '♯').replace(/b(?=\d|$|m)/, '♭'); for (const pd of $$('#pads .pad')) setCls(pd, 'now', pd.dataset.chord === ch || pd.dataset.chord === ch.replace(/7$|maj7$|m7$/, (x) => (x === 'm7' ? 'm' : ''))); }
   if (pos) { setText($('[data-barno]'), `bar ${pos.bar + 1}/${sec.bars}`); setText($('[data-chordnow]'), chordAt(pos.bar)); setText($('[data-chordnext]'), pos.bar + 1 < sec.bars ? `then ${chordAt(pos.bar + 1)}` : ''); }
@@ -1432,11 +1432,11 @@ function renderSecbar(full) {
 }
 setInterval(() => renderSecbar(false), 100);
 // Lock it in: your last full pass of the looping section (or what you've played of this one) becomes a part of it
-// opts.pass: lock that pass (its start beat) instead of the last complete one; opts.auto: from Record every pass
+// opts.pass: lock that pass (its start beat) instead of the last complete one; opts.auto: from armed takes (the take records quietly); opts.quiet: no error messages (Keep last pass)
 function lockIn(e, opts = {}) {
   const tr = opts.tr || songStore.song.transport; if (!e || !tr || !tr.on) return 0;
   const b = tempo.beatAt(clock.now()), pos = opts.pos || positionAt(tr, b); if (!pos) { if (!opts.auto) setStatus('Wait for the section to start.', 'error'); return 0; }
-  const say = (t) => { if (!opts.auto) setStatus(t, 'error'); };
+  const say = (t) => { if (!opts.auto && !opts.quiet) setStatus(t, 'error'); };
   const k = key(S.me, e.r);
   // what you played over [from, from + span) room beats, relative to `from`
   // what you played over [from, from + span) room beats, relative to `from`: the notes, and every knob move (always
@@ -1651,14 +1651,14 @@ function jamLane(id, sid) {
   if (t.kind === 'audio') {   // record into it: your live audio locks into this track
     S.audioLane = id;
     if (S.where === 'jam') S.openLive?.();
-    setStatus(`Your live audio now goes into ${t.name}. Turn on Live audio, play ${sec ? `along with ${sec.name}` : 'a pass'}, then Lock in.`);
+    setStatus(`Your live audio now goes into ${t.name}. Turn on Live audio, play ${sec ? `along with ${sec.name}` : 'a pass'}, then Arm takes and play a pass.`);
     return;
   }
   if (t.ext && !input.midi && !S.midiAsked) { S.midiAsked = true; input.enableMIDI().catch(() => {}).finally(() => jamLane(id, sid)); return; }   // an external synth needs MIDI out (asked once; without it, pick a port on the desk later)
   let e = S.rack.find((x) => x.laneId === id);
   if (!e) { e = addEntry({ inst: t.inst, patch: t.patch, hw: t.hw || undefined, ext: t.ext ? { name: t.ext.name, port: input.outputs[0]?.id || '', ch: 1 } : undefined }); if (!e) return; if (t.params) { e.cfg.params = { ...e.cfg.params, ...t.params }; publishEntry(e); } e.laneId = id; const own = t.hw && S.owned.get(t.hw); if (own?.ch) e.midiCh = own.ch; }
   S.sel = e.r; renderRack(); renderDevice(); renderKeyboard();
-  setStatus(sec ? `${t.name} is on your desk and ${sec.name} is looping: play along, then Lock in a pass you like, and it goes into this track.` : `${t.name} is on your desk: loop a section and lock takes in, and they go into this track.`);
+  setStatus(sec ? `${t.name} is on your desk and ${sec.name} is looping: Arm takes and play along: every pass you play goes into this track as a take.` : `${t.name} is on your desk: loop a section and lock takes in, and they go into this track.`);
 }
 // you own a track's blocks if you made it (by name, so it survives rejoining) or it came in with an import
 const ownsPart = (p) => !p || p.by === S.me || p.by === 'import' || (!!p.byName && p.byName === S.name);
@@ -1723,7 +1723,7 @@ function commitTake(sid, pid, base, take, takes, old, pos, opts = {}) {
   next.current = rule === 'owner' && !ownsPart(old) ? old.current : rule === 'vote' ? SONG.pickCurrent({ ...next, votes: { ...next.votes, [take.id]: [S.me] } }, 'vote', { ...next.votes, [take.id]: [S.me] }) : take.id;
   if (rule === 'vote') next.votes = { ...next.votes, [take.id]: [S.me] };
   setSong(`part:${sid}:${pid}`, next);
-  setStatus(`Take ${takes.length} locked into ${songStore.song.sections[sid].name}${next.current === take.id ? ': it plays from the next pass' : ' (waiting to be picked)'}. Keep layering, or play something else.`);
+  setStatus(`Take ${takes.length} kept in ${songStore.song.sections[sid].name}${next.current === take.id ? ': it plays from the next pass' : ' (waiting to be picked)'}. Keep layering, or play something else.`);
 }
 
 // ---------- audio takes: a pass of your live audio, locked in ----------
@@ -1788,21 +1788,23 @@ function setTakeQuality(q) {
   if (lane.on && lane.wantStereo !== (q === 'hifi')) lane.startLane($('#laneDev')?.value || undefined, q === 'hifi').catch(() => {});
 }
 function lockAudio(opts = {}) {
-  const tr = opts.tr || songStore.song.transport, say = (t) => { if (!opts.auto) setStatus(t, 'error'); };
+  const tr = opts.tr || songStore.song.transport, say = (t) => { if (!opts.auto && !opts.quiet) setStatus(t, 'error'); };
   if (!lane.on) { say('Go live first: Live audio on your shelf.'); return 0; }
-  if (!tr || !tr.on) { say('Loop a section first, then play a pass and lock it in.'); return 0; }
+  if (!tr || !tr.on) { say('Loop a section first, then play a pass.'); return 0; }
   const b = tempo.beatAt(clock.now()), pos = opts.pos || positionAt(tr, b); if (!pos) { say('Wait for the section to start.'); return 0; }
   const pieces = [];
   if (tr.mode === 'range') {
-    const L = pos.seg.passBeats; let ps = opts.pass ?? pos.seg.pass; if (opts.pass == null && b - ps < L * 0.98) { if (pos.seg.k > 0) ps -= L; else { say('Play the whole loop once, then lock it in.'); return 0; } }
+    const L = pos.seg.passBeats; let ps = opts.pass ?? pos.seg.pass; if (opts.pass == null && b - ps < L * 0.98) { if (pos.seg.k > 0) ps -= L; else { say('Play the whole loop once first.'); return 0; } }
     for (const t of songStore.timeline()) { const lo = Math.max(tr.a, t.start) - t.start, hi = Math.min(tr.b, t.start + t.beats) - t.start; if (hi > lo) pieces.push({ sid: t.id, start: ps + t.start - tr.a, lo, hi }); }
   } else {
     let ws = opts.pass ?? pos.seg.start; const L = pos.seg.beats;
-    if (opts.pass == null && b - ws < L * 0.98) { if (tr.mode === 'loop' && pos.seg.k > 0) ws -= L; else { say('Play the whole section once, then lock it in.'); return 0; } }
+    if (opts.pass == null && b - ws < L * 0.98) { if (tr.mode === 'loop' && pos.seg.k > 0) ws -= L; else { say('Play the whole section once first.'); return 0; } }
     pieces.push({ sid: pos.sid, start: ws, lo: 0, hi: L });
   }
+  if (opts.upTo != null) for (const pc of pieces) pc.hi = Math.min(pc.hi, opts.upTo - pc.start);   // a pass still going: up to now
   const t = audioLane(), pid = t.id; let n = 0;
   for (const pc of pieces) {
+    if (pc.hi - pc.lo < 0.5) continue;
     // standard: 24 kHz mono; a studio set to high fidelity: 48 kHz, stereo when the input really is
     const t0 = tempo.timeOf(pc.start + pc.lo), t1 = tempo.timeOf(pc.start + pc.hi), sr = hifi() ? 48000 : AUD_SR, got = lane.sliceTake(t0, t1, sr, hifi()); if (!got) continue;
     const id = Math.random().toString(36).slice(2, 10).padEnd(8, '0'), pcm16 = toPcm16(got.pcm), pcm = got.mono;
@@ -1928,25 +1930,68 @@ function splitSection(i, bar) {
   return { ...u, sids: [A.id, B.id] };
 }
 
-// ---------- Record every pass: arm it, play, and each full pass you play on is kept as a take ----------
-// A pass is kept when the next one starts (plus a moment for its last notes to land), for each of your instruments
-// that played in it, and for your live audio. Lanes you're recording stay quiet in the song meanwhile, so nobody
-// hears the old takes over you; stopping makes the newest take the one that sounds (pick another any time).
-function setRecAll(on) {
+// ---------- Takes: arm them, and every pass you play is kept; disarm, and recording stops ----------
+// Works from the Jam Room or the Compose Room. Armed with the music stopped, the section starts looping after a bar of
+// count-in (it clicks, metronome on or not); armed while it plays, recording starts with the next pass, which counts
+// in on screen. Each full pass you play is kept as a take: each of your instruments that played, and your live audio.
+// The tracks you're recording stay quiet in the song meanwhile, so nobody hears the old takes over you. Disarming
+// keeps the pass you're in when you've played at least a bar of it, and makes the newest take the one that sounds
+// (pick another any time). Stopping the music disarms too.
+function setRecAll(on, o = {}) {
   if (!!S.recAll === on) return;
-  S.recAll = on; S.recPass = null; S.recFrom = tempo.beatAt(clock.now());
-  if (on) setStatus('Recording every pass: play away. Each full pass you play is kept as a take.');
-  else {
-    let n = 0;
+  const tr = songStore.song.transport, meter = songStore.song.meter || 4;
+  if (on) {
+    if (!S.rack.length && !lane.on) { setStatus('Nothing to record yet: put an instrument on your desk in the Jam Room, or turn on Live audio.', 'error'); return; }
+    let from;
+    if (!tr?.on) { startTransport('loop', o.sid, 0, 1); from = songStore.song.transport?.start; }
+    else { const b = tempo.beatAt(clock.now()), pos = positionAt(tr, b); from = !pos ? tr.start : tr.mode === 'range' ? pos.seg.pass + pos.seg.passBeats : pos.seg.start + pos.seg.beats; }
+    if (from == null) return;
+    S.recAll = true; S.recPass = null; S.recFrom = from; S.recCount = 0;
+    engine.metro.countTo = from; engine.metro.next = -1;
+    const what = [...S.rack.map((e) => describe(e.cfg, true)), ...(lane.on ? ['your live audio'] : [])];
+    setStatus(`Takes armed: after the count-in, every pass you play is kept (${what.join(', ')}). Disarm to stop.`);
+  } else {
+    // the pass you're in: keep it if you've played a bar of it
+    const cur = S.recPass, b = tempo.beatAt(clock.now()); let n = 0;
+    if (cur && cur.key >= S.recFrom - 0.01 && b - cur.key >= meter - 0.01 && tr?.on) {
+      for (const e of S.rack) n += lockIn(e, { auto: true, pass: cur.key, pos: cur.pos, tr: cur.tr });
+      if (lane.on) n += lockAudio({ auto: true, pass: cur.key, pos: cur.pos, tr: cur.tr, upTo: b });
+    }
+    S.recCount = (S.recCount || 0) + n;
+    S.recAll = false; engine.metro.countTo = null;
+    let lanes = 0;
     for (const s of songStore.sections()) for (const p of Object.values(s.parts || {})) {
       if (p.recording !== S.me) continue;
       const ts = SONG.takesOf(p), last = ts[ts.length - 1];
       setSong(`part:${s.id}:${p.id}`, { ...p, recording: null, prev: p.current, current: (songStore.song.rule || 'newest') === 'vote' && p.current ? p.current : last?.id, switchAt: tempo.beatAt(clock.now() + 300) });
-      n++;
+      lanes++;
     }
-    setStatus(n ? `Stopped recording. The newest take of each lane plays now; pick another in the Compose Room.` : 'Stopped recording.');
+    const k = S.recCount || 0;
+    setStatus(k ? `Takes disarmed: ${k} take${k === 1 ? '' : 's'} kept. The newest of each plays now; pick another in its block's take list.` : 'Takes disarmed. Nothing was kept (no full pass played).');
   }
-  renderSecbar(true);
+  renderSecbar(true); if (S.where === 'compose') compose.render();
+}
+// the record button, the same in both rooms: arm, and while armed, the count-in and how many takes are kept
+function recButton(cls, sid) {
+  const st = recState();
+  return h('button', { class: `${cls} recall${st.armed ? ' on' : ''}`, 'data-recbtn': '', 'aria-pressed': String(st.armed), title: st.title || 'Arm takes: after a bar of count-in, every pass you play is kept as a take. Press again to disarm.', onclick: () => setRecAll(!S.recAll, { sid: typeof sid === 'function' ? sid() : sid }) }, st.label);
+}
+function setRecButtons() { const st = recState(); for (const b of $$('[data-recbtn]')) { setText(b, st.label); setCls(b, 'on', st.armed); setCls(b, 'counting', !!st.counting); b.setAttribute('aria-pressed', String(st.armed)); } }
+// "Keep last pass": the pass you just played over the loop, kept without having armed: your instrument and live audio
+function keepLast() {
+  const e = selEntry(); let n = 0;
+  if (e) n += lockIn(e, { quiet: !!lane.on });
+  if (lane.on) n += lockAudio({ quiet: !!e });
+  if (n) setStatus(`Kept your last pass as ${n === 1 ? 'a take' : `${n} takes`}. It plays from the song for everyone.`);
+  else if (e && lane.on) setStatus('Nothing to keep yet: play a whole pass of the loop first.', 'error');
+}
+// what the record button says right now: armed or not, counting in, how many kept
+function recState() {
+  const b = tempo.beatAt(clock.now()), tr = songStore.song.transport;
+  if (!S.recAll) return { armed: false, label: '⏺ Arm takes' };
+  const left = S.recFrom - b;
+  if (left > 0) return { armed: true, counting: true, label: `● Count in · ${Math.ceil(left)}`, title: 'Recording starts at the top of the next pass. Press to disarm.' };
+  return { armed: true, label: `● Recording takes${S.recCount ? ` · ${S.recCount} kept` : ''}`, title: `Every pass you play is kept as a take${tr?.mode === 'song' ? ' (each section)' : ''}. Press to disarm.` };
 }
 function recTick() {
   if (!S.recAll) return;
@@ -3341,7 +3386,7 @@ Object.assign(window.JJ, {
   studio, blobs, dropbox, openDemo: () => openDemo(), setTakeQuality: (q) => setTakeQuality(q), chOf: (id) => chOf(id), enterStudio: (id) => enterStudio(id), keepAsStudio: (n) => keepAsStudio(n), leave: () => leaveRoom(), exportSong: () => exportSong(), importFile: (f) => importSketch(f), importLive: (files) => importLive(files),
   seqView: (pid, r) => { const sq = seqs.get(key(pid || S.me, r)); return sq && (sq.kind === 'acid' ? sq.view().snapshot() : sq.snapshot()); },
   own: (id, v) => setOwned(id, v),
-  loopRange: (a, b) => loopRange(a, b), editTake: (sid, pid, ev, w) => editTake(sid, pid, ev, w), lockAudio: () => lockAudio(), recAll: (on) => setRecAll(on), audio: () => ({ have: [...blobs.bytes.keys()], started: AUD.started }), lane: () => lane,
+  loopRange: (a, b) => loopRange(a, b), editTake: (sid, pid, ev, w) => editTake(sid, pid, ev, w), lockAudio: () => lockAudio(), recAll: (on, sid) => setRecAll(on, { sid }), recState: () => recState(), audio: () => ({ have: [...blobs.bytes.keys()], started: AUD.started }), lane: () => lane,
   addVirtual: (kind, style) => band.add(kind, style), setVirtual: (id, p) => band.set(id, p), removeVirtual: (id) => band.remove(id), lockVirtual: (id, sid) => band.lock(id, sid), vplan: (id) => band.plan.get(id), players: () => songStore.song.players || {},
   setKey: (root, mode) => setKey(root, mode), choose: (sid, pid, t) => choose(sid, pid, t), vote: (sid, pid, t) => vote(sid, pid, t), saveVar: (n) => saveVariation(n), restoreVar: (n) => restoreVariation(n), song: () => songStore.song, setSong: (k, v) => setSong(k, v), loadSong: (sg) => loadSong(sg), songFromTracker: (j) => SONG.songFromTracker(j), songFromMidi: (b) => SONG.songFromMidi(b), songMidi: () => Array.from(SONG.songToMidi(songForExport())), play: (mode, sid, from) => startTransport(mode, sid, from), where: () => positionAt(songStore.song.transport, tempo.beatAt(clock.now())), joinSections: (i, j) => joinSections(i, j), splitSection: (i, bar) => splitSection(i, bar), stopSong: () => stopTransport(), lockIn: (r) => lockIn(entry(r)), goRoom: (w) => goRoom(w), bounced: () => [...songPlay.bounce].filter(([, v]) => v.buf).map(([k]) => k), bounceKeys: () => [...songPlay.bounce].map(([k, v]) => [k, v.key]), match: (r, on) => { const e = entry(r); if (e) return on ? startMatch(e) : stopMatch(e); }, matchScore: async (r, params) => { const m = entry(r)?.match; return m && m.fitter.scoreAll(params); }, matchObs: (r) => entry(r)?.match?.fitter.obs.map((o) => ({ note: o.note, held: o.held, att: o.att, noise: +o.noise.toFixed(2), hSus: o.hSus && o.hSus.map(Math.round).join(' '), curve: o.curve.slice(0, 40).map(Math.round).join(' ') })),
   matchState: (r) => { const m = entry(r)?.match; return m && { why: m.why, on: m.on, obs: m.fitter.obs.length, renders: m.fitter.renders, ms: m.fitter.ms, lag: m.lag, sim: m.sim, applied: m.applied, d: m.fitter.bestD, params: entry(r).cfg.params }; }, react: (r) => react(r), listen: (code) => enter(code, true), assist: (v) => { S.assist = v; },
