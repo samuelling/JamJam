@@ -438,7 +438,7 @@ export function makeCompose(x) {
     if (arrSay) return h('div', { class: 'undobar', role: 'status' }, h('span', {}, arrSay), h('button', { class: 'btn small ghost', 'aria-label': 'Dismiss', onclick: () => { arrSay = ''; render(); } }, '×'));
     if (!arrUndo) return null;
     return h('div', { class: 'undobar', role: 'status' }, h('span', {}, `${arrUndo.what}, for everyone.`),
-      h('button', { class: 'btn small hot', onclick: () => { x.arrangeUndo(arrUndo); arrUndo = null; clearTimeout(arrT); sel = null; selPos = null; render(); } }, 'Undo'),
+      h('button', { class: 'btn small hot', onclick: () => { if (arrUndo.undo) arrUndo.undo(); else x.arrangeUndo(arrUndo); arrUndo = null; clearTimeout(arrT); sel = null; selPos = null; render(); } }, 'Undo'),
       h('button', { class: 'btn small ghost', 'aria-label': 'Dismiss', onclick: () => { arrUndo = null; clearTimeout(arrT); render(); } }, '×'));
   }
   function delTrack(id, name) {
@@ -541,6 +541,7 @@ export function makeCompose(x) {
         h('option', { value: '' }, vars.length ? `Versions (${vars.length})` : 'Versions'), h('option', { value: '__save' }, 'Save this version…'), ...vars.map((v) => h('option', { value: v.name }, `Go to “${v.name}”`))),
       empty ? null : importBtn('btn small'), empty ? null : liveBtn('btn small'), empty ? null : presetPick('presets'), h('button', { class: 'btn small', onclick: () => x.exportMidi() }, 'Save MIDI'), h('button', { class: 'btn small', title: 'The song as a file: with audio takes it\'s a .zip of the song and each take as a WAV (keep it in the band\'s Dropbox or Drive, and import it back any time)', onclick: () => x.exportJson() }, 'Save song'),
       studioCtl(), x.studio?.() ? takesCtl() : null, x.studio?.() ? qualityCtl() : null,
+      x.clearSong && order.length ? h('button', { class: 'btn small ghost danger clearsong', title: 'Start over with a blank song, for everyone: every section, track and take goes (the tempo and key stay). Undo is there for a minute.', onclick: () => clearSongNow() }, 'Clear song…') : null,
       h('label', { class: 'help', title: 'Knob moves are always recorded with takes; this shows them as lanes you can edit' }, h('input', { type: 'checkbox', class: 'autotoggle', checked: showAuto, onchange: (e) => { showAuto = e.target.checked; remember('auto', showAuto); render(); } }), ' Show automation'),
       x.exportStems && !empty ? h('button', { class: 'btn small' + (stemsOpen ? ' on' : ''), 'aria-expanded': String(stemsOpen), onclick: () => { stemsOpen = !stemsOpen; render(); } }, 'Export stems…') : null,
       h('span', { class: 'help mono' }, `${x.bpm()} bpm · ${x.keyName()}`),
@@ -776,6 +777,16 @@ export function makeCompose(x) {
     return det;
   }
   // move the section at position i to position j (the road-map labels move with it)
+  // clear the song for everyone, with a minute to take it back
+  function clearSongNow() {
+    const st = x.studio?.(), where = st ? `“${st.name}”` : 'this room';
+    if (!confirm(`Clear the song for everyone in ${where}? Every section, track and take goes (the tempo and key stay). You can undo it for a minute.`)) return;
+    const snap = x.clearSong(), title = snap.title || 'the song';
+    if (!x.store.song.order.length) addSection('Verse', 4);
+    sel = null; selPos = null; span = null; cell = null; setCue(0);
+    arrUndo = { what: `Cleared “${title}”`, undo: () => x.unclearSong(snap) }; arrSay = ''; clearTimeout(arrT); arrT = setTimeout(() => { arrUndo = null; render(); }, 60000);
+    render();
+  }
   // the audio editor on one audio take (src/audioedit.js); saving adds the edit as a new take
   function editAudio(s, p, t) {
     const pcm = x.clipPcm?.(t.audio.id); if (!pcm) return;
